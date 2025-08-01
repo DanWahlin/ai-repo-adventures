@@ -5,43 +5,7 @@ import { parse } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/types';
 import { DEFAULT_ANALYSIS_CONFIG, type AnalysisConfig } from '../shared/types.js';
 
-// Better typed interfaces for AST parsing - currently unused but kept for extensibility
-// interface ParsedFunctionNode {
-//   name: string;
-//   params: ParsedParameter[];
-//   isAsync: boolean;
-//   isExported: boolean;
-//   location?: SourceLocation;
-//   returnType?: string;
-// }
-
-// interface ParsedParameter {
-//   name: string;
-//   type?: string;
-//   isOptional: boolean;
-//   isRest: boolean;
-// }
-
-// interface SourceLocation {
-//   line: number;
-//   column: number;
-// }
-
-// Interfaces for future use - currently unused but kept for extensibility
-// interface ParsedClassNode {
-//   name: string;
-//   methods: string[];
-//   properties: string[];
-//   isExported: boolean;
-//   location?: SourceLocation;
-// }
-
-// // Type-safe parser interface
-// interface ASTParser {
-//   language: string;
-//   parse(content: string): Promise<ParsedFunctionNode[]>;
-//   cleanup(): Promise<void>;
-// }
+// Removed commented-out interfaces as per code review recommendations
 
 export interface FunctionInfo {
   name: string;
@@ -119,18 +83,8 @@ export interface ProjectStructure {
 }
 
 // Analysis configuration constants
-const ANALYSIS_LIMITS = {
-  MAX_DEPTH: 3,
-  KEY_SOURCE_FILES_LIMIT: 10,
-  TOP_FUNCTIONS_LIMIT: 20,
-  TOP_CLASSES_LIMIT: 5,
-  TOP_DEPENDENCIES_LIMIT: 20,
-  SUMMARY_LINES_LIMIT: 10,
-  FILE_READ_LINE_LIMIT: 2000,
-  LINE_CHARACTER_LIMIT: 2000,
-  MAX_FILE_SIZE_MB: 10,
-  PARSER_CLEANUP_TIMEOUT_MS: 5000
-} as const;
+// Analysis limits are now configurable through AnalysisConfig
+// Keeping legacy constants for backward compatibility during transition
 
 export class ProjectAnalyzer {
   // Type guards for ESTree nodes
@@ -174,70 +128,17 @@ export class ProjectAnalyzer {
            (node as TSESTree.Node).type === 'RestElement';
   }
   private config: AnalysisConfig;
-  private treeSitterParsers: Map<string, any> = new Map();
 
   constructor(config: Partial<AnalysisConfig> = {}) {
     this.config = { ...DEFAULT_ANALYSIS_CONFIG, ...config };
   }
 
   /**
-   * Clean up tree-sitter parser resources with timeout handling
+   * Clean up resources (simplified - no tree-sitter parsers to clean)
    */
   public async cleanup(): Promise<void> {
-    const cleanupPromises: Promise<void>[] = [];
-    
-    // Clean up tree-sitter parsers when they exist
-    for (const [language, parser] of this.treeSitterParsers.entries()) {
-      const cleanupPromise = this.cleanupParser(language, parser);
-      cleanupPromises.push(cleanupPromise);
-    }
-    
-    // Wait for all cleanup operations with timeout
-    try {
-      await Promise.allSettled(cleanupPromises.map(p => 
-        this.withTimeout(p, ANALYSIS_LIMITS.PARSER_CLEANUP_TIMEOUT_MS)
-      ));
-    } catch (error) {
-      console.warn('Some parser cleanup operations timed out:', error);
-    }
-    
-    this.treeSitterParsers.clear();
-  }
-  
-  private async cleanupParser(language: string, parser: any): Promise<void> {
-    try {
-      if (parser && typeof parser.delete === 'function') {
-        // Wrap in promise to handle both sync and async cleanup
-        await new Promise<void>((resolve, reject) => {
-          try {
-            const result = parser.delete();
-            if (result && typeof result.then === 'function') {
-              result.then(resolve).catch(reject);
-            } else {
-              resolve();
-            }
-          } catch (error) {
-            reject(error);
-          }
-        });
-      }
-      
-      // Additional cleanup for parser resources
-      if (parser && typeof parser.close === 'function') {
-        await parser.close();
-      }
-    } catch (error) {
-      console.warn(`Failed to cleanup tree-sitter parser for ${language}:`, error instanceof Error ? error.message : String(error));
-    }
-  }
-  
-  private withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) => 
-        setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
-      )
-    ]);
+    // Resource cleanup is now minimal since we removed tree-sitter
+    // This method is kept for API compatibility
   }
 
   private readonly LANGUAGE_EXTENSIONS = {
@@ -364,7 +265,7 @@ export class ProjectAnalyzer {
       const readmePath = path.join(validatedPath, 'README.md');
       let readmeSummary = '';
       try {
-        readmeSummary = (await fs.readFile(readmePath, 'utf-8')).split('\n').slice(0, ANALYSIS_LIMITS.SUMMARY_LINES_LIMIT).join(' ');
+        readmeSummary = (await fs.readFile(readmePath, 'utf-8')).split('\n').slice(0, this.config.limits.summaryLines).join(' ');
       } catch {}
       const packageJsonPath = path.join(validatedPath, 'package.json');
       let pkgSummary = '';
@@ -395,14 +296,14 @@ export class ProjectAnalyzer {
       if (classSummaries) summaryParts.push(`**Main Classes:**\n${classSummaries}`);
 
       // Key function signatures
-      const functionSummaries = codeAnalysis.functions.slice(0, ANALYSIS_LIMITS.TOP_FUNCTIONS_LIMIT).map(fn => `- ${fn.name} (${fn.fileName}): ${fn.summary} Params: ${fn.parameters.join(', ')}`).join('\n');
+      const functionSummaries = codeAnalysis.functions.slice(0, this.config.limits.topFunctions).map(fn => `- ${fn.name} (${fn.fileName}): ${fn.summary} Params: ${fn.parameters.join(', ')}`).join('\n');
       if (functionSummaries) summaryParts.push(`**Key Functions:**\n${functionSummaries}`);
 
       // Main data types/interfaces (from classes)
       // (If you want to extract more, could parse typedefs/interfaces in the future)
 
       // Major dependencies and their purposes
-      const depSummaries = codeAnalysis.dependencies.slice(0, ANALYSIS_LIMITS.TOP_DEPENDENCIES_LIMIT).map(dep => `- ${dep.name} (${dep.type}, ${dep.category})`).join('\n');
+      const depSummaries = codeAnalysis.dependencies.slice(0, this.config.limits.topDependencies).map(dep => `- ${dep.name} (${dep.type}, ${dep.category})`).join('\n');
       if (depSummaries) summaryParts.push(`**Major Dependencies:**\n${depSummaries}`);
 
       // Entry points and startup flow
@@ -438,7 +339,7 @@ export class ProjectAnalyzer {
     }
   }
 
-  private async scanDirectory(dirPath: string, maxDepth = this.config.maxDepth || ANALYSIS_LIMITS.MAX_DEPTH, currentDepth = 0): Promise<ProjectStructure> {
+  private async scanDirectory(dirPath: string, maxDepth = this.config.maxDepth, currentDepth = 0): Promise<ProjectStructure> {
     const structure: ProjectStructure = {
       directories: [],
       importantFiles: [],
@@ -561,7 +462,7 @@ export class ProjectAnalyzer {
     return 'Software Project';
   }
 
-  private async countFiles(dirPath: string, maxDepth = this.config.maxDepth || ANALYSIS_LIMITS.MAX_DEPTH, currentDepth = 0): Promise<number> {
+  private async countFiles(dirPath: string, maxDepth = this.config.maxDepth, currentDepth = 0): Promise<number> {
     if (currentDepth >= maxDepth) return 0;
     
     let count = 0;
@@ -628,7 +529,7 @@ export class ProjectAnalyzer {
     // Analyze key source files (limit to prevent overwhelming LLM)
     const keySourceFiles = structure.sourceFiles
       .filter(file => this.isKeyFile(file))
-      .slice(0, ANALYSIS_LIMITS.KEY_SOURCE_FILES_LIMIT); // Limit to most important files
+      .slice(0, this.config.limits.keySourceFiles); // Limit to most important files
 
     for (const filePath of keySourceFiles) {
       const fullPath = path.join(projectPath, filePath);
@@ -637,8 +538,8 @@ export class ProjectAnalyzer {
         const stats = await fs.stat(fullPath);
         const fileSizeMB = stats.size / (1024 * 1024);
         
-        if (fileSizeMB > ANALYSIS_LIMITS.MAX_FILE_SIZE_MB) {
-          console.warn(`Skipping large file ${filePath} (${fileSizeMB.toFixed(2)}MB > ${ANALYSIS_LIMITS.MAX_FILE_SIZE_MB}MB)`);
+        if (fileSizeMB > this.config.limits.maxFileSizeMB) {
+          console.warn(`Skipping large file ${filePath} (${fileSizeMB.toFixed(2)}MB > ${this.config.limits.maxFileSizeMB}MB)`);
           continue;
         }
         
@@ -773,86 +674,17 @@ export class ProjectAnalyzer {
   }
 
   /**
-   * Analyze code using tree-sitter if available, otherwise fall back to regex patterns
+   * Analyze code using regex patterns (simplified - tree-sitter removed)
    */
   private async analyzeWithTreeSitter(content: string, fileName: string, language: string): Promise<{functions: FunctionInfo[], classes: ClassInfo[]}> {
-    try {
-      // Try to get or create tree-sitter parser for this language
-      const parser = await this.getTreeSitterParser(language);
-      
-      if (parser) {
-        // Parse the content using tree-sitter
-        const tree = parser.parse(content);
-        const rootNode = tree.rootNode;
-        
-        // Extract functions and classes using tree-sitter AST
-        const analysis = this.extractFromTreeSitterAST(rootNode, fileName, language);
-        
-        // Clean up tree resources
-        tree.delete();
-        
-        return analysis;
-      }
-    } catch (error) {
-      console.warn(`Tree-sitter analysis failed for ${fileName}, falling back to regex:`, error);
-    }
-    
-    // Fall back to regex-based analysis
+    // Simplified: directly use regex analysis (tree-sitter was always returning null anyway)
     return this.analyzeWithRegex(content, fileName, language);
   }
 
-  /**
-   * Get or create a tree-sitter parser for the given language
-   */
-  private async getTreeSitterParser(language: string): Promise<any | null> {
-    // Return cached parser if available
-    if (this.treeSitterParsers.has(language)) {
-      return this.treeSitterParsers.get(language);
-    }
 
-    try {
-      // TODO: Import and initialize tree-sitter when WASM files are available
-      // For now, return null to use regex fallback
-      
-      // Example of how this would work when WASM files are added:
-      // const Parser = await import('web-tree-sitter');
-      // await Parser.init();
-      // const parser = new Parser();
-      // const LanguageWasm = await Parser.Language.load(`/path/to/${language}.wasm`);
-      // parser.setLanguage(LanguageWasm);
-      // this.treeSitterParsers.set(language, parser);
-      // return parser;
-      
-      return null;
-    } catch (error) {
-      console.warn(`Failed to load tree-sitter parser for ${language}:`, error);
-      return null;
-    }
-  }
 
   /**
-   * Extract functions and classes from tree-sitter AST
-   */
-  private extractFromTreeSitterAST(rootNode: any, fileName: string, language: string): {functions: FunctionInfo[], classes: ClassInfo[]} {
-    const functions: FunctionInfo[] = [];
-    const classes: ClassInfo[] = [];
-
-    // TODO: Implement tree-sitter AST traversal when WASM files are available
-    // This would traverse the AST nodes and extract function/class information
-    // Example:
-    // const cursor = rootNode.walk();
-    // // Traverse AST and extract function/class nodes based on language syntax
-    
-    // Suppress unused parameter warnings until implementation
-    void rootNode;
-    void fileName; 
-    void language;
-    
-    return { functions, classes };
-  }
-
-  /**
-   * Fallback regex-based analysis for when tree-sitter is not available
+   * Regex-based code analysis (primary method after tree-sitter removal)
    */
   private analyzeWithRegex(content: string, fileName: string, language: string): {functions: FunctionInfo[], classes: ClassInfo[]} {
     const functions: FunctionInfo[] = [];

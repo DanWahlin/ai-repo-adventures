@@ -5,67 +5,16 @@ import { config } from 'dotenv';
 config();
 
 // Rate limiting configuration
-interface RateLimitConfig {
-  maxRequestsPerMinute: number;
-  maxConcurrentRequests: number;
-  requestCooldownMs: number;
+// Simple configuration for MCP usage (human-paced requests)
+interface LLMClientConfig {
+  timeoutMs?: number;        // Request timeout (default: 15 seconds)
+  cacheTimeoutMs?: number;   // Cache TTL (default: 5 minutes)
 }
 
-const DEFAULT_RATE_LIMIT: RateLimitConfig = {
-  maxRequestsPerMinute: 20,
-  maxConcurrentRequests: 3,
-  requestCooldownMs: 1000
+const DEFAULT_CONFIG: Required<LLMClientConfig> = {
+  timeoutMs: 15000,      // 15 seconds - generous for MCP usage
+  cacheTimeoutMs: 300000 // 5 minutes - useful for repeated requests
 };
-
-// Simple rate limiter class
-class RateLimiter {
-  private requests: number[] = [];
-  private activeRequests = 0;
-  private lastRequestTime = 0;
-  
-  constructor(private config: RateLimitConfig) {}
-  
-  async waitForSlot(): Promise<void> {
-    // Check concurrent requests
-    if (this.activeRequests >= this.config.maxConcurrentRequests) {
-      await this.waitForActiveRequestSlot();
-    }
-    
-    // Check rate per minute
-    const now = Date.now();
-    this.requests = this.requests.filter(time => now - time < 60000);
-    
-    if (this.requests.length >= this.config.maxRequestsPerMinute) {
-      const oldestRequest = Math.min(...this.requests);
-      const waitTime = 60000 - (now - oldestRequest);
-      await this.sleep(waitTime);
-    }
-    
-    // Check cooldown
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    if (timeSinceLastRequest < this.config.requestCooldownMs) {
-      await this.sleep(this.config.requestCooldownMs - timeSinceLastRequest);
-    }
-    
-    this.requests.push(Date.now());
-    this.lastRequestTime = Date.now();
-    this.activeRequests++;
-  }
-  
-  releaseSlot(): void {
-    this.activeRequests = Math.max(0, this.activeRequests - 1);
-  }
-  
-  private async waitForActiveRequestSlot(): Promise<void> {
-    while (this.activeRequests >= this.config.maxConcurrentRequests) {
-      await this.sleep(100);
-    }
-  }
-  
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-}
 
 export interface LLMResponse {
   content: string;
@@ -84,6 +33,8 @@ export interface LLMConfig {
   model?: string | undefined;
   temperature?: number | undefined;
   maxTokens?: number | undefined;
+  timeoutMs?: number;        // Request timeout
+  cacheTimeoutMs?: number;   // Cache TTL
 }
 
 export class LLMClient {
@@ -93,10 +44,11 @@ export class LLMClient {
   private maxTokens: number;
   private provider: string;
   private baseURL: string;
-  private rateLimiter: RateLimiter;
+  private timeoutMs: number;
+  private cacheTimeoutMs: number;
   private requestCache: Map<string, { response: LLMResponse; timestamp: number }> = new Map();
 
-  constructor(config?: LLMConfig & { rateLimitConfig?: Partial<RateLimitConfig> }) {
+  constructor(config?: LLMConfig) {
     // Environment-based configuration with optional overrides
     this.baseURL = config?.baseURL || process.env.LLM_BASE_URL || 'https://api.openai.com/v1';
     const apiKey = config?.apiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.GITHUB_TOKEN || 'fallback-key';
@@ -105,9 +57,9 @@ export class LLMClient {
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
     this.maxTokens = config?.maxTokens ?? parseInt(process.env.LLM_MAX_TOKENS || '1000');
     
-    // Initialize rate limiter
-    const rateLimitConfig = { ...DEFAULT_RATE_LIMIT, ...config?.rateLimitConfig };
-    this.rateLimiter = new RateLimiter(rateLimitConfig);
+    // Simple timeouts for MCP usage
+    this.timeoutMs = config?.timeoutMs || DEFAULT_CONFIG.timeoutMs;
+    this.cacheTimeoutMs = config?.cacheTimeoutMs || DEFAULT_CONFIG.cacheTimeoutMs;
     
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
@@ -141,18 +93,23 @@ export class LLMClient {
     return headers;
   }
 
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`LLM request timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
+    
+    return Promise.race([promise, timeoutPromise]);
+  }
+
   async generateResponse(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
     const cacheKey = this.getCacheKey(prompt, systemPrompt);
     
-    // Check cache first (5 minute TTL)
+    // Check cache first
     const cached = this.requestCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 300000) {
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeoutMs) {
       console.debug('Using cached LLM response');
       return cached.response;
     }
-    
-    // Wait for rate limit slot
-    await this.rateLimiter.waitForSlot();
     
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
@@ -171,12 +128,16 @@ export class LLMClient {
         content: prompt
       });
 
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages,
-        temperature: this.temperature,
-        max_tokens: this.maxTokens,
-      });
+      // Add timeout to API call for MCP usage
+      const response = await this.withTimeout(
+        this.client.chat.completions.create({
+          model: this.model,
+          messages,
+          temperature: this.temperature,
+          max_tokens: this.maxTokens,
+        }),
+        this.timeoutMs
+      );
 
       const content = response.choices[0]?.message?.content || '';
       
@@ -204,8 +165,6 @@ export class LLMClient {
         model: 'fallback-template',
         provider: 'Fallback System'
       };
-    } finally {
-      this.rateLimiter.releaseSlot();
     }
   }
 

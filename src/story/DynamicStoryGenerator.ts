@@ -36,6 +36,14 @@ export class DynamicStoryGenerator {
     this.currentProject = projectInfo;
   }
 
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
+    
+    return Promise.race([promise, timeoutPromise]);
+  }
+
   async generateStory(theme: string): Promise<Story> {
     // Validate theme
     if (!Object.values(STORY_THEMES).includes(theme as StoryTheme)) {
@@ -53,7 +61,12 @@ export class DynamicStoryGenerator {
     const storyPrompt = enhancedPrompt;
     
     try {
-      const llmResponse = await this.llmClient.generateResponse(storyPrompt);
+      // Add timeout to LLM call to prevent MCP timeouts (15 seconds)
+      const timeoutMs = 15000;
+      const llmResponse = await this.withTimeout(
+        this.llmClient.generateResponse(storyPrompt),
+        timeoutMs
+      );
       return this.parseStoryResponse(llmResponse.content, theme);
     } catch (error) {
       console.warn('Failed to generate dynamic story, using fallback:', error instanceof Error ? error.message : String(error));

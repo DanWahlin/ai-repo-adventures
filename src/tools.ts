@@ -2,12 +2,6 @@ import { z } from 'zod';
 import { optimizedAnalyzer, storyGenerator, adventureManager } from './shared/instances.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { AnalysisError, formatErrorForUser } from './shared/errors.js';
-// import { STORY_THEMES } from './story/DynamicStoryGenerator.js';
-// import type { StoryTheme } from './story/DynamicStoryGenerator.js';
-
-// Tool handler type for better type safety - currently unused but kept for extensibility
-// type ToolHandler<T> = (args: T) => Promise<{ content: Array<{ type: 'text', text: string }> }>;
-
 // Schema types
 type StartAdventureArgs = z.infer<typeof startAdventureSchema>;
 type ChooseThemeArgs = z.infer<typeof chooseThemeSchema>;

@@ -5,7 +5,7 @@
  */
 
 import { runTests as runAdventureAlgorithmTests } from './unit/adventure-algorithms.test.js';
-import { runLLMRateLimitingTests } from './unit/llm-rate-limiting.test.js';
+import { runLLMClientTests } from './unit/llm-client.test.js';
 
 async function runAllUnitTests() {
   console.log('🧪 MCP Repo Adventure - Unit Test Suite');
@@ -16,7 +16,7 @@ async function runAllUnitTests() {
   let totalFailed = 0;
   const testSuites: { name: string; runner: () => Promise<void> }[] = [
     { name: 'Adventure Algorithms', runner: runAdventureAlgorithmTests },
-    { name: 'LLM Rate Limiting', runner: runLLMRateLimitingTests }
+    { name: 'LLM Client', runner: runLLMClientTests }
   ];
 
   for (const suite of testSuites) {

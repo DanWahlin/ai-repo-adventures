@@ -42,6 +42,22 @@ export interface AnalysisConfig {
   cacheTimeout: number;
   allowedExtensions: string[];
   excludePatterns: string[];
+  // Timeout configurations (in milliseconds)
+  timeouts: {
+    fileRead: number;
+    analysis: number;
+  };
+  // Analysis limits
+  limits: {
+    maxFileSizeMB: number;
+    keySourceFiles: number;
+    topFunctions: number;
+    topClasses: number;
+    topDependencies: number;
+    summaryLines: number;
+    fileReadLines: number;
+    lineCharacters: number;
+  };
 }
 
 // Default configuration constants
@@ -51,7 +67,21 @@ export const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
   contentTruncation: 1000,
   cacheTimeout: 300000, // 5 minutes
   allowedExtensions: ['.ts', '.js', '.tsx', '.jsx', '.mjs', '.py', '.pyi', '.java', '.cs'],
-  excludePatterns: ['node_modules', '.git', 'dist', 'build', '__pycache__', '.pytest_cache']
+  excludePatterns: ['node_modules', '.git', 'dist', 'build', '__pycache__', '.pytest_cache'],
+  timeouts: {
+    fileRead: 10000,        // 10 seconds for file reading
+    analysis: 30000         // 30 seconds for analysis operations
+  },
+  limits: {
+    maxFileSizeMB: 10,
+    keySourceFiles: 10,
+    topFunctions: 20,
+    topClasses: 5,
+    topDependencies: 20,
+    summaryLines: 10,
+    fileReadLines: 2000,
+    lineCharacters: 2000
+  }
 };
 
 // Cache interface

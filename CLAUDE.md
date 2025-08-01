@@ -74,6 +74,26 @@ The `ProjectAnalyzer` uses a mapping system where each technology has file/direc
 
 This drives character generation where each detected technology gets a themed character representation.
 
+### Configuration System
+
+The system uses a comprehensive configuration system for analysis timeouts and limits:
+
+**Configurable Timeouts** (in milliseconds):
+- `timeouts.fileRead`: Time limit for reading individual files (default: 10000ms) 
+- `timeouts.analysis`: Time limit for analysis operations (default: 30000ms)
+
+**Configurable Limits**:
+- `limits.maxFileSizeMB`: Maximum file size to analyze (default: 10MB)
+- `limits.keySourceFiles`: Number of key source files to analyze (default: 10)
+- `limits.topFunctions`: Number of top functions to include in summaries (default: 20)
+- `limits.topClasses`: Number of top classes to include (default: 5)
+- `limits.topDependencies`: Number of dependencies to list (default: 20)
+- `limits.summaryLines`: Lines from README to include (default: 10)
+
+**LLM Client Configuration**:
+- `timeoutMs`: Request timeout for API calls (default: 15000ms)
+- `cacheTimeoutMs`: Response cache TTL (default: 300000ms / 5 minutes)
+
 ### MCP Integration
 
 The server exposes tools that follow the MCP tool pattern:
