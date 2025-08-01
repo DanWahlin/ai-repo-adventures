@@ -4,6 +4,69 @@ import { config } from 'dotenv';
 // Load environment variables
 config();
 
+// Rate limiting configuration
+interface RateLimitConfig {
+  maxRequestsPerMinute: number;
+  maxConcurrentRequests: number;
+  requestCooldownMs: number;
+}
+
+const DEFAULT_RATE_LIMIT: RateLimitConfig = {
+  maxRequestsPerMinute: 20,
+  maxConcurrentRequests: 3,
+  requestCooldownMs: 1000
+};
+
+// Simple rate limiter class
+class RateLimiter {
+  private requests: number[] = [];
+  private activeRequests = 0;
+  private lastRequestTime = 0;
+  
+  constructor(private config: RateLimitConfig) {}
+  
+  async waitForSlot(): Promise<void> {
+    // Check concurrent requests
+    if (this.activeRequests >= this.config.maxConcurrentRequests) {
+      await this.waitForActiveRequestSlot();
+    }
+    
+    // Check rate per minute
+    const now = Date.now();
+    this.requests = this.requests.filter(time => now - time < 60000);
+    
+    if (this.requests.length >= this.config.maxRequestsPerMinute) {
+      const oldestRequest = Math.min(...this.requests);
+      const waitTime = 60000 - (now - oldestRequest);
+      await this.sleep(waitTime);
+    }
+    
+    // Check cooldown
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < this.config.requestCooldownMs) {
+      await this.sleep(this.config.requestCooldownMs - timeSinceLastRequest);
+    }
+    
+    this.requests.push(Date.now());
+    this.lastRequestTime = Date.now();
+    this.activeRequests++;
+  }
+  
+  releaseSlot(): void {
+    this.activeRequests = Math.max(0, this.activeRequests - 1);
+  }
+  
+  private async waitForActiveRequestSlot(): Promise<void> {
+    while (this.activeRequests >= this.config.maxConcurrentRequests) {
+      await this.sleep(100);
+    }
+  }
+  
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
 export interface LLMResponse {
   content: string;
   model: string;
@@ -30,8 +93,10 @@ export class LLMClient {
   private maxTokens: number;
   private provider: string;
   private baseURL: string;
+  private rateLimiter: RateLimiter;
+  private requestCache: Map<string, { response: LLMResponse; timestamp: number }> = new Map();
 
-  constructor(config?: LLMConfig) {
+  constructor(config?: LLMConfig & { rateLimitConfig?: Partial<RateLimitConfig> }) {
     // Environment-based configuration with optional overrides
     this.baseURL = config?.baseURL || process.env.LLM_BASE_URL || 'https://api.openai.com/v1';
     const apiKey = config?.apiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.GITHUB_TOKEN || 'fallback-key';
@@ -39,6 +104,10 @@ export class LLMClient {
     this.model = config?.model || process.env.LLM_MODEL || 'gpt-4o-mini';
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
     this.maxTokens = config?.maxTokens ?? parseInt(process.env.LLM_MAX_TOKENS || '1000');
+    
+    // Initialize rate limiter
+    const rateLimitConfig = { ...DEFAULT_RATE_LIMIT, ...config?.rateLimitConfig };
+    this.rateLimiter = new RateLimiter(rateLimitConfig);
     
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
@@ -73,6 +142,18 @@ export class LLMClient {
   }
 
   async generateResponse(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
+    const cacheKey = this.getCacheKey(prompt, systemPrompt);
+    
+    // Check cache first (5 minute TTL)
+    const cached = this.requestCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 300000) {
+      console.debug('Using cached LLM response');
+      return cached.response;
+    }
+    
+    // Wait for rate limit slot
+    await this.rateLimiter.waitForSlot();
+    
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
       
@@ -99,7 +180,7 @@ export class LLMClient {
 
       const content = response.choices[0]?.message?.content || '';
       
-      return {
+      const llmResponse: LLMResponse = {
         content,
         model: this.model,
         provider: this.provider,
@@ -109,6 +190,11 @@ export class LLMClient {
           totalTokens: response.usage.total_tokens,
         } : undefined
       };
+      
+      // Cache the response
+      this.requestCache.set(cacheKey, { response: llmResponse, timestamp: Date.now() });
+      
+      return llmResponse;
     } catch (error) {
       console.warn(`LLM API call failed (${this.provider}), using fallback:`, error instanceof Error ? error.message : String(error));
       
@@ -118,6 +204,8 @@ export class LLMClient {
         model: 'fallback-template',
         provider: 'Fallback System'
       };
+    } finally {
+      this.rateLimiter.releaseSlot();
     }
   }
 
@@ -176,12 +264,29 @@ This project contains fascinating technologies that we'll explore through an eng
     return !!(process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.GITHUB_TOKEN);
   }
 
+  private getCacheKey(prompt: string, systemPrompt?: string): string {
+    const combined = `${systemPrompt || ''}|${prompt}`;
+    // Simple hash for cache key
+    let hash = 0;
+    for (let i = 0; i < combined.length; i++) {
+      const char = combined.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+  }
+  
+  clearCache(): void {
+    this.requestCache.clear();
+  }
+  
   getConfiguration(): { 
     provider: string; 
     model: string; 
     baseURL: string; 
     temperature: number; 
-    maxTokens: number; 
+    maxTokens: number;
+    cacheSize: number;
   } {
     return {
       provider: this.provider,
@@ -189,6 +294,7 @@ This project contains fascinating technologies that we'll explore through an eng
       baseURL: this.baseURL,
       temperature: this.temperature,
       maxTokens: this.maxTokens,
+      cacheSize: this.requestCache.size
     };
   }
 

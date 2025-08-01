@@ -2,14 +2,40 @@ import { z } from 'zod';
 import { optimizedAnalyzer, storyGenerator, adventureManager } from './shared/instances.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { AnalysisError, formatErrorForUser } from './shared/errors.js';
+// import { STORY_THEMES } from './story/DynamicStoryGenerator.js';
+// import type { StoryTheme } from './story/DynamicStoryGenerator.js';
+
+// Tool handler type for better type safety - currently unused but kept for extensibility
+// type ToolHandler<T> = (args: T) => Promise<{ content: Array<{ type: 'text', text: string }> }>;
+
+// Schema types
+type StartAdventureArgs = z.infer<typeof startAdventureSchema>;
+type ChooseThemeArgs = z.infer<typeof chooseThemeSchema>;
+type ExplorePathArgs = z.infer<typeof explorePathSchema>;
+type MeetCharacterArgs = z.infer<typeof meetCharacterSchema>;
+
+// Schemas
+const startAdventureSchema = z.object({
+  projectPath: z.string().optional().describe('Path to the project directory (defaults to current directory)')
+});
+
+const chooseThemeSchema = z.object({
+  theme: z.enum(['space', 'medieval', 'ancient'] as const).describe('The story theme to use for your adventure')
+});
+
+const explorePathSchema = z.object({
+  choice: z.string().describe('The exploration choice you want to make')
+});
+
+const meetCharacterSchema = z.object({
+  characterName: z.string().describe('Name of the character you want to meet')
+});
 
 // Start Adventure Tool
 export const start_adventure = {
   description: 'Begin your code repository adventure! Analyzes the project and presents theme options to the user.',
-  schema: z.object({
-    projectPath: z.string().optional().describe('Path to the project directory (defaults to current directory)')
-  }),
-  handler: async (args: any) => {
+  schema: startAdventureSchema,
+  handler: async (args: StartAdventureArgs) => {
     const projectPath = args.projectPath || process.cwd();
     
     try {
@@ -33,9 +59,15 @@ export const start_adventure = {
             text: `
 🌟 **Welcome to Repo Adventures!** 🌟
 
-You've discovered a mysterious codebase and want to unlock it's secrets! This ${projectInfo.type} project uses fascinating technologies like ${projectInfo.mainTechnologies.join(', ')} that you can explore.
+You've discovered a mysterious codebase containing ${projectInfo.fileCount} files of ancient digital wisdom! This ${projectInfo.type} project harnesses the power of ${projectInfo.mainTechnologies.slice(0, 3).join(', ')} and ${projectInfo.mainTechnologies.length > 3 ? `${projectInfo.mainTechnologies.length - 3} other technologies` : 'more'}.
 
-Your mission, should you choose to accept it, is to explore this digital realm and understand its inner workings through an epic adventure! To get started, choose a theme for your adventure.
+${projectInfo.codeAnalysis.functions.length > 0 ? `📊 **Initial Scan Results:**
+• ${projectInfo.codeAnalysis.functions.length} magical functions discovered
+• ${projectInfo.codeAnalysis.classes.length} powerful entities detected
+• ${projectInfo.codeAnalysis.dependencies.length} allied systems connected
+• Entry point: ${projectInfo.codeAnalysis.entryPoints[0] || 'Unknown'}` : ''}
+
+Your mission: Transform into a digital explorer and uncover the secrets of this codebase through an immersive adventure! Each character you meet represents a real component, and every location mirrors actual project structure.
 
 **Choose Your Story Theme:**
 
@@ -62,10 +94,8 @@ What story theme would you like to explore?`
 // Choose Theme Tool
 export const choose_theme = {
   description: 'Select your adventure theme after starting.',
-  schema: z.object({
-    theme: z.enum(['space', 'medieval', 'ancient']).describe('The story theme to use for your adventure')
-  }),
-  handler: async (args: any) => {
+  schema: chooseThemeSchema,
+  handler: async (args: ChooseThemeArgs) => {
     try {
       // Get the current project info (should be cached from start_adventure)
       const projectPath = process.cwd();
@@ -97,10 +127,8 @@ export const choose_theme = {
 // Explore Path Tool
 export const explore_path = {
   description: 'Choose your adventure path to explore different aspects of the codebase.',
-  schema: z.object({
-    choice: z.string().describe('The exploration choice you want to make')
-  }),
-  handler: async (args: any) => {
+  schema: explorePathSchema,
+  handler: async (args: ExplorePathArgs) => {
     try {
       const result = await adventureManager.makeChoice(args.choice);
       
@@ -126,10 +154,8 @@ export const explore_path = {
 // Meet Character Tool
 export const meet_character = {
   description: 'Interact with a specific character to learn about a technology or component.',
-  schema: z.object({
-    characterName: z.string().describe('Name of the character you want to meet')
-  }),
-  handler: async (args: any) => {
+  schema: meetCharacterSchema,
+  handler: async (args: MeetCharacterArgs) => {
     try {
       const character = await adventureManager.getCharacterInfo(args.characterName);
       

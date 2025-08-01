@@ -5,6 +5,44 @@ import { parse } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/types';
 import { DEFAULT_ANALYSIS_CONFIG, type AnalysisConfig } from '../shared/types.js';
 
+// Better typed interfaces for AST parsing - currently unused but kept for extensibility
+// interface ParsedFunctionNode {
+//   name: string;
+//   params: ParsedParameter[];
+//   isAsync: boolean;
+//   isExported: boolean;
+//   location?: SourceLocation;
+//   returnType?: string;
+// }
+
+// interface ParsedParameter {
+//   name: string;
+//   type?: string;
+//   isOptional: boolean;
+//   isRest: boolean;
+// }
+
+// interface SourceLocation {
+//   line: number;
+//   column: number;
+// }
+
+// Interfaces for future use - currently unused but kept for extensibility
+// interface ParsedClassNode {
+//   name: string;
+//   methods: string[];
+//   properties: string[];
+//   isExported: boolean;
+//   location?: SourceLocation;
+// }
+
+// // Type-safe parser interface
+// interface ASTParser {
+//   language: string;
+//   parse(content: string): Promise<ParsedFunctionNode[]>;
+//   cleanup(): Promise<void>;
+// }
+
 export interface FunctionInfo {
   name: string;
   summary: string;
@@ -89,25 +127,51 @@ const ANALYSIS_LIMITS = {
   TOP_DEPENDENCIES_LIMIT: 20,
   SUMMARY_LINES_LIMIT: 10,
   FILE_READ_LINE_LIMIT: 2000,
-  LINE_CHARACTER_LIMIT: 2000
+  LINE_CHARACTER_LIMIT: 2000,
+  MAX_FILE_SIZE_MB: 10,
+  PARSER_CLEANUP_TIMEOUT_MS: 5000
 } as const;
 
 export class ProjectAnalyzer {
   // Type guards for ESTree nodes
   private isIdentifier(node: unknown): node is TSESTree.Identifier {
-    return !!node && typeof node === 'object' && (node as any).type === 'Identifier';
+    return !!node && 
+           typeof node === 'object' && 
+           node !== null &&
+           'type' in node &&
+           (node as TSESTree.Node).type === 'Identifier';
   }
+  
   private isProperty(node: unknown): node is TSESTree.Property {
-    return !!node && typeof node === 'object' && (node as any).type === 'Property';
+    return !!node && 
+           typeof node === 'object' && 
+           node !== null &&
+           'type' in node &&
+           (node as TSESTree.Node).type === 'Property';
   }
+  
   private isMethodDefinition(node: unknown): node is TSESTree.MethodDefinition {
-    return !!node && typeof node === 'object' && (node as any).type === 'MethodDefinition';
+    return !!node && 
+           typeof node === 'object' && 
+           node !== null &&
+           'type' in node &&
+           (node as TSESTree.Node).type === 'MethodDefinition';
   }
+  
   private isAssignmentPattern(node: unknown): node is TSESTree.AssignmentPattern {
-    return !!node && typeof node === 'object' && (node as any).type === 'AssignmentPattern';
+    return !!node && 
+           typeof node === 'object' && 
+           node !== null &&
+           'type' in node &&
+           (node as TSESTree.Node).type === 'AssignmentPattern';
   }
+  
   private isRestElement(node: unknown): node is TSESTree.RestElement {
-    return !!node && typeof node === 'object' && (node as any).type === 'RestElement';
+    return !!node && 
+           typeof node === 'object' && 
+           node !== null &&
+           'type' in node &&
+           (node as TSESTree.Node).type === 'RestElement';
   }
   private config: AnalysisConfig;
   private treeSitterParsers: Map<string, any> = new Map();
@@ -117,20 +181,63 @@ export class ProjectAnalyzer {
   }
 
   /**
-   * Clean up tree-sitter parser resources
+   * Clean up tree-sitter parser resources with timeout handling
    */
-  public cleanup(): void {
+  public async cleanup(): Promise<void> {
+    const cleanupPromises: Promise<void>[] = [];
+    
     // Clean up tree-sitter parsers when they exist
     for (const [language, parser] of this.treeSitterParsers.entries()) {
-      try {
-        if (parser && typeof parser.delete === 'function') {
-          parser.delete();
-        }
-      } catch (error) {
-        console.warn(`Failed to cleanup tree-sitter parser for ${language}:`, error);
-      }
+      const cleanupPromise = this.cleanupParser(language, parser);
+      cleanupPromises.push(cleanupPromise);
     }
+    
+    // Wait for all cleanup operations with timeout
+    try {
+      await Promise.allSettled(cleanupPromises.map(p => 
+        this.withTimeout(p, ANALYSIS_LIMITS.PARSER_CLEANUP_TIMEOUT_MS)
+      ));
+    } catch (error) {
+      console.warn('Some parser cleanup operations timed out:', error);
+    }
+    
     this.treeSitterParsers.clear();
+  }
+  
+  private async cleanupParser(language: string, parser: any): Promise<void> {
+    try {
+      if (parser && typeof parser.delete === 'function') {
+        // Wrap in promise to handle both sync and async cleanup
+        await new Promise<void>((resolve, reject) => {
+          try {
+            const result = parser.delete();
+            if (result && typeof result.then === 'function') {
+              result.then(resolve).catch(reject);
+            } else {
+              resolve();
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }
+      
+      // Additional cleanup for parser resources
+      if (parser && typeof parser.close === 'function') {
+        await parser.close();
+      }
+    } catch (error) {
+      console.warn(`Failed to cleanup tree-sitter parser for ${language}:`, error instanceof Error ? error.message : String(error));
+    }
+  }
+  
+  private withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) => 
+        setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+      )
+    ]);
   }
 
   private readonly LANGUAGE_EXTENSIONS = {
@@ -182,10 +289,50 @@ export class ProjectAnalyzer {
       throw new Error('Invalid project path: null byte detected');
     }
     
+    // Check for dangerous patterns
+    const dangerousPatterns = [
+      /\.\./,  // Parent directory traversal
+      /~\//, // Home directory access
+      /\/\./,  // Current directory in path
+      /\s/, // Whitespace that could be used for injection
+      /[<>:"|*?]/ // Windows forbidden characters
+    ];
+    
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(normalizedPath)) {
+        throw new Error(`Invalid project path: contains unsafe pattern`);
+      }
+    }
+    
     // Ensure the path is within reasonable bounds (not root or system directories)
     const rootPath = path.parse(normalizedPath).root;
     if (normalizedPath === rootPath) {
       throw new Error('Invalid project path: root directory access denied');
+    }
+    
+    // Check for system directories (Unix-like systems)
+    const systemDirs = ['/bin', '/sbin', '/usr/bin', '/usr/sbin', '/etc', '/var', '/tmp', '/sys', '/proc'];
+    const isSystemDir = systemDirs.some(sysDir => 
+      normalizedPath === sysDir || normalizedPath.startsWith(sysDir + '/'));
+    
+    if (isSystemDir) {
+      throw new Error('Invalid project path: system directory access denied');
+    }
+    
+    // Check for Windows system directories
+    if (process.platform === 'win32') {
+      const windowsSystemDirs = ['C:\\Windows', 'C:\\Program Files', 'C:\\System32'];
+      const isWindowsSystemDir = windowsSystemDirs.some(sysDir => 
+        normalizedPath.toLowerCase().startsWith(sysDir.toLowerCase()));
+      
+      if (isWindowsSystemDir) {
+        throw new Error('Invalid project path: Windows system directory access denied');
+      }
+    }
+    
+    // Additional check: ensure path length is reasonable
+    if (normalizedPath.length > 4096) {
+      throw new Error('Invalid project path: path too long (max 4096 characters)');
     }
     
     return normalizedPath;
@@ -486,6 +633,15 @@ export class ProjectAnalyzer {
     for (const filePath of keySourceFiles) {
       const fullPath = path.join(projectPath, filePath);
       try {
+        // Check file size before reading
+        const stats = await fs.stat(fullPath);
+        const fileSizeMB = stats.size / (1024 * 1024);
+        
+        if (fileSizeMB > ANALYSIS_LIMITS.MAX_FILE_SIZE_MB) {
+          console.warn(`Skipping large file ${filePath} (${fileSizeMB.toFixed(2)}MB > ${ANALYSIS_LIMITS.MAX_FILE_SIZE_MB}MB)`);
+          continue;
+        }
+        
         const content = await fs.readFile(fullPath, 'utf-8');
         const language = this.getLanguageFromExtension(filePath);
         if (language === 'typescript' || language === 'javascript') {

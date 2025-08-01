@@ -268,11 +268,19 @@ ${colors.yellow}Exploration:${colors.reset}
   • "Go to [location]" - Navigate to a location
   • Just type the choice text shown in the story
 
+${colors.yellow}New Features:${colors.reset}
+  • "Review my discoveries" - See your progress and discoveries
+  • "Request a hint" - Get helpful guidance
+  • "Explore the Configuration Cavern" - Visit configuration files
+  • "Enter the Testing Grounds" - Explore test files
+  • "Investigate the API Gateway" - Check API routes
+
 ${colors.yellow}Commands:${colors.reset}
   • ${colors.cyan}/help${colors.reset} - Show this help
   • ${colors.cyan}/tools${colors.reset} - List available MCP tools
   • ${colors.cyan}/clear${colors.reset} - Clear the screen
   • ${colors.cyan}/project [path]${colors.reset} - Change project directory
+  • ${colors.cyan}/progress${colors.reset} - Quick progress check
   • ${colors.cyan}/exit${colors.reset} or ${colors.cyan}/quit${colors.reset} - Exit the client
 `);
   }
@@ -284,6 +292,14 @@ ${colors.bgBlue}${colors.white}${colors.bright} 🚀 MCP Repo Adventure - Intera
 ${colors.dim}────────────────────────────────────────────────${colors.reset}
 
 Welcome! This is an interactive client for testing the MCP Repo Adventure server.
+
+${colors.yellow}✨ NEW FEATURES:${colors.reset}
+• Dynamic choices based on exploration
+• Progress tracking and discoveries journal
+• Hint system for guidance
+• Code snippets when meeting characters
+• New areas: Testing Grounds, API Gateway, Configuration Cavern
+
 Type ${colors.cyan}/help${colors.reset} for available commands, or just start chatting!
 `);
 
@@ -315,6 +331,11 @@ Type ${colors.cyan}/help${colors.reset} for available commands, or just start ch
             const newPath = trimmed.substring(8).trim() || process.cwd();
             this.currentProject = newPath;
             console.log(`${colors.green}✓ Project directory set to: ${newPath}${colors.reset}\n`);
+          } else if (command === '/progress') {
+            // Quick progress check
+            const response = await this.callTool('explore_path', { choice: 'Review your discoveries' });
+            console.log(this.formatText(response));
+            console.log('\n' + colors.dim + '─'.repeat(60) + colors.reset + '\n');
           } else if (command === '/exit' || command === '/quit') {
             await this.cleanup();
             return;

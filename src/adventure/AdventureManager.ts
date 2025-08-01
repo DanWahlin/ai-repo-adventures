@@ -21,6 +21,8 @@ export interface AdventureState {
   exploredAreas: Set<string>;
   currentLocation: string;
   adventureProgress: number;
+  discoveries: string[];
+  hintsRevealed: number;
 }
 
 interface AdventureContext {
@@ -34,7 +36,9 @@ export class AdventureManager {
     visitedCharacters: new Set(),
     exploredAreas: new Set(),
     currentLocation: 'entrance',
-    adventureProgress: 0
+    adventureProgress: 0,
+    discoveries: [],
+    hintsRevealed: 0
   };
 
   private context: AdventureContext = {
@@ -47,6 +51,8 @@ export class AdventureManager {
     this.state.exploredAreas.clear();
     this.state.currentLocation = 'entrance';
     this.state.adventureProgress = 0;
+    this.state.discoveries = [];
+    this.state.hintsRevealed = 0;
   }
 
   setContext(projectInfo: ProjectInfo, theme: string) {
@@ -70,6 +76,14 @@ export class AdventureManager {
       return this.exploreDependencies();
     } else if (lowerChoice.includes('character gallery')) {
       return this.exploreCharacters();
+    } else if (lowerChoice.includes('testing grounds')) {
+      return this.exploreTestingGrounds();
+    } else if (lowerChoice.includes('api gateway')) {
+      return this.exploreAPIGateway();
+    } else if (lowerChoice.includes('hint')) {
+      return this.provideHint();
+    } else if (lowerChoice.includes('discoveries')) {
+      return this.showDiscoveries();
     }
 
     // Fall back to basic choice parsing (original functionality)
@@ -145,13 +159,12 @@ The ancient wisdom emanates from these sacred artifacts.`
 
     this.context.visitedLocations.add('configuration');
     
+    this.state.exploredAreas.add('configuration');
+    this.state.adventureProgress += 15;
+    
     return {
       narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: [
-        'Examine the primary configuration',
-        'Investigate dependency management',
-        'Return to the main quest'
-      ]
+      choices: this.generateDynamicChoices()
     };
   }
 
@@ -186,13 +199,12 @@ You discover the civilization's nerve center. The primary control (**${entryPoin
 This advanced society mastered ${this.context.projectInfo.mainTechnologies.join(', ')} long ago.`
     };
 
+    this.state.exploredAreas.add('main');
+    this.state.adventureProgress += 20;
+    
     return {
       narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: [
-        'Examine the entry point',
-        'Explore the function network',
-        'Investigate the data flow'
-      ]
+      choices: this.generateDynamicChoices()
     };
   }
 
@@ -233,13 +245,12 @@ ${dependencies.slice(0, 8).map(dep => `• **${dep.name}** - ${dep.type} knowled
 These connections enabled their advanced society.`
     };
 
+    this.state.exploredAreas.add('dependencies');
+    this.state.adventureProgress += 15;
+    
     return {
       narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: [
-        'Examine critical dependencies',
-        'Investigate version compatibility',
-        'Return to exploration'
-      ]
+      choices: this.generateDynamicChoices()
     };
   }
 
@@ -280,9 +291,12 @@ ${characters.slice(0, 6).map(char => `• **${char.name}** - ${char.role}`).join
 Each member contributed their unique knowledge to the civilization.`
     };
 
+    this.state.exploredAreas.add('characters');
+    this.state.adventureProgress += 10;
+    
     return {
       narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: characters.slice(0, 3).map(char => `Meet ${char.name}`)
+      choices: this.generateDynamicChoices()
     };
   }
 
@@ -311,10 +325,25 @@ Each member contributed their unique knowledge to the civilization.`
   private async handleMeetCharacter(characterName: string): Promise<AdventureResult> {
     try {
       const character = await this.getCharacterInfo(characterName);
+      
+      // Add code discovery based on character's technology
+      let codeInsight = '';
+      if (this.context.projectInfo && character.technology) {
+        const relevantFunction = this.context.projectInfo.codeAnalysis.functions.find(f => 
+          f.summary.toLowerCase().includes(character.technology.toLowerCase()) ||
+          f.fileName.toLowerCase().includes(character.technology.toLowerCase())
+        );
+        
+        if (relevantFunction) {
+          codeInsight = `\n\n📜 **Code Discovery**: ${character.name} shows you the \`${relevantFunction.name}\` function:\n\`\`\`\n${relevantFunction.name}(${relevantFunction.parameters.join(', ')})\n// ${relevantFunction.summary}\n// Located in: ${relevantFunction.fileName}\n\`\`\``;
+          this.state.discoveries.push(`Function: ${relevantFunction.name} - ${relevantFunction.summary}`);
+        }
+      }
+      
       return {
-        narrative: `You meet **${character.name}**. ${character.description}`,
+        narrative: `You meet **${character.name}**. ${character.description}${codeInsight}`,
         characterMet: character,
-        choices: ['Continue conversation', 'Ask about their work', 'Leave']
+        choices: ['Ask about their specific expertise', 'Learn about their connections', 'Continue exploring']
       };
     } catch (error) {
       return {
@@ -348,6 +377,201 @@ Each member contributed their unique knowledge to the civilization.`
       narrative: `You decide to ${choice}. The adventure continues with new possibilities ahead.`,
       choices: ['Keep exploring', 'Try a different approach', 'Seek guidance']
     };
+  }
+
+  private async exploreTestingGrounds(): Promise<AdventureResult> {
+    if (!this.context.projectInfo) {
+      return {
+        narrative: "You need to analyze a project first!",
+        choices: []
+      };
+    }
+
+    const theme = this.context.currentTheme || 'space';
+    const testFiles = this.context.projectInfo.structure.sourceFiles.filter(f => 
+      f.includes('test') || f.includes('spec')
+    );
+    
+    const narratives = {
+      space: `🚀 **The Testing Bay**
+
+You enter the ship's testing facility where quality assurance protocols ensure safe space travel. ${testFiles.length} testing modules are active:
+
+${testFiles.slice(0, 5).map(file => `• **${file}** - Automated safety check`).join('\n')}
+
+The testing systems validate every component before deployment.`,
+
+      medieval: `🏰 **The Proving Grounds**
+
+You discover the training grounds where brave knights test their skills. ${testFiles.length} trials await:
+
+${testFiles.slice(0, 5).map(file => `• **${file}** - Combat trial`).join('\n')}
+
+Here, all magical artifacts are tested before use in the kingdom.`,
+
+      ancient: `🏺 **The Trial Chambers**
+
+You find the ancient testing chambers where artifacts were proven worthy. ${testFiles.length} trials remain:
+
+${testFiles.slice(0, 5).map(file => `• **${file}** - Sacred trial`).join('\n')}
+
+Only the most reliable artifacts passed these rigorous tests.`
+    };
+
+    this.state.exploredAreas.add('tests');
+    this.state.adventureProgress += 15;
+    this.state.discoveries.push('Testing Framework: Ensuring code quality through automated tests');
+    
+    return {
+      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
+      choices: this.generateDynamicChoices()
+    };
+  }
+
+  private async exploreAPIGateway(): Promise<AdventureResult> {
+    if (!this.context.projectInfo) {
+      return {
+        narrative: "You need to analyze a project first!",
+        choices: []
+      };
+    }
+
+    const theme = this.context.currentTheme || 'space';
+    const apiFiles = this.context.projectInfo.structure.sourceFiles.filter(f => 
+      f.includes('api') || f.includes('route') || f.includes('controller')
+    );
+    
+    const narratives = {
+      space: `🚀 **The Communication Array**
+
+You approach the ship's massive communication array. Here, ${apiFiles.length} channels connect your vessel to the galaxy:
+
+${apiFiles.slice(0, 5).map(file => `• **${file}** - Subspace frequency`).join('\n')}
+
+Data flows in and out through these carefully managed channels.`,
+
+      medieval: `🏰 **The Royal Messenger Tower**
+
+You climb the messenger tower where royal decrees are sent across the realm. ${apiFiles.length} message routes are maintained:
+
+${apiFiles.slice(0, 5).map(file => `• **${file}** - Messenger route`).join('\n')}
+
+Each route ensures secure communication throughout the kingdom.`,
+
+      ancient: `🏺 **The Signal Fires**
+
+You discover the ancient communication network of signal fires. ${apiFiles.length} beacon points remain:
+
+${apiFiles.slice(0, 5).map(file => `• **${file}** - Sacred beacon`).join('\n')}
+
+These beacons once connected the entire civilization.`
+    };
+
+    this.state.exploredAreas.add('api');
+    this.state.adventureProgress += 20;
+    this.state.discoveries.push('API Architecture: Communication pathways that connect different parts of the system');
+    
+    return {
+      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
+      choices: this.generateDynamicChoices()
+    };
+  }
+
+  private async provideHint(): Promise<AdventureResult> {
+    const hints = [
+      "💡 **Hint**: Try exploring areas related to the main technologies in this project. Each technology has its own guardian character!",
+      "💡 **Hint**: Configuration files often hold the secrets to how a project is structured. Have you visited the Configuration Cavern?",
+      "💡 **Hint**: Dependencies are like allies - they provide special powers to your project. The Dependency Nexus reveals these relationships.",
+      "💡 **Hint**: The entry point file is where every adventure begins. Following the code flow from there reveals the project's true nature."
+    ];
+
+    const hint = hints[this.state.hintsRevealed % hints.length];
+    this.state.hintsRevealed++;
+    
+    return {
+      narrative: hint + "\n\nThis insight might help guide your next steps!",
+      choices: this.generateDynamicChoices()
+    };
+  }
+
+  private async showDiscoveries(): Promise<AdventureResult> {
+    if (this.state.discoveries.length === 0) {
+      return {
+        narrative: "📜 **Your Adventure Journal**\n\nYou haven't made any discoveries yet. Keep exploring to uncover the secrets of this codebase!",
+        choices: this.generateDynamicChoices()
+      };
+    }
+
+    const progress = Math.min(100, this.state.adventureProgress);
+    const narrative = `📜 **Your Adventure Journal**
+
+**Progress**: ${progress}% complete
+**Areas Explored**: ${this.state.exploredAreas.size}
+**Characters Met**: ${this.state.visitedCharacters.size}
+
+**Discoveries**:
+${this.state.discoveries.map((d, i) => `${i + 1}. ${d}`).join('\n')}
+
+${progress >= 80 ? '\n🎉 You\'re close to mastering this codebase!' : '\nKeep exploring to uncover more secrets!'}`;
+
+    return {
+      narrative,
+      choices: this.generateDynamicChoices()
+    };
+  }
+
+  // Generate dynamic choices based on exploration state
+  private generateDynamicChoices(): string[] {
+    const choices: string[] = [];
+    
+    if (!this.state.currentStory || !this.context.projectInfo) {
+      return ['Begin your adventure'];
+    }
+
+    // Add character-based choices for unmet characters
+    const unmetCharacters = this.state.currentStory.characters.filter(
+      char => !this.state.visitedCharacters.has(char.name)
+    );
+    if (unmetCharacters.length > 0 && choices.length < 3) {
+      const char = unmetCharacters[0];
+      if (char) {
+        choices.push(`Meet ${char.name} (${char.technology || 'General'} expert)`);
+      }
+    }
+
+    // Add exploration choices based on project structure
+    if (!this.state.exploredAreas.has('configuration') && this.context.projectInfo.structure.configFiles.length > 0) {
+      choices.push('Explore the Configuration Cavern');
+    }
+    
+    if (!this.state.exploredAreas.has('dependencies') && this.context.projectInfo.codeAnalysis.dependencies.length > 0) {
+      choices.push('Visit the Dependency Nexus');
+    }
+
+    if (!this.state.exploredAreas.has('tests') && this.context.projectInfo.hasTests) {
+      choices.push('Enter the Testing Grounds');
+    }
+
+    if (!this.state.exploredAreas.has('api') && this.context.projectInfo.hasApi) {
+      choices.push('Investigate the API Gateway');
+    }
+
+    // Add progress-based choices
+    if (this.state.adventureProgress > 50 && !this.state.exploredAreas.has('core')) {
+      choices.push('Unlock the Core Secrets');
+    }
+
+    // Add hint option if stuck
+    if (this.state.hintsRevealed < 3 && choices.length < 2) {
+      choices.push('Request a helpful hint');
+    }
+
+    // Always have a fallback
+    if (choices.length === 0) {
+      choices.push('Continue exploring', 'Return to the main path', 'Review your discoveries');
+    }
+
+    return choices.slice(0, 4); // Limit to 4 choices for better UX
   }
 
   // Helper methods

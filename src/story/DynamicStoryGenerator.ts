@@ -49,18 +49,40 @@ export class DynamicStoryGenerator {
     }
 
     const projectAnalysis = this.createProjectAnalysis();
-    const storyPrompt = `Theme: ${theme}\n\n${projectAnalysis}`;
+    const enhancedPrompt = this.createEnhancedStoryPrompt(theme, projectAnalysis);
+    const storyPrompt = enhancedPrompt;
     
     try {
       const llmResponse = await this.llmClient.generateResponse(storyPrompt);
       return this.parseStoryResponse(llmResponse.content, theme);
     } catch (error) {
       console.warn('Failed to generate dynamic story, using fallback:', error instanceof Error ? error.message : String(error));
-      return this.generateFallbackStory(theme);
+      
+      // Log additional context for debugging
+      if (error instanceof Error && error.stack) {
+        console.debug('Story generation error stack:', error.stack);
+      }
+      
+      // Ensure fallback always works
+      try {
+        return this.generateFallbackStory(theme);
+      } catch (fallbackError) {
+        console.error('Fallback story generation also failed:', fallbackError);
+        // Last resort: minimal story
+        return {
+          theme,
+          title: `${theme} Code Adventure`,
+          introduction: `Welcome to your ${theme} adventure! Let's explore this codebase together.`,
+          setting: `A ${theme}-themed exploration`,
+          characters: [],
+          initialChoices: ['Begin exploring', 'Learn about the project']
+        };
+      }
     }
   }
 
   private createProjectAnalysis(): string {
+    // Add code snippets for richer LLM context
     if (!this.currentProject) return '';
 
     const analysis = this.currentProject.codeAnalysis;
@@ -147,6 +169,40 @@ export class DynamicStoryGenerator {
     ].filter(Boolean).join('\n');
   }
 
+  private createEnhancedStoryPrompt(theme: string, projectAnalysis: string): string {
+    const keyFunctions = this.currentProject?.codeAnalysis.functions.slice(0, 3) || [];
+    const functionExamples = keyFunctions.map(f => 
+      `- ${f.name}(${f.parameters.join(', ')}) - ${f.summary}`
+    ).join('\n');
+
+    return `Theme: ${theme}
+
+${projectAnalysis}
+
+IMPORTANT STORY REQUIREMENTS:
+
+1. Create vivid character personalities that represent these actual functions:
+${functionExamples}
+
+2. Use these specific project details in your narrative:
+   - The main entry point is: ${this.currentProject?.codeAnalysis.entryPoints[0] || 'src/index'}
+   - Key technologies to personify: ${this.currentProject?.mainTechnologies.slice(0, 3).join(', ')}
+   - Project type: ${this.currentProject?.type}
+
+3. Structure your response with:
+   - A compelling title that references the project type
+   - An introduction that sets up the ${theme} world while hinting at the actual project structure
+   - Characters that embody specific technologies or components found in the analysis
+   - Initial adventure choices that map to real areas of the codebase
+
+4. Make the story educational by:
+   - Using analogies that explain what each component does
+   - Creating character interactions that mirror actual code relationships
+   - Designing locations that represent real project directories
+
+Remember: The goal is to make learning about this codebase fun and memorable through creative storytelling!`;
+  }
+
   private parseStoryResponse(content: string, theme: string): Story {
     try {
       const parsedData = this.extractStoryData(content);
@@ -223,7 +279,7 @@ export class DynamicStoryGenerator {
   }
 
   private isSectionHeader(line: string): boolean {
-    return line.includes(':') && (line.startsWith('**') || line.toLowerCase().match(/^(title|introduction|characters|choices):/));
+    return line.includes(':') && (line.startsWith('**') || !!line.toLowerCase().match(/^(title|introduction|characters|choices):/));
   }
 
   private isListItem(line: string): boolean {

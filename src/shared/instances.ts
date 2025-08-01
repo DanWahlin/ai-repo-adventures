@@ -42,14 +42,31 @@ class OptimizedAnalyzer {
   // Pre-trigger analysis without waiting
   preAnalyze(projectPath: string): void {
     if (!this.cache.has(projectPath) && !this.activeAnalysis.has(projectPath)) {
-      this.analyzeProject(projectPath).catch(console.error);
+      this.analyzeProject(projectPath).catch(error => {
+        console.error(`Pre-analysis failed for ${projectPath}:`, error instanceof Error ? error.message : String(error));
+        // Clear from active analysis on error to allow retry
+        this.activeAnalysis.delete(projectPath);
+        // Could implement exponential backoff retry here if needed
+      });
     }
   }
 
   // Cleanup resources
-  cleanup(): void {
-    this.cache.cleanup();
-    this.analyzer.cleanup();
+  async cleanup(): Promise<void> {
+    try {
+      this.cache.cleanup();
+      await this.analyzer.cleanup();
+      
+      // Cancel any active analysis operations
+      for (const [projectPath, analysisPromise] of this.activeAnalysis.entries()) {
+        console.warn(`Canceling active analysis for ${projectPath} during cleanup`);
+        // Mark as cancelled but don't await to avoid hanging
+        analysisPromise.catch(() => {}); // Suppress unhandled rejection
+      }
+      this.activeAnalysis.clear();
+    } catch (error) {
+      console.error('Error during cleanup:', error instanceof Error ? error.message : String(error));
+    }
   }
 }
 

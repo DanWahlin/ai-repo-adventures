@@ -10,6 +10,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { tools } from './tools.js';
 import { convertZodSchema } from './utils/zodToJsonSchema.js';
+import { optimizedAnalyzer } from './shared/instances.js';
 
 class RepoAdventureServer {
   private server: Server;
@@ -64,7 +65,7 @@ class RepoAdventureServer {
         }
 
         // Execute the tool handler with validated arguments
-        return await tool.handler(validationResult.data);
+        return await tool.handler(validationResult.data as any);
 
       } catch (error) {
         if (error instanceof McpError) {
@@ -82,12 +83,40 @@ class RepoAdventureServer {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error('Repo Adventure MCP server running on stdio');
+    
+    // Pre-analyze the current working directory to warm up the cache
+    // This happens in the background while waiting for user commands
+    const projectPath = process.cwd();
+    console.error(`Pre-analyzing project at ${projectPath}...`);
+    optimizedAnalyzer.preAnalyze(projectPath);
   }
 }
 
 async function main() {
   try {
     const server = new RepoAdventureServer();
+    
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.error('\nShutting down MCP server...');
+      try {
+        await optimizedAnalyzer.cleanup();
+      } catch (error) {
+        console.error('Error during shutdown cleanup:', error);
+      }
+      process.exit(0);
+    });
+    
+    process.on('SIGTERM', async () => {
+      console.error('\nShutting down MCP server...');
+      try {
+        await optimizedAnalyzer.cleanup();
+      } catch (error) {
+        console.error('Error during shutdown cleanup:', error);
+      }
+      process.exit(0);
+    });
+    
     await server.run();
   } catch (error) {
     console.error('Fatal error starting MCP server:', error);
