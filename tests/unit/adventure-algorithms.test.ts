@@ -4,13 +4,14 @@
  * Unit tests for core adventure algorithms - Updated for LLM-driven system
  */
 
-import { strict as assert } from 'assert';
 import { AdventureManager } from '../../src/adventure/AdventureManager.js';
 import { DynamicStoryGenerator, STORY_THEMES } from '../../src/story/DynamicStoryGenerator.js';
 import { ProjectAnalyzer } from '../../src/analyzer/ProjectAnalyzer.js';
+import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
 
-// Test data fixtures
+// Using shared mockProjectInfo from test-utils.js
+/* Commented out local definition - using shared version
 const mockProjectInfo: ProjectInfo = {
   type: 'Web Application',
   fileCount: 25,
@@ -73,7 +74,8 @@ const mockProjectInfo: ProjectInfo = {
       }
     ]
   }
-};
+}; 
+*/
 
 // Test helper functions
 async function createTestAdventureManager(): Promise<AdventureManager> {
@@ -89,20 +91,7 @@ async function createTestAdventureManager(): Promise<AdventureManager> {
 
 async function runTests() {
   console.log('🧪 Running Unit Tests for Adventure Algorithms\n');
-  let passed = 0;
-  let failed = 0;
-
-  // Test helper
-  const test = async (name: string, testFn: () => Promise<void> | void) => {
-    try {
-      await testFn();
-      console.log(`✅ ${name}`);
-      passed++;
-    } catch (error) {
-      console.log(`❌ ${name}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-    }
-  };
+  const { test, stats, printResults } = await createTestRunner('Adventure Algorithm Tests');
 
   // Adventure Manager Tests - Updated for new API
   console.log('🎮 Adventure Manager Tests');
@@ -315,18 +304,11 @@ async function runTests() {
     }
   });
 
-  // Results Summary
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 TEST RESULTS SUMMARY');
-  console.log('='.repeat(50));
-  console.log(`✅ Passed: ${passed}`);
-  console.log(`❌ Failed: ${failed}`);
-  console.log(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
+  // Print results using shared utility
+  printResults();
   
-  if (failed === 0) {
-    console.log('\n🎉 All tests passed! Adventure algorithms are working correctly.');
-  } else {
-    console.log(`\n⚠️  ${failed} tests failed. Please review the failures above.`);
+  // Exit with error code if tests failed
+  if (stats.failed > 0) {
     process.exit(1);
   }
 }

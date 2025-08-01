@@ -4,25 +4,12 @@
  * Unit tests for LLM Client functionality (simplified for MCP usage)
  */
 
-import { strict as assert } from 'assert';
 import { LLMClient } from '../../src/llm/LLMClient.js';
+import { createTestRunner, assert } from '../shared/test-utils.js';
 
 async function runLLMClientTests() {
   console.log('🤖 Running LLM Client Tests\n');
-  let passed = 0;
-  let failed = 0;
-
-  // Test helper
-  const test = async (name: string, testFn: () => Promise<void> | void) => {
-    try {
-      await testFn();
-      console.log(`✅ ${name}`);
-      passed++;
-    } catch (error) {
-      console.log(`❌ ${name}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-    }
-  };
+  const { test, stats, printResults } = await createTestRunner('LLM Client Tests');
 
   // Caching Tests
   console.log('\n📦 Caching Tests');
@@ -37,7 +24,7 @@ async function runLLMClientTests() {
     
     assert(response1.content === response2.content, 'Cached responses should be identical');
     assert(response1.model === response2.model, 'Response metadata should match');
-  });
+  }, { skipIfNoLLM: true, timeout: 15000 });
 
 
   await test('Cache can be cleared', async () => {
@@ -51,7 +38,7 @@ async function runLLMClientTests() {
     cache.clear();
     
     assert(cache.size === 0, 'Cache should be empty after clearing');
-  });
+  }, { skipIfNoLLM: true, timeout: 15000 });
 
   // Error Handling Tests
   console.log('\n🚨 Error Handling Tests');
@@ -69,7 +56,7 @@ async function runLLMClientTests() {
     assert(response.content.length > 0, 'Should return fallback content');
     assert(response.provider === 'Fallback System', 'Should indicate fallback was used');
     assert(response.model === 'fallback-template', 'Should use fallback model');
-  });
+  }, { timeout: 10000 });
 
   await test('Client availability check works correctly', () => {
     const client = new LLMClient();
@@ -104,24 +91,13 @@ async function runLLMClientTests() {
     
     // Cache lookup should be very fast (under 50ms) even for fallback responses
     assert(endTime - startTime < 50, `Cache lookup should be very fast, but took ${endTime - startTime}ms`);
-  });
+  }, { timeout: 20000 });
 
 
-  // Results Summary
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 LLM CLIENT TEST RESULTS');
-  console.log('='.repeat(50));
-  console.log(`✅ Passed: ${passed}`);
-  console.log(`❌ Failed: ${failed}`);
-  console.log(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
-  
-  if (failed === 0) {
-    console.log('\n🎉 All LLM client tests passed!');
-  } else {
-    console.log(`\n⚠️  ${failed} tests failed. Please review the failures above.`);
-  }
+  // Print results using shared utility
+  printResults();
 
-  return { passed, failed };
+  return { passed: stats.passed, failed: stats.failed };
 }
 
 // Run tests if called directly

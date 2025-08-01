@@ -212,7 +212,7 @@ export const realProjectInfo: ProjectInfo = {
       { name: 'zod', version: '^3.25.76', type: 'dependency', category: 'validation' }
     ],
     entryPoints: ['src/index.ts'],
-    keyFiles: ['src/index.ts', 'src/adventure/AdventureManager.ts', 'src/llm/LLLClient.ts']
+    keyFiles: ['src/index.ts', 'src/adventure/AdventureManager.ts', 'src/llm/LLMClient.ts']
   }
 };
 
