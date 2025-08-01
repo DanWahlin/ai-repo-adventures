@@ -1,7 +1,9 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { parse } from '@typescript-eslint/typescript-estree';
-// import Parser, { Tree } from 'web-tree-sitter'; // Will be used when WASM files are added
+
+import type { TSESTree } from '@typescript-eslint/types';
+import { DEFAULT_ANALYSIS_CONFIG, type AnalysisConfig } from '../shared/types.js';
 
 export interface FunctionInfo {
   name: string;
@@ -68,6 +70,7 @@ export interface ProjectInfo {
   hasApi: boolean;
   hasFrontend: boolean;
   codeAnalysis: CodeAnalysis;
+  llmContextSummary?: string;
 }
 
 export interface ProjectStructure {
@@ -77,24 +80,65 @@ export interface ProjectStructure {
   sourceFiles: string[];
 }
 
+// Analysis configuration constants
+const ANALYSIS_LIMITS = {
+  MAX_DEPTH: 3,
+  KEY_SOURCE_FILES_LIMIT: 10,
+  TOP_FUNCTIONS_LIMIT: 20,
+  TOP_CLASSES_LIMIT: 5,
+  TOP_DEPENDENCIES_LIMIT: 20,
+  SUMMARY_LINES_LIMIT: 10,
+  FILE_READ_LINE_LIMIT: 2000,
+  LINE_CHARACTER_LIMIT: 2000
+} as const;
+
 export class ProjectAnalyzer {
-  private parsers: Map<string, any> = new Map();
-  private initialized = false;
+  // Type guards for ESTree nodes
+  private isIdentifier(node: unknown): node is TSESTree.Identifier {
+    return !!node && typeof node === 'object' && (node as any).type === 'Identifier';
+  }
+  private isProperty(node: unknown): node is TSESTree.Property {
+    return !!node && typeof node === 'object' && (node as any).type === 'Property';
+  }
+  private isMethodDefinition(node: unknown): node is TSESTree.MethodDefinition {
+    return !!node && typeof node === 'object' && (node as any).type === 'MethodDefinition';
+  }
+  private isAssignmentPattern(node: unknown): node is TSESTree.AssignmentPattern {
+    return !!node && typeof node === 'object' && (node as any).type === 'AssignmentPattern';
+  }
+  private isRestElement(node: unknown): node is TSESTree.RestElement {
+    return !!node && typeof node === 'object' && (node as any).type === 'RestElement';
+  }
+  private config: AnalysisConfig;
+  private treeSitterParsers: Map<string, any> = new Map();
+
+  constructor(config: Partial<AnalysisConfig> = {}) {
+    this.config = { ...DEFAULT_ANALYSIS_CONFIG, ...config };
+  }
+
+  /**
+   * Clean up tree-sitter parser resources
+   */
+  public cleanup(): void {
+    // Clean up tree-sitter parsers when they exist
+    for (const [language, parser] of this.treeSitterParsers.entries()) {
+      try {
+        if (parser && typeof parser.delete === 'function') {
+          parser.delete();
+        }
+      } catch (error) {
+        console.warn(`Failed to cleanup tree-sitter parser for ${language}:`, error);
+      }
+    }
+    this.treeSitterParsers.clear();
+  }
 
   private readonly LANGUAGE_EXTENSIONS = {
     'javascript': ['.js', '.jsx', '.mjs'],
     'typescript': ['.ts', '.tsx'],
     'python': ['.py', '.pyi'],
     'java': ['.java'],
-    'go': ['.go'],
-    'rust': ['.rs'],
-    'c': ['.c', '.h'],
-    'cpp': ['.cpp', '.cc', '.cxx', '.hpp', '.hxx'],
-    'csharp': ['.cs'],
-    'ruby': ['.rb'],
-    'php': ['.php'],
-    'swift': ['.swift'],
-    'kotlin': ['.kt', '.kts']
+    'csharp': ['.cs']
   };
 
   private readonly TECH_INDICATORS = {
@@ -117,17 +161,31 @@ export class ProjectAnalyzer {
   };
 
   private validateProjectPath(projectPath: string): string {
-    // Normalize and resolve the path
-    const normalizedPath = path.normalize(path.resolve(projectPath));
-    
-    // Check for dangerous patterns
-    if (normalizedPath.includes('..') || normalizedPath !== path.resolve(projectPath)) {
-      throw new Error('Invalid project path: path traversal detected');
+    // Input validation
+    if (!projectPath || typeof projectPath !== 'string') {
+      throw new Error('Invalid project path: path must be a non-empty string');
     }
     
-    // Ensure path is absolute
-    if (!path.isAbsolute(normalizedPath)) {
-      throw new Error('Project path must be absolute');
+    // Resolve the path first to handle relative paths and symlinks
+    const resolvedPath = path.resolve(projectPath);
+    
+    // Re-normalize after resolution to catch any remaining traversal attempts
+    const normalizedPath = path.normalize(resolvedPath);
+    
+    // Enhanced security checks
+    if (normalizedPath !== resolvedPath) {
+      throw new Error('Invalid project path: path normalization mismatch detected');
+    }
+    
+    // Check for null bytes (path traversal technique)
+    if (normalizedPath.includes('\0')) {
+      throw new Error('Invalid project path: null byte detected');
+    }
+    
+    // Ensure the path is within reasonable bounds (not root or system directories)
+    const rootPath = path.parse(normalizedPath).root;
+    if (normalizedPath === rootPath) {
+      throw new Error('Invalid project path: root directory access denied');
     }
     
     return normalizedPath;
@@ -146,34 +204,94 @@ export class ProjectAnalyzer {
     try {
       // Validate and sanitize the path
       const validatedPath = this.validateProjectPath(projectPath);
-      
-      // Check if the path exists and is a directory
       if (!(await this.isValidProjectPath(validatedPath))) {
         throw new Error(`Invalid project path: ${projectPath} is not a valid directory`);
       }
-      
       const structure = await this.scanDirectory(validatedPath);
       const technologies = this.identifyTechnologies(structure);
       const projectType = this.determineProjectType(technologies, structure);
       const codeAnalysis = await this.analyzeCode(validatedPath, structure);
-      
+
+      // Extract project summary from README.md and package.json
+      const summaryParts: string[] = [];
+      const readmePath = path.join(validatedPath, 'README.md');
+      let readmeSummary = '';
+      try {
+        readmeSummary = (await fs.readFile(readmePath, 'utf-8')).split('\n').slice(0, ANALYSIS_LIMITS.SUMMARY_LINES_LIMIT).join(' ');
+      } catch {}
+      const packageJsonPath = path.join(validatedPath, 'package.json');
+      let pkgSummary = '';
+      try {
+        const pkg = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+        pkgSummary = pkg.description || '';
+      } catch {}
+      if (readmeSummary) summaryParts.push(`**README.md:** ${readmeSummary}`);
+      if (pkgSummary) summaryParts.push(`**package.json description:** ${pkgSummary}`);
+
+      // Extract environment variable names from .env/.env.example
+      const envVarNames: Set<string> = new Set();
+      const envFiles = ['.env', '.env.example'];
+      for (const envFile of envFiles) {
+        try {
+          const envPath = path.join(validatedPath, envFile);
+          const envContent = await fs.readFile(envPath, 'utf-8');
+          envContent.split('\n').forEach(line => {
+            const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/);
+            if (match && typeof match[1] === 'string') envVarNames.add(match[1]);
+          });
+        } catch {}
+      }
+      if (envVarNames.size > 0) summaryParts.push(`**Environment Variables:** ${Array.from(envVarNames).join(', ')}`);
+
+      // Summarize main modules/classes and responsibilities
+      const classSummaries = codeAnalysis.classes.map(cls => `- ${cls.name} (${cls.fileName}): ${cls.summary}`).join('\n');
+      if (classSummaries) summaryParts.push(`**Main Classes:**\n${classSummaries}`);
+
+      // Key function signatures
+      const functionSummaries = codeAnalysis.functions.slice(0, ANALYSIS_LIMITS.TOP_FUNCTIONS_LIMIT).map(fn => `- ${fn.name} (${fn.fileName}): ${fn.summary} Params: ${fn.parameters.join(', ')}`).join('\n');
+      if (functionSummaries) summaryParts.push(`**Key Functions:**\n${functionSummaries}`);
+
+      // Main data types/interfaces (from classes)
+      // (If you want to extract more, could parse typedefs/interfaces in the future)
+
+      // Major dependencies and their purposes
+      const depSummaries = codeAnalysis.dependencies.slice(0, ANALYSIS_LIMITS.TOP_DEPENDENCIES_LIMIT).map(dep => `- ${dep.name} (${dep.type}, ${dep.category})`).join('\n');
+      if (depSummaries) summaryParts.push(`**Major Dependencies:**\n${depSummaries}`);
+
+      // Entry points and startup flow
+      if (codeAnalysis.entryPoints.length > 0) {
+        summaryParts.push(`**Entry Points:** ${codeAnalysis.entryPoints.join(', ')}`);
+      }
+      if (codeAnalysis.codeFlow && codeAnalysis.codeFlow.executionOrder.length > 0) {
+        summaryParts.push(`**Startup/Execution Order:** ${codeAnalysis.codeFlow.executionOrder.join(' → ')}`);
+      }
+
+      // Notable patterns
+      const asyncCount = codeAnalysis.functions.filter(fn => fn.isAsync).length;
+      if (asyncCount > 0) summaryParts.push(`**Async Functions:** ${asyncCount}`);
+      // Could add more patterns here
+
+      // Compose summary
+      const llmContextSummary = summaryParts.join('\n\n');
+
       return {
         type: projectType,
         fileCount: await this.countFiles(validatedPath),
-        mainTechnologies: technologies.slice(0, 5), // Top 5 technologies
+        mainTechnologies: technologies.slice(0, 5),
         structure,
         hasTests: this.hasFeature('Testing', technologies),
         hasDatabase: this.hasFeature('Database', technologies),
         hasApi: this.hasFeature('API', technologies),
         hasFrontend: this.hasFrontendTech(technologies),
         codeAnalysis,
+        llmContextSummary,
       };
     } catch (error) {
       throw new Error(`Failed to analyze project: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  private async scanDirectory(dirPath: string, maxDepth = 3, currentDepth = 0): Promise<ProjectStructure> {
+  private async scanDirectory(dirPath: string, maxDepth = this.config.maxDepth || ANALYSIS_LIMITS.MAX_DEPTH, currentDepth = 0): Promise<ProjectStructure> {
     const structure: ProjectStructure = {
       directories: [],
       importantFiles: [],
@@ -296,7 +414,7 @@ export class ProjectAnalyzer {
     return 'Software Project';
   }
 
-  private async countFiles(dirPath: string, maxDepth = 3, currentDepth = 0): Promise<number> {
+  private async countFiles(dirPath: string, maxDepth = this.config.maxDepth || ANALYSIS_LIMITS.MAX_DEPTH, currentDepth = 0): Promise<number> {
     if (currentDepth >= maxDepth) return 0;
     
     let count = 0;
@@ -330,18 +448,6 @@ export class ProjectAnalyzer {
     );
   }
 
-  private async initializeTreeSitter(): Promise<void> {
-    if (this.initialized) return;
-    
-    try {
-      // For web-tree-sitter, initialization is automatic
-      this.initialized = true;
-      console.log('🌳 Tree-sitter initialized successfully');
-    } catch (error) {
-      console.warn('⚠️ Failed to initialize tree-sitter:', error);
-    }
-  }
-
   private getLanguageFromExtension(filePath: string): string | null {
     const ext = path.extname(filePath).toLowerCase();
     
@@ -353,29 +459,8 @@ export class ProjectAnalyzer {
     return null;
   }
 
-  private async getParserForLanguage(language: string): Promise<any | null> {
-    if (!this.initialized) {
-      await this.initializeTreeSitter();
-    }
-    
-    if (this.parsers.has(language)) {
-      return this.parsers.get(language)!;
-    }
-
-    try {
-      // For now, just return a placeholder since we don't have WASM files
-      // In a full implementation, you'd load the language-specific WASM
-      const mockParser = { language };
-      this.parsers.set(language, mockParser);
-      return mockParser;
-    } catch (error) {
-      console.warn(`⚠️ Failed to create parser for ${language}:`, error);
-      return null;
-    }
-  }
-
   private isSourceFile(filename: string): boolean {
-    const sourceExtensions = ['.ts', '.js', '.tsx', '.jsx', '.py', '.java', '.cs', '.go', '.rs'];
+    const sourceExtensions = ['.ts', '.js', '.tsx', '.jsx', '.mjs', '.py', '.pyi', '.java', '.cs'];
     return sourceExtensions.some(ext => filename.endsWith(ext)) && 
            !filename.includes('.test.') && 
            !filename.includes('.spec.');
@@ -396,44 +481,35 @@ export class ProjectAnalyzer {
     // Analyze key source files (limit to prevent overwhelming LLM)
     const keySourceFiles = structure.sourceFiles
       .filter(file => this.isKeyFile(file))
-      .slice(0, 10); // Limit to 10 most important files
+      .slice(0, ANALYSIS_LIMITS.KEY_SOURCE_FILES_LIMIT); // Limit to most important files
 
     for (const filePath of keySourceFiles) {
       const fullPath = path.join(projectPath, filePath);
       try {
         const content = await fs.readFile(fullPath, 'utf-8');
-        
-        // Analyze files with both existing methods and tree-sitter
         const language = this.getLanguageFromExtension(filePath);
-        
-        // Use existing TypeScript/JavaScript analysis for those files
-        if (filePath.endsWith('.ts') || filePath.endsWith('.js') || filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) {
-          const fileAnalysis = await this.analyzeTypeScriptFile(content, filePath);
-          analysis.functions.push(...fileAnalysis.functions);
-          analysis.classes.push(...fileAnalysis.classes);
-        }
-        
-        // Also try tree-sitter analysis for additional insights
-        if (language) {
+        if (language === 'typescript' || language === 'javascript') {
+          // Prefer TypeScript parser for TS/JS, fallback to tree-sitter/regex if parse fails
+          try {
+            const fileAnalysis = await this.analyzeTypeScriptFile(content, filePath);
+            analysis.functions.push(...fileAnalysis.functions);
+            analysis.classes.push(...fileAnalysis.classes);
+          } catch {
+            const fallback = await this.analyzeWithTreeSitter(content, filePath, language);
+            analysis.functions.push(...fallback.functions);
+            analysis.classes.push(...fallback.classes);
+          }
+        } else if (language) {
+          // Use tree-sitter/regex for all other languages
           const treeSitterAnalysis = await this.analyzeWithTreeSitter(content, filePath, language);
-          // Merge unique results (avoid duplicates)
-          analysis.functions.push(...treeSitterAnalysis.functions.filter(f => 
-            !analysis.functions.some(existing => 
-              existing.name === f.name && existing.fileName === f.fileName
-            )
-          ));
-          analysis.classes.push(...treeSitterAnalysis.classes.filter(c => 
-            !analysis.classes.some(existing => 
-              existing.name === c.name && existing.fileName === c.fileName
-            )
-          ));
+          analysis.functions.push(...treeSitterAnalysis.functions);
+          analysis.classes.push(...treeSitterAnalysis.classes);
         }
-
         // Store key file content (truncated for LLM context)
         if (this.isVeryImportantFile(filePath)) {
           analysis.keyFiles.push({
             path: filePath,
-            content: this.truncateContent(content, 500),
+            content: this.truncateContent(content, this.config.contentTruncation),
             summary: this.generateFileSummary(content, filePath)
           });
         }
@@ -540,28 +616,89 @@ export class ProjectAnalyzer {
     return { functions, classes };
   }
 
+  /**
+   * Analyze code using tree-sitter if available, otherwise fall back to regex patterns
+   */
   private async analyzeWithTreeSitter(content: string, fileName: string, language: string): Promise<{functions: FunctionInfo[], classes: ClassInfo[]}> {
-    const functions: FunctionInfo[] = [];
-    const classes: ClassInfo[] = [];
+    try {
+      // Try to get or create tree-sitter parser for this language
+      const parser = await this.getTreeSitterParser(language);
+      
+      if (parser) {
+        // Parse the content using tree-sitter
+        const tree = parser.parse(content);
+        const rootNode = tree.rootNode;
+        
+        // Extract functions and classes using tree-sitter AST
+        const analysis = this.extractFromTreeSitterAST(rootNode, fileName, language);
+        
+        // Clean up tree resources
+        tree.delete();
+        
+        return analysis;
+      }
+    } catch (error) {
+      console.warn(`Tree-sitter analysis failed for ${fileName}, falling back to regex:`, error);
+    }
+    
+    // Fall back to regex-based analysis
+    return this.analyzeWithRegex(content, fileName, language);
+  }
+
+  /**
+   * Get or create a tree-sitter parser for the given language
+   */
+  private async getTreeSitterParser(language: string): Promise<any | null> {
+    // Return cached parser if available
+    if (this.treeSitterParsers.has(language)) {
+      return this.treeSitterParsers.get(language);
+    }
 
     try {
-      const parser = await this.getParserForLanguage(language);
-      if (!parser) {
-        return { functions, classes };
-      }
-
-      // For now, we'll implement a basic fallback since we don't have language WASM files
-      // This would be replaced with actual tree-sitter parsing once WASM files are added
-      const basicAnalysis = this.analyzeWithPatterns(content, fileName, language);
-      return basicAnalysis;
+      // TODO: Import and initialize tree-sitter when WASM files are available
+      // For now, return null to use regex fallback
       
+      // Example of how this would work when WASM files are added:
+      // const Parser = await import('web-tree-sitter');
+      // await Parser.init();
+      // const parser = new Parser();
+      // const LanguageWasm = await Parser.Language.load(`/path/to/${language}.wasm`);
+      // parser.setLanguage(LanguageWasm);
+      // this.treeSitterParsers.set(language, parser);
+      // return parser;
+      
+      return null;
     } catch (error) {
-      console.warn(`Failed to analyze ${fileName} with tree-sitter:`, error);
-      return { functions, classes };
+      console.warn(`Failed to load tree-sitter parser for ${language}:`, error);
+      return null;
     }
   }
 
-  private analyzeWithPatterns(content: string, fileName: string, language: string): {functions: FunctionInfo[], classes: ClassInfo[]} {
+  /**
+   * Extract functions and classes from tree-sitter AST
+   */
+  private extractFromTreeSitterAST(rootNode: any, fileName: string, language: string): {functions: FunctionInfo[], classes: ClassInfo[]} {
+    const functions: FunctionInfo[] = [];
+    const classes: ClassInfo[] = [];
+
+    // TODO: Implement tree-sitter AST traversal when WASM files are available
+    // This would traverse the AST nodes and extract function/class information
+    // Example:
+    // const cursor = rootNode.walk();
+    // // Traverse AST and extract function/class nodes based on language syntax
+    
+    // Suppress unused parameter warnings until implementation
+    void rootNode;
+    void fileName; 
+    void language;
+    
+    return { functions, classes };
+  }
+
+  /**
+   * Fallback regex-based analysis for when tree-sitter is not available
+   */
+  private analyzeWithRegex(content: string, fileName: string, language: string): {functions: FunctionInfo[], classes: ClassInfo[]} {
     const functions: FunctionInfo[] = [];
     const classes: ClassInfo[] = [];
 
@@ -581,26 +718,8 @@ export class ProjectAnalyzer {
       java: [
         /(?:public|private|protected)?\s*(?:static\s+)?(?:\w+\s+)?(\w+)\s*\(([^)]*)\)\s*\{/g
       ],
-      go: [
-        /func\s+(?:\([^)]*\)\s+)?(\w+)\s*\(([^)]*)\)/g
-      ],
-      rust: [
-        /fn\s+(\w+)\s*\(([^)]*)\)/g
-      ],
-      c: [
-        /(?:\w+\s+)*(\w+)\s*\(([^)]*)\)\s*\{/g
-      ],
-      cpp: [
-        /(?:\w+\s+)*(\w+)\s*\(([^)]*)\)\s*\{/g
-      ],
       csharp: [
         /(?:public|private|protected)?\s*(?:static\s+)?(?:\w+\s+)?(\w+)\s*\(([^)]*)\)\s*\{/g
-      ],
-      ruby: [
-        /def\s+(\w+)(?:\(([^)]*)\))?/g
-      ],
-      php: [
-        /function\s+(\w+)\s*\(([^)]*)\)/g
       ]
     };
 
@@ -610,13 +729,7 @@ export class ProjectAnalyzer {
       typescript: [/class\s+(\w+)/g],
       python: [/class\s+(\w+)/g],
       java: [/(?:public|private|protected)?\s*class\s+(\w+)/g],
-      go: [/type\s+(\w+)\s+struct/g],
-      rust: [/struct\s+(\w+)/g, /enum\s+(\w+)/g],
-      c: [/(?:typedef\s+)?struct\s+(\w+)/g],
-      cpp: [/class\s+(\w+)/g, /struct\s+(\w+)/g],
-      csharp: [/(?:public|private|protected)?\s*class\s+(\w+)/g],
-      ruby: [/class\s+(\w+)/g],
-      php: [/class\s+(\w+)/g]
+      csharp: [/(?:public|private|protected)?\s*class\s+(\w+)/g]
     };
 
     // Extract functions
@@ -636,7 +749,7 @@ export class ProjectAnalyzer {
           isAsync: match[0].includes('async'),
           isExported: match[0].includes('export') || match[0].includes('public'),
           fileName,
-          source: 'tree-sitter',
+          source: 'tree-sitter', // Currently using regex fallback until WASM files are added
           language
         });
       }
@@ -657,7 +770,7 @@ export class ProjectAnalyzer {
           properties: [],
           isExported: match[0].includes('export') || match[0].includes('public'),
           fileName,
-          source: 'tree-sitter',
+          source: 'tree-sitter', // Currently using regex fallback until WASM files are added
           language
         });
       }
@@ -666,35 +779,126 @@ export class ProjectAnalyzer {
     return { functions, classes };
   }
 
-  private walkAST(node: any, functions: FunctionInfo[], classes: ClassInfo[], fileName: string) {
+  private walkAST(
+    node: TSESTree.Node | undefined,
+    functions: FunctionInfo[],
+    classes: ClassInfo[],
+    fileName: string
+  ) {
     if (!node || typeof node !== 'object') return;
 
-    if (node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression' || node.type === 'FunctionExpression') {
-      const func = this.extractFunctionInfo(node, fileName);
+    if (
+      node.type === 'FunctionDeclaration' ||
+      node.type === 'ArrowFunctionExpression' ||
+      node.type === 'FunctionExpression'
+    ) {
+      const func = this.extractFunctionInfo(node as TSESTree.FunctionDeclaration | TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression, fileName);
       if (func) functions.push(func);
     }
 
     if (node.type === 'ClassDeclaration') {
-      const cls = this.extractClassInfo(node, fileName);
+      const cls = this.extractClassInfo(node as TSESTree.ClassDeclaration, fileName);
       if (cls) classes.push(cls);
+      // Also extract methods as FunctionInfo
+      const classBody = (node as TSESTree.ClassDeclaration).body;
+      if (classBody && Array.isArray(classBody.body)) {
+        classBody.body.forEach((member) => {
+          if (member.type === 'MethodDefinition') {
+            // Attach parent for extractFunctionInfo compatibility
+            (member.value as any).parent = member;
+            const func = this.extractFunctionInfo(member.value as TSESTree.FunctionExpression, fileName);
+            if (func) functions.push(func);
+          }
+        });
+      }
     }
 
     // Recursively walk child nodes
     for (const key in node) {
-      if (key !== 'parent' && node[key] && typeof node[key] === 'object') {
-        if (Array.isArray(node[key])) {
-          node[key].forEach((child: any) => this.walkAST(child, functions, classes, fileName));
+      if (key !== 'parent' && (node as any)[key] && typeof (node as any)[key] === 'object') {
+        if (Array.isArray((node as any)[key])) {
+          (node as any)[key].forEach((child: any) => this.walkAST(child, functions, classes, fileName));
         } else {
-          this.walkAST(node[key], functions, classes, fileName);
+          this.walkAST((node as any)[key], functions, classes, fileName);
         }
       }
     }
   }
 
-  private extractFunctionInfo(node: any, fileName: string): FunctionInfo | null {
-    const name = node.id?.name || 'anonymous';
-    const params = node.params?.map((p: any) => p.name || p.type) || [];
-    
+  private extractFunctionInfo(node: TSESTree.FunctionDeclaration | TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression, fileName: string): FunctionInfo | null {
+    // Try to infer the function name from various AST contexts
+    let name = undefined;
+    if ('id' in node && this.isIdentifier((node as any).id)) {
+      name = (node as any).id.name;
+    }
+    // If no id, try to infer from parent (variable, property, method, class)
+    if (!name && node.parent) {
+      // Variable assignment: const foo = () => {}
+      if (node.parent.type === 'VariableDeclarator' && this.isIdentifier(node.parent.id)) {
+        name = node.parent.id.name;
+      }
+      // Object property: { foo: () => {} }
+      else if (this.isProperty(node.parent) && node.parent.key && this.isIdentifier(node.parent.key)) {
+        name = node.parent.key.name;
+      }
+      // Class method: class X { foo() {} }
+      else if (this.isMethodDefinition(node.parent) && node.parent.key && this.isIdentifier(node.parent.key)) {
+        name = node.parent.key.name;
+      }
+      // AssignmentExpression: foo.bar = function() {}
+      else if (node.parent.type === 'AssignmentExpression' && node.parent.left) {
+        const left = node.parent.left as any;
+        if (left.property && this.isIdentifier(left.property)) {
+          name = left.property.name;
+        } else if (left.name) {
+          name = left.name;
+        }
+      }
+      // ExportDefaultDeclaration: export default function() {}
+      else if (node.parent.type === 'ExportDefaultDeclaration') {
+        name = 'default';
+      }
+      // MethodDefinition node itself (for class methods)
+      else if (node.type === 'FunctionExpression' && this.isMethodDefinition(node.parent) && node.parent.key && this.isIdentifier(node.parent.key)) {
+        name = node.parent.key.name;
+      }
+    }
+    // Fallback: try grandparent for some patterns
+    if (!name && node.parent && node.parent.parent && node.parent.parent.type === 'VariableDeclarator' && this.isIdentifier(node.parent.parent.id)) {
+      name = node.parent.parent.id.name;
+    }
+    if (!name) name = 'anonymous';
+
+    const params = node.params?.map((p) => {
+      let paramName = '';
+      let paramType = '';
+      if (this.isIdentifier(p)) {
+        paramName = p.name;
+        if (p.typeAnnotation) {
+          paramType = this.stringifyTypeAnnotation(p.typeAnnotation);
+        }
+      } else if (this.isAssignmentPattern(p)) {
+        if (this.isIdentifier(p.left)) {
+          paramName = p.left.name;
+          if (p.left.typeAnnotation) {
+            paramType = this.stringifyTypeAnnotation(p.left.typeAnnotation);
+          }
+        }
+      } else if (this.isRestElement(p)) {
+        if (this.isIdentifier(p.argument)) {
+          paramName = '...' + p.argument.name;
+          if (p.argument.typeAnnotation) {
+            paramType = this.stringifyTypeAnnotation(p.argument.typeAnnotation);
+          }
+        }
+      } else if ('name' in p && typeof (p as any).name === 'string') {
+        paramName = (p as any).name;
+      } else if ('type' in p && typeof (p as any).type === 'string') {
+        paramName = (p as any).type;
+      }
+      return paramType ? `${paramName}: ${paramType}` : paramName;
+    }) || [];
+
     return {
       name,
       summary: this.generateFunctionSummary(name, params),
@@ -706,6 +910,77 @@ export class ProjectAnalyzer {
       source: 'typescript-estree',
       language: fileName.endsWith('.ts') || fileName.endsWith('.tsx') ? 'typescript' : 'javascript'
     };
+  }
+
+  /**
+   * Helper to convert a typeAnnotation AST node to a string (simple and complex types)
+   */
+  private stringifyTypeAnnotation(typeAnnotation: TSESTree.TypeNode | TSESTree.TSTypeAnnotation | undefined): string {
+    if (!typeAnnotation) return '';
+    let node = typeAnnotation as any;
+    if (node.type === 'TSTypeAnnotation') node = node.typeAnnotation;
+
+    switch (node.type) {
+      case 'TSStringKeyword': return 'string';
+      case 'TSNumberKeyword': return 'number';
+      case 'TSBooleanKeyword': return 'boolean';
+      case 'TSAnyKeyword': return 'any';
+      case 'TSVoidKeyword': return 'void';
+      case 'TSUnknownKeyword': return 'unknown';
+      case 'TSNullKeyword': return 'null';
+      case 'TSUndefinedKeyword': return 'undefined';
+      case 'TSSymbolKeyword': return 'symbol';
+      case 'TSNeverKeyword': return 'never';
+      case 'TSObjectKeyword': return 'object';
+      case 'TSArrayType': return this.stringifyTypeAnnotation(node.elementType);
+      case 'TSTypeReference':
+        if (node.typeName && node.typeName.type === 'Identifier') {
+          let typeName = node.typeName.name;
+          if (node.typeParameters && Array.isArray(node.typeParameters.params)) {
+            const params = node.typeParameters.params.map((p: any) => this.stringifyTypeAnnotation(p)).join(', ');
+            return `${typeName}<${params}>`;
+          }
+          return typeName;
+        }
+        return 'unknown';
+      case 'TSUnionType':
+        return node.types.map((t: any) => this.stringifyTypeAnnotation(t)).join(' | ');
+      case 'TSLiteralType':
+        if (node.literal) return JSON.stringify(node.literal.value);
+        return 'literal';
+      case 'TSFunctionType':
+        const params = node.parameters?.map((p: any) => {
+          let n = p.name || (p.left && p.left.name) || '';
+          let t = p.typeAnnotation ? this.stringifyTypeAnnotation(p.typeAnnotation) : '';
+          return t ? `${n}: ${t}` : n;
+        }).join(', ');
+        const ret = node.typeAnnotation ? this.stringifyTypeAnnotation(node.typeAnnotation) : 'void';
+        return `(${params}) => ${ret}`;
+      case 'TSTypeLiteral':
+        if (node.members) {
+          return '{ ' + node.members.map((m: any) => {
+            if (m.key && m.key.type === 'Identifier') {
+              let t = m.typeAnnotation ? this.stringifyTypeAnnotation(m.typeAnnotation) : '';
+              return `${m.key.name}${m.optional ? '?' : ''}: ${t}`;
+            }
+            return '';
+          }).filter(Boolean).join('; ') + ' }';
+        }
+        return 'object';
+      case 'TSParenthesizedType':
+        return this.stringifyTypeAnnotation(node.typeAnnotation);
+      case 'TSIndexedAccessType':
+        return `${this.stringifyTypeAnnotation(node.objectType)}[${this.stringifyTypeAnnotation(node.indexType)}]`;
+      case 'TSIntersectionType':
+        return node.types.map((t: any) => this.stringifyTypeAnnotation(t)).join(' & ');
+      case 'TSRestType':
+        return '...' + this.stringifyTypeAnnotation(node.typeAnnotation);
+      case 'TSOptionalType':
+        return this.stringifyTypeAnnotation(node.typeAnnotation) + '?';
+      default:
+        if (node.typeName && node.typeName.type === 'Identifier') return node.typeName.name;
+        return node.type || 'unknown';
+    }
   }
 
   private extractClassInfo(node: any, fileName: string): ClassInfo | null {
@@ -751,7 +1026,7 @@ export class ProjectAnalyzer {
           isAsync: match[0].includes('async'),
           isExported: match[0].includes('export'),
           fileName,
-          source: 'regex',
+          source: 'tree-sitter', // Currently using regex fallback until WASM files are added
           language: fileName.endsWith('.ts') || fileName.endsWith('.tsx') ? 'typescript' : 'javascript'
         });
       }

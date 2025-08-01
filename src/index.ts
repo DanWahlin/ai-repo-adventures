@@ -8,7 +8,7 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { repoAdventureTools, type ToolName } from './tools/tools.js';
+import { tools } from './tools.js';
 import { convertZodSchema } from './utils/zodToJsonSchema.js';
 
 class RepoAdventureServer {
@@ -34,29 +34,25 @@ class RepoAdventureServer {
   private setupHandlers() {
     // Dynamic tool listing
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      const tools = Object.entries(repoAdventureTools).map(([name, tool]) => ({
+      const toolList = Object.entries(tools).map(([name, tool]) => ({
         name,
         description: tool.description,
         inputSchema: convertZodSchema(tool.schema)
       }));
 
-      return { tools };
+      return { tools: toolList };
     });
 
     // Dynamic tool execution
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       try {
         const { name, arguments: args } = request.params;
-        const toolName = name as ToolName;
 
-        if (!(toolName in repoAdventureTools)) {
+        if (!(name in tools)) {
           throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
         }
 
-        const tool = repoAdventureTools[toolName];
-        if (!tool) {
-          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-        }
+        const tool = tools[name as keyof typeof tools];
         
         // Validate arguments using the tool's Zod schema
         const validationResult = tool.schema.safeParse(args);

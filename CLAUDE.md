@@ -8,6 +8,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run**: `npm start` - Runs the MCP server via tsx
 - **Development**: `npm run dev` - Runs with file watching for development
 
+## Code Review Policy
+
+**ALWAYS** use the code-reviewer agent after writing or significantly modifying code. This includes:
+- New files or components
+- Major refactoring or architectural changes
+- Bug fixes that affect multiple functions
+- Feature additions or enhancements
+- Performance optimizations
+- Security-related changes
+
+**Exception**: Skip code review only for trivial changes like:
+- Single-line typo fixes
+- Comment updates
+- Minor formatting adjustments
+- Simple variable renames
+
 ## Architecture Overview
 
 This is a **Model Context Protocol (MCP) server** that gamifies code repository exploration through interactive storytelling. The server operates as a stdio-based MCP server using the `@modelcontextprotocol/sdk`.

@@ -1,38 +1,17 @@
 import { ProjectAnalyzer, ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
 import { DynamicStoryGenerator } from '../story/DynamicStoryGenerator.js';
 import { AdventureManager } from '../adventure/AdventureManager.js';
+import { LRUCache } from './cache.js';
 
-// Cache for analysis results to avoid re-analysis
-class AnalysisCache {
-  private cache: Map<string, { info: ProjectInfo; timestamp: number }> = new Map();
-  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-  get(projectPath: string): ProjectInfo | null {
-    const cached = this.cache.get(projectPath);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      return cached.info;
-    }
-    return null;
-  }
-
-  set(projectPath: string, info: ProjectInfo): void {
-    this.cache.set(projectPath, { info, timestamp: Date.now() });
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-}
-
-// Analysis state management
+// Analysis state management with improved caching
 class OptimizedAnalyzer {
   private analyzer = new ProjectAnalyzer();
-  private cache = new AnalysisCache();
+  private cache = new LRUCache(50, 300000); // 50 entries, 5min TTL
   private activeAnalysis: Map<string, Promise<ProjectInfo>> = new Map();
 
   async analyzeProject(projectPath: string): Promise<ProjectInfo> {
     // Check cache first
-    const cached = this.cache.get(projectPath);
+    const cached = this.cache.get<ProjectInfo>(projectPath);
     if (cached) {
       console.log('📋 Using cached analysis for', projectPath);
       return cached;
@@ -51,6 +30,9 @@ class OptimizedAnalyzer {
       this.cache.set(projectPath, result);
       this.activeAnalysis.delete(projectPath);
       return result;
+    }).catch(error => {
+      this.activeAnalysis.delete(projectPath);
+      throw error;
     });
 
     this.activeAnalysis.set(projectPath, analysisPromise);
@@ -59,9 +41,15 @@ class OptimizedAnalyzer {
 
   // Pre-trigger analysis without waiting
   preAnalyze(projectPath: string): void {
-    if (!this.cache.get(projectPath) && !this.activeAnalysis.has(projectPath)) {
+    if (!this.cache.has(projectPath) && !this.activeAnalysis.has(projectPath)) {
       this.analyzeProject(projectPath).catch(console.error);
     }
+  }
+
+  // Cleanup resources
+  cleanup(): void {
+    this.cache.cleanup();
+    this.analyzer.cleanup();
   }
 }
 

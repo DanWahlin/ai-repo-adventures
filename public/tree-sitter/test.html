@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tree-sitter WASM Test</title>
+  <script src="https://unpkg.com/web-tree-sitter/tree-sitter.js"></script>
+</head>
+<body>
+  <h1>Tree-sitter WASM Test</h1>
+  <div id="results"></div>
+  
+  <script>
+    async function testTreeSitter() {
+      const results = document.getElementById('results');
+      
+      try {
+        // Initialize tree-sitter
+        await TreeSitter.init();
+        results.innerHTML = '<p>✅ Tree-sitter initialized</p>';
+        
+        // Test each language
+        const languages = [{"name":"javascript","file":"tree-sitter-javascript.wasm","testCode":"const x = 42;"},{"name":"typescript","file":"tree-sitter-typescript.wasm","testCode":"const x: number = 42;"},{"name":"python","file":"tree-sitter-python.wasm","testCode":"def hello(): pass"},{"name":"java","file":"tree-sitter-java.wasm","testCode":"class Test { }"},{"name":"csharp","file":"tree-sitter-csharp.wasm","testCode":"class Test { }"}];
+        
+        for (const lang of languages) {
+          try {
+            const parser = new TreeSitter();
+            const wasmPath = '/tree-sitter/' + lang.file;
+            const Language = await TreeSitter.Language.load(wasmPath);
+            parser.setLanguage(Language);
+            
+            const tree = parser.parse(lang.testCode);
+            results.innerHTML += '<p>✅ ' + lang.name + ' loaded successfully</p>';
+            results.innerHTML += '<pre>' + tree.rootNode.toString() + '</pre>';
+          } catch (error) {
+            results.innerHTML += '<p>❌ ' + lang.name + ' failed: ' + error.message + '</p>';
+          }
+        }
+      } catch (error) {
+        results.innerHTML = '<p>❌ Failed to initialize: ' + error.message + '</p>';
+      }
+    }
+    
+    testTreeSitter();
+  </script>
+</body>
+</html>
