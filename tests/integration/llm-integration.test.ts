@@ -127,6 +127,189 @@ async function runTests() {
   console.log('\\n🔍 Response Quality Tests');
   console.log('-'.repeat(40));
 
+  await test('Story structure validation with secondary LLM call', async () => {
+    const manager = new AdventureManager();
+    const llmClient = new LLMClient();
+    
+    // Generate the story first
+    const storyResult = await manager.initializeAdventure(realProjectInfo, 'space');
+    const progress = manager.getProgress();
+    
+    // Get the actual adventures that were created
+    assert(progress.choices && progress.choices.length > 0, 'Should have created adventures');
+    const adventures = progress.choices;
+    
+    // Use LLM to validate the story structure
+    const validationPrompt = `Please analyze this story and adventures for quality. Return JSON with:
+    {
+      "storyQuality": "good/poor",
+      "hasOverallNarrative": true/false,
+      "adventuresAreChapters": true/false,
+      "themeConsistency": "good/poor",
+      "reasoning": "explanation"
+    }
+
+    STORY: ${storyResult}
+    
+    ADVENTURES: ${JSON.stringify(adventures)}`;
+
+    const validation = await llmClient.generateResponse(validationPrompt, { responseFormat: 'json_object' });
+    const validationResult = JSON.parse(validation.content);
+    
+    // Assert the LLM validation results
+    assert(validationResult.storyQuality === 'good', `Story quality should be good: ${validationResult.reasoning}`);
+    assert(validationResult.hasOverallNarrative === true, `Should have overall narrative: ${validationResult.reasoning}`);
+    assert(validationResult.adventuresAreChapters === true, `Adventures should be chapters: ${validationResult.reasoning}`);
+    assert(validationResult.themeConsistency === 'good', `Theme should be consistent: ${validationResult.reasoning}`);
+    
+  }, { skipIfNoLLM: true, timeout: 60000 });
+
+  await test('Adventure chapters validation with LLM analysis', async () => {
+    const manager = new AdventureManager();
+    const llmClient = new LLMClient();
+    
+    // Initialize with medieval theme
+    const storyResult = await manager.initializeAdventure(realProjectInfo, 'medieval');
+    
+    // Explore first adventure to get detailed content
+    const adventure1 = await manager.exploreAdventure('1');
+    
+    // Use LLM to validate the adventure content
+    const chapterValidationPrompt = `Analyze this adventure content to verify it's a proper "chapter" of a larger story. Return JSON:
+    {
+      "isProperChapter": true/false,
+      "connectsToMainStory": true/false,
+      "hasCodeEducationalContent": true/false,
+      "medievalThemeConsistent": true/false,
+      "progressesNarrative": true/false,
+      "reasoning": "detailed explanation"
+    }
+
+    MAIN STORY: ${storyResult}
+    
+    ADVENTURE CHAPTER: ${adventure1.narrative}`;
+
+    const chapterValidation = await llmClient.generateResponse(chapterValidationPrompt, { responseFormat: 'json_object' });
+    const chapterResult = JSON.parse(chapterValidation.content);
+    
+    // Assert the chapter validation results
+    assert(chapterResult.isProperChapter === true, `Should be a proper chapter: ${chapterResult.reasoning}`);
+    assert(chapterResult.connectsToMainStory === true, `Should connect to main story: ${chapterResult.reasoning}`);
+    assert(chapterResult.hasCodeEducationalContent === true, `Should have educational content: ${chapterResult.reasoning}`);
+    assert(chapterResult.medievalThemeConsistent === true, `Should maintain theme: ${chapterResult.reasoning}`);
+    assert(chapterResult.progressesNarrative === true, `Should progress narrative: ${chapterResult.reasoning}`);
+    
+  }, { skipIfNoLLM: true, timeout: 75000 });
+
+  await test('Theme guidelines compliance validation', async () => {
+    const manager = new AdventureManager();
+    const llmClient = new LLMClient();
+    
+    // Test all three themes
+    const themes = ['space', 'medieval', 'ancient'];
+    
+    for (const theme of themes) {
+      const storyResult = await manager.initializeAdventure(realProjectInfo, theme);
+      
+      // Get theme-specific validation criteria
+      const themeValidationPrompt = `Validate this ${theme}-themed story follows our guidelines. Return JSON:
+      {
+        "themeVocabularyCorrect": true/false,
+        "noMixedThemes": true/false,
+        "educationalValue": "high/medium/low",
+        "projectIntegration": "good/poor",
+        "storyCoherence": "good/poor",
+        "forbiddenElements": [],
+        "reasoning": "explanation"
+      }
+
+      Theme: ${theme.toUpperCase()}
+      Expected vocabulary: ${theme === 'space' ? 'space ships, galaxies, astronauts' : 
+                           theme === 'medieval' ? 'castles, knights, magic' : 
+                           'temples, pyramids, ancient wisdom'}
+      
+      Should NOT contain: ${theme === 'space' ? 'kingdoms, magic, temples' : 
+                          theme === 'medieval' ? 'space ships, ancient temples' : 
+                          'space ships, medieval castles'}
+
+      STORY: ${storyResult}`;
+
+      const themeValidation = await llmClient.generateResponse(themeValidationPrompt, { responseFormat: 'json_object' });
+      const themeResult = JSON.parse(themeValidation.content);
+      
+      // Assert theme compliance
+      assert(themeResult.themeVocabularyCorrect === true, `${theme} theme vocabulary should be correct: ${themeResult.reasoning}`);
+      assert(themeResult.noMixedThemes === true, `${theme} theme should not mix themes: ${themeResult.reasoning}`);
+      assert(themeResult.educationalValue === 'high' || themeResult.educationalValue === 'medium', 
+             `${theme} should have educational value: ${themeResult.reasoning}`);
+      assert(themeResult.projectIntegration === 'good', `${theme} should integrate project info: ${themeResult.reasoning}`);
+      assert(themeResult.forbiddenElements.length === 0, `${theme} should not have forbidden elements: ${themeResult.forbiddenElements}`);
+    }
+    
+  }, { skipIfNoLLM: true, timeout: 120000 }); // Longer timeout for 3 themes
+
+  await test('Multi-chapter story coherence validation', async () => {
+    const manager = new AdventureManager();
+    const llmClient = new LLMClient();
+    
+    // Initialize story
+    const mainStory = await manager.initializeAdventure(realProjectInfo, 'ancient');
+    const progress = manager.getProgress();
+    
+    // Explore multiple adventures to get chapter content
+    const chapters = [];
+    const maxChapters = Math.min(3, progress.choices?.length || 0);
+    
+    for (let i = 1; i <= maxChapters; i++) {
+      try {
+        const chapter = await manager.exploreAdventure(i.toString());
+        chapters.push({
+          id: i,
+          narrative: chapter.narrative,
+          completed: chapter.completed
+        });
+      } catch (error) {
+        // Some adventures might not be available - that's okay
+        break;
+      }
+    }
+    
+    assert(chapters.length > 0, 'Should have at least one chapter to validate');
+    
+    // Use LLM to validate the multi-chapter coherence
+    const coherencePrompt = `Analyze this story with multiple chapters for overall coherence. Return JSON:
+    {
+      "overallCoherence": "excellent/good/poor",
+      "chaptersConnected": true/false,
+      "progressiveNarrative": true/false,
+      "educationalProgression": true/false,
+      "themeConsistency": true/false,
+      "storyCompleteness": "complete/partial/incomplete",
+      "codebaseIntegration": "excellent/good/poor",
+      "reasoning": "detailed analysis"
+    }
+
+    MAIN STORY: ${mainStory}
+    
+    CHAPTERS: ${JSON.stringify(chapters, null, 2)}`;
+
+    const coherenceValidation = await llmClient.generateResponse(coherencePrompt, { responseFormat: 'json_object' });
+    const coherenceResult = JSON.parse(coherenceValidation.content);
+    
+    // Assert story coherence
+    assert(coherenceResult.overallCoherence === 'excellent' || coherenceResult.overallCoherence === 'good', 
+           `Story should be coherent: ${coherenceResult.reasoning}`);
+    assert(coherenceResult.chaptersConnected === true, 
+           `Chapters should be connected: ${coherenceResult.reasoning}`);
+    assert(coherenceResult.progressiveNarrative === true, 
+           `Should have progressive narrative: ${coherenceResult.reasoning}`);
+    assert(coherenceResult.educationalProgression === true, 
+           `Should have educational progression: ${coherenceResult.reasoning}`);
+    assert(coherenceResult.themeConsistency === true, 
+           `Theme should be consistent: ${coherenceResult.reasoning}`);
+    
+  }, { skipIfNoLLM: true, timeout: 90000 });
+
   await test('LLM responses contain project-specific information', async () => {
     const manager = new AdventureManager();
     const result = await manager.initializeAdventure(realProjectInfo, 'space');

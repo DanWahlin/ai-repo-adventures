@@ -14,19 +14,7 @@ import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
 // Test helper
 async function runTests() {
   console.log('🧪 Running LLM Adventure Generation Tests\n');
-  let passed = 0;
-  let failed = 0;
-
-  const test = async (name: string, testFn: () => Promise<void> | void) => {
-    try {
-      await testFn();
-      console.log(`✅ ${name}`);
-      passed++;
-    } catch (error) {
-      console.log(`❌ ${name}: ${error instanceof Error ? error.message : String(error)}`);
-      failed++;
-    }
-  };
+  const { test, stats, printResults } = await createTestRunner('LLM Adventure Generation Tests');
 
   // Basic Functionality Tests
   console.log('🔍 Basic Functionality Tests');
@@ -158,18 +146,11 @@ async function runTests() {
     }
   });
 
-  // Results Summary
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 LLM ADVENTURE TEST RESULTS');
-  console.log('='.repeat(50));
-  console.log(`✅ Passed: ${passed}`);
-  console.log(`❌ Failed: ${failed}`);
-  console.log(`📈 Success Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
+  // Print results using shared utility
+  printResults();
   
-  if (failed === 0) {
-    console.log('\n🎉 All LLM adventure tests passed!');
-  } else {
-    console.log(`\n⚠️  ${failed} tests failed. Please review the failures above.`);
+  // Exit with error code if tests failed
+  if (stats.failed > 0) {
     process.exit(1);
   }
 }

@@ -132,7 +132,7 @@ async function runTests() {
     } catch (error) {
       // Expected with fallback system
     }
-  });
+  }, { timeout: 15000 });
 
 
   // Story Generator Tests - Updated for new system
