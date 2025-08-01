@@ -75,7 +75,8 @@ export class AdventureManager {
     const themeGuidelines = this.getThemeGuidelines(theme);
     const responseFormat = this.getStoryResponseFormat(theme);
     
-    return `You are a technical education specialist who creates immersive code exploration experiences. Your goal is to transform this codebase into an engaging ${theme}-themed narrative that helps developers understand the architecture through storytelling.
+    return `You are a technical education specialist who creates immersive code exploration experiences.
+Your goal is to transform this codebase into an engaging ${theme}-themed narrative that helps developers understand the architecture through storytelling.
 
 ## Project Analysis
 ${projectAnalysis}
@@ -84,7 +85,8 @@ ${adventureRules}
 
 ${themeGuidelines}
 
-${responseFormat}`;
+${responseFormat}
+`;
   }
 
   /**
@@ -92,6 +94,13 @@ ${responseFormat}`;
    */
   private getAdventureCreationRules(): string {
     return `## Adventure Creation Rules
+
+**Adventure Title Format:**
+Each adventure title MUST follow this pattern: "Theme-Specific Name: Technical Description"
+- Space example: "Starship Design: An Overview of the Codebase Architecture"
+- Medieval example: "Castle Design: Exploring the Kingdom Layout"
+- Ancient example: "Temple Complex Architecture: Understanding the Sacred Layout"
+- DO NOT copy these examples directly - create unique titles that fit the theme and keep them positive and non-controversial.
 
 **Adventure Count Logic:**
 - Simple projects (<50 files, <3 technologies): 2-3 adventures
@@ -138,12 +147,18 @@ ${this.getThemeVocabulary(theme)}
 
 Your response must be a valid JSON object matching the structure below.
 
+IMPORTANT: Adventure titles MUST follow the format "Theme-Specific Title: Brief Description" 
+Examples:
+- "Starship Design: An Overview of the Codebase Architecture"
+- "Temple Complex Architecture: Understanding the Sacred Layout"
+- "Castle Design: Exploring the Kingdom Layout"
+
 {
   "story": "An engaging 2-3 paragraph opening that establishes the ${theme} world, introduces the codebase as a living system, and sets up the adventure framework. Must reference specific technologies and file structure from the analysis.",
   "adventures": [
     {
       "id": "kebab-case-id",
-      "title": "${theme}-themed title that clearly indicates what code aspect is explored",
+      "title": "${theme}-themed title in format 'Adventure Name: What It Covers' (e.g., 'Starship Design: An Overview of the Codebase Architecture')",
       "description": "1-2 sentences explaining what developers will learn and which files/concepts are covered",
       "codeFiles": ["actual-file-names-from-analysis"]
     }

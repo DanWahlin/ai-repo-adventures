@@ -73,21 +73,40 @@ async function runTests() {
     assert(result.length > 100, 'Story should be substantial (>100 chars)');
     assert(result.includes('adventure') || result.includes('Adventure'), 'Should mention adventures');
     
+    // Output story content for visibility
+    console.log('\n📖 Generated Story (Space Theme):');
+    console.log('-'.repeat(50));
+    const storyPreview = result.length > 500 ? result.substring(0, 500) + '...' : result;
+    console.log(storyPreview);
+    
     // More flexible space theme detection using shared helper
     const spaceWords = ['space', 'cosmic', 'star', 'galaxy', 'ship', 'orbit', 'universe', 'stellar', 'astro'];
     const foundSpaceWords = TestHelpers.getFoundWords(result, spaceWords);
     assert(foundSpaceWords.length > 0, `Should include space theme elements. Found: ${foundSpaceWords}`);
     
-    // Check that adventures were created
+    // Check that adventures were created and output their details
     const progress = manager.getProgress();
     assert(progress.choices && progress.choices.length > 0, 'Should have created adventure choices');
+    
+    console.log('\n🎯 Available Adventures:');
+    progress.choices?.forEach((choice, index) => {
+      console.log(`  ${index + 1}. ${choice}`);
+    });
   }, { skipIfNoLLM: true, timeout: 45000 });
 
   await test('Adventure exploration generates detailed content', async () => {
     const manager = new AdventureManager();
     
     // Initialize adventure first
-    await manager.initializeAdventure(realProjectInfo, 'medieval');
+    const storyResult = await manager.initializeAdventure(realProjectInfo, 'medieval');
+    
+    // Get available adventures before exploring
+    const progress = manager.getProgress();
+    const firstAdventure = progress.choices?.[0];
+    
+    console.log('\n🏰 Adventure Details (Medieval Theme):');
+    console.log('-'.repeat(50));
+    console.log(`🎯 Adventure Title: ${progress.choices?.[0] || 'No adventures available'}`);
     
     // Explore first adventure
     const result = await manager.exploreAdventure('1');
@@ -96,6 +115,11 @@ async function runTests() {
     assert(result.narrative.length > 200, 'Narrative should be detailed (>200 chars)');
     assert(result.completed === true, 'Adventure should be marked as completed');
     assert(result.progressUpdate && result.progressUpdate.includes('%'), 'Should include progress update');
+    
+    // Output adventure narrative preview
+    const narrativePreview = result.narrative.length > 400 ? result.narrative.substring(0, 400) + '...' : result.narrative;
+    console.log(`📜 Adventure Narrative Preview:\n${narrativePreview}`);
+    console.log(`\n📊 Progress: ${result.progressUpdate}`);
     
     // Check that medieval theme is present
     const medieval_indicators = ['medieval', 'knight', 'castle', 'quest', 'realm', 'kingdom'];
@@ -108,12 +132,40 @@ async function runTests() {
   await test('Multiple themes generate different content', async () => {
     const manager1 = new AdventureManager();
     const manager2 = new AdventureManager();
+    const manager3 = new AdventureManager();
     
-    // Generate space and ancient theme stories
+    // Generate all three theme stories
     const spaceStory = await manager1.initializeAdventure(realProjectInfo, 'space');
     const ancientStory = await manager2.initializeAdventure(realProjectInfo, 'ancient');
+    const medievalStory = await manager3.initializeAdventure(realProjectInfo, 'medieval');
+    
+    console.log('\n🌟 Theme Comparison - Story Previews:');
+    console.log('='.repeat(60));
+    
+    // Space theme
+    const spacePreview = spaceStory.length > 200 ? spaceStory.substring(0, 200) + '...' : spaceStory;
+    console.log(`\n🚀 SPACE THEME:\n${spacePreview}`);
+    
+    const spaceProgress = manager1.getProgress();
+    console.log(`Adventures: ${spaceProgress.choices?.filter(c => c !== 'View progress').join(', ')}`);
+    
+    // Ancient theme  
+    const ancientPreview = ancientStory.length > 200 ? ancientStory.substring(0, 200) + '...' : ancientStory;
+    console.log(`\n🏛️ ANCIENT THEME:\n${ancientPreview}`);
+    
+    const ancientProgress = manager2.getProgress();
+    console.log(`Adventures: ${ancientProgress.choices?.filter(c => c !== 'View progress').join(', ')}`);
+    
+    // Medieval theme
+    const medievalPreview = medievalStory.length > 200 ? medievalStory.substring(0, 200) + '...' : medievalStory;
+    console.log(`\n🏰 MEDIEVAL THEME:\n${medievalPreview}`);
+    
+    const medievalProgress = manager3.getProgress();
+    console.log(`Adventures: ${medievalProgress.choices?.filter(c => c !== 'View progress').join(', ')}`);
     
     assert(spaceStory !== ancientStory, 'Different themes should generate different stories');
+    assert(spaceStory !== medievalStory, 'Space and medieval should be different');
+    assert(ancientStory !== medievalStory, 'Ancient and medieval should be different');
     
     // Check theme-specific vocabulary using shared helpers
     const spaceWords = ['space', 'ship', 'galaxy', 'star', 'cosmic', 'orbital'];
@@ -121,7 +173,7 @@ async function runTests() {
     
     assert(TestHelpers.containsAnyWord(spaceStory, spaceWords), 'Space story should contain space vocabulary');
     assert(TestHelpers.containsAnyWord(ancientStory, ancientWords), 'Ancient story should contain ancient vocabulary');
-  }, { skipIfNoLLM: true, timeout: 60000 });
+  }, { skipIfNoLLM: true, timeout: 90000 });
 
   // Response Quality Tests
   console.log('\\n🔍 Response Quality Tests');
