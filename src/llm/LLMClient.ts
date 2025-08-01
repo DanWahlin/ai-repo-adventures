@@ -27,6 +27,11 @@ export interface LLMResponse {
   } | undefined;
 }
 
+export interface LLMRequestOptions {
+  systemPrompt?: string;
+  responseFormat?: 'text' | 'json_object';
+}
+
 export interface LLMConfig {
   baseURL?: string | undefined;
   apiKey?: string | undefined;
@@ -101,8 +106,13 @@ export class LLMClient {
     return Promise.race([promise, timeoutPromise]);
   }
 
-  async generateResponse(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
-    const cacheKey = this.getCacheKey(prompt, systemPrompt);
+  async generateResponse(prompt: string, options?: LLMRequestOptions | string): Promise<LLMResponse> {
+    // Handle legacy string parameter for backward compatibility
+    const opts: LLMRequestOptions = typeof options === 'string' 
+      ? { systemPrompt: options } 
+      : (options || {});
+    
+    const cacheKey = this.getCacheKey(prompt, opts.systemPrompt);
     
     // Check cache first
     const cached = this.requestCache.get(cacheKey);
@@ -115,10 +125,10 @@ export class LLMClient {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
       
       // Add system prompt
-      if (systemPrompt || this.getDefaultSystemPrompt()) {
+      if (opts.systemPrompt || this.getDefaultSystemPrompt()) {
         messages.push({
           role: 'system',
-          content: systemPrompt || this.getDefaultSystemPrompt()
+          content: opts.systemPrompt || this.getDefaultSystemPrompt()
         });
       }
       
@@ -128,14 +138,22 @@ export class LLMClient {
         content: prompt
       });
 
+      // Prepare completion options
+      const completionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+        model: this.model,
+        messages,
+        temperature: this.temperature,
+        max_tokens: this.maxTokens,
+      };
+
+      // Add response format if specified
+      if (opts.responseFormat === 'json_object') {
+        completionOptions.response_format = { type: 'json_object' };
+      }
+
       // Add timeout to API call for MCP usage
       const response = await this.withTimeout(
-        this.client.chat.completions.create({
-          model: this.model,
-          messages,
-          temperature: this.temperature,
-          max_tokens: this.maxTokens,
-        }),
+        this.client.chat.completions.create(completionOptions),
         this.timeoutMs
       );
 
@@ -160,11 +178,16 @@ export class LLMClient {
       console.warn(`LLM API call failed (${this.provider}), using fallback:`, error instanceof Error ? error.message : String(error));
       
       // Fallback to a simple template-based response
-      return {
+      const fallbackResponse = {
         content: this.generateFallbackResponse(prompt),
         model: 'fallback-template',
         provider: 'Fallback System'
       };
+      
+      // Cache the fallback response too
+      this.requestCache.set(cacheKey, { response: fallbackResponse, timestamp: Date.now() });
+      
+      return fallbackResponse;
     }
   }
 

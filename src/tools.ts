@@ -1,12 +1,17 @@
 import { z } from 'zod';
-import { optimizedAnalyzer, storyGenerator, adventureManager } from './shared/instances.js';
+import { optimizedAnalyzer } from './shared/instances.js';
+import { AdventureManager } from './adventure/AdventureManager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { AnalysisError, formatErrorForUser } from './shared/errors.js';
+import { formatErrorForUser } from './shared/errors.js';
+
+// Create a single shared adventure manager instance
+const adventureManager = new AdventureManager();
+
 // Schema types
 type StartAdventureArgs = z.infer<typeof startAdventureSchema>;
 type ChooseThemeArgs = z.infer<typeof chooseThemeSchema>;
 type ExplorePathArgs = z.infer<typeof explorePathSchema>;
-type MeetCharacterArgs = z.infer<typeof meetCharacterSchema>;
+type ProgressArgs = z.infer<typeof progressSchema>;
 
 // Schemas
 const startAdventureSchema = z.object({
@@ -18,12 +23,10 @@ const chooseThemeSchema = z.object({
 });
 
 const explorePathSchema = z.object({
-  choice: z.string().describe('The exploration choice you want to make')
+  choice: z.string().describe('The adventure choice - can be adventure number (1, 2, 3) or adventure title')
 });
 
-const meetCharacterSchema = z.object({
-  characterName: z.string().describe('Name of the character you want to meet')
-});
+const progressSchema = z.object({});
 
 // Start Adventure Tool
 export const start_adventure = {
@@ -33,35 +36,24 @@ export const start_adventure = {
     const projectPath = args.projectPath || process.cwd();
     
     try {
-      // Note: The actual scanning happens here immediately, before theme selection
+      // Analyze the project
       const projectInfo = await optimizedAnalyzer.analyzeProject(projectPath);
-      
-      try {
-        storyGenerator.setProject(projectInfo);
-      } catch (error) {
-        throw AnalysisError(
-          'Failed to initialize story generator with project info',
-          { projectPath, step: 'story_initialization' },
-          error instanceof Error ? error : new Error(String(error))
-        );
-      }
       
       return {
         content: [
           {
             type: 'text' as const,
-            text: `
-🌟 **Welcome to Repo Adventures!** 🌟
+            text: `🌟 **Welcome to Repo Adventures!** 🌟
 
-You've discovered a mysterious codebase containing ${projectInfo.fileCount} files of ancient digital wisdom! This ${projectInfo.type} project harnesses the power of ${projectInfo.mainTechnologies.slice(0, 3).join(', ')} and ${projectInfo.mainTechnologies.length > 3 ? `${projectInfo.mainTechnologies.length - 3} other technologies` : 'more'}.
+You've discovered a mysterious codebase containing ${projectInfo.fileCount} files of digital wisdom! This ${projectInfo.type} project harnesses the power of ${projectInfo.mainTechnologies.slice(0, 3).join(', ')}${projectInfo.mainTechnologies.length > 3 ? ` and ${projectInfo.mainTechnologies.length - 3} other technologies` : ''}.
 
-${projectInfo.codeAnalysis.functions.length > 0 ? `📊 **Initial Scan Results:**
-• ${projectInfo.codeAnalysis.functions.length} magical functions discovered
-• ${projectInfo.codeAnalysis.classes.length} powerful entities detected
-• ${projectInfo.codeAnalysis.dependencies.length} allied systems connected
-• Entry point: ${projectInfo.codeAnalysis.entryPoints[0] || 'Unknown'}` : ''}
+📊 **Initial Scan Results:**
+• ${projectInfo.codeAnalysis.functions.length} functions discovered
+• ${projectInfo.codeAnalysis.classes.length} classes detected
+• ${projectInfo.codeAnalysis.dependencies.length} dependencies connected
+• Entry point: ${projectInfo.codeAnalysis.entryPoints[0] || 'Unknown'}
 
-Your mission: Transform into a digital explorer and uncover the secrets of this codebase through an immersive adventure! Each character you meet represents a real component, and every location mirrors actual project structure.
+Your mission: Transform into a digital explorer and uncover the secrets of this codebase through an immersive, LLM-generated adventure! Every story, character, and code insight is dynamically created based on your actual project structure.
 
 **Choose Your Story Theme:**
 
@@ -69,7 +61,7 @@ Your mission: Transform into a digital explorer and uncover the secrets of this 
 🏰 **Enchanted Kingdom** - Explore magical realms where databases are dragon hoards and functions are powerful spells  
 🏺 **Ancient Civilization** - Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes
 
-What story theme would you like to explore?`
+Use the \`choose_theme\` tool with your preferred theme to begin your adventure!`
           }
         ]
       };
@@ -85,27 +77,24 @@ What story theme would you like to explore?`
   }
 };
 
-// Choose Theme Tool
+// Choose Theme Tool - Now uses LLM to generate story + adventures
 export const choose_theme = {
-  description: 'Select your adventure theme after starting.',
+  description: 'Select your adventure theme and generate a custom story with adventures based on your project.',
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
-      // Get the current project info (should be cached from start_adventure)
+      // Get the current project info
       const projectPath = process.cwd();
       const projectInfo = await optimizedAnalyzer.analyzeProject(projectPath);
       
-      const story = await storyGenerator.generateStory(args.theme);
-      adventureManager.setCurrentStory(story);
-      
-      // Set project context for enhanced adventure features
-      adventureManager.setContext(projectInfo, args.theme);
+      // Initialize adventure with LLM-generated content
+      const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, args.theme);
       
       return {
         content: [
           {
             type: 'text' as const,
-            text: story.introduction
+            text: storyWithAdventures
           }
         ]
       };
@@ -118,21 +107,32 @@ export const choose_theme = {
   }
 };
 
-// Explore Path Tool
+// Explore Path Tool - Now handles both numbered choices and adventure titles
 export const explore_path = {
-  description: 'Choose your adventure path to explore different aspects of the codebase.',
+  description: 'Choose your adventure path to explore different aspects of the codebase. Use adventure numbers (1, 2, 3) or adventure titles.',
   schema: explorePathSchema,
   handler: async (args: ExplorePathArgs) => {
     try {
-      const result = await adventureManager.makeChoice(args.choice);
+      // AdventureManager now handles numbered choices, titles, and IDs automatically
+      const result = await adventureManager.exploreAdventure(args.choice);
+      
+      let responseText = result.narrative;
+      
+      // Add progress update if available
+      if (result.progressUpdate) {
+        responseText += `\n\n**${result.progressUpdate}**`;
+      }
+      
+      // Add available choices
+      if (result.choices && result.choices.length > 0) {
+        responseText += `\n\n**Available Adventures:**\n${result.choices.map((choice: string, i: number) => `${i + 1}. ${choice}`).join('\n')}\n\nUse \`explore_path\` with your choice to continue your journey!`;
+      }
       
       return {
         content: [
           {
             type: 'text' as const,
-            text: result.narrative + (result.choices && result.choices.length > 0 
-              ? `\n\n**Your choices:**\n${result.choices.map((choice: string, i: number) => `${i + 1}. ${choice}`).join('\n')}\n\nUse \`explore_path\` with your choice to continue!`
-              : '')
+            text: responseText
           }
         ]
       };
@@ -145,38 +145,33 @@ export const explore_path = {
   }
 };
 
-// Meet Character Tool
-export const meet_character = {
-  description: 'Interact with a specific character to learn about a technology or component.',
-  schema: meetCharacterSchema,
-  handler: async (args: MeetCharacterArgs) => {
+// Progress Tool - Show current adventure progress
+export const view_progress = {
+  description: 'View your current adventure progress and see completed adventures.',
+  schema: progressSchema,
+  handler: async (_args: ProgressArgs) => {
     try {
-      const character = await adventureManager.getCharacterInfo(args.characterName);
+      const progress = adventureManager.getProgress();
+      
+      let responseText = progress.narrative;
+      
+      // Add available choices
+      if (progress.choices && progress.choices.length > 0) {
+        responseText += `\n\n**Available Adventures:**\n${progress.choices.map((choice: string, i: number) => `${i + 1}. ${choice}`).join('\n')}\n\nUse \`explore_path\` with your choice to continue!`;
+      }
       
       return {
         content: [
           {
             type: 'text' as const,
-            text: `**${character.name}** approaches you with a warm smile.
-
-"${character.greeting}"
-
-**About ${character.name}:**
-${character.description}
-
-**What they do:**
-${character.role}
-
-**Fun fact:** ${character.funFact}
-
-Would you like to explore their domain or continue your adventure elsewhere?`
+            text: responseText
           }
         ]
       };
     } catch (error) {
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to meet character: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to view progress: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -187,5 +182,5 @@ export const tools = {
   start_adventure,
   choose_theme,
   explore_path,
-  meet_character
+  view_progress
 };

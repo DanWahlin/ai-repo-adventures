@@ -1,609 +1,625 @@
-import { Story, Character } from '../shared/types.js';
 import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
+import { LLMClient } from '../llm/LLMClient.js';
 
-export interface AdventureChoice {
+// Core interfaces for LLM-driven adventures
+export interface Adventure {
   id: string;
-  text: string;
+  title: string;
   description: string;
-  target: string; // character name, area, or special action
+  codeFiles?: string[]; // files this adventure will explore
+}
+
+export interface StoryResponse {
+  story: string;
+  adventures: Adventure[];
+}
+
+export interface CodeSnippet {
+  file: string;
+  snippet: string;
+  explanation: string;
+}
+
+export interface AdventureContent {
+  adventure: string;  // Contains the story with analogies woven throughout
+  codeSnippets: CodeSnippet[];
+  hints: string[];
 }
 
 export interface AdventureResult {
   narrative: string;
   choices?: string[];
-  characterMet?: Character;
   completed?: boolean;
+  progressUpdate?: string;
 }
 
-export interface AdventureState {
-  currentStory?: Story;
-  visitedCharacters: Set<string>;
-  exploredAreas: Set<string>;
-  currentLocation: string;
-  adventureProgress: number;
-  discoveries: string[];
-  hintsRevealed: number;
-}
+export class AdventureState {
+  story: string | undefined = undefined;
+  adventures: Adventure[] = [];
+  completedAdventures: Set<string> = new Set();
+  currentTheme: string = '';
+  projectInfo: ProjectInfo | undefined = undefined;
 
-interface AdventureContext {
-  projectInfo?: ProjectInfo;
-  currentTheme?: string;
-  visitedLocations: Set<string>;
+  get progressPercentage(): number {
+    return this.adventures.length > 0 
+      ? Math.round((this.completedAdventures.size / this.adventures.length) * 100)
+      : 0;
+  }
+
+  reset() {
+    this.story = undefined;
+    this.adventures = [];
+    this.completedAdventures.clear();
+    this.currentTheme = '';
+    this.projectInfo = undefined;
+  }
 }
 
 export class AdventureManager {
-  private state: AdventureState = {
-    visitedCharacters: new Set(),
-    exploredAreas: new Set(),
-    currentLocation: 'entrance',
-    adventureProgress: 0,
-    discoveries: [],
-    hintsRevealed: 0
-  };
+  private state: AdventureState = new AdventureState();
+  private llmClient: LLMClient;
 
-  private context: AdventureContext = {
-    visitedLocations: new Set()
-  };
-
-  setCurrentStory(story: Story) {
-    this.state.currentStory = story;
-    this.state.visitedCharacters.clear();
-    this.state.exploredAreas.clear();
-    this.state.currentLocation = 'entrance';
-    this.state.adventureProgress = 0;
-    this.state.discoveries = [];
-    this.state.hintsRevealed = 0;
+  constructor() {
+    this.llmClient = new LLMClient();
   }
 
-  setContext(projectInfo: ProjectInfo, theme: string) {
-    this.context.projectInfo = projectInfo;
-    this.context.currentTheme = theme;
-  }
+  /**
+   * Initialize the adventure with project context and generate story + adventures
+   */
+  async initializeAdventure(projectInfo: ProjectInfo, theme: string): Promise<string> {
+    // Reset state for new adventure
+    this.state.reset();
+    this.state.projectInfo = projectInfo;
+    this.state.currentTheme = theme;
 
-  async makeChoice(choice: string): Promise<AdventureResult> {
-    if (!this.state.currentStory) {
-      throw new Error('No story is currently active. Please choose a theme first.');
-    }
-
-    // Handle specific adventure paths first (enhanced functionality)
-    const lowerChoice = choice.toLowerCase();
+    // Generate the overall story and adventures using LLM
+    const storyResponse = await this.generateStoryAndAdventures(projectInfo, theme);
     
-    if (lowerChoice.includes('configuration cavern') || lowerChoice === '1') {
-      return this.exploreConfiguration();
-    } else if (lowerChoice.includes('main quest') || lowerChoice === '2') {
-      return this.exploreMainQuest();
-    } else if (lowerChoice.includes('dependency nexus')) {
-      return this.exploreDependencies();
-    } else if (lowerChoice.includes('character gallery')) {
-      return this.exploreCharacters();
-    } else if (lowerChoice.includes('testing grounds')) {
-      return this.exploreTestingGrounds();
-    } else if (lowerChoice.includes('api gateway')) {
-      return this.exploreAPIGateway();
-    } else if (lowerChoice.includes('hint')) {
-      return this.provideHint();
-    } else if (lowerChoice.includes('discoveries')) {
-      return this.showDiscoveries();
-    }
+    this.state.story = storyResponse.story;
+    this.state.adventures = storyResponse.adventures;
 
-    // Fall back to basic choice parsing (original functionality)
-    const action = this.parseChoice(choice);
+    // Return the story with available adventures
+    return this.formatStoryWithAdventures(storyResponse);
+  }
+
+  /**
+   * Execute a chosen adventure by ID, number, or title
+   */
+  async exploreAdventure(choice: string): Promise<AdventureResult> {
+    let adventure: Adventure | undefined;
     
-    switch (action.type) {
-      case 'meet_character':
-        return await this.handleMeetCharacter(action.target);
-      case 'explore_area':
-        return await this.handleExploreArea(action.target);
-      case 'investigate':
-        return await this.handleInvestigate(action.target);
-      default:
-        return this.handleGenericChoice(choice);
+    // Try to match by number (1, 2, 3, etc.)
+    const choiceNumber = parseInt(choice);
+    if (!isNaN(choiceNumber) && choiceNumber > 0) {
+      adventure = this.state.adventures[choiceNumber - 1];
     }
-  }
-
-  async getCharacterInfo(characterName: string): Promise<Character> {
-    if (!this.state.currentStory) {
-      throw new Error('No story is currently active.');
+    
+    // Try to match by ID or title if number didn't work
+    if (!adventure) {
+      adventure = this.state.adventures.find(a => 
+        a.id === choice || 
+        a.title.toLowerCase().includes(choice.toLowerCase()) ||
+        choice.toLowerCase().includes(a.title.toLowerCase())
+      );
     }
-
-    const character = this.state.currentStory.characters.find(
-      c => c.name.toLowerCase().includes(characterName.toLowerCase()) ||
-           characterName.toLowerCase().includes(c.name.toLowerCase())
-    );
-
-    if (!character) {
-      throw new Error(`Character "${characterName}" not found in the current story.`);
-    }
-
-    this.state.visitedCharacters.add(character.name);
-    return character;
-  }
-
-  // Enhanced adventure exploration methods
-  private async exploreConfiguration(): Promise<AdventureResult> {
-    if (!this.context.projectInfo) {
+    
+    if (!adventure) {
       return {
-        narrative: "The mists of uncertainty cloud your vision. You must first analyze a project!",
-        choices: []
+        narrative: "Adventure not found. Please choose from the available adventures.",
+        choices: this.getAvailableAdventureChoices()
       };
     }
 
-    const configFiles = this.context.projectInfo.structure.configFiles;
-    const theme = this.context.currentTheme || 'space';
+    // Generate adventure content using LLM
+    const adventureContent = await this.generateAdventureContent(adventure);
     
-    const narratives = {
-      space: `🚀 **The Configuration Nebula**
+    // Mark adventure as completed
+    this.state.completedAdventures.add(adventure.id);
 
-You drift into a shimmering cloud of cosmic data streams. Here, the fundamental laws of your starship are defined. Floating before you are ${configFiles.length} crystalline data cores:
+    // Generate completion summary
+    const completionSummary = await this.generateCompletionSummary(adventure);
 
-${configFiles.slice(0, 5).map(file => `• **${file}** - A ${this.getConfigDescription(file, 'space')}`).join('\n')}
-
-The configuration systems hum with power, ready to reveal their secrets.`,
-
-      medieval: `🏰 **The Configuration Caverns**
-
-You descend into ancient stone chambers where magical scrolls determine the kingdom's fate. Here lie ${configFiles.length} mystical parchments:
-
-${configFiles.slice(0, 5).map(file => `• **${file}** - A ${this.getConfigDescription(file, 'medieval')}`).join('\n')}
-
-The magical energies pulse through these ancient texts.`,
-
-      ancient: `🏺 **The Configuration Temple**
-
-You enter a sacred temple where stone tablets hold the laws of the realm. Before you are ${configFiles.length} carved monuments:
-
-${configFiles.slice(0, 5).map(file => `• **${file}** - A ${this.getConfigDescription(file, 'ancient')}`).join('\n')}
-
-The ancient wisdom emanates from these sacred artifacts.`
-    };
-
-    this.context.visitedLocations.add('configuration');
-    
-    this.state.exploredAreas.add('configuration');
-    this.state.adventureProgress += 15;
-    
     return {
-      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: this.generateDynamicChoices()
+      narrative: this.formatAdventureResult(adventureContent, completionSummary),
+      choices: this.getAvailableAdventureChoices(),
+      completed: true,
+      progressUpdate: `Progress: ${this.state.progressPercentage}% complete (${this.state.completedAdventures.size}/${this.state.adventures.length} adventures finished)`
     };
   }
 
-  private async exploreMainQuest(): Promise<AdventureResult> {
-    if (!this.context.projectInfo) {
-      return {
-        narrative: "You need to analyze a project first!",
-        choices: []
-      };
-    }
-
-    const theme = this.context.currentTheme || 'space';
-    const entryPoint = this.context.projectInfo.codeAnalysis.entryPoints[0] || 'src/index.ts';
-    
-    const narratives = {
-      space: `🚀 **The Core Systems**
-
-You navigate to the heart of the starship's operations. The main reactor (**${entryPoint}**) pulses with energy, coordinating all ship systems. From here, data flows to ${this.context.projectInfo.codeAnalysis.functions.length} operational subroutines.
-
-The ship's neural network processes ${this.context.projectInfo.mainTechnologies.join(', ')} technologies in perfect harmony.`,
-
-      medieval: `🏰 **The Great Hall**
-
-You enter the kingdom's grand hall where the main quest begins. The central command (**${entryPoint}**) coordinates ${this.context.projectInfo.codeAnalysis.functions.length} loyal subjects in their duties.
-
-The realm operates through the magical arts of ${this.context.projectInfo.mainTechnologies.join(', ')}.`,
-
-      ancient: `🏺 **The Central Chamber**
-
-You discover the civilization's nerve center. The primary control (**${entryPoint}**) orchestrates ${this.context.projectInfo.codeAnalysis.functions.length} ceremonial processes.
-
-This advanced society mastered ${this.context.projectInfo.mainTechnologies.join(', ')} long ago.`
-    };
-
-    this.state.exploredAreas.add('main');
-    this.state.adventureProgress += 20;
-    
-    return {
-      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: this.generateDynamicChoices()
-    };
-  }
-
-  private async exploreDependencies(): Promise<AdventureResult> {
-    if (!this.context.projectInfo) {
-      return {
-        narrative: "You need to analyze a project first!",
-        choices: []
-      };
-    }
-
-    const dependencies = this.context.projectInfo.codeAnalysis.dependencies;
-    const theme = this.context.currentTheme || 'space';
-    
-    const narratives = {
-      space: `🚀 **The Alliance Network**
-
-You access the starship's alliance database. Connected to your vessel are ${dependencies.length} allied systems:
-
-${dependencies.slice(0, 8).map(dep => `• **${dep.name}** - ${dep.type} alliance`).join('\n')}
-
-These partnerships provide essential resources and capabilities.`,
-
-      medieval: `🏰 **The Trade Network**
-
-You examine the kingdom's trade relationships. The realm maintains ${dependencies.length} important alliances:
-
-${dependencies.slice(0, 8).map(dep => `• **${dep.name}** - ${dep.type} trading partner`).join('\n')}
-
-These alliances strengthen the kingdom's capabilities.`,
-
-      ancient: `🏺 **The Network of Knowledge**
-
-You discover the civilization's knowledge network. They maintained ${dependencies.length} connections:
-
-${dependencies.slice(0, 8).map(dep => `• **${dep.name}** - ${dep.type} knowledge source`).join('\n')}
-
-These connections enabled their advanced society.`
-    };
-
-    this.state.exploredAreas.add('dependencies');
-    this.state.adventureProgress += 15;
-    
-    return {
-      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: this.generateDynamicChoices()
-    };
-  }
-
-  private async exploreCharacters(): Promise<AdventureResult> {
-    if (!this.state.currentStory) {
-      return {
-        narrative: "No story is active!",
-        choices: []
-      };
-    }
-
-    const characters = this.state.currentStory.characters;
-    const theme = this.context.currentTheme || 'space';
-    
-    const narratives = {
-      space: `🚀 **The Crew Quarters**
-
-You enter the crew quarters where the ship's inhabitants reside. ${characters.length} beings work together to maintain this cosmic vessel:
-
-${characters.slice(0, 6).map(char => `• **${char.name}** - ${char.role}`).join('\n')}
-
-Each crew member specializes in different aspects of the ship's operation.`,
-
-      medieval: `🏰 **The Royal Court**
-
-You arrive at the royal court where ${characters.length} important figures serve the realm:
-
-${characters.slice(0, 6).map(char => `• **${char.name}** - ${char.role}`).join('\n')}
-
-Each courtier has their own expertise and domain.`,
-
-      ancient: `🏺 **The Council Chamber**
-
-You discover the council chamber where ${characters.length} wise figures once gathered:
-
-${characters.slice(0, 6).map(char => `• **${char.name}** - ${char.role}`).join('\n')}
-
-Each member contributed their unique knowledge to the civilization.`
-    };
-
-    this.state.exploredAreas.add('characters');
-    this.state.adventureProgress += 10;
-    
-    return {
-      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: this.generateDynamicChoices()
-    };
-  }
-
-  // Basic adventure methods (from original AdventureManager)
-  private parseChoice(choice: string): { type: string; target: string } {
-    const lowerChoice = choice.toLowerCase();
-    
-    if (lowerChoice.includes('meet') || lowerChoice.includes('talk')) {
-      const target = choice.replace(/meet|talk to|with/gi, '').trim();
-      return { type: 'meet_character', target };
-    }
-    
-    if (lowerChoice.includes('explore') || lowerChoice.includes('go to')) {
-      const target = choice.replace(/explore|go to/gi, '').trim();
-      return { type: 'explore_area', target };
-    }
-    
-    if (lowerChoice.includes('investigate') || lowerChoice.includes('examine')) {
-      const target = choice.replace(/investigate|examine/gi, '').trim();
-      return { type: 'investigate', target };
-    }
-    
-    return { type: 'generic', target: choice };
-  }
-
-  private async handleMeetCharacter(characterName: string): Promise<AdventureResult> {
-    try {
-      const character = await this.getCharacterInfo(characterName);
-      
-      // Add code discovery based on character's technology
-      let codeInsight = '';
-      if (this.context.projectInfo && character.technology) {
-        const relevantFunction = this.context.projectInfo.codeAnalysis.functions.find(f => 
-          f.summary.toLowerCase().includes(character.technology.toLowerCase()) ||
-          f.fileName.toLowerCase().includes(character.technology.toLowerCase())
-        );
-        
-        if (relevantFunction) {
-          codeInsight = `\n\n📜 **Code Discovery**: ${character.name} shows you the \`${relevantFunction.name}\` function:\n\`\`\`\n${relevantFunction.name}(${relevantFunction.parameters.join(', ')})\n// ${relevantFunction.summary}\n// Located in: ${relevantFunction.fileName}\n\`\`\``;
-          this.state.discoveries.push(`Function: ${relevantFunction.name} - ${relevantFunction.summary}`);
-        }
-      }
-      
-      return {
-        narrative: `You meet **${character.name}**. ${character.description}${codeInsight}`,
-        characterMet: character,
-        choices: ['Ask about their specific expertise', 'Learn about their connections', 'Continue exploring']
-      };
-    } catch (error) {
-      return {
-        narrative: `You couldn't find anyone named "${characterName}". Try meeting someone else.`,
-        choices: this.state.currentStory?.characters.slice(0, 3).map(c => `Meet ${c.name}`) || []
-      };
-    }
-  }
-
-  private async handleExploreArea(area: string): Promise<AdventureResult> {
-    this.state.exploredAreas.add(area);
-    this.state.adventureProgress += 10;
-    
-    return {
-      narrative: `You explore the ${area}. It's an interesting place with many secrets to discover.`,
-      choices: ['Look around more', 'Meet someone here', 'Go somewhere else']
-    };
-  }
-
-  private async handleInvestigate(target: string): Promise<AdventureResult> {
-    return {
-      narrative: `You investigate ${target}. Your careful examination reveals interesting details about how this works.`,
-      choices: ['Investigate further', 'Try something else', 'Ask for help']
-    };
-  }
-
-  private async handleGenericChoice(choice: string): Promise<AdventureResult> {
-    this.state.adventureProgress += 5;
-    
-    return {
-      narrative: `You decide to ${choice}. The adventure continues with new possibilities ahead.`,
-      choices: ['Keep exploring', 'Try a different approach', 'Seek guidance']
-    };
-  }
-
-  private async exploreTestingGrounds(): Promise<AdventureResult> {
-    if (!this.context.projectInfo) {
-      return {
-        narrative: "You need to analyze a project first!",
-        choices: []
-      };
-    }
-
-    const theme = this.context.currentTheme || 'space';
-    const testFiles = this.context.projectInfo.structure.sourceFiles.filter(f => 
-      f.includes('test') || f.includes('spec')
-    );
-    
-    const narratives = {
-      space: `🚀 **The Testing Bay**
-
-You enter the ship's testing facility where quality assurance protocols ensure safe space travel. ${testFiles.length} testing modules are active:
-
-${testFiles.slice(0, 5).map(file => `• **${file}** - Automated safety check`).join('\n')}
-
-The testing systems validate every component before deployment.`,
-
-      medieval: `🏰 **The Proving Grounds**
-
-You discover the training grounds where brave knights test their skills. ${testFiles.length} trials await:
-
-${testFiles.slice(0, 5).map(file => `• **${file}** - Combat trial`).join('\n')}
-
-Here, all magical artifacts are tested before use in the kingdom.`,
-
-      ancient: `🏺 **The Trial Chambers**
-
-You find the ancient testing chambers where artifacts were proven worthy. ${testFiles.length} trials remain:
-
-${testFiles.slice(0, 5).map(file => `• **${file}** - Sacred trial`).join('\n')}
-
-Only the most reliable artifacts passed these rigorous tests.`
-    };
-
-    this.state.exploredAreas.add('tests');
-    this.state.adventureProgress += 15;
-    this.state.discoveries.push('Testing Framework: Ensuring code quality through automated tests');
-    
-    return {
-      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: this.generateDynamicChoices()
-    };
-  }
-
-  private async exploreAPIGateway(): Promise<AdventureResult> {
-    if (!this.context.projectInfo) {
-      return {
-        narrative: "You need to analyze a project first!",
-        choices: []
-      };
-    }
-
-    const theme = this.context.currentTheme || 'space';
-    const apiFiles = this.context.projectInfo.structure.sourceFiles.filter(f => 
-      f.includes('api') || f.includes('route') || f.includes('controller')
-    );
-    
-    const narratives = {
-      space: `🚀 **The Communication Array**
-
-You approach the ship's massive communication array. Here, ${apiFiles.length} channels connect your vessel to the galaxy:
-
-${apiFiles.slice(0, 5).map(file => `• **${file}** - Subspace frequency`).join('\n')}
-
-Data flows in and out through these carefully managed channels.`,
-
-      medieval: `🏰 **The Royal Messenger Tower**
-
-You climb the messenger tower where royal decrees are sent across the realm. ${apiFiles.length} message routes are maintained:
-
-${apiFiles.slice(0, 5).map(file => `• **${file}** - Messenger route`).join('\n')}
-
-Each route ensures secure communication throughout the kingdom.`,
-
-      ancient: `🏺 **The Signal Fires**
-
-You discover the ancient communication network of signal fires. ${apiFiles.length} beacon points remain:
-
-${apiFiles.slice(0, 5).map(file => `• **${file}** - Sacred beacon`).join('\n')}
-
-These beacons once connected the entire civilization.`
-    };
-
-    this.state.exploredAreas.add('api');
-    this.state.adventureProgress += 20;
-    this.state.discoveries.push('API Architecture: Communication pathways that connect different parts of the system');
-    
-    return {
-      narrative: narratives[theme as keyof typeof narratives] || narratives.space,
-      choices: this.generateDynamicChoices()
-    };
-  }
-
-  private async provideHint(): Promise<AdventureResult> {
-    const hints = [
-      "💡 **Hint**: Try exploring areas related to the main technologies in this project. Each technology has its own guardian character!",
-      "💡 **Hint**: Configuration files often hold the secrets to how a project is structured. Have you visited the Configuration Cavern?",
-      "💡 **Hint**: Dependencies are like allies - they provide special powers to your project. The Dependency Nexus reveals these relationships.",
-      "💡 **Hint**: The entry point file is where every adventure begins. Following the code flow from there reveals the project's true nature."
-    ];
-
-    const hint = hints[this.state.hintsRevealed % hints.length];
-    this.state.hintsRevealed++;
-    
-    return {
-      narrative: hint + "\n\nThis insight might help guide your next steps!",
-      choices: this.generateDynamicChoices()
-    };
-  }
-
-  private async showDiscoveries(): Promise<AdventureResult> {
-    if (this.state.discoveries.length === 0) {
-      return {
-        narrative: "📜 **Your Adventure Journal**\n\nYou haven't made any discoveries yet. Keep exploring to uncover the secrets of this codebase!",
-        choices: this.generateDynamicChoices()
-      };
-    }
-
-    const progress = Math.min(100, this.state.adventureProgress);
-    const narrative = `📜 **Your Adventure Journal**
-
-**Progress**: ${progress}% complete
-**Areas Explored**: ${this.state.exploredAreas.size}
-**Characters Met**: ${this.state.visitedCharacters.size}
-
-**Discoveries**:
-${this.state.discoveries.map((d, i) => `${i + 1}. ${d}`).join('\n')}
-
-${progress >= 80 ? '\n🎉 You\'re close to mastering this codebase!' : '\nKeep exploring to uncover more secrets!'}`;
+  /**
+   * Get current progress and available adventures
+   */
+  getProgress(): AdventureResult {
+    const completedList = Array.from(this.state.completedAdventures)
+      .map(id => this.state.adventures.find(a => a.id === id)?.title)
+      .filter(Boolean);
+
+    const narrative = `📊 **Adventure Progress**
+
+**Overall Progress**: ${this.state.progressPercentage}% complete
+**Adventures Completed**: ${this.state.completedAdventures.size}/${this.state.adventures.length}
+
+${completedList.length > 0 ? `**Completed Adventures:**
+${completedList.map((title, i) => `${i + 1}. ${title}`).join('\n')}` : '**No adventures completed yet.** Choose your first adventure below!'}
+
+${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have successfully explored this codebase through your epic adventures!' : 'Continue your journey by selecting another adventure:'}`;
 
     return {
       narrative,
-      choices: this.generateDynamicChoices()
+      choices: this.getAvailableAdventureChoices()
     };
   }
 
-  // Generate dynamic choices based on exploration state
-  private generateDynamicChoices(): string[] {
-    const choices: string[] = [];
-    
-    if (!this.state.currentStory || !this.context.projectInfo) {
-      return ['Begin your adventure'];
-    }
+  /**
+   * Generate the initial story and adventures using LLM
+   */
+  private async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: string): Promise<StoryResponse> {
+    const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
 
-    // Add character-based choices for unmet characters
-    const unmetCharacters = this.state.currentStory.characters.filter(
-      char => !this.state.visitedCharacters.has(char.name)
-    );
-    if (unmetCharacters.length > 0 && choices.length < 3) {
-      const char = unmetCharacters[0];
-      if (char) {
-        choices.push(`Meet ${char.name} (${char.technology || 'General'} expert)`);
+    const prompt = `You are a technical education specialist who creates immersive code exploration experiences. Your goal is to transform this codebase into an engaging ${theme}-themed narrative that helps developers understand the architecture through storytelling.
+
+## Project Analysis
+${projectAnalysis}
+
+## Adventure Creation Rules
+
+**Adventure Count Logic:**
+- Simple projects (<50 files, <3 technologies): 2-3 adventures
+- Medium projects (50-200 files, 3-5 technologies): 3-4 adventures  
+- Complex projects (>200 files, >5 technologies): 5-6 adventures
+
+**Required Adventure Types** (adapt to available project components):
+1. **Architecture Overview** - Overall system design and entry points
+2. **Configuration & Setup** - How the project is configured and initialized
+3. **Core Logic** - Main business logic and algorithms
+4. **Data Layer** - Database, storage, or data management (if present)
+5. **API/Interface** - External interfaces, APIs, or user interactions (if present)
+6. **Testing & Quality** - Testing setup and quality assurance (if present)
+
+## Theme Guidelines
+
+**${theme.toUpperCase()} THEME VOCABULARY:**
+${this.getThemeVocabulary(theme)}
+
+**Story Requirements:**
+- Create an overarching narrative that connects all adventures
+- Each adventure should feel like a chapter in a larger story
+- Use ${theme} metaphors that make technical concepts intuitive
+- Reference actual file names and technologies from the analysis
+- Make the story educational but entertaining
+- IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
+  ${theme === 'space' ? '(space ships, galaxies, astronauts - NOT kingdoms or magic)' : 
+    theme === 'medieval' ? '(castles, knights, magic - NOT space ships or ancient temples)' : 
+    '(temples, pyramids, ancient wisdom - NOT space ships or medieval castles)'}
+
+## Response Format
+
+Your response must be a valid JSON object matching the structure below.
+
+{
+  "story": "An engaging 2-3 paragraph opening that establishes the ${theme} world, introduces the codebase as a living system, and sets up the adventure framework. Must reference specific technologies and file structure from the analysis.",
+  "adventures": [
+    {
+      "id": "kebab-case-id",
+      "title": "${theme}-themed title that clearly indicates what code aspect is explored",
+      "description": "1-2 sentences explaining what developers will learn and which files/concepts are covered",
+      "codeFiles": ["actual-file-names-from-analysis"]
+    }
+  ]
+}`;
+
+    try {
+      const response = await this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
+      // With json_object format, the response should already be valid JSON
+      const parsed = JSON.parse(response.content) as StoryResponse;
+      
+      // Validate response structure
+      if (!parsed.story || !Array.isArray(parsed.adventures)) {
+        throw new Error('Invalid response structure');
       }
-    }
 
-    // Add exploration choices based on project structure
-    if (!this.state.exploredAreas.has('configuration') && this.context.projectInfo.structure.configFiles.length > 0) {
-      choices.push('Explore the Configuration Cavern');
+      return parsed;
+    } catch (error) {
+      console.warn('LLM story generation failed, using fallback:', error);
+      return this.generateFallbackStory(projectInfo, theme);
     }
-    
-    if (!this.state.exploredAreas.has('dependencies') && this.context.projectInfo.codeAnalysis.dependencies.length > 0) {
-      choices.push('Visit the Dependency Nexus');
-    }
-
-    if (!this.state.exploredAreas.has('tests') && this.context.projectInfo.hasTests) {
-      choices.push('Enter the Testing Grounds');
-    }
-
-    if (!this.state.exploredAreas.has('api') && this.context.projectInfo.hasApi) {
-      choices.push('Investigate the API Gateway');
-    }
-
-    // Add progress-based choices
-    if (this.state.adventureProgress > 50 && !this.state.exploredAreas.has('core')) {
-      choices.push('Unlock the Core Secrets');
-    }
-
-    // Add hint option if stuck
-    if (this.state.hintsRevealed < 3 && choices.length < 2) {
-      choices.push('Request a helpful hint');
-    }
-
-    // Always have a fallback
-    if (choices.length === 0) {
-      choices.push('Continue exploring', 'Return to the main path', 'Review your discoveries');
-    }
-
-    return choices.slice(0, 4); // Limit to 4 choices for better UX
   }
 
-  // Helper methods
-  private getConfigDescription(filename: string, theme: string): string {
-    const descriptions = {
-      space: {
-        'package.json': 'primary ship manifest',
-        'tsconfig.json': 'navigation protocol matrix',
-        '.env': 'classified mission parameters',
-        'webpack.config.js': 'cargo bay organization system',
-        'vite.config.ts': 'energy distribution network',
-        'default': 'cosmic configuration array'
-      },
-      medieval: {
-        'package.json': 'royal decree scroll',
-        'tsconfig.json': 'magical incantation rules',
-        '.env': 'secret spell components',
-        'webpack.config.js': 'fortress defense blueprint',
-        'vite.config.ts': 'mystical energy conduit',
-        'default': 'ancient enchanted scroll'
-      },
-      ancient: {
-        'package.json': 'sacred law tablet',
-        'tsconfig.json': 'ceremonial ritual guide',
-        '.env': 'hidden temple secrets',
-        'webpack.config.js': 'architectural blueprint',
-        'vite.config.ts': 'power distribution map',
-        'default': 'mysterious stone inscription'
-      }
-    };
+  /**
+   * Generate detailed adventure content using LLM
+   */
+  private async generateAdventureContent(adventure: Adventure): Promise<AdventureContent> {
+    if (!this.state.projectInfo) {
+      throw new Error('No project context available');
+    }
 
-    const themeDescriptions = descriptions[theme as keyof typeof descriptions] || descriptions.space;
-    return themeDescriptions[filename as keyof typeof themeDescriptions] || themeDescriptions.default;
+    // Prepare code content if specific files are mentioned
+    const codeContent = await this.prepareCodeContent(adventure.codeFiles || []);
+    
+    const prompt = `You are continuing the ${this.state.currentTheme}-themed code exploration adventure. Create immersive content for: "${adventure.title}"
+
+**Adventure Context:**
+- Description: ${adventure.description}
+- Project Type: ${this.state.projectInfo.type} using ${this.state.projectInfo.mainTechnologies.join(', ')}
+- Theme Vocabulary: ${this.getThemeVocabulary(this.state.currentTheme)}
+
+**Code Files to Explore:**
+${codeContent}
+
+## Content Requirements
+
+**Adventure Story:**
+- Write 2-3 paragraphs continuing the overarching ${this.state.currentTheme} narrative
+- Connect this adventure to the main story established earlier
+- Use ${this.state.currentTheme} metaphors to explain technical concepts
+- Make complex code concepts accessible through analogies
+- Include specific file names and technologies from the project
+
+**Code Snippets (2-4 required):**
+- Focus on 5-15 lines that demonstrate key patterns or architectures
+- Show important functions, classes, or configuration examples
+- Highlight how components interact with each other
+- Choose the most educational and representative code sections
+
+**Hints (exactly 3 required):**
+1. **Conceptual Hint**: How this code fits into the bigger system architecture
+2. **Practical Hint**: How developers can work with, modify, or extend this code
+3. **Learning Hint**: What concepts to study next or related areas to explore
+
+## Response Format
+
+Your response must be a valid JSON object matching the structure below.
+
+{
+  "adventure": "2-3 paragraph ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
+  "codeSnippets": [
+    {
+      "file": "actual-filename-from-project",
+      "snippet": "5-15 lines of actual relevant code",
+      "explanation": "Clear explanation of what this code does, why it matters, and how it fits into the system"
+    }
+  ],
+  "hints": [
+    "Conceptual: How this fits into the bigger architecture",
+    "Practical: How to work with or modify this code",
+    "Learning: What to study next or related concepts"
+  ]
+}`;
+
+    try {
+      const response = await this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
+      // With json_object format, the response should already be valid JSON
+      const parsed = JSON.parse(response.content) as AdventureContent;
+      
+      // Validate response structure
+      if (!parsed.adventure || !Array.isArray(parsed.codeSnippets) || !Array.isArray(parsed.hints)) {
+        throw new Error('Invalid adventure content structure');
+      }
+
+      return parsed;
+    } catch (error) {
+      console.warn('LLM adventure content generation failed, using fallback:', error);
+      return this.generateFallbackAdventureContent(adventure);
+    }
+  }
+
+  /**
+   * Generate completion summary using LLM
+   */
+  private async generateCompletionSummary(adventure: Adventure): Promise<string> {
+    const progress = this.state.completedAdventures.size + 1;
+    const total = this.state.adventures.length;
+    const percentComplete = Math.round((progress / total) * 100);
+    
+    const prompt = `Generate a ${this.state.currentTheme}-themed completion celebration for: "${adventure.title}"
+
+**Context:**
+- Adventure completed: ${adventure.title}
+- Progress: ${progress}/${total} adventures (${percentComplete}% complete)
+- Theme: ${this.state.currentTheme}
+- Theme vocabulary: ${this.getThemeVocabulary(this.state.currentTheme)}
+
+**Requirements:**
+- Write 1-2 sentences using ${this.state.currentTheme} terminology
+- Celebrate the specific learning achievement of this adventure
+- Reference what code concepts were mastered
+- Use encouraging, triumphant tone
+- Connect to the overarching ${this.state.currentTheme} narrative
+
+**Examples:**
+SPACE: "🚀 Mission accomplished, Space Explorer! You've successfully navigated the Configuration Control Center and mastered the art of system initialization protocols."
+MEDIEVAL: "⚔️ Victory is yours, brave Knight! You have conquered the Enchanted Armory and now wield the sacred knowledge of configuration spells."
+ANCIENT: "🏺 The Oracle smiles upon you, Seeker! You have unlocked the secrets of the Sacred Configuration Chamber and gained wisdom of the initialization rituals."
+
+Generate ONLY the celebration message, no extra text.`;
+
+    try {
+      const response = await this.llmClient.generateResponse(prompt);
+      return response.content.trim();
+    } catch (error) {
+      console.warn('LLM completion summary failed, using fallback:', error);
+      return `🎉 Adventure "${adventure.title}" completed! You've gained valuable insights into this part of the codebase.`;
+    }
+  }
+
+  /**
+   * Get theme-specific vocabulary and examples
+   */
+  private getThemeVocabulary(theme: string): string {
+    const vocabularies = {
+      space: `
+- Architecture → "Starship Design" or "Orbital Platform"
+- Configuration → "Navigation Control Center" or "Command Bridge"
+- APIs → "Interstellar Communication Hub" or "Quantum Data Relay"
+- Database → "Data Archive Constellation" or "Information Nebula"
+- Functions → "Navigation Protocols" or "System Procedures"
+- Classes → "Crew Modules" or "Ship Components"
+- Tests → "System Diagnostics" or "Mission Simulation Chamber"
+- Dependencies → "Allied Fleet" or "Support Network"`,
+      
+      medieval: `
+- Architecture → "Castle Design" or "Kingdom Layout"  
+- Configuration → "Enchanted Armory" or "Royal Treasury"
+- APIs → "Royal Messenger Network" or "Diplomatic Embassy"
+- Database → "Ancient Knowledge Vault" or "Royal Archives"
+- Functions → "Magical Spells" or "Royal Decrees"
+- Classes → "Guild Houses" or "Noble Orders"
+- Tests → "Trial by Combat" or "Wisdom Challenges"
+- Dependencies → "Allied Kingdoms" or "Trade Partners"`,
+      
+      ancient: `
+- Architecture → "Temple Complex" or "Pyramid Structure"
+- Configuration → "Sacred Ritual Chamber" or "Oracle's Sanctum"
+- APIs → "Trade Route Network" or "Messenger Papyrus System"
+- Database → "Sacred Scroll Library" or "Stone Tablet Archive"
+- Functions → "Ancient Rituals" or "Sacred Ceremonies"
+- Classes → "Priest Orders" or "Craftsman Guilds"
+- Tests → "Divine Trials" or "Wisdom Examinations"
+- Dependencies → "Trade Alliances" or "Tribute Networks"`
+    };
+    
+    return vocabularies[theme as keyof typeof vocabularies] || vocabularies.space;
+  }
+
+
+  /**
+   * Prepare code content for LLM analysis
+   */
+  private async prepareCodeContent(codeFiles: string[]): Promise<string> {
+    if (!this.state.projectInfo || codeFiles.length === 0) {
+      return 'No specific files to explore - general project analysis.';
+    }
+
+    // For now, return file info from project analysis
+    // In a full implementation, you'd read the actual file contents
+    const fileInfo = codeFiles.map(file => {
+      const found = this.state.projectInfo!.structure.sourceFiles.find(f => f.includes(file)) ||
+                   this.state.projectInfo!.structure.configFiles.find(f => f.includes(file));
+      return found ? `- ${file}: Found in project structure` : `- ${file}: File reference`;
+    }).join('\n');
+
+    return `Files to explore in this adventure:
+${fileInfo}
+
+Project structure context:
+- Total files: ${this.state.projectInfo.fileCount}
+- Main technologies: ${this.state.projectInfo.mainTechnologies.join(', ')}
+- Has tests: ${this.state.projectInfo.hasTests}
+- Has API: ${this.state.projectInfo.hasApi}
+- Has database: ${this.state.projectInfo.hasDatabase}
+- Entry points: ${this.state.projectInfo.codeAnalysis.entryPoints.join(', ')}`;
+  }
+
+  /**
+   * Create formatted project analysis for LLM
+   */
+  private createProjectAnalysisPrompt(projectInfo: ProjectInfo): string {
+    // Determine complexity level
+    const fileCount = projectInfo.fileCount;
+    const techCount = projectInfo.mainTechnologies.length;
+    let complexityLevel = 'Simple';
+    if (fileCount >= 200 || techCount > 5) {
+      complexityLevel = 'Complex';
+    } else if (fileCount >= 50 || techCount >= 3) {
+      complexityLevel = 'Medium';
+    }
+
+    // Get top functions for better context
+    const topFunctions = projectInfo.codeAnalysis.functions
+      .slice(0, 5)
+      .map(f => `  • ${f.name}() in ${f.fileName} - ${f.summary}`)
+      .join('\n') || '  • No functions detected';
+
+    // Get top classes for better context  
+    const topClasses = projectInfo.codeAnalysis.classes
+      .slice(0, 3)
+      .map(c => `  • ${c.name} in ${c.fileName} - ${c.summary}`)
+      .join('\n') || '  • No classes detected';
+
+    // Categorize dependencies
+    const depsByCategory = projectInfo.codeAnalysis.dependencies.reduce((acc, dep) => {
+      if (!acc[dep.category]) acc[dep.category] = [];
+      acc[dep.category]!.push(dep.name);
+      return acc;
+    }, {} as Record<string, string[]>);
+
+    const depSummary = Object.entries(depsByCategory)
+      .map(([category, deps]) => `  • ${category}: ${deps.slice(0, 3).join(', ')}`)
+      .join('\n') || '  • No dependencies detected';
+
+    return `**PROJECT ANALYSIS:**
+
+**Complexity Assessment:** ${complexityLevel} project (${fileCount} files, ${techCount} technologies)
+
+**Basic Info:**
+- Project type: ${projectInfo.type}
+- File count: ${projectInfo.fileCount}
+- Main technologies: ${projectInfo.mainTechnologies.join(', ')}
+- Entry points: ${projectInfo.codeAnalysis.entryPoints.join(', ') || 'None detected'}
+
+**Architecture Components:**
+- Database integration: ${projectInfo.hasDatabase ? 'Yes' : 'No'}
+- API/HTTP endpoints: ${projectInfo.hasApi ? 'Yes' : 'No'}
+- Frontend interface: ${projectInfo.hasFrontend ? 'Yes' : 'No'}
+- Testing framework: ${projectInfo.hasTests ? 'Yes' : 'No'}
+
+**Key Functions (most important):**
+${topFunctions}
+
+**Key Classes/Components:**
+${topClasses}
+
+**Dependencies by Category:**
+${depSummary}
+
+**File Structure:**
+- Source files: ${projectInfo.structure.sourceFiles.slice(0, 8).join(', ')}
+- Config files: ${projectInfo.structure.configFiles.join(', ')}
+- Important files: ${projectInfo.structure.importantFiles.slice(0, 5).join(', ')}
+
+**Directory Layout:**
+${projectInfo.structure.directories.slice(0, 6).map(dir => `- ${dir}`).join('\n')}
+
+**Recommended Adventure Focus Areas:**
+${this.getRecommendedAdventureFocus(projectInfo)}`;
+  }
+
+  /**
+   * Get recommended adventure focus areas based on project analysis
+   */
+  private getRecommendedAdventureFocus(projectInfo: ProjectInfo): string {
+    const focusAreas = [];
+    
+    // Always include architecture overview for entry points
+    if (projectInfo.codeAnalysis.entryPoints.length > 0) {
+      focusAreas.push('• Architecture Overview - Explore main entry points and system flow');
+    }
+    
+    // Configuration if config files exist
+    if (projectInfo.structure.configFiles.length > 0) {
+      focusAreas.push('• Configuration Setup - Understand project configuration and initialization');
+    }
+    
+    // Core logic based on functions
+    if (projectInfo.codeAnalysis.functions.length > 0) {
+      focusAreas.push('• Core Logic - Dive into main business logic and key algorithms');
+    }
+    
+    // Data layer if database present
+    if (projectInfo.hasDatabase) {
+      focusAreas.push('• Data Management - Explore database integration and data flow');
+    }
+    
+    // API layer if APIs detected
+    if (projectInfo.hasApi) {
+      focusAreas.push('• API Interface - Understand external communication and endpoints');
+    }
+    
+    // Frontend if present
+    if (projectInfo.hasFrontend) {
+      focusAreas.push('• User Interface - Explore frontend components and user interactions');
+    }
+    
+    // Testing if present
+    if (projectInfo.hasTests) {
+      focusAreas.push('• Quality Assurance - Review testing strategies and quality measures');
+    }
+    
+    // Dependencies if significant
+    if (projectInfo.codeAnalysis.dependencies.length > 5) {
+      focusAreas.push('• Dependency Network - Understand external libraries and integrations');
+    }
+    
+    return focusAreas.length > 0 ? focusAreas.join('\n') : '• General Code Exploration - Basic project structure and patterns';
+  }
+
+  /**
+   * Format story with adventures for initial presentation
+   */
+  private formatStoryWithAdventures(storyResponse: StoryResponse): string {
+    const adventuresText = storyResponse.adventures
+      .map((adventure, index) => `${index + 1}. **${adventure.title}** - ${adventure.description}`)
+      .join('\n');
+
+    return `${storyResponse.story}
+
+**🗺️ Available Adventures:**
+${adventuresText}
+
+Choose an adventure by using the \`explore_path\` tool with the adventure number (1, 2, 3, etc.) or adventure title.`;
+  }
+
+  /**
+   * Format complete adventure result
+   */
+  private formatAdventureResult(content: AdventureContent, completionSummary: string): string {
+    const codeSnippetsText = content.codeSnippets.length > 0 
+      ? `\n\n**📜 Code Discoveries:**\n${content.codeSnippets.map(snippet => 
+          `**${snippet.file}:**\n\`\`\`\n${snippet.snippet}\n\`\`\`\n*${snippet.explanation}*`
+        ).join('\n\n')}`
+      : '';
+
+    const hintsText = content.hints.length > 0 
+      ? `\n\n**💡 Helpful Hints:**\n${content.hints.map(hint => `• ${hint}`).join('\n')}`
+      : '';
+
+    return `${content.adventure}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
+  }
+
+  /**
+   * Get available adventure choices for user
+   */
+  private getAvailableAdventureChoices(): string[] {
+    const incomplete = this.state.adventures.filter(a => !this.state.completedAdventures.has(a.id));
+    
+    if (incomplete.length === 0) {
+      return ['View progress', 'Start new adventure'];
+    }
+
+    return [
+      ...incomplete.slice(0, 4).map(a => a.title),
+      'View progress'
+    ];
+  }
+
+  /**
+   * Fallback story generation when LLM fails
+   */
+  private generateFallbackStory(projectInfo: ProjectInfo, theme: string): StoryResponse {
+    const themeEmojis = { space: '🚀', medieval: '🏰', ancient: '🏺' };
+    const emoji = themeEmojis[theme as keyof typeof themeEmojis] || '✨';
+
+    return {
+      story: `${emoji} Welcome to your ${theme} code adventure! This ${projectInfo.type} project contains ${projectInfo.fileCount} files using ${projectInfo.mainTechnologies.join(', ')}. Let's explore it together through an engaging ${theme} journey!`,
+      adventures: [
+        {
+          id: 'main-exploration',
+          title: 'Main Code Exploration',
+          description: 'Explore the core functionality and architecture',
+          codeFiles: projectInfo.codeAnalysis.entryPoints
+        },
+        {
+          id: 'config-adventure',
+          title: 'Configuration Quest',
+          description: 'Discover how the project is configured and set up',
+          codeFiles: projectInfo.structure.configFiles
+        }
+      ]
+    };
+  }
+
+  /**
+   * Fallback adventure content when LLM fails
+   */
+  private generateFallbackAdventureContent(adventure: Adventure): AdventureContent {
+    return {
+      adventure: `You embark on the "${adventure.title}" adventure. ${adventure.description}. This is an important part of understanding how the system works.`,
+      codeSnippets: [],
+      hints: [
+        'Explore the code structure to understand the patterns used',
+        'Look for connections between different parts of the system'
+      ]
+    };
   }
 }

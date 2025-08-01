@@ -143,28 +143,12 @@ async function testRealWorldScenario() {
     console.log('-'.repeat(40));
 
     try {
-      console.log('👥 Meeting a character to discover code...');
+      console.log('👥 Testing character interactions via adventure exploration...');
       
-      // First, get available characters
-      const characterGalleryResult = await client.callTool({
-        name: 'explore_path',
-        arguments: { choice: 'character gallery' }
-      }) as CallToolResult;
-
-      const galleryText = characterGalleryResult.content
-        .filter(c => c.type === 'text')
-        .map(c => (c as TextContent).text)
-        .join('\n');
-
-      // Extract first character name
-      const characterMatch = galleryText.match(/Meet ([^(]+) \(/);
-      const characterName = characterMatch ? characterMatch[1].trim() : 'Data Navigator';
-
-      console.log(`   → Meeting ${characterName}...`);
-      
+      // Test character interactions through adventure exploration (using adventure 1)
       const characterResult = await client.callTool({
-        name: 'meet_character',
-        arguments: { characterName }
+        name: 'explore_path',
+        arguments: { choice: '1' }
       }) as CallToolResult;
 
       const characterText = characterResult.content
@@ -172,18 +156,18 @@ async function testRealWorldScenario() {
         .map(c => (c as TextContent).text)
         .join('\n');
 
-      console.log('   ✓ Character interaction successful');
+      console.log('   ✓ Adventure exploration with character interactions successful');
       
-      // Check for code snippet
-      if (characterText.includes('Code Discovery')) {
-        console.log('   ✓ Code snippet discovered!');
-        const functionMatch = characterText.match(/`([^`]+)`/);
-        if (functionMatch) {
-          console.log(`   ✓ Function shown: ${functionMatch[1]}`);
+      // Check for code snippet in adventure
+      if (characterText.includes('📜 Code Discoveries') || characterText.includes('```')) {
+        console.log('   ✓ Code snippet discovered in adventure!');
+        const codeMatch = characterText.match(/```([^`]+)```/);
+        if (codeMatch) {
+          console.log(`   ✓ Code shown in adventure`);
         }
       }
     } catch (error) {
-      console.log(`   ❌ Character interaction failed: ${error}`);
+      console.log(`   ❌ Character interaction through adventure failed: ${error}`);
     }
 
     // Test 5: Hint System
@@ -217,16 +201,17 @@ async function testRealWorldScenario() {
     console.log('-'.repeat(40));
 
     try {
-      console.log('🚫 Testing invalid theme (should default to space)...');
+      console.log('🚫 Testing invalid theme (should be rejected)...');
       const invalidThemeResult = await client.callTool({
         name: 'choose_theme',
         arguments: { theme: 'underwater' }
       }) as CallToolResult;
       
-      // Should succeed with fallback
-      console.log('   ✓ Invalid theme handled gracefully with fallback');
+      // Should not reach here
+      console.log('   ❌ Invalid theme was not rejected as expected');
     } catch (error) {
-      console.log('   ❌ Unexpected error with invalid theme');
+      // This is expected - invalid themes should be rejected by schema validation
+      console.log('   ✓ Invalid theme correctly rejected by validation');
     }
 
     // Test 7: Performance and Caching
