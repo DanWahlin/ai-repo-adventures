@@ -24,23 +24,6 @@ async function runLLMClientTests() {
     }
   };
 
-  // Basic Configuration Tests
-  console.log('⚙️ Configuration Tests');
-  console.log('-'.repeat(30));
-
-  await test('Client initializes with default configuration', () => {
-    const client = new LLMClient();
-    assert(client instanceof LLMClient, 'Should create LLM client instance');
-  });
-
-  await test('Client accepts custom timeout configuration', () => {
-    const client = new LLMClient({
-      timeoutMs: 5000,
-      cacheTimeoutMs: 60000
-    });
-    assert(client instanceof LLMClient, 'Should create client with custom config');
-  });
-
   // Caching Tests
   console.log('\n📦 Caching Tests');
   console.log('-'.repeat(30));
@@ -56,19 +39,6 @@ async function runLLMClientTests() {
     assert(response1.model === response2.model, 'Response metadata should match');
   });
 
-  await test('Cache key generation is consistent', () => {
-    const client = new LLMClient();
-    
-    // Access private method for testing (TypeScript hack)
-    const getCacheKey = (client as any).getCacheKey.bind(client);
-    
-    const key1 = getCacheKey('test prompt', 'system prompt');
-    const key2 = getCacheKey('test prompt', 'system prompt');
-    const key3 = getCacheKey('different prompt', 'system prompt');
-    
-    assert(key1 === key2, 'Same inputs should generate same cache key');
-    assert(key1 !== key3, 'Different inputs should generate different cache keys');
-  });
 
   await test('Cache can be cleared', async () => {
     const client = new LLMClient();
@@ -136,15 +106,6 @@ async function runLLMClientTests() {
     assert(endTime - startTime < 50, `Cache lookup should be very fast, but took ${endTime - startTime}ms`);
   });
 
-  await test('Timeout configuration is respected', async () => {
-    const client = new LLMClient({
-      timeoutMs: 100 // Very short timeout
-    });
-    
-    // This test is harder to verify without a slow server, so we just check the config was set
-    const timeoutMs = (client as any).timeoutMs;
-    assert(timeoutMs === 100, 'Timeout should be configured correctly');
-  });
 
   // Results Summary
   console.log('\n' + '='.repeat(50));

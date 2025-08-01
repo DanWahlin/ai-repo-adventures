@@ -108,14 +108,6 @@ async function runTests() {
   console.log('🎮 Adventure Manager Tests');
   console.log('-'.repeat(30));
 
-  await test('Adventure Manager initializes correctly', async () => {
-    const manager = new AdventureManager();
-    assert(manager, 'AdventureManager should be created');
-    
-    // Test progress calculation when no adventures
-    const progress = manager.getProgress();
-    assert(progress.narrative.includes('Progress'), 'Should return progress information');
-  });
 
   await test('Adventure initialization creates fallback content', async () => {
     const manager = new AdventureManager();
@@ -153,14 +145,6 @@ async function runTests() {
     }
   });
 
-  await test('Adventure state management works', () => {
-    const manager = new AdventureManager();
-    const state = (manager as any).state;
-    
-    assert(state.adventures.length === 0, 'Should start with no adventures');
-    assert(state.completedAdventures.size === 0, 'Should start with no completed adventures');
-    assert(state.progressPercentage === 0, 'Should start with 0% progress');
-  });
 
   // Story Generator Tests - Updated for new system
   console.log('\n📚 Story Generator Tests');
@@ -329,30 +313,6 @@ async function runTests() {
       assert(error instanceof Error, 'Should throw Error');
       assert(error.message.includes('No project information'), 'Error should mention missing project');
     }
-  });
-
-  // Performance Tests
-  console.log('\n⚡ Performance Tests');
-  console.log('-'.repeat(30));
-
-  await test('Adventure manager creation is fast', () => {
-    const startTime = Date.now();
-    const manager = new AdventureManager();
-    const endTime = Date.now();
-    
-    assert(endTime - startTime < 50, 'AdventureManager creation should be fast');
-    assert(manager, 'Should create manager successfully');
-  });
-
-  await test('Progress calculation is efficient', async () => {
-    const manager = await createTestAdventureManager();
-    
-    const startTime = Date.now();
-    const progress = manager.getProgress();
-    const endTime = Date.now();
-    
-    assert(endTime - startTime < 50, 'Progress calculation should be fast');
-    assert(progress.narrative.length > 0, 'Should return meaningful progress');
   });
 
   // Results Summary

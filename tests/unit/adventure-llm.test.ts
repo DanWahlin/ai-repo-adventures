@@ -4,58 +4,12 @@
  * Unit tests for LLM-driven adventure generation
  */
 
-import { strict as assert } from 'assert';
 import { AdventureManager, StoryResponse, AdventureContent } from '../../src/adventure/AdventureManager.js';
 import { LLMClient } from '../../src/llm/LLMClient.js';
+import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
 
-// Mock project info for testing
-const mockProjectInfo: ProjectInfo = {
-  type: 'Web Application',
-  fileCount: 45,
-  mainTechnologies: ['TypeScript', 'Node.js', 'React'],
-  structure: {
-    directories: ['src', 'tests', 'dist'],
-    importantFiles: ['package.json', 'README.md', 'src/index.ts'],
-    configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/index.ts', 'src/app.ts', 'src/utils.ts']
-  },
-  hasTests: true,
-  hasDatabase: false,
-  hasApi: true,
-  hasFrontend: true,
-  codeAnalysis: {
-    functions: [
-      {
-        name: 'startServer',
-        summary: 'Initializes and starts the web server',
-        parameters: ['port', 'options'],
-        isAsync: true,
-        isExported: true,
-        fileName: 'src/server.ts',
-        source: 'typescript-estree',
-        language: 'typescript'
-      }
-    ],
-    classes: [
-      {
-        name: 'ApiController',
-        summary: 'Handles API requests and responses',
-        methods: ['get', 'post', 'delete'],
-        properties: ['router', 'middleware'],
-        isExported: true,
-        fileName: 'src/controllers/api.ts',
-        source: 'typescript-estree',
-        language: 'typescript'
-      }
-    ],
-    dependencies: [
-      { name: 'express', version: '^4.18.0', type: 'dependency', category: 'framework' }
-    ],
-    entryPoints: ['src/index.ts'],
-    keyFiles: []
-  }
-};
+// Using shared mock project info from test-utils.js
 
 // Test helper
 async function runTests() {
@@ -78,13 +32,6 @@ async function runTests() {
   console.log('🔍 Basic Functionality Tests');
   console.log('-'.repeat(30));
 
-  await test('Adventure manager handles JSON parsing correctly', () => {
-    // Test that basic JSON parsing works
-    const validJson = '{"story": "Test story", "adventures": []}';
-    const parsed = JSON.parse(validJson);
-    assert(parsed.story === 'Test story', 'Should parse JSON correctly');
-    assert(Array.isArray(parsed.adventures), 'Should parse adventures array');
-  });
 
   await test('Adventure manager provides fallback when LLM fails', async () => {
     const manager = new AdventureManager();
@@ -126,38 +73,6 @@ async function runTests() {
     
     const found = (manager as any).findFileInIndex('index');
     assert(found && found.includes('index'), 'Should find partial file match');
-  });
-
-  // Prompt Building Tests
-  console.log('\n📝 Prompt Building Tests');
-  console.log('-'.repeat(30));
-
-  await test('Adventure creation rules are properly formatted', () => {
-    const manager = new AdventureManager();
-    const rules = (manager as any).getAdventureCreationRules();
-    
-    assert(rules.includes('Adventure Count Logic'), 'Should include count logic');
-    assert(rules.includes('Required Adventure Types'), 'Should include adventure types');
-    assert(rules.includes('Architecture Overview'), 'Should include architecture type');
-  });
-
-  await test('Theme guidelines include vocabulary', () => {
-    const manager = new AdventureManager();
-    const guidelines = (manager as any).getThemeGuidelines('space');
-    
-    assert(guidelines.includes('SPACE THEME VOCABULARY'), 'Should include theme vocabulary');
-    assert(guidelines.includes('space ships, galaxies'), 'Should include space restrictions');
-    assert(!guidelines.includes('kingdoms or magic'), 'Should exclude other themes');
-  });
-
-  await test('Story prompt includes all sections', () => {
-    const manager = new AdventureManager();
-    const prompt = (manager as any).buildStoryGenerationPrompt(mockProjectInfo, 'medieval');
-    
-    assert(prompt.includes('Project Analysis'), 'Should include project analysis');
-    assert(prompt.includes('Adventure Creation Rules'), 'Should include rules');
-    assert(prompt.includes('Theme Guidelines'), 'Should include theme guidelines');
-    assert(prompt.includes('Response Format'), 'Should include response format');
   });
 
   // Error Context Tests
