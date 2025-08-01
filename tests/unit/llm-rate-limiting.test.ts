@@ -209,17 +209,17 @@ async function runLLMRateLimitingTests() {
       }
     });
     
-    const startTime = Date.now();
-    
-    // Test a single cached call (should be very fast)
+    // Prime cache first (this might take time due to fallback generation)
     const samePrompt = 'Rate limit perf test cached';
-    await client.generateResponse(samePrompt); // Prime cache
-    await client.generateResponse(samePrompt); // Use cache
+    await client.generateResponse(samePrompt);
     
+    // Now test just the cached performance
+    const startTime = Date.now();
+    await client.generateResponse(samePrompt); // Use cache
     const endTime = Date.now();
     
-    // Cached calls should be very fast
-    assert(endTime - startTime < 2000, 'Rate limiting should not add excessive overhead for cached calls');
+    // Cached calls should be very fast (under 100ms)
+    assert(endTime - startTime < 100, 'Cached calls should have minimal rate limiting overhead');
   });
 
   // Results Summary
