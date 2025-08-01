@@ -57,7 +57,7 @@ export async function createTestRunner(suiteName: string = 'Tests') {
   };
 
   const printResults = () => {
-    console.log('\\n' + '='.repeat(50));
+    console.log('\n' + '='.repeat(50));
     console.log(`📊 ${suiteName.toUpperCase()} RESULTS`);
     console.log('='.repeat(50));
     console.log(`✅ Passed: ${stats.passed}`);
@@ -70,13 +70,16 @@ export async function createTestRunner(suiteName: string = 'Tests') {
     }
     
     if (stats.failed === 0) {
-      console.log(`\\n🎉 All ${total > 0 ? total : stats.skipped} tests completed successfully!`);
+      console.log('');
+      console.log(`🎉 All ${total > 0 ? total : stats.skipped} tests completed successfully!`);
     } else {
-      console.log(`\\n⚠️  ${stats.failed} tests failed. Please review the failures above.`);
+      console.log('');
+      console.log(`⚠️  ${stats.failed} tests failed. Please review the failures above.`);
     }
 
     if (stats.skipped === total && total > 0) {
-      console.log('\\n⚠️  All tests were skipped - no LLM available.');
+      console.log('');
+      console.log('⚠️  All tests were skipped - no LLM available.');
       console.log('💡 Configure LLM_PROVIDER and API keys to run LLM-dependent tests.');
     }
   };
@@ -288,25 +291,30 @@ export async function runTestSuite(
 ): Promise<void> {
   console.log(`🧪 ${suiteName}`);
   console.log('='.repeat(60));
-  console.log(`Running ${testGroups.length} test group(s)\\n`);
+  console.log(`Running ${testGroups.length} test group(s)`);
+  console.log('');
 
   let totalPassed = 0;
   let totalFailed = 0;
 
   for (const group of testGroups) {
-    console.log(`\\n🎯 Running ${group.name} Tests`);
+    console.log('');
+    console.log(`🎯 Running ${group.name} Tests`);
     console.log('='.repeat(60));
     
     try {
       await group.runner();
-      console.log(`\\n✅ ${group.name} tests completed successfully`);
+      console.log('');
+      console.log(`✅ ${group.name} tests completed successfully`);
     } catch (error) {
-      console.log(`\\n❌ ${group.name} tests failed:`, error);
+      console.log('');
+      console.log(`❌ ${group.name} tests failed:`, error);
       totalFailed++;
     }
   }
 
-  console.log('\\n' + '='.repeat(60));
+  console.log('');
+  console.log('='.repeat(60));
   console.log('🏁 FINAL TEST RESULTS');
   console.log('='.repeat(60));
   
@@ -314,10 +322,12 @@ export async function runTestSuite(
   console.log(`Test Groups: ${successfulGroups}/${testGroups.length} passed`);
   
   if (totalFailed === 0) {
-    console.log('\\n🎉 All test groups passed successfully!');
+    console.log('');
+    console.log('🎉 All test groups passed successfully!');
     console.log('🚀 System is working correctly!');
   } else {
-    console.log(`\\n⚠️  ${totalFailed} test group(s) failed.`);
+    console.log('');
+    console.log(`⚠️  ${totalFailed} test group(s) failed.`);
     console.log('🔧 Please review and fix the failing tests.');
     process.exit(1);
   }

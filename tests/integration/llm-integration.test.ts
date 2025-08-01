@@ -15,7 +15,8 @@ import {
 
 // Test helper
 async function runTests() {
-  console.log('🤖 Running LLM Integration Tests\\n');
+  console.log('🤖 Running LLM Integration Tests');
+  console.log('');
   const { test, stats, printResults } = await createTestRunner('LLM Integration Tests');
 
   // LLM Client Integration Tests
@@ -62,7 +63,8 @@ async function runTests() {
   }, { skipIfNoLLM: true, timeout: 25000 });
 
   // Adventure Manager Integration Tests  
-  console.log('\\n🎮 Adventure Manager Integration Tests');
+  console.log('');
+  console.log('🎮 Adventure Manager Integration Tests');
   console.log('-'.repeat(40));
 
   await test('Adventure initialization generates valid story with LLM', async () => {
@@ -176,7 +178,8 @@ async function runTests() {
   }, { skipIfNoLLM: true, timeout: 90000 });
 
   // Response Quality Tests
-  console.log('\\n🔍 Response Quality Tests');
+  console.log('');
+  console.log('🔍 Response Quality Tests');
   console.log('-'.repeat(40));
 
   await test('Story structure validation with secondary LLM call', async () => {
