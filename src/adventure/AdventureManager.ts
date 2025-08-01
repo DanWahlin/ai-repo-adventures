@@ -58,9 +58,97 @@ export class AdventureState {
 export class AdventureManager {
   private state: AdventureState = new AdventureState();
   private llmClient: LLMClient;
+  private fileIndex: Map<string, string> = new Map();
 
   constructor() {
     this.llmClient = new LLMClient();
+  }
+
+
+
+  /**
+   * Build the story generation prompt
+   */
+  private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: string): string {
+    const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
+    const adventureRules = this.getAdventureCreationRules();
+    const themeGuidelines = this.getThemeGuidelines(theme);
+    const responseFormat = this.getStoryResponseFormat(theme);
+    
+    return `You are a technical education specialist who creates immersive code exploration experiences. Your goal is to transform this codebase into an engaging ${theme}-themed narrative that helps developers understand the architecture through storytelling.
+
+## Project Analysis
+${projectAnalysis}
+
+${adventureRules}
+
+${themeGuidelines}
+
+${responseFormat}`;
+  }
+
+  /**
+   * Get adventure creation rules
+   */
+  private getAdventureCreationRules(): string {
+    return `## Adventure Creation Rules
+
+**Adventure Count Logic:**
+- Simple projects (<50 files, <3 technologies): 2-3 adventures
+- Medium projects (50-200 files, 3-5 technologies): 3-4 adventures  
+- Complex projects (>200 files, >5 technologies): 5-6 adventures
+
+**Required Adventure Types** (adapt to available project components):
+1. **Architecture Overview** - Overall system design and entry points
+2. **Configuration & Setup** - How the project is configured and initialized
+3. **Core Logic** - Main business logic and algorithms
+4. **Data Layer** - Database, storage, or data management (if present)
+5. **API/Interface** - External interfaces, APIs, or user interactions (if present)
+6. **Testing & Quality** - Testing setup and quality assurance (if present)`;
+  }
+
+  /**
+   * Get theme-specific guidelines
+   */
+  private getThemeGuidelines(theme: string): string {
+    const themeRestrictions = theme === 'space' ? '(space ships, galaxies, astronauts - NOT kingdoms or magic)' : 
+      theme === 'medieval' ? '(castles, knights, magic - NOT space ships or ancient temples)' : 
+      '(temples, pyramids, ancient wisdom - NOT space ships or medieval castles)';
+    
+    return `## Theme Guidelines
+
+**${theme.toUpperCase()} THEME VOCABULARY:**
+${this.getThemeVocabulary(theme)}
+
+**Story Requirements:**
+- Create an overarching narrative that connects all adventures
+- Each adventure should feel like a chapter in a larger story
+- Use ${theme} metaphors that make technical concepts intuitive
+- Reference actual file names and technologies from the analysis
+- Make the story educational but entertaining
+- IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
+  ${themeRestrictions}`;
+  }
+
+  /**
+   * Get story response format
+   */
+  private getStoryResponseFormat(theme: string): string {
+    return `## Response Format
+
+Your response must be a valid JSON object matching the structure below.
+
+{
+  "story": "An engaging 2-3 paragraph opening that establishes the ${theme} world, introduces the codebase as a living system, and sets up the adventure framework. Must reference specific technologies and file structure from the analysis.",
+  "adventures": [
+    {
+      "id": "kebab-case-id",
+      "title": "${theme}-themed title that clearly indicates what code aspect is explored",
+      "description": "1-2 sentences explaining what developers will learn and which files/concepts are covered",
+      "codeFiles": ["actual-file-names-from-analysis"]
+    }
+  ]
+}`;
   }
 
   /**
@@ -71,6 +159,9 @@ export class AdventureManager {
     this.state.reset();
     this.state.projectInfo = projectInfo;
     this.state.currentTheme = theme;
+    
+    // Build file index for efficient lookups
+    this.buildFileIndex(projectInfo);
 
     // Generate the overall story and adventures using LLM
     const storyResponse = await this.generateStoryAndAdventures(projectInfo, theme);
@@ -155,73 +246,44 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
    * Generate the initial story and adventures using LLM
    */
   private async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: string): Promise<StoryResponse> {
-    const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
-
-    const prompt = `You are a technical education specialist who creates immersive code exploration experiences. Your goal is to transform this codebase into an engaging ${theme}-themed narrative that helps developers understand the architecture through storytelling.
-
-## Project Analysis
-${projectAnalysis}
-
-## Adventure Creation Rules
-
-**Adventure Count Logic:**
-- Simple projects (<50 files, <3 technologies): 2-3 adventures
-- Medium projects (50-200 files, 3-5 technologies): 3-4 adventures  
-- Complex projects (>200 files, >5 technologies): 5-6 adventures
-
-**Required Adventure Types** (adapt to available project components):
-1. **Architecture Overview** - Overall system design and entry points
-2. **Configuration & Setup** - How the project is configured and initialized
-3. **Core Logic** - Main business logic and algorithms
-4. **Data Layer** - Database, storage, or data management (if present)
-5. **API/Interface** - External interfaces, APIs, or user interactions (if present)
-6. **Testing & Quality** - Testing setup and quality assurance (if present)
-
-## Theme Guidelines
-
-**${theme.toUpperCase()} THEME VOCABULARY:**
-${this.getThemeVocabulary(theme)}
-
-**Story Requirements:**
-- Create an overarching narrative that connects all adventures
-- Each adventure should feel like a chapter in a larger story
-- Use ${theme} metaphors that make technical concepts intuitive
-- Reference actual file names and technologies from the analysis
-- Make the story educational but entertaining
-- IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
-  ${theme === 'space' ? '(space ships, galaxies, astronauts - NOT kingdoms or magic)' : 
-    theme === 'medieval' ? '(castles, knights, magic - NOT space ships or ancient temples)' : 
-    '(temples, pyramids, ancient wisdom - NOT space ships or medieval castles)'}
-
-## Response Format
-
-Your response must be a valid JSON object matching the structure below.
-
-{
-  "story": "An engaging 2-3 paragraph opening that establishes the ${theme} world, introduces the codebase as a living system, and sets up the adventure framework. Must reference specific technologies and file structure from the analysis.",
-  "adventures": [
-    {
-      "id": "kebab-case-id",
-      "title": "${theme}-themed title that clearly indicates what code aspect is explored",
-      "description": "1-2 sentences explaining what developers will learn and which files/concepts are covered",
-      "codeFiles": ["actual-file-names-from-analysis"]
-    }
-  ]
-}`;
+    const prompt = this.buildStoryGenerationPrompt(projectInfo, theme);
 
     try {
       const response = await this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
-      // With json_object format, the response should already be valid JSON
-      const parsed = JSON.parse(response.content) as StoryResponse;
       
-      // Validate response structure
-      if (!parsed.story || !Array.isArray(parsed.adventures)) {
-        throw new Error('Invalid response structure');
+      // With json_object format, the response should already be valid JSON, but let's be safe
+      let parsed;
+      try {
+        parsed = JSON.parse(response.content);
+      } catch (parseError) {
+        throw new Error(`Failed to parse LLM response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      }
+      
+      // Type-safe validation with detailed error messages
+      if (!parsed.story || typeof parsed.story !== 'string') {
+        throw new Error('Invalid LLM response: missing or invalid story field');
+      }
+      
+      if (!Array.isArray(parsed.adventures)) {
+        throw new Error('Invalid LLM response: adventures must be an array');
+      }
+      
+      // Validate each adventure has required fields
+      for (let i = 0; i < parsed.adventures.length; i++) {
+        const adventure = parsed.adventures[i];
+        if (!adventure.id || !adventure.title || !adventure.description) {
+          throw new Error(`Invalid adventure at index ${i}: missing required fields (id, title, description)`);
+        }
       }
 
       return parsed;
     } catch (error) {
-      console.warn('LLM story generation failed, using fallback:', error);
+      console.warn(`LLM story generation failed for theme "${theme}", project type "${projectInfo.type}":`, {
+        error: error instanceof Error ? error.message : String(error),
+        projectFileCount: projectInfo.fileCount,
+        technologies: projectInfo.mainTechnologies,
+        timestamp: new Date().toISOString()
+      });
       return this.generateFallbackStory(projectInfo, theme);
     }
   }
@@ -289,17 +351,36 @@ Your response must be a valid JSON object matching the structure below.
 
     try {
       const response = await this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
-      // With json_object format, the response should already be valid JSON
-      const parsed = JSON.parse(response.content) as AdventureContent;
       
-      // Validate response structure
-      if (!parsed.adventure || !Array.isArray(parsed.codeSnippets) || !Array.isArray(parsed.hints)) {
-        throw new Error('Invalid adventure content structure');
+      // With json_object format, the response should already be valid JSON, but let's be safe
+      let parsed;
+      try {
+        parsed = JSON.parse(response.content);
+      } catch (parseError) {
+        throw new Error(`Failed to parse adventure content as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      }
+
+      // Type-safe validation with detailed error messages
+      if (!parsed.adventure || typeof parsed.adventure !== 'string') {
+        throw new Error('Invalid adventure content: missing or invalid adventure field');
+      }
+      
+      if (!Array.isArray(parsed.hints)) {
+        throw new Error('Invalid adventure content: hints must be an array');
+      }
+      
+      if (!Array.isArray(parsed.codeSnippets)) {
+        parsed.codeSnippets = []; // Default to empty array if missing
       }
 
       return parsed;
     } catch (error) {
-      console.warn('LLM adventure content generation failed, using fallback:', error);
+      console.warn(`LLM adventure content generation failed for adventure "${adventure.title}", theme "${this.state.currentTheme}":`, {
+        error: error instanceof Error ? error.message : String(error),
+        adventureId: adventure.id,
+        codeFilesCount: adventure.codeFiles?.length || 0,
+        timestamp: new Date().toISOString()
+      });
       return this.generateFallbackAdventureContent(adventure);
     }
   }
@@ -384,6 +465,44 @@ Generate ONLY the celebration message, no extra text.`;
 
 
   /**
+   * Build file index for efficient lookups
+   */
+  private buildFileIndex(projectInfo: ProjectInfo): void {
+    this.fileIndex.clear();
+    
+    // Index all source files
+    [...projectInfo.structure.sourceFiles, ...projectInfo.structure.configFiles].forEach(filePath => {
+      // Index by full path
+      this.fileIndex.set(filePath, filePath);
+      
+      // Also index by filename only for convenience
+      const filename = filePath.split('/').pop() || '';
+      if (filename && !this.fileIndex.has(filename)) {
+        this.fileIndex.set(filename, filePath);
+      }
+    });
+  }
+
+  /**
+   * Find file in index efficiently
+   */
+  private findFileInIndex(file: string): string | undefined {
+    // Direct lookup first
+    if (this.fileIndex.has(file)) {
+      return this.fileIndex.get(file);
+    }
+    
+    // Try partial match
+    for (const [key, value] of this.fileIndex.entries()) {
+      if (key.includes(file) || file.includes(key)) {
+        return value;
+      }
+    }
+    
+    return undefined;
+  }
+
+  /**
    * Prepare code content for LLM analysis
    */
   private async prepareCodeContent(codeFiles: string[]): Promise<string> {
@@ -394,8 +513,7 @@ Generate ONLY the celebration message, no extra text.`;
     // For now, return file info from project analysis
     // In a full implementation, you'd read the actual file contents
     const fileInfo = codeFiles.map(file => {
-      const found = this.state.projectInfo!.structure.sourceFiles.find(f => f.includes(file)) ||
-                   this.state.projectInfo!.structure.configFiles.find(f => f.includes(file));
+      const found = this.findFileInIndex(file);
       return found ? `- ${file}: Found in project structure` : `- ${file}: File reference`;
     }).join('\n');
 

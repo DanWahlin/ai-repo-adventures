@@ -1,6 +1,4 @@
 import { ProjectAnalyzer, ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
-import { DynamicStoryGenerator } from '../story/DynamicStoryGenerator.js';
-import { AdventureManager } from '../adventure/AdventureManager.js';
 import { LRUCache } from './cache.js';
 
 // Analysis state management with improved caching
@@ -72,5 +70,3 @@ class OptimizedAnalyzer {
 
 // Shared instances to maintain state across tools
 export const optimizedAnalyzer = new OptimizedAnalyzer();
-export const storyGenerator = new DynamicStoryGenerator();
-export const adventureManager = new AdventureManager();

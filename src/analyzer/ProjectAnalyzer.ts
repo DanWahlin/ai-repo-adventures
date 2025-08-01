@@ -5,7 +5,6 @@ import { parse } from '@typescript-eslint/typescript-estree';
 import type { TSESTree } from '@typescript-eslint/types';
 import { DEFAULT_ANALYSIS_CONFIG, type AnalysisConfig } from '../shared/types.js';
 
-// Removed commented-out interfaces as per code review recommendations
 
 export interface FunctionInfo {
   name: string;

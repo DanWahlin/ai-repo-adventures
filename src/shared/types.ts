@@ -17,22 +17,6 @@ export interface Story {
   initialChoices: string[];
 }
 
-// Tool input types
-export interface StartAdventureInput {
-  projectPath?: string;
-}
-
-export interface ChooseThemeInput {
-  theme: 'space' | 'medieval' | 'ancient';
-}
-
-export interface ExplorePathInput {
-  choice: string;
-}
-
-export interface MeetCharacterInput {
-  characterName: string;
-}
 
 // Analysis configuration
 export interface AnalysisConfig {

@@ -178,7 +178,6 @@ export class DynamicStoryGenerator {
       'CODE PATTERNS DETECTED:',
       (asyncFunctions.length > 0 ? `  - Async functions: ${asyncFunctions.length}` : ''),
       (exportedFunctions.length > 0 ? `  - Exported functions: ${exportedFunctions.length}` : ''),
-      // removed sourceTypeSummary, not present in CodeAnalysis
     ].filter(Boolean).join('\n');
   }
 
