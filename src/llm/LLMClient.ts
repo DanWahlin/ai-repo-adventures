@@ -1,4 +1,4 @@
-import { OpenAI } from 'openai';
+import { OpenAI, AzureOpenAI } from 'openai';
 import { config } from 'dotenv';
 
 // Load environment variables
@@ -43,7 +43,7 @@ export interface LLMConfig {
 }
 
 export class LLMClient {
-  private client: OpenAI;
+  private client: OpenAI | AzureOpenAI;
   private model: string;
   private temperature: number;
   private maxTokens: number;
@@ -56,7 +56,7 @@ export class LLMClient {
   constructor(config?: LLMConfig) {
     // Environment-based configuration with optional overrides
     this.baseURL = config?.baseURL || process.env.LLM_BASE_URL || 'https://api.openai.com/v1';
-    const apiKey = config?.apiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.GITHUB_TOKEN || 'fallback-key';
+    const apiKey = config?.apiKey || process.env.LLM_API_KEY || 'fallback-key';
     
     this.model = config?.model || process.env.LLM_MODEL || 'gpt-4o-mini';
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
@@ -69,13 +69,21 @@ export class LLMClient {
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
 
-    // Create OpenAI client with dynamic configuration
-    this.client = new OpenAI({
-      baseURL: this.baseURL,
-      apiKey: apiKey,
-      // Add custom headers if needed for certain providers
-      defaultHeaders: this.getProviderHeaders()
-    });
+    // Create client with provider-specific configuration
+    if (this.provider === 'Azure OpenAI') {
+      this.client = new AzureOpenAI({
+        endpoint: this.baseURL,
+        apiKey: apiKey,
+        apiVersion: process.env.LLM_API_VERSION || '2024-02-15-preview',
+        deployment: this.model
+      });
+    } else {
+      this.client = new OpenAI({
+        baseURL: this.baseURL,
+        apiKey: apiKey,
+        defaultHeaders: this.getProviderHeaders()
+      });
+    }
   }
 
   private inferProvider(baseURL: string): string {
@@ -140,7 +148,7 @@ export class LLMClient {
 
       // Prepare completion options
       const completionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-        model: this.model,
+        model: this.model, // For Azure, this is the deployment name
         messages,
         temperature: this.temperature,
         max_tokens: this.maxTokens,
@@ -307,8 +315,8 @@ This project contains fascinating technologies that we'll explore through an eng
 
   static forAzureOpenAI(endpoint?: string, apiKey?: string): LLMClient {
     return new LLMClient({
-      baseURL: endpoint || process.env.AZURE_OPENAI_ENDPOINT,
-      apiKey: apiKey || process.env.AZURE_OPENAI_API_KEY,
+      baseURL: endpoint || process.env.LLM_BASE_URL,
+      apiKey: apiKey || process.env.LLM_API_KEY,
       model: 'gpt-4o'
     });
   }
