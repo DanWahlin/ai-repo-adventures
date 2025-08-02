@@ -1,5 +1,6 @@
 import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
 import { LLMClient } from '../llm/LLMClient.js';
+import { readFile } from 'fs/promises';
 
 // Core interfaces for LLM-driven adventures
 export interface Adventure {
@@ -100,7 +101,7 @@ Each adventure title MUST follow this pattern: "Theme-Specific Name: Technical D
 - Space example: "Starship Design: An Overview of the Codebase Architecture"
 - Medieval example: "Castle Design: Exploring the Kingdom Layout"
 - Ancient example: "Temple Complex Architecture: Understanding the Sacred Layout"
-- DO NOT copy these examples directly - create unique titles that fit the theme and keep them positive and non-controversial.
+- DO NOT COPY these examples directly - create unique titles that fit the theme and keep them positive and non-controversial.
 
 **Adventure Count Logic:**
 - Simple projects (<50 files, <3 technologies): 2-3 adventures
@@ -154,12 +155,12 @@ Examples:
 - "Castle Design: Exploring the Kingdom Layout"
 
 {
-  "story": "An engaging 2-3 paragraph opening that establishes the ${theme} world, introduces the codebase as a living system, and sets up the adventure framework. Must reference specific technologies and file structure from the analysis.",
+  "story": "A concise 1-2 paragraph opening (max 150 words) that establishes the ${theme} world and introduces the codebase. Keep it engaging but brief. Reference 1-2 key technologies.",
   "adventures": [
     {
       "id": "kebab-case-id",
       "title": "${theme}-themed title in format 'Adventure Name: What It Covers' (e.g., 'Starship Design: An Overview of the Codebase Architecture')",
-      "description": "1-2 sentences explaining what developers will learn and which files/concepts are covered",
+      "description": "One concise sentence explaining what this adventure covers",
       "codeFiles": ["actual-file-names-from-analysis"]
     }
   ]
@@ -345,40 +346,37 @@ ${codeContent}
 ## Content Requirements
 
 **Adventure Story:**
-- Write 2-3 paragraphs continuing the overarching ${this.state.currentTheme} narrative
-- Connect this adventure to the main story established earlier
-- Use ${this.state.currentTheme} metaphors to explain technical concepts
-- Make complex code concepts accessible through analogies
-- Include specific file names and technologies from the project
+- Write 1-2 concise paragraphs (max 150 words total)
+- Continue the ${this.state.currentTheme} narrative efficiently
+- Use clear ${this.state.currentTheme} metaphors for technical concepts
+- Reference 1-2 specific files or technologies
 
-**Code Snippets (2-4 required):**
-- Focus on 5-15 lines that demonstrate key patterns or architectures
-- Show important functions, classes, or configuration examples
-- Highlight how components interact with each other
-- Choose the most educational and representative code sections
+**Code Snippets (2-3 required):**
+- Extract and show 5-10 lines of ACTUAL code from the files provided above
+- DO NOT create fictional or example code - use only real code from the project
+- Focus on key patterns or core functionality from the actual files
+- Keep explanations brief but clear
 
-**Hints (exactly 3 required):**
-1. **Conceptual Hint**: How this code fits into the bigger system architecture
-2. **Practical Hint**: How developers can work with, modify, or extend this code
-3. **Learning Hint**: What concepts to study next or related areas to explore
+**Hints (exactly 2 required):**
+1. **Practical**: How to work with this code
+2. **Next Steps**: What to explore next
 
 ## Response Format
 
 Your response must be a valid JSON object matching the structure below.
 
 {
-  "adventure": "2-3 paragraph ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
+  "adventure": "1-2 concise paragraphs (max 150 words) ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
   "codeSnippets": [
     {
       "file": "actual-filename-from-project",
-      "snippet": "5-15 lines of actual relevant code",
+      "snippet": "5-10 lines of ACTUAL code from the files provided above (not fictional examples)",
       "explanation": "Clear explanation of what this code does, why it matters, and how it fits into the system"
     }
   ],
   "hints": [
-    "Conceptual: How this fits into the bigger architecture",
-    "Practical: How to work with or modify this code",
-    "Learning: What to study next or related concepts"
+    "Practical: How to work with this code",
+    "Next Steps: What to explore next"
   ]
 }`;
 
@@ -543,15 +541,36 @@ Generate ONLY the celebration message, no extra text.`;
       return 'No specific files to explore - general project analysis.';
     }
 
-    // For now, return file info from project analysis
-    // In a full implementation, you'd read the actual file contents
-    const fileInfo = codeFiles.map(file => {
-      const found = this.findFileInIndex(file);
-      return found ? `- ${file}: Found in project structure` : `- ${file}: File reference`;
-    }).join('\n');
+    const fileContents: string[] = [];
+    
+    for (const file of codeFiles.slice(0, 3)) { // Limit to 3 files to avoid overwhelming the LLM
+      try {
+        const filePath = this.findFileInIndex(file);
+        if (filePath) {
+          // Try to read the file content
+          const content = await readFile(filePath, 'utf-8');
+          
+          // Truncate very long files (keep first 100 lines)
+          const lines = content.split('\n');
+          const truncatedContent = lines.slice(0, 100).join('\n');
+          const truncatedNote = lines.length > 100 ? `\n... (file continues for ${lines.length - 100} more lines)` : '';
+          
+          fileContents.push(`**File: ${file}**
+\`\`\`${this.getFileExtension(filePath)}
+${truncatedContent}${truncatedNote}
+\`\`\``);
+        } else {
+          fileContents.push(`**File: ${file}** - Not found in project structure`);
+        }
+      } catch (error) {
+        console.warn(`Could not read file ${file}:`, error instanceof Error ? error.message : String(error));
+        fileContents.push(`**File: ${file}** - Could not read file content`);
+      }
+    }
 
     return `Files to explore in this adventure:
-${fileInfo}
+
+${fileContents.join('\n\n')}
 
 Project structure context:
 - Total files: ${this.state.projectInfo.fileCount}
@@ -560,6 +579,36 @@ Project structure context:
 - Has API: ${this.state.projectInfo.hasApi}
 - Has database: ${this.state.projectInfo.hasDatabase}
 - Entry points: ${this.state.projectInfo.codeAnalysis.entryPoints.join(', ')}`;
+  }
+
+  /**
+   * Get file extension for syntax highlighting
+   */
+  private getFileExtension(filePath: string): string {
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    // Map extensions to common syntax highlighting languages
+    const langMap: Record<string, string> = {
+      'ts': 'typescript',
+      'js': 'javascript',
+      'tsx': 'tsx',
+      'jsx': 'jsx',
+      'json': 'json',
+      'md': 'markdown',
+      'yml': 'yaml',
+      'yaml': 'yaml',
+      'toml': 'toml',
+      'py': 'python',
+      'java': 'java',
+      'go': 'go',
+      'rs': 'rust',
+      'cpp': 'cpp',
+      'c': 'c',
+      'cs': 'csharp',
+      'php': 'php',
+      'rb': 'ruby',
+      'sh': 'bash'
+    };
+    return langMap[ext || ''] || ext || '';
   }
 
   /**
