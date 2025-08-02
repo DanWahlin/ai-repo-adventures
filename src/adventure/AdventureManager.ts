@@ -24,6 +24,7 @@ export interface CodeSnippet {
 
 export interface AdventureContent {
   adventure: string;  // Contains the story with analogies woven throughout
+  fileExploration?: string;  // Interactive file exploration prompt
   codeSnippets: CodeSnippet[];
   hints: string[];
 }
@@ -155,18 +156,19 @@ Your response must be a valid JSON object matching the structure below.
 
 IMPORTANT: 
 1. Adventure IDs MUST be simple integers starting from "1", "2", "3", etc.
-2. Adventure titles MUST follow the format "Theme-Specific Title: Brief Description" 
+2. Adventure titles MUST follow the format "🎯 Theme-Specific Title: Brief Description" with appropriate emojis
 Examples:
-- "Starship Design: An Overview of the Codebase Architecture"
-- "Temple Complex Architecture: Understanding the Sacred Layout"
-- "Castle Design: Exploring the Kingdom Layout"
+- "🚀 Starship Design: An Overview of the Codebase Architecture"
+- "🏛️ Temple Complex Architecture: Understanding the Sacred Layout"
+- "🏰 Castle Design: Exploring the Kingdom Layout"
+3. Each adventure title MUST start with an appropriate emoji that matches both the theme and adventure type
 
 {
   "story": "A concise 1-2 paragraph opening (max 150 words) that establishes the ${theme} world and introduces the codebase. Keep it engaging but brief. Reference 1-2 key technologies.",
   "adventures": [
     {
       "id": "1",
-      "title": "${theme}-themed title in format 'Adventure Name: What It Covers' (e.g., 'Starship Design: An Overview of the Codebase Architecture')",
+      "title": "📍 ${theme}-themed title in format 'Emoji Adventure Name: What It Covers' (e.g., '🚀 Starship Design: An Overview of the Codebase Architecture')",
       "description": "One concise sentence explaining what this adventure covers",
       "codeFiles": ["actual-file-names-from-analysis"]
     },
@@ -365,15 +367,25 @@ ${codeContent}
 - Use clear ${this.state.currentTheme} metaphors for technical concepts
 - Reference 1-2 specific files or technologies
 
+**File Exploration Prompt (REQUIRED):**
+Create an interactive "Quest Action Required" section that:
+- Encourages opening specific files in their code editor
+- Provides step-by-step navigation with line numbers
+- Explains the code flow (what connects to what)
+- Uses engaging ${this.state.currentTheme} language
+- Includes specific exploration tasks ("look for X", "trace from line Y to Z")
+- Asks users to report back or type something when done
+
 **Code Snippets (2-3 required):**
-- Extract and show 5-10 lines of ACTUAL code from the files provided above
+- Extract and show 15-25 lines of ACTUAL code from the files provided above (more context than before)
 - DO NOT create fictional or example code - use only real code from the project
-- Focus on key patterns or core functionality from the actual files
-- Keep explanations brief but clear
+- Show function signatures AND implementations for better understanding
+- Explain the data flow: what comes in, what gets processed, what goes out
+- Connect this code to other parts of the system
 
 **Hints (exactly 2 required):**
-1. **Practical**: How to work with this code
-2. **Next Steps**: What to explore next
+1. **Practical**: How to work with this code and what to look for when exploring
+2. **Next Steps**: What specific files to explore next and what to look for there
 
 ## Response Format
 
@@ -381,16 +393,17 @@ Your response must be a valid JSON object matching the structure below.
 
 {
   "adventure": "1-2 concise paragraphs (max 150 words) ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
+  "fileExploration": "Interactive 'Quest Action Required' section with specific file exploration tasks, line number references, code flow explanation, and user engagement prompts using ${this.state.currentTheme} language",
   "codeSnippets": [
     {
       "file": "actual-filename-from-project",
-      "snippet": "5-10 lines of ACTUAL code from the files provided above (not fictional examples)",
-      "explanation": "Clear explanation of what this code does, why it matters, and how it fits into the system"
+      "snippet": "15-25 lines of ACTUAL code from the files provided above showing function signatures and implementations",
+      "explanation": "Clear explanation of data flow: what comes in, what gets processed, what goes out, and how this connects to other parts of the system"
     }
   ],
   "hints": [
-    "Practical: How to work with this code",
-    "Next Steps: What to explore next"
+    "Practical: How to work with this code and what to look for when exploring",
+    "Next Steps: What specific files to explore next and what to look for there"
   ]
 }`;
 
@@ -475,34 +488,37 @@ Generate ONLY the celebration message, no extra text.`;
   private getThemeVocabulary(theme: AdventureTheme): string {
     const vocabularies = {
       [THEMES.SPACE.key]: `
-- Architecture → "Starship Design" or "Orbital Platform"
-- Configuration → "Navigation Control Center" or "Command Bridge"
-- APIs → "Interstellar Communication Hub" or "Quantum Data Relay"
-- Database → "Data Archive Constellation" or "Information Nebula"
-- Functions → "Navigation Protocols" or "System Procedures"
-- Classes → "Crew Modules" or "Ship Components"
-- Tests → "System Diagnostics" or "Mission Simulation Chamber"
-- Dependencies → "Allied Fleet" or "Support Network"`,
+**Adventure Emojis:** 🚀 🛸 🌌 ⭐ 🪐 🛰️ 🔭 🌟 🚁 🎯
+- Architecture → "🚀 Starship Design" or "🛰️ Orbital Platform"
+- Configuration → "🎛️ Navigation Control Center" or "🌌 Command Bridge"
+- APIs → "📡 Interstellar Communication Hub" or "⚡ Quantum Data Relay"
+- Database → "🗄️ Data Archive Constellation" or "☁️ Information Nebula"
+- Functions → "🧭 Navigation Protocols" or "⚙️ System Procedures"
+- Classes → "👥 Crew Modules" or "🔧 Ship Components"
+- Tests → "🔬 System Diagnostics" or "🎮 Mission Simulation Chamber"
+- Dependencies → "🤝 Allied Fleet" or "🔗 Support Network"`,
       
       [THEMES.MYTHICAL.key]: `
-- Architecture → "Castle Design" or "Kingdom Layout"  
-- Configuration → "Enchanted Armory" or "Royal Treasury"
-- APIs → "Royal Messenger Network" or "Diplomatic Embassy"
-- Database → "Ancient Knowledge Vault" or "Dragon's Hoard"
-- Functions → "Magical Spells" or "Mythical Incantations"
-- Classes → "Guild Houses" or "Noble Orders"
-- Tests → "Trial by Combat" or "Wisdom Challenges"
-- Dependencies → "Allied Kingdoms" or "Mythical Alliances"`,
+**Adventure Emojis:** 🏰 ⚔️ 🗡️ 🛡️ 🏺 🔮 🗝️ 👑 🏛️ 🎭
+- Architecture → "🏰 Castle Design" or "🗺️ Kingdom Layout"  
+- Configuration → "⚔️ Enchanted Armory" or "💎 Royal Treasury"
+- APIs → "📜 Royal Messenger Network" or "🏛️ Diplomatic Embassy"
+- Database → "📚 Ancient Knowledge Vault" or "🐉 Dragon's Hoard"
+- Functions → "🔮 Magical Spells" or "✨ Mythical Incantations"
+- Classes → "🏠 Guild Houses" or "👑 Noble Orders"
+- Tests → "⚔️ Trial by Combat" or "🧠 Wisdom Challenges"
+- Dependencies → "🤝 Allied Kingdoms" or "🛡️ Mythical Alliances"`,
       
       [THEMES.ANCIENT.key]: `
-- Architecture → "Temple Complex" or "Pyramid Structure"
-- Configuration → "Sacred Ritual Chamber" or "Oracle's Sanctum"
-- APIs → "Trade Route Network" or "Messenger Papyrus System"
-- Database → "Sacred Scroll Library" or "Stone Tablet Archive"
-- Functions → "Ancient Rituals" or "Sacred Ceremonies"
-- Classes → "Priest Orders" or "Craftsman Guilds"
-- Tests → "Divine Trials" or "Wisdom Examinations"
-- Dependencies → "Trade Alliances" or "Tribute Networks"`
+**Adventure Emojis:** 🏛️ 📜 🏺 ⚱️ 🗿 🔺 🌅 📿 🕯️ 🧙
+- Architecture → "🏛️ Temple Complex" or "🔺 Pyramid Structure"
+- Configuration → "🕯️ Sacred Ritual Chamber" or "🔮 Oracle's Sanctum"
+- APIs → "🛤️ Trade Route Network" or "📜 Messenger Papyrus System"
+- Database → "📚 Sacred Scroll Library" or "🏺 Stone Tablet Archive"
+- Functions → "🕯️ Ancient Rituals" or "⚱️ Sacred Ceremonies"
+- Classes → "👨‍🏫 Priest Orders" or "🔨 Craftsman Guilds"
+- Tests → "⚖️ Divine Trials" or "🧠 Wisdom Examinations"
+- Dependencies → "🤝 Trade Alliances" or "💰 Tribute Networks"`
     };
     
     return vocabularies[theme as keyof typeof vocabularies] || vocabularies.space;
@@ -768,6 +784,10 @@ Choose an adventure by using the \`explore_path\` tool with the adventure number
    * Format complete adventure result
    */
   private formatAdventureResult(content: AdventureContent, completionSummary: string): string {
+    const fileExplorationText = content.fileExploration 
+      ? `\n\n${content.fileExploration}`
+      : '';
+
     const codeSnippetsText = content.codeSnippets.length > 0 
       ? `\n\n**📜 Code Discoveries:**\n${content.codeSnippets.map(snippet => 
           `**${snippet.file}:**\n\`\`\`\n${snippet.snippet}\n\`\`\`\n*${snippet.explanation}*`
@@ -778,7 +798,7 @@ Choose an adventure by using the \`explore_path\` tool with the adventure number
       ? `\n\n**💡 Helpful Hints:**\n${content.hints.map(hint => `• ${hint}`).join('\n')}`
       : '';
 
-    return `${content.adventure}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
+    return `${content.adventure}${fileExplorationText}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
   }
 
   /**
