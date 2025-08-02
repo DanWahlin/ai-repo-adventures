@@ -189,13 +189,31 @@ Examples:
   }
 
   /**
+   * Sanitize user input for adventure selection
+   * This is used for matching adventure IDs, titles, or numbers - not for code input
+   */
+  private sanitizeUserInput(input: string): string {
+    // For adventure selection, we need to allow:
+    // - Numbers (1, 2, 3)
+    // - Adventure IDs (architecture-overview, core-logic)
+    // - Parts of adventure titles (which may contain : and /)
+    // But prevent obvious injection attempts
+    return input
+      .replace(/[<>{}"`$\\]/g, '') // Remove only dangerous characters for prompts
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim()
+      .slice(0, 200); // Limit length to prevent DOS
+  }
+
+  /**
    * Execute a chosen adventure by ID, number, or title
    */
   async exploreAdventure(choice: string): Promise<AdventureResult> {
+    const sanitizedChoice = this.sanitizeUserInput(choice);
     let adventure: Adventure | undefined;
     
     // Try to match by number (1, 2, 3, etc.)
-    const choiceNumber = parseInt(choice);
+    const choiceNumber = parseInt(sanitizedChoice);
     if (!isNaN(choiceNumber) && choiceNumber > 0) {
       adventure = this.state.adventures[choiceNumber - 1];
     }
@@ -203,9 +221,9 @@ Examples:
     // Try to match by ID or title if number didn't work
     if (!adventure) {
       adventure = this.state.adventures.find(a => 
-        a.id === choice || 
-        a.title.toLowerCase().includes(choice.toLowerCase()) ||
-        choice.toLowerCase().includes(a.title.toLowerCase())
+        a.id === sanitizedChoice || 
+        a.title.toLowerCase().includes(sanitizedChoice.toLowerCase()) ||
+        sanitizedChoice.toLowerCase().includes(a.title.toLowerCase())
       );
     }
     

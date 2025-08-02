@@ -1,5 +1,6 @@
 import { OpenAI, AzureOpenAI } from 'openai';
 import { config } from 'dotenv';
+import { createHash } from 'crypto';
 
 // Load environment variables
 config();
@@ -56,7 +57,10 @@ export class LLMClient {
   constructor(config?: LLMConfig) {
     // Environment-based configuration with optional overrides
     this.baseURL = config?.baseURL || process.env.LLM_BASE_URL || 'https://api.openai.com/v1';
-    const apiKey = config?.apiKey || process.env.LLM_API_KEY || 'fallback-key';
+    const apiKey = config?.apiKey || process.env.LLM_API_KEY;
+    if (!apiKey) {
+      throw new Error('LLM_API_KEY environment variable is required. Please set LLM_API_KEY in your environment or .env file.');
+    }
     
     this.model = config?.model || process.env.LLM_MODEL || 'gpt-4o-mini';
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
@@ -71,6 +75,7 @@ export class LLMClient {
 
     // Create client with provider-specific configuration
     if (this.provider === 'Azure OpenAI') {
+      this.validateAzureConfiguration();
       this.client = new AzureOpenAI({
         endpoint: this.baseURL,
         apiKey: apiKey,
@@ -83,6 +88,86 @@ export class LLMClient {
         apiKey: apiKey,
         defaultHeaders: this.getProviderHeaders()
       });
+    }
+  }
+
+  /**
+   * Categorize errors for better handling
+   */
+  private categorizeError(error: unknown): { type: string; message: string } {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      
+      // Check for authentication errors
+      if (message.includes('unauthorized') || message.includes('401') || message.includes('invalid api key') || message.includes('bad credentials')) {
+        return { type: 'authentication', message: this.sanitizeErrorMessage(error.message) };
+      }
+      
+      // Check for rate limiting
+      if (message.includes('rate limit') || message.includes('429') || message.includes('quota exceeded')) {
+        return { type: 'rate_limit', message: this.sanitizeErrorMessage(error.message) };
+      }
+      
+      // Check for timeout errors
+      if (message.includes('timeout') || message.includes('timed out')) {
+        return { type: 'timeout', message: this.sanitizeErrorMessage(error.message) };
+      }
+      
+      // Check for network errors
+      if (message.includes('network') || message.includes('enotfound') || message.includes('econnrefused') || message.includes('fetch')) {
+        return { type: 'network', message: this.sanitizeErrorMessage(error.message) };
+      }
+      
+      // Check for model/resource not found
+      if (message.includes('404') || message.includes('not found') || message.includes('model not found')) {
+        return { type: 'resource_not_found', message: this.sanitizeErrorMessage(error.message) };
+      }
+      
+      return { type: 'unknown', message: this.sanitizeErrorMessage(error.message) };
+    }
+    
+    return { type: 'unknown', message: 'An unexpected error occurred' };
+  }
+
+  /**
+   * Sanitize error messages to prevent sensitive information leakage
+   */
+  private sanitizeErrorMessage(message: string): string {
+    return message
+      .replace(/api[_-]?key[s]?[:\s=][^\s]*/gi, 'API_KEY=***')
+      .replace(/token[s]?[:\s=][^\s]*/gi, 'TOKEN=***')
+      .replace(/password[s]?[:\s=][^\s]*/gi, 'PASSWORD=***')
+      .replace(/https?:\/\/[^\s]*/gi, '[URL_REDACTED]')
+      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/gi, '[EMAIL_REDACTED]');
+  }
+
+  /**
+   * Validate Azure-specific configuration
+   */
+  private validateAzureConfiguration(): void {
+    // Check for required Azure environment variables
+    if (!this.baseURL || !this.baseURL.includes('azure.com')) {
+      throw new Error('Azure OpenAI requires a valid Azure endpoint (LLM_BASE_URL). Example: https://your-resource.openai.azure.com');
+    }
+
+    // Validate API version format
+    const apiVersion = process.env.LLM_API_VERSION;
+    if (apiVersion && !apiVersion.match(/^\d{4}-\d{2}-\d{2}(-preview)?$/)) {
+      throw new Error(`Invalid LLM_API_VERSION format: ${apiVersion}. Expected format: YYYY-MM-DD or YYYY-MM-DD-preview`);
+    }
+
+    // Validate model/deployment name
+    if (!this.model || this.model.length === 0) {
+      throw new Error('Azure OpenAI requires a deployment name (LLM_MODEL). This should match your Azure deployment name.');
+    }
+
+    // Check for common Azure configuration mistakes
+    if (this.baseURL.includes('/v1')) {
+      console.warn('Warning: Azure OpenAI endpoints typically do not include "/v1" in the base URL. You may want to remove it.');
+    }
+
+    if (this.baseURL.includes('api.openai.com')) {
+      throw new Error('Azure OpenAI detected but baseURL points to OpenAI. Please use your Azure endpoint URL.');
     }
   }
 
@@ -183,7 +268,21 @@ export class LLMClient {
       
       return llmResponse;
     } catch (error) {
-      console.warn(`LLM API call failed (${this.provider}), using fallback:`, error instanceof Error ? error.message : String(error));
+      const errorType = this.categorizeError(error);
+      console.warn(`LLM API call failed (${this.provider}) - ${errorType.type}:`, errorType.message);
+      
+      // Different handling based on error type
+      if (errorType.type === 'authentication') {
+        throw new Error(`Authentication failed for ${this.provider}. Please check your API key and configuration.`);
+      }
+      
+      if (errorType.type === 'timeout') {
+        console.warn(`Request timeout for ${this.provider}, using fallback response`);
+      } else if (errorType.type === 'rate_limit') {
+        console.warn(`Rate limit exceeded for ${this.provider}, using fallback response`);
+      } else if (errorType.type === 'network') {
+        console.warn(`Network error for ${this.provider}, using fallback response`);
+      }
       
       // Fallback to a simple template-based response
       const fallbackResponse = {
@@ -251,19 +350,16 @@ This project contains fascinating technologies that we'll explore through an eng
   }
 
   isAvailable(): boolean {
-    return !!(process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.GITHUB_TOKEN);
+    return !!process.env.LLM_API_KEY;
   }
 
   private getCacheKey(prompt: string, systemPrompt?: string): string {
-    const combined = `${systemPrompt || ''}|${prompt}`;
-    // Simple hash for cache key
-    let hash = 0;
-    for (let i = 0; i < combined.length; i++) {
-      const char = combined.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString();
+    const combined = `${systemPrompt || ''}|${prompt}|${this.provider}|${this.model}`;
+    // Use crypto hash for better distribution and collision resistance
+    return createHash('sha256')
+      .update(combined)
+      .digest('hex')
+      .substring(0, 32); // Use first 32 characters for better collision resistance
   }
   
   clearCache(): void {
