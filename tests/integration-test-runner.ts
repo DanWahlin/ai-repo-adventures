@@ -17,7 +17,14 @@ async function runAllIntegrationTests() {
 }
 
 // Run all tests
-runAllIntegrationTests().catch(error => {
-  console.error('💥 Integration test runner failed:', error);
-  process.exit(1);
-});
+runAllIntegrationTests()
+  .then(() => {
+    // Force exit after successful completion to avoid hanging
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  })
+  .catch(error => {
+    console.error('💥 Integration test runner failed:', error);
+    process.exit(1);
+  });

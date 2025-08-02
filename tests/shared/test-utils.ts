@@ -325,6 +325,8 @@ export async function runTestSuite(
     console.log('');
     console.log('🎉 All test groups passed successfully!');
     console.log('🚀 System is working correctly!');
+    // Exit cleanly when all tests pass
+    process.exit(0);
   } else {
     console.log('');
     console.log(`⚠️  ${totalFailed} test group(s) failed.`);
