@@ -1,3 +1,17 @@
+/**
+ * MCP Repo Adventure Tools
+ * 
+ * These tools provide an interactive, gamified way to explore and understand codebases.
+ * The typical flow is:
+ * 1. start_adventure - Analyzes the codebase and presents theme options
+ * 2. choose_theme - Generates a custom story and adventures based on the selected theme
+ * 3. explore_path - Explores individual adventures (can be called multiple times)
+ * 4. view_progress - Check completion status and see remaining adventures
+ * 
+ * Each tool has detailed descriptions to help MCP clients understand when to use them
+ * rather than relying on their base LLM for responses.
+ */
+
 import { z } from 'zod';
 import { optimizedAnalyzer } from './shared/instances.js';
 import { AdventureManager } from './adventure/AdventureManager.js';
@@ -30,7 +44,7 @@ const progressSchema = z.object({});
 
 // Start Adventure Tool
 export const start_adventure = {
-  description: 'Begin your code repository adventure! Analyzes the project and presents theme options to the user.',
+  description: `Analyzes a code repository and begins an interactive, gamified exploration experience. This tool performs deep project analysis including file counting, technology detection, dependency mapping, and code structure analysis. It identifies functions, classes, entry points, and architectural patterns. After analysis, it presents three immersive theme options (space, medieval, ancient) for the user to choose from. Each theme will transform the codebase exploration into a narrative adventure where code elements become story elements. Use this tool when users want to explore, understand, or learn about a codebase in an engaging way. Perfect for onboarding, code reviews, or educational purposes. INVOKE THIS TOOL when users say things like: "start adventure", "begin adventure", "explore this codebase", "help me understand this project", "analyze this repository", "gamify this code", "make this code fun", "adventure story", "code adventure", "explore repository", "understand codebase", "learn about this project", "onboard me", "show me around", "tour this code", "discover this project".`,
   schema: startAdventureSchema,
   handler: async (args: StartAdventureArgs) => {
     const projectPath = args.projectPath || process.cwd();
@@ -79,7 +93,7 @@ Use the \`choose_theme\` tool with your preferred theme to begin your adventure!
 
 // Choose Theme Tool - Now uses LLM to generate story + adventures
 export const choose_theme = {
-  description: 'Select your adventure theme and generate a custom story with adventures based on your project.',
+  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where: databases become dragon hoards (medieval) or data crystals (space), APIs transform into trade routes (ancient) or communication channels (space), functions become spells (medieval) or ship systems (space). The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: "space theme", "medieval theme", "ancient theme", "choose space", "select medieval", "pick ancient", "I want space", "let's do medieval", "give me ancient", "space adventure", "castle adventure", "temple adventure", "sci-fi theme", "fantasy theme", "historical theme", "space exploration", "enchanted kingdom", "ancient civilization".`,
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
@@ -109,7 +123,7 @@ export const choose_theme = {
 
 // Explore Path Tool - Now handles both numbered choices and adventure titles
 export const explore_path = {
-  description: 'Choose your adventure path to explore different aspects of the codebase. Use adventure numbers (1, 2, 3) or adventure titles.',
+  description: `Executes a chosen adventure to explore specific parts of the codebase through LLM-generated narrative content. This tool accepts either adventure numbers (1, 2, 3, etc.) or partial/full adventure titles (e.g., "Core Logic" or "Castle Design: Exploring the Kingdom Layout"). It generates detailed, contextualized content that weaves actual code insights, file references, and technical concepts into the themed story. Each exploration reveals code snippets, architectural patterns, dependencies, and best practices wrapped in narrative form. The tool maintains adventure state, tracks progress (showing completion percentage), and suggests next adventures. Includes built-in input sanitization to prevent prompt injection while allowing legitimate adventure selection. Use this repeatedly to explore different code areas until all adventures are completed. INVOKE THIS TOOL when users say: "explore 1", "choose 1", "select 1", "go to 1", "adventure 1", "explore core logic", "visit architecture", "explore the castle", "enter the temple", "board the starship", "next adventure", "continue adventure", "explore path", "take path", "follow path", "enter adventure", "start chapter", numbers like "1", "2", "3", or adventure names.`,
   schema: explorePathSchema,
   handler: async (args: ExplorePathArgs) => {
     try {
@@ -147,7 +161,7 @@ export const explore_path = {
 
 // Progress Tool - Show current adventure progress
 export const view_progress = {
-  description: 'View your current adventure progress and see completed adventures.',
+  description: `Displays comprehensive progress tracking for the code exploration adventure. Shows overall completion percentage, lists all completed adventures with their titles, displays remaining available adventures, and provides contextual encouragement. This tool helps users understand their learning journey through the codebase, see which code areas they've already explored (marked as completed chapters), and decide which parts to explore next. Essential for tracking progress in larger codebases with multiple adventures. No parameters required - automatically tracks state from previous tool calls. Use when users want to check their progress, see what's left to explore, or need guidance on next steps. INVOKE THIS TOOL when users say: "view progress", "show progress", "check progress", "my progress", "progress report", "status", "where am I", "what's left", "remaining adventures", "completed adventures", "how far along", "completion status", "adventure status", "chapters completed", "track progress", "progress check", "how much left", "what have I done", "list adventures", "show adventures".`,
   schema: progressSchema,
   handler: async (_args: ProgressArgs) => {
     try {
