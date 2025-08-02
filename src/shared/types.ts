@@ -1,3 +1,5 @@
+import { AdventureTheme } from './theme.js';
+
 // Story and Character types
 export interface Character {
   name: string;
@@ -9,7 +11,7 @@ export interface Character {
 }
 
 export interface Story {
-  theme: string;
+  theme: AdventureTheme;
   title: string;
   introduction: string;
   setting: string;

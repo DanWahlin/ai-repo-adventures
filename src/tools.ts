@@ -17,6 +17,7 @@ import { optimizedAnalyzer } from './shared/instances.js';
 import { AdventureManager } from './adventure/AdventureManager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { formatErrorForUser } from './shared/errors.js';
+import { parseTheme, getFormattedThemeOptions } from './shared/theme.js';
 
 // Create a single shared adventure manager instance
 const adventureManager = new AdventureManager();
@@ -33,7 +34,7 @@ const startAdventureSchema = z.object({
 });
 
 const chooseThemeSchema = z.object({
-  theme: z.enum(['space', 'medieval', 'ancient'] as const).describe('The story theme to use for your adventure')
+  theme: z.string().describe('The story theme - use "space"/"mythical"/"ancient" or numbers 1/2/3')
 });
 
 const explorePathSchema = z.object({
@@ -44,7 +45,7 @@ const progressSchema = z.object({});
 
 // Start Adventure Tool
 export const start_adventure = {
-  description: `Analyzes a code repository and begins an interactive, gamified exploration experience. This tool performs deep project analysis including file counting, technology detection, dependency mapping, and code structure analysis. It identifies functions, classes, entry points, and architectural patterns. After analysis, it presents three immersive theme options (space, medieval, ancient) for the user to choose from. Each theme will transform the codebase exploration into a narrative adventure where code elements become story elements. Use this tool when users want to explore, understand, or learn about a codebase in an engaging way. Perfect for onboarding, code reviews, or educational purposes. INVOKE THIS TOOL when users say things like: "start adventure", "begin adventure", "explore this codebase", "help me understand this project", "analyze this repository", "gamify this code", "make this code fun", "adventure story", "code adventure", "explore repository", "understand codebase", "learn about this project", "onboard me", "show me around", "tour this code", "discover this project".`,
+  description: `Analyzes a code repository and begins an interactive, gamified exploration experience. This tool performs deep project analysis including file counting, technology detection, dependency mapping, and code structure analysis. It identifies functions, classes, entry points, and architectural patterns. After analysis, it presents three immersive theme options (space, mythical, ancient) for the user to choose from. Each theme will transform the codebase exploration into a narrative adventure where code elements become story elements. Use this tool when users want to explore, understand, or learn about a codebase in an engaging way. Perfect for onboarding, code reviews, or educational purposes. INVOKE THIS TOOL when users say things like: "start adventure", "begin adventure", "explore this codebase", "help me understand this project", "analyze this repository", "gamify this code", "make this code fun", "adventure story", "code adventure", "explore repository", "understand codebase", "learn about this project", "onboard me", "show me around", "tour this code", "discover this project".`,
   schema: startAdventureSchema,
   handler: async (args: StartAdventureArgs) => {
     const projectPath = args.projectPath || process.cwd();
@@ -71,11 +72,9 @@ Your mission: Transform into a digital explorer and uncover the secrets of this 
 
 **Choose Your Story Theme:**
 
-🚀 **Space Exploration** - Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies
-🏰 **Enchanted Kingdom** - Explore magical realms where databases are dragon hoards and functions are powerful spells  
-🏺 **Ancient Civilization** - Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes
+${getFormattedThemeOptions()}
 
-Use the \`choose_theme\` tool with your preferred theme to begin your adventure!`
+Use the \`choose_theme\` tool with your preferred theme (name or number) to begin your adventure!`
           }
         ]
       };
@@ -93,16 +92,26 @@ Use the \`choose_theme\` tool with your preferred theme to begin your adventure!
 
 // Choose Theme Tool - Now uses LLM to generate story + adventures
 export const choose_theme = {
-  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where: databases become dragon hoards (medieval) or data crystals (space), APIs transform into trade routes (ancient) or communication channels (space), functions become spells (medieval) or ship systems (space). The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: "space theme", "medieval theme", "ancient theme", "choose space", "select medieval", "pick ancient", "I want space", "let's do medieval", "give me ancient", "space adventure", "castle adventure", "temple adventure", "sci-fi theme", "fantasy theme", "historical theme", "space exploration", "enchanted kingdom", "ancient civilization".`,
+  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where: databases become dragon hoards (mythical) or data crystals (space), APIs transform into trade routes (ancient) or communication channels (space), functions become spells (mythical) or ship systems (space). The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: "1", "2", "3" (for numbered themes), "space theme", "mythical theme", "ancient theme", "choose space", "select mythical", "pick ancient", "I want space", "let's do mythical", "give me ancient", "space adventure", "castle adventure", "temple adventure", "sci-fi theme", "fantasy theme", "historical theme", "space exploration", "enchanted kingdom", "ancient civilization", "choose 1", "select 2", "pick 3".`,
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
+      // Parse the theme input (handles numbers, full names, partial matches)
+      const selectedTheme = parseTheme(args.theme);
+      
+      if (!selectedTheme) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `Invalid theme: ${args.theme}. Please choose 'space', 'mythical', 'ancient', or use numbers 1-3.`
+        );
+      }
+      
       // Get the current project info
       const projectPath = process.cwd();
       const projectInfo = await optimizedAnalyzer.analyzeProject(projectPath);
       
       // Initialize adventure with LLM-generated content
-      const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, args.theme);
+      const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, selectedTheme);
       
       return {
         content: [

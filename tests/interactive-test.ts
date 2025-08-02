@@ -124,12 +124,20 @@ class InteractiveMCPClient {
     }
 
     // Choose theme
-    if (lower.includes('space') || lower.includes('medieval') || lower.includes('ancient')) {
+    if (lower.includes('space') || lower.includes('mythical') || lower.includes('ancient')) {
       const theme = lower.includes('space') ? 'space' : 
-                    lower.includes('medieval') ? 'medieval' : 'ancient';
+                    lower.includes('mythical') ? 'mythical' : 'ancient';
       return {
         intent: 'choose_theme',
         params: { theme }
+      };
+    }
+    
+    // Check if this is a numeric theme selection (adventure started but no theme chosen)
+    if (this.adventureStarted && !this.currentTheme && /^[1-3]$/.test(input.trim())) {
+      return {
+        intent: 'choose_theme',
+        params: { theme: input.trim() }  // Pass the number directly, the tool will handle conversion
       };
     }
 
@@ -152,7 +160,16 @@ class InteractiveMCPClient {
       };
     }
 
-    // Default to exploration
+    // Default behavior: if adventure started but no theme chosen, treat as theme selection
+    if (this.adventureStarted && !this.currentTheme) {
+      // Assume user is trying to select a theme
+      return {
+        intent: 'choose_theme',
+        params: { theme: input }
+      };
+    }
+    
+    // Otherwise default to exploration
     return {
       intent: 'explore_path',
       params: { choice: input }
@@ -210,25 +227,20 @@ ${colors.yellow}📁 Project Setup${colors.reset}
 Current directory: ${colors.cyan}${this.currentProject}${colors.reset}
 
 Would you like to:
-  1. Analyze this MCP Repo Adventure project (recommended for testing)
-  2. Analyze current directory: ${colors.dim}${process.cwd()}${colors.reset}
-  3. Enter a different project path
+  1. Analyze current directory: ${colors.dim}${process.cwd()}${colors.reset}
+  2. Enter a different project path
 
 ${colors.green}Press Enter for option 1 (default)${colors.reset}
 `);
 
-      this.rl.question(`${colors.bright}Choose (1-3 or path)>${colors.reset} `, async (input) => {
+      this.rl.question(`${colors.bright}Choose (1-2 or path)>${colors.reset} `, async (input) => {
         const trimmed = input.trim();
         
         if (!trimmed || trimmed === '1') {
-          // Default to this project
-          this.currentProject = process.cwd();
-          console.log(`${colors.green}✓ Using MCP Repo Adventure project for testing${colors.reset}`);
-        } else if (trimmed === '2') {
-          // Use current directory
+          // Default to current directory
           this.currentProject = process.cwd();
           console.log(`${colors.green}✓ Using current directory: ${this.currentProject}${colors.reset}`);
-        } else if (trimmed === '3') {
+        } else if (trimmed === '2') {
           // Ask for path
           this.rl.question(`${colors.bright}Enter project path>${colors.reset} `, (path) => {
             this.currentProject = path.trim() || process.cwd();
@@ -259,7 +271,7 @@ ${colors.yellow}Starting:${colors.reset}
 
 ${colors.yellow}Themes:${colors.reset}
   • "I choose the space theme" / "space" - Space exploration theme
-  • "Medieval theme please" / "medieval" - Medieval fantasy theme
+  • "Mythical theme please" / "mythical" - Mythical fantasy theme
   • "Let's go ancient" / "ancient" - Ancient civilization theme
 
 ${colors.yellow}Exploration:${colors.reset}

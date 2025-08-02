@@ -1,6 +1,7 @@
 import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { readFile } from 'fs/promises';
+import { AdventureTheme, THEMES, THEME_EMOJIS } from '../shared/theme.js';
 
 // Core interfaces for LLM-driven adventures
 export interface Adventure {
@@ -38,7 +39,7 @@ export class AdventureState {
   story: string | undefined = undefined;
   adventures: Adventure[] = [];
   completedAdventures: Set<string> = new Set();
-  currentTheme: string = '';
+  currentTheme: AdventureTheme | null = null;
   projectInfo: ProjectInfo | undefined = undefined;
 
   get progressPercentage(): number {
@@ -51,7 +52,7 @@ export class AdventureState {
     this.story = undefined;
     this.adventures = [];
     this.completedAdventures.clear();
-    this.currentTheme = '';
+    this.currentTheme = null;
     this.projectInfo = undefined;
   }
 }
@@ -70,7 +71,7 @@ export class AdventureManager {
   /**
    * Build the story generation prompt
    */
-  private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: string): string {
+  private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: AdventureTheme): string {
     const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
     const adventureRules = this.getAdventureCreationRules();
     const themeGuidelines = this.getThemeGuidelines(theme);
@@ -120,10 +121,14 @@ Each adventure title MUST follow this pattern: "Theme-Specific Name: Technical D
   /**
    * Get theme-specific guidelines
    */
-  private getThemeGuidelines(theme: string): string {
-    const themeRestrictions = theme === 'space' ? '(space ships, galaxies, astronauts - NOT kingdoms or magic)' : 
-      theme === 'medieval' ? '(castles, knights, magic - NOT space ships or ancient temples)' : 
-      '(temples, pyramids, ancient wisdom - NOT space ships or medieval castles)';
+  private getThemeGuidelines(theme: AdventureTheme): string {
+    const THEME_RESTRICTIONS = {
+      [THEMES.SPACE.key]: '(space ships, galaxies, astronauts - NOT kingdoms or magic)',
+      [THEMES.MYTHICAL.key]: '(castles, knights, magic, mythical creatures - NOT space ships or ancient temples)',
+      [THEMES.ANCIENT.key]: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)'
+    } as const;
+    
+    const themeRestrictions = THEME_RESTRICTIONS[theme] || THEME_RESTRICTIONS[THEMES.SPACE.key];
     
     return `## Theme Guidelines
 
@@ -143,12 +148,14 @@ ${this.getThemeVocabulary(theme)}
   /**
    * Get story response format
    */
-  private getStoryResponseFormat(theme: string): string {
+  private getStoryResponseFormat(theme: AdventureTheme): string {
     return `## Response Format
 
 Your response must be a valid JSON object matching the structure below.
 
-IMPORTANT: Adventure titles MUST follow the format "Theme-Specific Title: Brief Description" 
+IMPORTANT: 
+1. Adventure IDs MUST be simple integers starting from "1", "2", "3", etc.
+2. Adventure titles MUST follow the format "Theme-Specific Title: Brief Description" 
 Examples:
 - "Starship Design: An Overview of the Codebase Architecture"
 - "Temple Complex Architecture: Understanding the Sacred Layout"
@@ -158,11 +165,18 @@ Examples:
   "story": "A concise 1-2 paragraph opening (max 150 words) that establishes the ${theme} world and introduces the codebase. Keep it engaging but brief. Reference 1-2 key technologies.",
   "adventures": [
     {
-      "id": "kebab-case-id",
+      "id": "1",
       "title": "${theme}-themed title in format 'Adventure Name: What It Covers' (e.g., 'Starship Design: An Overview of the Codebase Architecture')",
       "description": "One concise sentence explaining what this adventure covers",
       "codeFiles": ["actual-file-names-from-analysis"]
+    },
+    {
+      "id": "2",
+      "title": "Second adventure title",
+      "description": "Description",
+      "codeFiles": ["files"]
     }
+    // Continue with id "3", "4", etc. for remaining adventures
   ]
 }`;
   }
@@ -170,7 +184,7 @@ Examples:
   /**
    * Initialize the adventure with project context and generate story + adventures
    */
-  async initializeAdventure(projectInfo: ProjectInfo, theme: string): Promise<string> {
+  async initializeAdventure(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<string> {
     // Reset state for new adventure
     this.state.reset();
     this.state.projectInfo = projectInfo;
@@ -279,7 +293,7 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
   /**
    * Generate the initial story and adventures using LLM
    */
-  private async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: string): Promise<StoryResponse> {
+  private async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
     const prompt = this.buildStoryGenerationPrompt(projectInfo, theme);
 
     try {
@@ -338,7 +352,7 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
 **Adventure Context:**
 - Description: ${adventure.description}
 - Project Type: ${this.state.projectInfo.type} using ${this.state.projectInfo.mainTechnologies.join(', ')}
-- Theme Vocabulary: ${this.getThemeVocabulary(this.state.currentTheme)}
+- Theme Vocabulary: ${this.state.currentTheme ? this.getThemeVocabulary(this.state.currentTheme) : 'Not selected'}
 
 **Code Files to Explore:**
 ${codeContent}
@@ -430,7 +444,7 @@ Your response must be a valid JSON object matching the structure below.
 - Adventure completed: ${adventure.title}
 - Progress: ${progress}/${total} adventures (${percentComplete}% complete)
 - Theme: ${this.state.currentTheme}
-- Theme vocabulary: ${this.getThemeVocabulary(this.state.currentTheme)}
+- Theme vocabulary: ${this.state.currentTheme ? this.getThemeVocabulary(this.state.currentTheme) : 'Not selected'}
 
 **Requirements:**
 - Write 1-2 sentences using ${this.state.currentTheme} terminology
@@ -458,9 +472,9 @@ Generate ONLY the celebration message, no extra text.`;
   /**
    * Get theme-specific vocabulary and examples
    */
-  private getThemeVocabulary(theme: string): string {
+  private getThemeVocabulary(theme: AdventureTheme): string {
     const vocabularies = {
-      space: `
+      [THEMES.SPACE.key]: `
 - Architecture → "Starship Design" or "Orbital Platform"
 - Configuration → "Navigation Control Center" or "Command Bridge"
 - APIs → "Interstellar Communication Hub" or "Quantum Data Relay"
@@ -470,17 +484,17 @@ Generate ONLY the celebration message, no extra text.`;
 - Tests → "System Diagnostics" or "Mission Simulation Chamber"
 - Dependencies → "Allied Fleet" or "Support Network"`,
       
-      medieval: `
+      [THEMES.MYTHICAL.key]: `
 - Architecture → "Castle Design" or "Kingdom Layout"  
 - Configuration → "Enchanted Armory" or "Royal Treasury"
 - APIs → "Royal Messenger Network" or "Diplomatic Embassy"
-- Database → "Ancient Knowledge Vault" or "Royal Archives"
-- Functions → "Magical Spells" or "Royal Decrees"
+- Database → "Ancient Knowledge Vault" or "Dragon's Hoard"
+- Functions → "Magical Spells" or "Mythical Incantations"
 - Classes → "Guild Houses" or "Noble Orders"
 - Tests → "Trial by Combat" or "Wisdom Challenges"
-- Dependencies → "Allied Kingdoms" or "Trade Partners"`,
+- Dependencies → "Allied Kingdoms" or "Mythical Alliances"`,
       
-      ancient: `
+      [THEMES.ANCIENT.key]: `
 - Architecture → "Temple Complex" or "Pyramid Structure"
 - Configuration → "Sacred Ritual Chamber" or "Oracle's Sanctum"
 - APIs → "Trade Route Network" or "Messenger Papyrus System"
@@ -786,9 +800,8 @@ Choose an adventure by using the \`explore_path\` tool with the adventure number
   /**
    * Fallback story generation when LLM fails
    */
-  private generateFallbackStory(projectInfo: ProjectInfo, theme: string): StoryResponse {
-    const themeEmojis = { space: '🚀', medieval: '🏰', ancient: '🏺' };
-    const emoji = themeEmojis[theme as keyof typeof themeEmojis] || '✨';
+  private generateFallbackStory(projectInfo: ProjectInfo, theme: AdventureTheme): StoryResponse {
+    const emoji = THEME_EMOJIS[theme] || '✨';
 
     return {
       story: `${emoji} Welcome to your ${theme} code adventure! This ${projectInfo.type} project contains ${projectInfo.fileCount} files using ${projectInfo.mainTechnologies.join(', ')}. Let's explore it together through an engaging ${theme} journey!`,

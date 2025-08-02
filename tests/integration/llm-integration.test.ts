@@ -100,7 +100,7 @@ async function runTests() {
     const manager = new AdventureManager();
     
     // Initialize adventure first
-    const storyResult = await manager.initializeAdventure(realProjectInfo, 'medieval');
+    const storyResult = await manager.initializeAdventure(realProjectInfo, 'mythical');
     
     // Get available adventures before exploring
     const progress = manager.getProgress();
@@ -123,12 +123,12 @@ async function runTests() {
     console.log(`📜 Adventure Narrative Preview:\n${narrativePreview}`);
     console.log(`\n📊 Progress: ${result.progressUpdate}`);
     
-    // Check that medieval theme is present
-    const medieval_indicators = ['medieval', 'knight', 'castle', 'quest', 'realm', 'kingdom'];
-    const hasTheme = medieval_indicators.some(indicator => 
+    // Check that mythical theme is present
+    const mythical_indicators = ['mythical', 'knight', 'castle', 'quest', 'realm', 'kingdom'];
+    const hasTheme = mythical_indicators.some(indicator => 
       result.narrative.toLowerCase().includes(indicator)
     );
-    assert(hasTheme, 'Should include medieval theme elements');
+    assert(hasTheme, 'Should include mythical theme elements');
   }, { skipIfNoLLM: true, timeout: 60000 });
 
   await test('Multiple themes generate different content', async () => {
@@ -139,7 +139,7 @@ async function runTests() {
     // Generate all three theme stories
     const spaceStory = await manager1.initializeAdventure(realProjectInfo, 'space');
     const ancientStory = await manager2.initializeAdventure(realProjectInfo, 'ancient');
-    const medievalStory = await manager3.initializeAdventure(realProjectInfo, 'medieval');
+    const mythicalStory = await manager3.initializeAdventure(realProjectInfo, 'mythical');
     
     console.log('\n🌟 Theme Comparison - Story Previews:');
     console.log('='.repeat(60));
@@ -159,15 +159,15 @@ async function runTests() {
     console.log(`Adventures: ${ancientProgress.choices?.filter(c => c !== 'View progress').join(', ')}`);
     
     // Medieval theme
-    const medievalPreview = medievalStory.length > 200 ? medievalStory.substring(0, 200) + '...' : medievalStory;
-    console.log(`\n🏰 MEDIEVAL THEME:\n${medievalPreview}`);
+    const mythicalPreview = mythicalStory.length > 200 ? mythicalStory.substring(0, 200) + '...' : mythicalStory;
+    console.log(`\n🏰 MEDIEVAL THEME:\n${mythicalPreview}`);
     
-    const medievalProgress = manager3.getProgress();
-    console.log(`Adventures: ${medievalProgress.choices?.filter(c => c !== 'View progress').join(', ')}`);
+    const mythicalProgress = manager3.getProgress();
+    console.log(`Adventures: ${mythicalProgress.choices?.filter(c => c !== 'View progress').join(', ')}`);
     
     assert(spaceStory !== ancientStory, 'Different themes should generate different stories');
-    assert(spaceStory !== medievalStory, 'Space and medieval should be different');
-    assert(ancientStory !== medievalStory, 'Ancient and medieval should be different');
+    assert(spaceStory !== mythicalStory, 'Space and mythical should be different');
+    assert(ancientStory !== mythicalStory, 'Ancient and mythical should be different');
     
     // Check theme-specific vocabulary using shared helpers
     const spaceWords = ['space', 'ship', 'galaxy', 'star', 'cosmic', 'orbital'];
@@ -223,8 +223,8 @@ async function runTests() {
     const manager = new AdventureManager();
     const llmClient = new LLMClient();
     
-    // Initialize with medieval theme
-    const storyResult = await manager.initializeAdventure(realProjectInfo, 'medieval');
+    // Initialize with mythical theme
+    const storyResult = await manager.initializeAdventure(realProjectInfo, 'mythical');
     
     // Explore first adventure to get detailed content
     const adventure1 = await manager.exploreAdventure('1');
@@ -235,7 +235,7 @@ async function runTests() {
       "isProperChapter": true/false,
       "connectsToMainStory": true/false,
       "hasCodeEducationalContent": true/false,
-      "medievalThemeConsistent": true/false,
+      "mythicalThemeConsistent": true/false,
       "progressesNarrative": true/false,
       "reasoning": "detailed explanation"
     }
@@ -251,7 +251,7 @@ async function runTests() {
     assert(chapterResult.isProperChapter === true, `Should be a proper chapter: ${chapterResult.reasoning}`);
     assert(chapterResult.connectsToMainStory === true, `Should connect to main story: ${chapterResult.reasoning}`);
     assert(chapterResult.hasCodeEducationalContent === true, `Should have educational content: ${chapterResult.reasoning}`);
-    assert(chapterResult.medievalThemeConsistent === true, `Should maintain theme: ${chapterResult.reasoning}`);
+    assert(chapterResult.mythicalThemeConsistent === true, `Should maintain theme: ${chapterResult.reasoning}`);
     assert(chapterResult.progressesNarrative === true, `Should progress narrative: ${chapterResult.reasoning}`);
     
   }, { skipIfNoLLM: true, timeout: 75000 });
@@ -261,7 +261,7 @@ async function runTests() {
     const llmClient = new LLMClient();
     
     // Test all three themes
-    const themes = ['space', 'medieval', 'ancient'];
+    const themes = ['space', 'mythical', 'ancient'];
     
     for (const theme of themes) {
       const storyResult = await manager.initializeAdventure(realProjectInfo, theme);
@@ -280,12 +280,12 @@ async function runTests() {
 
       Theme: ${theme.toUpperCase()}
       Expected vocabulary: ${theme === 'space' ? 'space ships, galaxies, astronauts' : 
-                           theme === 'medieval' ? 'castles, knights, magic' : 
+                           theme === 'mythical' ? 'castles, knights, magic' : 
                            'temples, pyramids, ancient wisdom'}
       
       Should NOT contain: ${theme === 'space' ? 'kingdoms, magic, temples' : 
-                          theme === 'medieval' ? 'space ships, ancient temples' : 
-                          'space ships, medieval castles'}
+                          theme === 'mythical' ? 'space ships, ancient temples' : 
+                          'space ships, mythical castles'}
 
       STORY: ${storyResult}`;
 

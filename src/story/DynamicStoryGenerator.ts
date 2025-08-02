@@ -2,15 +2,16 @@ import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { Character, Story } from '../shared/types.js';
 import { AdventurePathGenerator } from '../adventure/AdventurePathGenerator.js';
+import { AdventureTheme, THEMES } from '../shared/theme.js';
 
-// Theme constants
+// Theme keys for internal use
 export const STORY_THEMES = {
-  SPACE: 'space',
-  MEDIEVAL: 'medieval',
-  ANCIENT: 'ancient'
+  SPACE: THEMES.SPACE.key,
+  MYTHICAL: THEMES.MYTHICAL.key,
+  ANCIENT: THEMES.ANCIENT.key
 } as const;
 
-export type StoryTheme = typeof STORY_THEMES[keyof typeof STORY_THEMES];
+export type StoryTheme = AdventureTheme;
 
 // Analysis limits
 const STORY_LIMITS = {
@@ -44,7 +45,7 @@ export class DynamicStoryGenerator {
     return Promise.race([promise, timeoutPromise]);
   }
 
-  async generateStory(theme: string): Promise<Story> {
+  async generateStory(theme: AdventureTheme): Promise<Story> {
     // Validate theme
     if (!Object.values(STORY_THEMES).includes(theme as StoryTheme)) {
       console.warn(`Invalid theme '${theme}', defaulting to ${STORY_THEMES.SPACE} theme`);
@@ -181,7 +182,7 @@ export class DynamicStoryGenerator {
     ].filter(Boolean).join('\n');
   }
 
-  private createEnhancedStoryPrompt(theme: string, projectAnalysis: string): string {
+  private createEnhancedStoryPrompt(theme: AdventureTheme, projectAnalysis: string): string {
     const keyFunctions = this.currentProject?.codeAnalysis.functions.slice(0, 3) || [];
     const functionExamples = keyFunctions.map(f => 
       `- ${f.name}(${f.parameters.join(', ')}) - ${f.summary}`
@@ -215,7 +216,7 @@ ${functionExamples}
 Remember: The goal is to make learning about this codebase fun and memorable through creative storytelling!`;
   }
 
-  private parseStoryResponse(content: string, theme: string): Story {
+  private parseStoryResponse(content: string, theme: AdventureTheme): Story {
     try {
       const parsedData = this.extractStoryData(content);
       return this.buildStoryFromParsedData(parsedData, theme);
@@ -330,7 +331,7 @@ Remember: The goal is to make learning about this codebase fun and memorable thr
 
   private buildStoryFromParsedData(
     parsedData: { title: string; introduction: string; characters: Partial<Character>[]; initialChoices: string[] },
-    theme: string
+    theme: AdventureTheme
   ): Story {
     const { title, introduction, characters: partialCharacters, initialChoices } = parsedData;
     
@@ -392,7 +393,7 @@ Remember: The goal is to make learning about this codebase fun and memorable thr
     return 'General';
   }
 
-  private generateDefaultCharacters(theme: string): Character[] {
+  private generateDefaultCharacters(theme: AdventureTheme): Character[] {
     const templates = {
       [STORY_THEMES.SPACE]: {
         name: 'Data Navigator Zara',
@@ -402,7 +403,7 @@ Remember: The goal is to make learning about this codebase fun and memorable thr
         funFact: 'I can process stellar databases faster than light travel!',
         technology: 'Database'
       },
-      [STORY_THEMES.MEDIEVAL]: {
+      [STORY_THEMES.MYTHICAL]: {
         name: 'Keeper Magnus',
         role: 'Guardian of the Code Archives',
         description: 'An ancient keeper who protects the sacred scrolls of knowledge.',
@@ -432,17 +433,17 @@ Remember: The goal is to make learning about this codebase fun and memorable thr
     return choices;
   }
 
-  private generateDefaultIntroduction(theme: string): string {
+  private generateDefaultIntroduction(theme: AdventureTheme): string {
     const intros = {
       [STORY_THEMES.SPACE]: '🚀 Welcome to your digital starship! This vessel contains the technological marvels that power your mission through the code cosmos.',
-      [STORY_THEMES.MEDIEVAL]: '🏰 Welcome to the enchanted kingdom of code! This mystical realm holds the magical technologies that bring your digital world to life.',
+      [STORY_THEMES.MYTHICAL]: '🏰 Welcome to the enchanted kingdom of code! This mystical realm holds the magical technologies that bring your digital world to life.',
       [STORY_THEMES.ANCIENT]: '🏺 Welcome to the lost temple of digital wisdom! These ancient halls contain the technological artifacts of a sophisticated civilization.'
     };
     
     return intros[theme as keyof typeof intros] || intros[STORY_THEMES.SPACE];
   }
 
-  private generateFallbackStory(theme: string): Story {
+  private generateFallbackStory(theme: AdventureTheme): Story {
     if (!this.currentProject) {
       const error = new Error('No project information available');
       console.error('generateFallbackStory error:', error.message);

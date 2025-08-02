@@ -1,4 +1,5 @@
 import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
+import { AdventureTheme, THEME_EMOJIS } from '../shared/theme.js';
 
 export interface AdventurePath {
   id: string;
@@ -150,14 +151,8 @@ export class AdventurePathGenerator {
     return paths.sort((a, b) => order[a.complexity] - order[b.complexity]);
   }
 
-  generateAdventureChoicesText(paths: AdventurePath[], theme: string): string {
-    const themeEmojis = {
-      space: '🚀',
-      medieval: '🏰',
-      ancient: '🏺'
-    };
-
-    const emoji = themeEmojis[theme as keyof typeof themeEmojis] || '🎮';
+  generateAdventureChoicesText(paths: AdventurePath[], theme: AdventureTheme): string {
+    const emoji = THEME_EMOJIS[theme] || '🎮';
     
     let text = `\n${emoji} **Choose Your Adventure Path:**\n\n`;
     

@@ -328,7 +328,7 @@ Your mission: Explore this codebase through the eyes of space travelers, where d
 - Venture to Engineering (Backend Systems)`;
     }
     
-    if (prompt.includes('medieval') || prompt.includes('kingdom')) {
+    if (prompt.includes('mythical') || prompt.includes('kingdom')) {
       return `🏰 **Welcome to the Enchanted Kingdom of Code!**
 
 You've entered a mystical realm where digital magic flows through ancient towers and crystalline data chambers. Each area of this kingdom is protected by wise guardians who understand the deepest secrets of their domains.
