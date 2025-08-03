@@ -33,12 +33,13 @@ export interface LLMConfig {
 }
 
 export class LLMClient {
-  private client: OpenAI | AzureOpenAI;
+  private client: OpenAI | AzureOpenAI | undefined;
   private model: string;
   private temperature: number;
   private maxTokens: number;
   private provider: string;
   private baseURL: string;
+  private apiKey: string | undefined;
   private timeoutMs: number;
   private cacheTimeoutMs: number;
   private requestCache: Map<string, { response: LLMResponse; timestamp: number }> = new Map();
@@ -47,9 +48,9 @@ export class LLMClient {
     // Environment-based configuration with optional overrides
     this.baseURL = config?.baseURL || ENV_CONFIG.LLM_BASE_URL;
     const apiKey = config?.apiKey || ENV_CONFIG.LLM_API_KEY;
-    if (!apiKey) {
-      throw new Error(ERROR_CONFIG.DEFAULT_MESSAGES.LLM_UNAVAILABLE + ' Please set LLM_API_KEY in your environment or .env file.');
-    }
+    
+    // Store API key - can be undefined to allow fallback mode
+    this.apiKey = apiKey;
     
     this.model = config?.model || ENV_CONFIG.LLM_MODEL;
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
@@ -62,21 +63,26 @@ export class LLMClient {
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
 
-    // Create client with provider-specific configuration
-    if (this.provider === 'Azure OpenAI') {
-      this.validateAzureConfiguration();
-      this.client = new AzureOpenAI({
-        endpoint: this.baseURL,
-        apiKey: apiKey,
-        apiVersion: ENV_CONFIG.LLM_API_VERSION,
-        deployment: this.model
-      });
+    // Create client with provider-specific configuration only if API key is available
+    if (this.apiKey) {
+      if (this.provider === 'Azure OpenAI') {
+        this.validateAzureConfiguration();
+        this.client = new AzureOpenAI({
+          endpoint: this.baseURL,
+          apiKey: this.apiKey,
+          apiVersion: ENV_CONFIG.LLM_API_VERSION,
+          deployment: this.model
+        });
+      } else {
+        this.client = new OpenAI({
+          baseURL: this.baseURL,
+          apiKey: this.apiKey,
+          defaultHeaders: this.getProviderHeaders()
+        });
+      }
     } else {
-      this.client = new OpenAI({
-        baseURL: this.baseURL,
-        apiKey: apiKey,
-        defaultHeaders: this.getProviderHeaders()
-      });
+      // No API key available - client will operate in fallback mode
+      this.client = undefined;
     }
   }
 
@@ -189,6 +195,11 @@ export class LLMClient {
   }
 
   async generateResponse(prompt: string, options?: LLMRequestOptions | string): Promise<LLMResponse> {
+    // Check if LLM is available
+    if (!this.client) {
+      throw new Error(ERROR_CONFIG.DEFAULT_MESSAGES.LLM_UNAVAILABLE + ' LLM client not initialized. Please configure API credentials.');
+    }
+
     // Handle legacy string parameter for backward compatibility
     const opts: LLMRequestOptions = typeof options === 'string' 
       ? { systemPrompt: options } 
@@ -294,7 +305,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
 
 
   isAvailable(): boolean {
-    return !!ENV_CONFIG.LLM_API_KEY;
+    return !!this.client;
   }
 
   private getCacheKey(prompt: string, systemPrompt?: string): string {

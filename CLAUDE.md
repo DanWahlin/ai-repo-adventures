@@ -8,6 +8,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run**: `npm start` - Runs the MCP server via tsx
 - **Development**: `npm run dev` - Runs with file watching for development
 
+### Testing Commands
+- **All Tests**: `npm test` - Runs comprehensive test suite
+- **Unit Tests**: `npm run test:unit` - Core algorithm and component tests
+- **Integration Tests**: `npm run test:integration` - LLM integration tests
+- **Individual Test Suites**: 
+  - `npm run test:unit:algorithms` - Adventure algorithm tests
+  - `npm run test:unit:llm` - LLM client tests
+  - `npm run test:simple` - Basic MCP workflow test
+  - `npm run test:real-world` - Full MCP integration test
+
+### LLM Configuration (Optional)
+The system works without LLM configuration (using fallback templates), but LLM enables dynamic story generation:
+```bash
+cp .env.example .env
+# Configure LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+```
+
 ## Code Review Policy
 
 **ALWAYS** use the code-reviewer agent after writing or significantly modifying code. This includes:
@@ -30,77 +47,128 @@ This is a **Model Context Protocol (MCP) server** that gamifies code repository 
 
 ### Core Architecture Pattern
 
-The system follows a **three-layer pipeline architecture**:
+The system follows a **modular domain-driven architecture**:
 
-1. **Analysis Layer** (`ProjectAnalyzer`) - Scans filesystem, detects technologies, analyzes project structure
-2. **Story Generation Layer** (`StoryGenerator`) - Transforms technical metadata into themed narratives with characters
-3. **Adventure Management Layer** (`AdventureManager`) - Handles user interaction state and choice progression
+1. **Analysis Domain** (`src/analyzer/`) - Project structure analysis and code understanding
+2. **Adventure Domain** (`src/adventure/`) - Story generation and user interaction management  
+3. **Shared Infrastructure** (`src/shared/`) - Configuration, error handling, and utilities
+4. **MCP Server Layer** (`src/server.ts`, `src/tools.ts`) - Protocol implementation and tool orchestration
 
-### Key Components
+### Key Architectural Components
 
 **`src/server.ts`** - Main MCP server that:
-- Dynamically loads tools from the `/tools` directory
+- Dynamically loads and registers tools from `src/tools.ts`
 - Converts Zod schemas to JSON Schema for MCP tool registration
-- Provides centralized error handling and validation
+- Provides centralized error handling with `McpError` types
 - Uses stdio transport for local file system access
 
-**`src/tools/`** - Modular tool system:
-- Each tool is self-contained with its own directory (`start_adventure/`, `choose_theme/`, etc.)
-- Tools use Zod schemas for input validation and automatic JSON Schema generation
-- Shared instances maintain state across tool calls via `src/shared/instances.ts`
-- Dynamic tool registration via `src/tools/tools.ts` aggregator
+**`src/tools.ts`** - Tool orchestration layer:
+- Defines 4 main MCP tools: `start_adventure`, `choose_theme`, `explore_path`, `view_progress`
+- Uses Zod schemas for input validation and automatic JSON Schema generation
+- Maintains shared state through singleton `AdventureManager` instance
+- Provides user-friendly error formatting
 
-**`src/analyzer/ProjectAnalyzer.ts`** - File system scanner that:
-- Recursively scans directories (max depth 3) while skipping `node_modules`, `.git`, etc.
-- Maps file patterns to technology detection via `TECH_INDICATORS` object
-- Returns structured `ProjectInfo` with detected technologies and project metadata
+### Analysis Domain (`src/analyzer/`)
 
-**`src/story/StoryGenerator.ts`** - Narrative engine that:
-- Contains 3 predefined themes (space, medieval, ancient) with character templates
-- Maps detected technologies to themed characters (Database → "Data Archivist", API → "Commander", etc.)
-- Generates contextual introductions and choice paths based on project analysis
+Modular analysis system with specialized components:
+- **`ProjectAnalyzer`** - Main orchestrator coordinating all analysis activities
+- **`FileSystemScanner`** - Directory traversal and technology detection via file patterns
+- **`CodeAnalyzer`** - Source code parsing for functions, classes, and patterns
+- **`DependencyParser`** - Package.json analysis and dependency mapping
+- **`LinguistAnalyzer`** - Language detection using linguist-js
+- **`CodeFlowAnalyzer`** - Execution flow and call relationship mapping
 
-**`src/adventure/AdventureManager.ts`** - State machine that:
-- Maintains adventure state (visited characters, explored areas, progress tracking)
-- Parses user choices and routes to appropriate handlers
-- Generates dynamic narratives and next-choice options
+### Adventure Domain (`src/adventure/`)
+
+Story generation and interaction management:
+- **`AdventureManager`** - Main orchestrator for adventure state and user interactions
+- **`StoryGenerator`** - LLM-based story generation with project context
+- **`DynamicStoryGenerator`** - Advanced story generation with theme support and fallback templates
+- **`ThemeManager`** - Manages 3 themes (space, mythical, ancient) with character mappings
+- **`FileContentManager`** - File reading and content preparation for adventures
+- **`AdventurePathGenerator`** - Generates exploration paths based on project structure
+
+### Shared Infrastructure (`src/shared/`)
+
+Centralized utilities and configuration:
+- **`config.ts`** - All timeouts, limits, and environment configuration
+- **`error-handling.ts`** - Standardized error types and context handling
+- **`theme.ts`** - Theme validation and formatting utilities
+- **`instances.ts`** - Singleton instances for state management
+- **`cache.ts`** - LRU cache implementation for performance optimization
 
 ### Technology Detection System
 
-The `ProjectAnalyzer` uses a mapping system where each technology has file/directory indicators:
-- React: `['react', 'jsx', 'tsx', '.jsx', '.tsx']`
-- Database: `['database', 'db', 'sql', 'mongodb', 'postgres', 'mysql']`
-- API: `['api', 'rest', 'graphql', 'routes', 'controllers']`
+The `FileSystemScanner` detects technologies through file patterns and extensions. Technologies are returned in UPPERCASE format (e.g., 'TYPESCRIPT', 'JAVASCRIPT'). Each technology maps to themed characters in the adventure stories.
 
-This drives character generation where each detected technology gets a themed character representation.
+### Configuration System (`src/shared/config.ts`)
 
-### Configuration System
+All configuration is centralized for easy maintenance:
 
-The system uses a comprehensive configuration system for analysis timeouts and limits:
+**Environment Variables** (`ENV_CONFIG`):
+- `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` - LLM provider configuration
+- `GITHUB_TOKEN` - For GitHub Models integration
 
-**Configurable Timeouts** (in milliseconds):
-- `timeouts.fileRead`: Time limit for reading individual files (default: 10000ms) 
-- `timeouts.analysis`: Time limit for analysis operations (default: 30000ms)
+**Timeouts** (`TIMEOUTS`):
+- `FILE_READ`: 10000ms - Individual file read operations
+- `FILE_ANALYSIS`: 30000ms - Code analysis operations  
+- `LLM_REQUEST`: 15000ms - LLM API calls
+- `LLM_CACHE`: 300000ms - Response cache TTL
 
-**Configurable Limits**:
-- `limits.maxFileSizeMB`: Maximum file size to analyze (default: 10MB)
-- `limits.keySourceFiles`: Number of key source files to analyze (default: 10)
-- `limits.topFunctions`: Number of top functions to include in summaries (default: 20)
-- `limits.topClasses`: Number of top classes to include (default: 5)
-- `limits.topDependencies`: Number of dependencies to list (default: 20)
-- `limits.summaryLines`: Lines from README to include (default: 10)
+**Analysis Limits** (`ANALYSIS_LIMITS`):
+- `MAX_FILE_SIZE_MB`: 10 - Skip files larger than this
+- `MAX_SCAN_DEPTH`: 3 - Directory traversal depth
+- `KEY_SOURCE_FILES`: 10 - Number of key files to analyze
+- `TOP_FUNCTIONS`: 20 - Functions to include in summaries
+- `TOP_CLASSES`: 5 - Classes to include in summaries
 
-**LLM Client Configuration**:
-- `timeoutMs`: Request timeout for API calls (default: 15000ms)
-- `cacheTimeoutMs`: Response cache TTL (default: 300000ms / 5 minutes)
+### State Management
 
-### MCP Integration
+The system uses singleton instances (`src/shared/instances.ts`):
+- `optimizedAnalyzer` - Shared `ProjectAnalyzer` instance with caching
+- `adventureManager` - Single instance maintaining adventure state across tool calls
 
-The server exposes tools that follow the MCP tool pattern:
-- Schema-defined input parameters using JSON Schema
-- Structured text responses with narrative content
-- Error handling with `McpError` types
-- Designed for integration with Claude Desktop, GitHub Copilot, and other MCP clients
+### Error Handling
+
+Standardized error handling with custom error types:
+- `AnalysisError` - File system and code analysis failures
+- `StoryGenerationError` - LLM and story generation issues  
+- `AdventureError` - Adventure state and user interaction problems
+- All errors include context (theme, project type, file paths, etc.)
+
+### LLM Integration
+
+The `LLMClient` (`src/llm/llm-client.ts`):
+- Supports multiple providers (OpenAI, Azure OpenAI, GitHub Models, Ollama)
+- Gracefully handles missing API keys (fallback to template-based stories)
+- Implements response caching with SHA256 hash keys
+- Provider auto-detection from base URL
+
+### MCP Tool Flow
+
+The typical user interaction flow:
+1. **`start_adventure`** - Analyzes codebase, returns available themes
+2. **`choose_theme`** - Generates story and adventures for selected theme
+3. **`explore_path`** - Explores specific adventures (can be called multiple times)
+4. **`view_progress`** - Shows completion status and remaining adventures
+
+### Important Implementation Details
+
+**Module System**: 
+- Uses ESM modules (`"type": "module"` in package.json)
+- All imports must include `.js` extension even for TypeScript files
+- Index files provide clean exports for each domain
+
+**Testing Considerations**:
+- Unit tests pass without LLM configuration
+- Integration tests gracefully skip when LLM unavailable
+- Simple/real-world tests require full MCP workflow (will fail without LLM)
+
+**File Organization After Recent Refactoring**:
+- `src/index.ts` renamed to `src/server.ts` for clarity
+- Story generation consolidated in `src/adventure/` (no separate `src/story/`)
+- All domains have `index.ts` files for clean imports
+- Configuration centralized in `src/shared/config.ts`
 
 ### Configuration for Claude Desktop
 
@@ -116,4 +184,4 @@ The server exposes tools that follow the MCP tool pattern:
 }
 ```
 
-The `cwd` should point to the project you want to explore, not this MCP server's directory.
+**Note**: The `cwd` should point to the project you want to explore, not this MCP server's directory.
