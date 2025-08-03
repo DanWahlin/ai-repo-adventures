@@ -82,8 +82,7 @@ Modular analysis system with specialized components:
 
 Story generation and interaction management:
 - **`AdventureManager`** - Main orchestrator for adventure state and user interactions
-- **`StoryGenerator`** - LLM-based story generation with project context
-- **`DynamicStoryGenerator`** - Advanced story generation with theme support and fallback templates
+- **`StoryGenerator`** - Consolidated story generation with LLM support and fallback templates
 - **`ThemeManager`** - Manages 3 themes (space, mythical, ancient) with character mappings
 - **`FileContentManager`** - File reading and content preparation for adventures
 - **`AdventurePathGenerator`** - Generates exploration paths based on project structure

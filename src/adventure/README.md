@@ -6,8 +6,7 @@ This module handles all adventure and storytelling functionality for the MCP Rep
 
 ### Core Components
 - **`adventure-manager.ts`** - Main orchestrator for adventure state and user interactions
-- **`story-generator.ts`** - Handles LLM-based story generation with project context
-- **`dynamic-story-generator.ts`** - Advanced story generation with theme support
+- **`story-generator.ts`** - Consolidated story generation with LLM support and fallback templates
 
 ### Supporting Services
 - **`theme-manager.ts`** - Manages adventure themes (space, mythical, ancient)
