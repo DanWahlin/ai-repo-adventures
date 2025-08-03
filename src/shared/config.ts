@@ -34,6 +34,13 @@ export const TIMEOUTS = {
   NETWORK_REQUEST: 10000,
 } as const;
 
+// Cache configuration to prevent memory leaks
+export const CACHE_CONFIG = {
+  LLM_MAX_SIZE: parseInt(process.env.LLM_CACHE_SIZE || '100'),
+  LLM_CLEANUP_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes
+  // Other cache configurations can be added here
+} as const;
+
 // Analysis limits and constraints
 export const ANALYSIS_LIMITS = {
   // File system scanning
@@ -124,12 +131,7 @@ export const ERROR_CONFIG = {
 
 // Validation patterns
 export const VALIDATION = {
-  // File path validation
-  SAFE_PATH_PATTERN: /^[a-zA-Z0-9\-_./\s]+$/,
-  DANGEROUS_PATHS: ['/etc/', '/bin/', '/usr/bin/', '/sys/', '/proc/'],
-  
-  // Theme validation
-  VALID_THEMES: ['space', 'mythical', 'ancient'] as const,
+  // Theme validation is now handled by src/shared/theme.ts
   
   // Project type validation
   VALID_PROJECT_TYPES: [

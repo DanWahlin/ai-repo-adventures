@@ -373,6 +373,20 @@ ${codeContent}
    * Create project analysis prompt section
    */
   private createProjectAnalysisPrompt(projectInfo: ProjectInfo): string {
+    // Use the rich LLM context summary from analyzer if available
+    if (projectInfo.llmContextSummary) {
+      return `**Comprehensive Project Analysis:**
+${projectInfo.llmContextSummary}
+
+**Additional Architecture Details:**
+- Database: ${projectInfo.hasDatabase ? 'Yes' : 'No'}
+- API: ${projectInfo.hasApi ? 'Yes' : 'No'}
+- Frontend: ${projectInfo.hasFrontend ? 'Yes' : 'No'}
+- Tests: ${projectInfo.hasTests ? 'Yes' : 'No'}
+- Structure: ${projectInfo.structure.directories.slice(0, 5).join(', ')}`;
+    }
+
+    // Fallback to basic analysis if no LLM context summary
     const fileCount = projectInfo.fileCount;
     const complexity = fileCount < 20 ? 'Simple' : fileCount < 50 ? 'Medium' : 'Complex';
 

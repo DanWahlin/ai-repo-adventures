@@ -18,6 +18,7 @@ import { AdventureManager } from './adventure/adventure-manager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { formatErrorForUser } from './shared/errors.js';
 import { parseTheme, getFormattedThemeOptions } from './shared/theme.js';
+import { InputValidator } from './shared/input-validator.js';
 
 // Create a single shared adventure manager instance
 const adventureManager = new AdventureManager();
@@ -48,7 +49,12 @@ export const start_adventure = {
   description: `Analyzes a code repository and begins an interactive, gamified exploration experience. This tool performs deep project analysis including file counting, technology detection, dependency mapping, and code structure analysis. It identifies functions, classes, entry points, and architectural patterns. After analysis, it presents three immersive theme options (space, mythical, ancient) for the user to choose from. Each theme will transform the codebase exploration into a narrative adventure where code elements become story elements. Use this tool when users want to explore, understand, or learn about a codebase in an engaging way. Perfect for onboarding, code reviews, or educational purposes. INVOKE THIS TOOL when users say things like: "start adventure", "begin adventure", "explore this codebase", "help me understand this project", "analyze this repository", "gamify this code", "make this code fun", "adventure story", "code adventure", "explore repository", "understand codebase", "learn about this project", "onboard me", "show me around", "tour this code", "discover this project".`,
   schema: startAdventureSchema,
   handler: async (args: StartAdventureArgs) => {
-    const projectPath = args.projectPath || process.cwd();
+    // Validate project path input
+    const pathValidation = InputValidator.validateProjectPath(args.projectPath);
+    if (!pathValidation.isValid) {
+      throw new McpError(ErrorCode.InvalidParams, pathValidation.error || 'Invalid project path');
+    }
+    const projectPath = pathValidation.sanitized;
     
     try {
       // Analyze the project
@@ -96,8 +102,14 @@ export const choose_theme = {
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
+      // Validate theme input with whitelist-based security
+      const themeValidation = InputValidator.validateTheme(args.theme);
+      if (!themeValidation.isValid) {
+        throw new McpError(ErrorCode.InvalidParams, themeValidation.error || 'Invalid theme');
+      }
+      
       // Parse the theme input (handles numbers, full names, partial matches)
-      const selectedTheme = parseTheme(args.theme);
+      const selectedTheme = parseTheme(themeValidation.sanitized);
       
       if (!selectedTheme) {
         throw new McpError(
@@ -136,8 +148,15 @@ export const explore_path = {
   schema: explorePathSchema,
   handler: async (args: ExplorePathArgs) => {
     try {
+      // Validate choice input with whitelist-based security
+      // Note: The AdventureManager will do additional validation
+      const choiceValidation = InputValidator.validateAdventureChoice(args.choice);
+      if (!choiceValidation.isValid) {
+        throw new McpError(ErrorCode.InvalidParams, choiceValidation.error || 'Invalid adventure choice');
+      }
+      
       // AdventureManager now handles numbered choices, titles, and IDs automatically
-      const result = await adventureManager.exploreAdventure(args.choice);
+      const result = await adventureManager.exploreAdventure(choiceValidation.sanitized);
       
       let responseText = result.narrative;
       

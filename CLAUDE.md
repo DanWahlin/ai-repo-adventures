@@ -8,6 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run**: `npm start` - Runs the MCP server via tsx
 - **Development**: `npm run dev` - Runs with file watching for development
 
+### Linting Commands
+- **Lint All**: `npm run lint` - Check code quality and complexity
+- **Lint Fix**: `npm run lint:fix` - Auto-fix linting issues where possible
+- **Complexity Check**: `npm run lint:complexity` - Focus on cyclomatic complexity analysis
+
 ### Testing Commands
 - **All Tests**: `npm test` - Runs comprehensive test suite
 - **Unit Tests**: `npm run test:unit` - Core algorithm and component tests
@@ -40,6 +45,19 @@ cp .env.example .env
 - Comment updates
 - Minor formatting adjustments
 - Simple variable renames
+
+**ALWAYS** run `npm run lint` and fix any linting errors before committing code. The project uses ESLint with cyclomatic complexity analysis to maintain code quality.
+
+### Code Complexity Standards
+
+The project enforces these complexity limits to maintain readability and testability:
+- **Cyclomatic Complexity**: ≤10 per function
+- **Function Length**: ≤50 lines (excluding blanks/comments)
+- **Function Parameters**: ≤4 parameters  
+- **Nesting Depth**: ≤4 levels
+- **Statements per Function**: ≤20 statements
+
+Functions exceeding these limits should be refactored into smaller, more focused units.
 
 ## Architecture Overview
 

@@ -1,7 +1,7 @@
 import { OpenAI, AzureOpenAI } from 'openai';
 import { config } from 'dotenv';
 import { createHash } from 'crypto';
-import { ENV_CONFIG, TIMEOUTS, ERROR_CONFIG } from '../shared/index.js';
+import { ENV_CONFIG, TIMEOUTS, ERROR_CONFIG, CACHE_CONFIG, LRUCache } from '../shared/index.js';
 
 // Load environment variables
 config();
@@ -30,6 +30,7 @@ export interface LLMConfig {
   maxTokens?: number | undefined;
   timeoutMs?: number;
   cacheTimeoutMs?: number;
+  maxCacheSize?: number;
 }
 
 export class LLMClient {
@@ -42,7 +43,8 @@ export class LLMClient {
   private apiKey: string | undefined;
   private timeoutMs: number;
   private cacheTimeoutMs: number;
-  private requestCache: Map<string, { response: LLMResponse; timestamp: number }> = new Map();
+  private requestCache: LRUCache<LLMResponse>;
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(config?: LLMConfig) {
     // Environment-based configuration with optional overrides
@@ -59,6 +61,17 @@ export class LLMClient {
     // Use centralized timeout configuration
     this.timeoutMs = config?.timeoutMs || TIMEOUTS.LLM_REQUEST;
     this.cacheTimeoutMs = config?.cacheTimeoutMs || TIMEOUTS.LLM_CACHE;
+    
+    // Initialize LRU cache with memory safety
+    this.requestCache = new LRUCache(
+      config?.maxCacheSize || CACHE_CONFIG.LLM_MAX_SIZE,
+      this.cacheTimeoutMs
+    );
+    
+    // Set up periodic cache cleanup to prevent memory leaks
+    this.cleanupInterval = setInterval(() => {
+      this.requestCache.cleanup();
+    }, CACHE_CONFIG.LLM_CLEANUP_INTERVAL_MS);
     
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
@@ -209,9 +222,9 @@ export class LLMClient {
     
     // Check cache first
     const cached = this.requestCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.cacheTimeoutMs) {
+    if (cached) {
       console.debug('Using cached LLM response');
-      return cached.response;
+      return cached;
     }
     
     try {
@@ -264,7 +277,7 @@ export class LLMClient {
       };
       
       // Cache the response
-      this.requestCache.set(cacheKey, { response: llmResponse, timestamp: Date.now() });
+      this.requestCache.set(cacheKey, llmResponse);
       
       return llmResponse;
     } catch (error) {
@@ -335,8 +348,19 @@ Focus on creating memorable themes, characters, narratives, and settings that re
       baseURL: this.baseURL,
       temperature: this.temperature,
       maxTokens: this.maxTokens,
-      cacheSize: this.requestCache.size
+      cacheSize: this.requestCache.size()
     };
+  }
+
+  /**
+   * Clean up resources (called on shutdown)
+   */
+  cleanup(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+    }
+    this.clearCache();
   }
 
   // Static factory methods for common providers

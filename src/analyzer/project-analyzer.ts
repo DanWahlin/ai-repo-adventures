@@ -426,11 +426,150 @@ export class ProjectAnalyzer {
       summary += `Primary language: ${linguistResult.primaryLanguage}. `;
     }
 
+    // Add purpose and domain context from key files
+    const purposeContext = this.extractPurposeContext(codeAnalysis, scanResult);
+    if (purposeContext) {
+      summary += `Project purpose: ${purposeContext}. `;
+    }
+
     summary += `Key functions: ${topFunctions || 'None detected'}. `;
     summary += `Key classes: ${topClasses || 'None detected'}. `;
-    summary += `Entry points: ${codeAnalysis.entryPoints.join(', ') || 'None detected'}.`;
+    summary += `Entry points: ${codeAnalysis.entryPoints.join(', ') || 'None detected'}. `;
+
+    // Add design patterns and architectural insights
+    const architecturalPatterns = this.detectArchitecturalPatterns(codeAnalysis, scanResult);
+    if (architecturalPatterns.length > 0) {
+      summary += `Patterns: ${architecturalPatterns.join(', ')}. `;
+    }
+
+    // Add code flow analysis information
+    if (codeAnalysis.codeFlow) {
+      const flow = codeAnalysis.codeFlow;
+      summary += `Code flow: ${flow.modules.length} modules with ${flow.relationships.length} relationships. `;
+      
+      if (flow.executionOrder && flow.executionOrder.length > 0) {
+        const orderPreview = flow.executionOrder.slice(0, 3).join(' → ');
+        summary += `Execution flow: ${orderPreview}${flow.executionOrder.length > 3 ? '...' : ''}. `;
+      }
+
+      // Add dependency insights
+      const importRelationships = flow.relationships.filter(r => r.type === 'import').length;
+      const functionCalls = flow.relationships.filter(r => r.type === 'function-call').length;
+      if (importRelationships > 0 || functionCalls > 0) {
+        summary += `Dependencies: ${importRelationships} imports, ${functionCalls} function calls. `;
+      }
+    }
+
+    // Add key dependencies with real-world context
+    const keyDeps = codeAnalysis.dependencies
+      .filter(d => d.type === 'dependency')
+      .slice(0, 5)
+      .map(d => `${d.name} (${d.category})`)
+      .join(', ');
+    if (keyDeps) {
+      summary += `Key dependencies: ${keyDeps}. `;
+    }
 
     return summary;
+  }
+
+  /**
+   * Extract project purpose and domain context from README and key files
+   */
+  private extractPurposeContext(codeAnalysis: CodeAnalysis, scanResult: ScanResult): string | null {
+    // Look for README files in structure
+    const readmeFile = scanResult.structure.importantFiles.find(file => 
+      file.toLowerCase().includes('readme')
+    );
+    
+    if (readmeFile) {
+      // Extract first meaningful line from README
+      const readmeContent = codeAnalysis.keyFiles.find(kf => kf.path.includes('readme'));
+      if (readmeContent) {
+        const lines = readmeContent.content.split('\n').filter(line => line.trim().length > 0);
+        const descriptionLine = lines.find(line => 
+          !line.startsWith('#') && 
+          !line.startsWith('[![') && 
+          line.length > 20 &&
+          !line.toLowerCase().includes('installation') &&
+          !line.toLowerCase().includes('getting started')
+        );
+        if (descriptionLine) {
+          return descriptionLine.trim().substring(0, 100);
+        }
+      }
+    }
+
+    // Fallback: analyze function names for domain clues
+    const domainKeywords = codeAnalysis.functions
+      .map(f => f.name.toLowerCase())
+      .filter(name => 
+        name.includes('user') || name.includes('auth') || name.includes('order') ||
+        name.includes('payment') || name.includes('product') || name.includes('email') ||
+        name.includes('game') || name.includes('player') || name.includes('score') ||
+        name.includes('message') || name.includes('chat') || name.includes('post') ||
+        name.includes('admin') || name.includes('dashboard') || name.includes('report')
+      );
+
+    if (domainKeywords.length > 0) {
+      const primaryDomain = domainKeywords[0];
+      if (primaryDomain.includes('user') || primaryDomain.includes('auth')) return 'User management system';
+      if (primaryDomain.includes('order') || primaryDomain.includes('payment')) return 'E-commerce platform';
+      if (primaryDomain.includes('game') || primaryDomain.includes('player')) return 'Gaming application';
+      if (primaryDomain.includes('message') || primaryDomain.includes('chat')) return 'Communication platform';
+      if (primaryDomain.includes('admin') || primaryDomain.includes('dashboard')) return 'Administrative dashboard';
+    }
+
+    return null;
+  }
+
+  /**
+   * Detect architectural patterns from code structure
+   */
+  private detectArchitecturalPatterns(codeAnalysis: CodeAnalysis, scanResult: ScanResult): string[] {
+    const patterns: string[] = [];
+
+    // MVC pattern detection
+    const hasMVC = scanResult.structure.directories.some(dir => 
+      dir.includes('model') || dir.includes('view') || dir.includes('controller')
+    ) || codeAnalysis.functions.some(f => 
+      f.fileName.includes('controller') || f.fileName.includes('model') || f.fileName.includes('view')
+    );
+    if (hasMVC) patterns.push('MVC');
+
+    // Repository pattern
+    const hasRepository = codeAnalysis.classes.some(c => 
+      c.name.toLowerCase().includes('repository') || c.name.toLowerCase().includes('dao')
+    );
+    if (hasRepository) patterns.push('Repository');
+
+    // Service layer pattern
+    const hasService = codeAnalysis.classes.some(c => 
+      c.name.toLowerCase().includes('service') || c.name.toLowerCase().includes('manager')
+    );
+    if (hasService) patterns.push('Service Layer');
+
+    // Factory pattern
+    const hasFactory = codeAnalysis.functions.some(f => 
+      f.name.toLowerCase().includes('create') || f.name.toLowerCase().includes('factory') ||
+      f.name.toLowerCase().includes('builder')
+    );
+    if (hasFactory) patterns.push('Factory');
+
+    // Observer/Event pattern
+    const hasEvents = codeAnalysis.functions.some(f => 
+      f.name.toLowerCase().includes('emit') || f.name.toLowerCase().includes('trigger') ||
+      f.name.toLowerCase().includes('subscribe') || f.name.toLowerCase().includes('listen')
+    );
+    if (hasEvents) patterns.push('Observer/Events');
+
+    // Middleware pattern
+    const hasMiddleware = scanResult.structure.directories.some(dir => 
+      dir.includes('middleware') || dir.includes('middlewares')
+    ) || codeAnalysis.functions.some(f => f.fileName.includes('middleware'));
+    if (hasMiddleware) patterns.push('Middleware');
+
+    return patterns;
   }
 
   /**

@@ -26,25 +26,56 @@ export class FileSystemScanner {
   }
 
   /**
-   * Validate and normalize project path
+   * Validate and normalize project path with enhanced security
    */
   private validateProjectPath(projectPath: string): string {
     if (!projectPath || typeof projectPath !== 'string') {
       throw new Error('Project path must be a non-empty string');
     }
 
+    // Resolve the path to get absolute canonical form
     const resolvedPath = path.resolve(projectPath);
     
-    // Security check: prevent path traversal attacks
-    if (resolvedPath.includes('..') || resolvedPath.includes('~')) {
-      throw new Error('Invalid project path: path traversal detected');
+    // Security check: ensure the resolved path doesn't escape the intended directory
+    // Use path.relative to detect if the path tries to go outside allowed boundaries
+    const relativePath = path.relative(process.cwd(), resolvedPath);
+    
+    // If the relative path starts with '..' or is absolute, it's trying to escape
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      // Allow paths that are in common safe directories
+      const allowedPrefixes = [
+        '/tmp/',
+        '/var/folders/', // macOS temp directories
+        '/private/tmp/', // macOS private temp
+        process.env.HOME || '', // User home directory
+        process.cwd() // Current working directory and subdirectories
+      ].filter(Boolean);
+      
+      const isInAllowedLocation = allowedPrefixes.some(prefix => 
+        resolvedPath.startsWith(prefix) || resolvedPath === prefix.slice(0, -1)
+      );
+      
+      if (!isInAllowedLocation) {
+        throw new Error('Invalid project path: path outside allowed directories');
+      }
     }
 
     // Validate it's not a dangerous system directory
-    // Allow /var since temp directories are often there (e.g., /var/folders on macOS)
-    const systemDirs = ['/bin', '/usr/bin', '/usr/sbin', '/etc', '/sys', '/proc'];
-    if (systemDirs.some(dir => resolvedPath === dir || resolvedPath.startsWith(dir + '/'))) {
+    const dangerousSystemDirs = [
+      '/bin', '/usr/bin', '/usr/sbin', '/sbin',
+      '/etc', '/sys', '/proc', '/dev',
+      '/boot', '/root'
+    ];
+    
+    if (dangerousSystemDirs.some(dir => 
+      resolvedPath === dir || resolvedPath.startsWith(dir + '/')
+    )) {
       throw new Error('Invalid project path: system directory not allowed');
+    }
+
+    // Additional validation: ensure path doesn't contain null bytes or other dangerous characters
+    if (resolvedPath.includes('\0') || resolvedPath.includes('\x00')) {
+      throw new Error('Invalid project path: contains illegal characters');
     }
 
     return resolvedPath;

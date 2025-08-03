@@ -3,6 +3,7 @@ import type { AdventureTheme } from '../shared/index.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
 import { FileContentManager } from './file-content-manager.js';
 import { StoryGenerationError } from '../shared/index.js';
+import { InputValidator } from '../shared/input-validator.js';
 
 // Re-export interfaces from story-generator for backward compatibility
 export type { Adventure, StoryResponse, AdventureContent, CodeSnippet } from './story-generator.js';
@@ -72,27 +73,24 @@ export class AdventureManager {
   }
 
   /**
-   * Sanitize user input for adventure selection
-   * This is used for matching adventure IDs, titles, or numbers - not for code input
+   * Validate and sanitize user input for adventure selection
+   * Uses whitelist-based validation to prevent injection attacks
    */
-  private sanitizeUserInput(input: string): string {
-    // For adventure selection, we need to allow:
-    // - Numbers (1, 2, 3)
-    // - Adventure IDs (architecture-overview, core-logic)
-    // - Parts of adventure titles (which may contain : and /)
-    // But prevent obvious injection attempts
-    return input
-      .replace(/[<>{}"`$\\]/g, '') // Remove only dangerous characters for prompts
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .trim()
-      .slice(0, 200); // Limit length to prevent DOS attacks
+  private validateAndSanitizeChoice(input: string): string {
+    const validation = InputValidator.validateAdventureChoice(input);
+    
+    if (!validation.isValid) {
+      throw new Error(`Invalid adventure choice: ${validation.error}`);
+    }
+    
+    return validation.sanitized;
   }
 
   /**
    * Execute a chosen adventure by ID, number, or title
    */
   async exploreAdventure(choice: string): Promise<AdventureResult> {
-    const sanitizedChoice = this.sanitizeUserInput(choice);
+    const sanitizedChoice = this.validateAndSanitizeChoice(choice);
     let adventure: Adventure | undefined;
     
     // Try to match by number (1, 2, 3, etc.)
