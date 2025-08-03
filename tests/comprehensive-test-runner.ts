@@ -315,6 +315,78 @@ async function runAllTests(): Promise<TestSummary> {
   };
 }
 
+function printTestSummaryTable(summary: TestSummary): void {
+  // Create a formatted table with test suite results
+  const tableData = [
+    {
+      name: 'Comprehensive Test Runner',
+      status: summary.failedSuites === 0 ? '✅ PASSED' : '❌ FAILED',
+      passRate: summary.totalSuites > 0 ? Math.round((summary.passedSuites / summary.totalSuites) * 100) + '%' : 'N/A',
+      tests: `${summary.totalIndividualTests} tests across ${summary.totalSuites} suites`
+    }
+  ];
+
+  // Add individual suite results
+  summary.results.forEach((result) => {
+    const passRate = result.stats.total > 0 ? Math.round((result.stats.passed / result.stats.total) * 100) + '%' : 'N/A';
+    const status = result.passed ? '✅ PASSED' : '❌ FAILED';
+    
+    // Map suite names to more descriptive names
+    let displayName = result.name;
+    let testDescription = '';
+    
+    if (result.name.includes('Unit Tests')) {
+      displayName = 'Unit Test Runner';
+      testDescription = `${result.stats.total} tests across ${result.individualTests.length > 0 ? '3' : '1'} groups`;
+    } else if (result.name.includes('Simple Tests')) {
+      displayName = 'Simple Test';
+      testDescription = 'Basic workflow tests';
+    } else if (result.name.includes('Real-World Tests')) {
+      displayName = 'Real-World Test';
+      testDescription = 'Comprehensive workflow tests';
+    } else if (result.name.includes('Integration')) {
+      displayName = 'Integration Test Runner';
+      testDescription = `${result.stats.total} LLM integration tests`;
+    } else if (result.name.includes('Algorithm')) {
+      displayName = 'Individual Algorithm Tests';
+      testDescription = `${result.stats.total} algorithm tests`;
+    } else if (result.name.includes('LLM Client')) {
+      displayName = 'Individual LLM Client Tests';
+      testDescription = `${result.stats.total} client tests`;
+    } else if (result.name.includes('Cross-Language')) {
+      displayName = 'Cross-Language Analysis';
+      testDescription = `${result.stats.total} language analysis tests`;
+    } else {
+      testDescription = `${result.stats.total} tests`;
+    }
+    
+    tableData.push({
+      name: displayName,
+      status: status,
+      passRate: passRate,
+      tests: testDescription
+    });
+  });
+
+  // Calculate column widths
+  const nameWidth = Math.max(28, Math.max(...tableData.map(row => row.name.length)));
+  const statusWidth = 10;
+  const passRateWidth = 11;
+  const testsWidth = Math.max(30, Math.max(...tableData.map(row => row.tests.length)));
+
+  // Print table header
+  console.log('');
+  console.log(`| ${'Test Suite'.padEnd(nameWidth)} | ${'Status'.padEnd(statusWidth)} | ${'Pass Rate'.padEnd(passRateWidth)} | ${'Tests'.padEnd(testsWidth)} |`);
+  console.log(`|${'-'.repeat(nameWidth + 2)}|${'-'.repeat(statusWidth + 2)}|${'-'.repeat(passRateWidth + 2)}|${'-'.repeat(testsWidth + 2)}|`);
+
+  // Print table rows
+  tableData.forEach(row => {
+    console.log(`| ${row.name.padEnd(nameWidth)} | ${row.status.padEnd(statusWidth)} | ${row.passRate.padEnd(passRateWidth)} | ${row.tests.padEnd(testsWidth)} |`);
+  });
+  
+  console.log('');
+}
+
 function printOverallSummary(summary: TestSummary): void {
   console.log('\n\n');
   console.log('🏆 COMPREHENSIVE TEST RESULTS - HIERARCHICAL VIEW');
@@ -353,6 +425,12 @@ function printOverallSummary(summary: TestSummary): void {
       console.log(`   📊 Suite Status: ${result.passed ? 'PASSED' : 'FAILED'}`);
     }
   });
+  
+  // Add the formatted table summary
+  console.log('\n' + '='.repeat(70));
+  console.log('📊 TEST SUITE SUMMARY TABLE');
+  console.log('='.repeat(70));
+  printTestSummaryTable(summary);
   
   console.log('\n' + '='.repeat(70));
   console.log('📈 OVERALL STATISTICS');
