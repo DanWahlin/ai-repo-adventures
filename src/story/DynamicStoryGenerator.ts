@@ -171,7 +171,7 @@ export class DynamicStoryGenerator {
       `- Source Files: ${this.currentProject.structure.sourceFiles.slice(0, STORY_LIMITS.TOP_SOURCE_FILES).join(', ')}`,
       '',
       'CODE FLOW ANALYSIS:',
-      (analysis.codeFlow ? `- Entry Point: ${analysis.codeFlow.entryPoint}\n- Execution Flow: ${analysis.codeFlow.executionOrder.slice(0, STORY_LIMITS.TOP_EXECUTION_FLOW).join(' → ')}\n- Call Relationships: ${analysis.codeFlow.callGraph.length} connections mapped` : '- No flow analysis available'),
+      (analysis.codeFlow ? `- Entry Point: ${analysis.codeFlow.entryPoint}\n- Execution Flow: ${analysis.codeFlow.executionOrder?.slice(0, STORY_LIMITS.TOP_EXECUTION_FLOW).join(' → ') || 'No execution order available'}\n- Call Relationships: ${analysis.codeFlow.callGraph?.length || 0} connections mapped` : '- No flow analysis available'),
       '',
       'SUGGESTED EXPLORATION ORDER:',
       suggestedOrder || '  • No suggested order available',

@@ -42,80 +42,78 @@ interface TestSummary {
   totalSkippedTests: number;
 }
 
-function parseTestOutput(output: string): IndividualTest[] {
+// Constants for configuration
+const MAX_TEST_NAME_LENGTH = 100;
+const MAX_OUTPUT_SIZE = 10 * 1024 * 1024; // 10MB limit
+const DEFAULT_TEST_TIMEOUT = 120000; // 2 minutes for comprehensive test suite
+
+// Pre-compiled regex patterns to prevent ReDoS attacks
+const TEST_PATTERNS = {
+  passed: /^(✅|✓)\s+(.{1,200}?)\s*$/,  // Non-greedy with length limit
+  failed: /^❌\s+(.{1,200}?):\s*(.{0,500}?)$/,  // Limited error message length
+  skipped: /^⏭️\s+(.{1,200}?)(?:\s*\([^)]{0,50}\))?\s*$/  // Limited parentheses content
+};
+
+// Exclusion patterns for non-test output
+const EXCLUSION_PATTERNS = [
+  /^🧪|^📊|^=|^-|^🎯|^📋|^🏁/,
+  /^\[dotenv/,
+  /^(Running|Could not read file|generateStory error|LLM API call failed)/,
+  /^(Using cached|Repo Adventure|Pre-analyzing|Shutting down)/,
+  /(Success Rate:|completed successfully|tests completed)/,
+  /(Passed:|Failed:|Skipped:|All test groups passed|System is working)/
+];
+
+// Known non-test result patterns to exclude from test parsing
+const NON_TEST_RESULT_PATTERNS = [
+  'Tests completed', 'test groups', 'System is working', 'All ', 
+  'Connected to MCP', 'Project analysis', 'Progressive exploration',
+  'Discovery tracking', 'Character interactions', 'Code snippet discovery',
+  'algorithms tests', 'Client tests', 'Project scanned', 'Functions discovered',
+  'Classes detected', 'Dependencies found', 'Themed story generated',
+  'Dynamic adventure paths', 'Successfully explored', 'Dynamic choices generated',
+  'Adventure Progress:', 'Areas Explored:', 'Discoveries Made:',
+  'exploration with character', 'Code snippet discovered', 'Code shown in adventure',
+  'Invalid theme correctly', 'Caching is working', 'Hint 1:', 'Hint 2:'
+];
+
+function validateInput(command: string, args: string[] = []): void {
+  if (!command || typeof command !== 'string' || command.trim().length === 0) {
+    throw new Error('Invalid command provided');
+  }
+  if (!Array.isArray(args)) {
+    throw new Error('Arguments must be an array');
+  }
+}
+
+function splitAndCleanLines(output: string): string[] {
+  // Truncate output if it exceeds limit to prevent memory issues
+  const truncatedOutput = output.length > MAX_OUTPUT_SIZE 
+    ? output.substring(0, MAX_OUTPUT_SIZE) + '\n... (output truncated due to size limit)'
+    : output;
+    
+  return truncatedOutput.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+}
+
+function shouldExcludeLine(line: string): boolean {
+  return EXCLUSION_PATTERNS.some(pattern => pattern.test(line));
+}
+
+function isNonTestResult(testName: string): boolean {
+  return NON_TEST_RESULT_PATTERNS.some(pattern => testName.includes(pattern)) ||
+         testName.length === 0 ||
+         testName.length > MAX_TEST_NAME_LENGTH;
+}
+
+function parseTestResults(lines: string[]): IndividualTest[] {
   const tests: IndividualTest[] = [];
-  const lines = output.split('\n');
   
   for (const line of lines) {
-    const trimmedLine = line.trim();
-    
-    // Skip empty lines and non-test lines
-    if (!trimmedLine || 
-        trimmedLine.startsWith('🧪') || 
-        trimmedLine.startsWith('📊') ||
-        trimmedLine.startsWith('=') ||
-        trimmedLine.startsWith('-') ||
-        trimmedLine.startsWith('🎯') ||
-        trimmedLine.startsWith('📋') ||
-        trimmedLine.startsWith('🏁') ||
-        trimmedLine.startsWith('[dotenv') ||
-        trimmedLine.startsWith('Running') ||
-        trimmedLine.startsWith('Could not read file') ||
-        trimmedLine.startsWith('generateStory error') ||
-        trimmedLine.startsWith('LLM API call failed') ||
-        trimmedLine.startsWith('Using cached') ||
-        trimmedLine.startsWith('Repo Adventure') ||
-        trimmedLine.startsWith('Pre-analyzing') ||
-        trimmedLine.startsWith('Shutting down') ||
-        trimmedLine.includes('Success Rate:') ||
-        trimmedLine.includes('completed successfully') ||
-        trimmedLine.includes('tests completed') ||
-        trimmedLine.includes('Passed:') ||
-        trimmedLine.includes('Failed:') ||
-        trimmedLine.includes('Skipped:') ||
-        trimmedLine.includes('All test groups passed') ||
-        trimmedLine.includes('System is working')) {
-      continue;
-    }
-    
-    // Look for actual test result patterns - be more strict
-    const passedMatch = trimmedLine.match(/^(✅|✓)\s+(.+?)$/);
+    // Try to match passed tests
+    const passedMatch = line.match(TEST_PATTERNS.passed);
     if (passedMatch) {
       const testName = passedMatch[2].trim();
-      // Skip if it looks like a summary line or status message
-      if (!testName.includes('Tests completed') && 
-          !testName.includes('test groups') &&
-          !testName.includes('System is working') &&
-          !testName.includes('All ') &&
-          !testName.includes('Connected to MCP') &&
-          !testName.includes('Project analysis') &&
-          !testName.includes('Progressive exploration') &&
-          !testName.includes('Discovery tracking') &&
-          !testName.includes('Character interactions') &&
-          !testName.includes('Code snippet discovery') &&
-          !testName.includes('Passed:') &&
-          !testName.includes('algorithms tests') &&
-          !testName.includes('Client tests') &&
-          !testName.includes('Project scanned') &&
-          !testName.includes('Functions discovered') &&
-          !testName.includes('Classes detected') &&
-          !testName.includes('Dependencies found') &&
-          !testName.includes('Themed story generated') &&
-          !testName.includes('Dynamic adventure paths') &&
-          !testName.includes('Successfully explored') &&
-          !testName.includes('Dynamic choices generated') &&
-          !testName.includes('Adventure Progress:') &&
-          !testName.includes('Areas Explored:') &&
-          !testName.includes('Discoveries Made:') &&
-          !testName.includes('exploration with character') &&
-          !testName.includes('Code snippet discovered') &&
-          !testName.includes('Code shown in adventure') &&
-          !testName.includes('Invalid theme correctly') &&
-          !testName.includes('Caching is working') &&
-          !testName.includes('Hint 1:') &&
-          !testName.includes('Hint 2:') &&
-          testName.length > 0 &&
-          testName.length < 100) { // Reasonable test name length
+      if (!isNonTestResult(testName)) {
         tests.push({
           name: testName,
           passed: true
@@ -124,11 +122,11 @@ function parseTestOutput(output: string): IndividualTest[] {
       continue;
     }
     
-    // Look for failed tests
-    const failedMatch = trimmedLine.match(/^❌\s+(.+?):\s*(.*)$/);
+    // Try to match failed tests
+    const failedMatch = line.match(TEST_PATTERNS.failed);
     if (failedMatch) {
       const testName = failedMatch[1].trim();
-      if (testName.length > 0) {
+      if (!isNonTestResult(testName)) {
         tests.push({
           name: testName,
           passed: false,
@@ -138,11 +136,11 @@ function parseTestOutput(output: string): IndividualTest[] {
       continue;
     }
     
-    // Look for skipped tests
-    const skippedMatch = trimmedLine.match(/^⏭️\s+(.+?)(?:\s*\(.*\))?\s*$/);
+    // Try to match skipped tests
+    const skippedMatch = line.match(TEST_PATTERNS.skipped);
     if (skippedMatch) {
       const testName = skippedMatch[1].trim();
-      if (testName.length > 0 && !testName.includes('Skipped:')) {
+      if (!isNonTestResult(testName) && !testName.includes('Skipped:')) {
         tests.push({
           name: testName,
           passed: true,
@@ -156,6 +154,17 @@ function parseTestOutput(output: string): IndividualTest[] {
   return tests;
 }
 
+function parseTestOutput(output: string): IndividualTest[] {
+  try {
+    const lines = splitAndCleanLines(output);
+    const testLines = lines.filter(line => !shouldExcludeLine(line));
+    return parseTestResults(testLines);
+  } catch (error) {
+    console.warn('Error parsing test output:', error instanceof Error ? error.message : String(error));
+    return [];
+  }
+}
+
 function calculateTestStats(tests: IndividualTest[]) {
   return {
     total: tests.length,
@@ -166,44 +175,92 @@ function calculateTestStats(tests: IndividualTest[]) {
 }
 
 async function runCommand(command: string, args: string[] = []): Promise<TestResult> {
+  // Input validation
+  validateInput(command, args);
+  
   const startTime = Date.now();
   
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let output = '';
     let errorOutput = '';
+    let outputSize = 0;
+    let errorOutputSize = 0;
     
     const child = spawn(command, args, { 
       stdio: ['inherit', 'pipe', 'pipe'],
       shell: true 
     });
     
+    // Handle timeout
+    const timeout = setTimeout(() => {
+      child.kill('SIGTERM');
+      reject(new Error(`Command timed out after ${DEFAULT_TEST_TIMEOUT}ms`));
+    }, DEFAULT_TEST_TIMEOUT);
+    
     child.stdout?.on('data', (data) => {
       const chunk = data.toString();
-      output += chunk;
+      
+      // Prevent memory leak by limiting output size
+      if (outputSize + chunk.length > MAX_OUTPUT_SIZE) {
+        const remainingSpace = MAX_OUTPUT_SIZE - outputSize;
+        if (remainingSpace > 0) {
+          output += chunk.substring(0, remainingSpace);
+          output += '\n... (output truncated due to size limit)';
+        }
+        outputSize = MAX_OUTPUT_SIZE;
+      } else {
+        output += chunk;
+        outputSize += chunk.length;
+      }
+      
       process.stdout.write(chunk);
     });
     
     child.stderr?.on('data', (data) => {
       const chunk = data.toString();
-      errorOutput += chunk;
+      
+      // Prevent memory leak by limiting error output size
+      if (errorOutputSize + chunk.length > MAX_OUTPUT_SIZE) {
+        const remainingSpace = MAX_OUTPUT_SIZE - errorOutputSize;
+        if (remainingSpace > 0) {
+          errorOutput += chunk.substring(0, remainingSpace);
+          errorOutput += '\n... (error output truncated due to size limit)';
+        }
+        errorOutputSize = MAX_OUTPUT_SIZE;
+      } else {
+        errorOutput += chunk;
+        errorOutputSize += chunk.length;
+      }
+      
       process.stderr.write(chunk);
     });
     
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      reject(new Error(`Command failed to start: ${error.message}`));
+    });
+    
     child.on('close', (code) => {
+      clearTimeout(timeout);
       const duration = Date.now() - startTime;
-      const individualTests = parseTestOutput(output);
-      const stats = calculateTestStats(individualTests);
       
-      resolve({
-        name: args.length > 0 ? `${command} ${args.join(' ')}` : command,
-        command: `${command} ${args.join(' ')}`,
-        passed: code === 0,
-        output,
-        errorOutput,
-        duration,
-        individualTests,
-        stats
-      });
+      try {
+        const individualTests = parseTestOutput(output);
+        const stats = calculateTestStats(individualTests);
+        
+        resolve({
+          name: args.length > 0 ? `${command} ${args.join(' ')}` : command,
+          command: `${command} ${args.join(' ')}`,
+          passed: code === 0,
+          output,
+          errorOutput,
+          duration,
+          individualTests,
+          stats
+        });
+      } catch (error) {
+        reject(new Error(`Failed to parse test output: ${error instanceof Error ? error.message : String(error)}`));
+      }
     });
   });
 }
@@ -348,20 +405,40 @@ function printOverallSummary(summary: TestSummary): void {
   console.log('='.repeat(70));
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const summary = await runAllTests();
     printOverallSummary(summary);
     
-    // Exit with appropriate code
-    process.exit(summary.failedSuites === 0 ? 0 : 1);
+    // Set exit code instead of calling process.exit() to allow cleanup
+    process.exitCode = summary.failedSuites === 0 && summary.totalFailedTests === 0 ? 0 : 1;
   } catch (error) {
-    console.error('💥 Test runner crashed:', error);
-    process.exit(1);
+    console.error('💥 Test runner crashed:', error instanceof Error ? error.message : String(error));
+    
+    // Log stack trace in debug mode
+    if (process.env.DEBUG) {
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
+    }
+    
+    process.exitCode = 1;
   }
 }
 
+// Graceful shutdown handling
+process.on('SIGINT', () => {
+  console.log('\n🛑 Test runner interrupted by user');
+  process.exitCode = 130; // Standard exit code for SIGINT
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Test runner terminated');
+  process.exitCode = 143; // Standard exit code for SIGTERM
+});
+
 // Run if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  main().catch((error) => {
+    console.error('💥 Unhandled error in main:', error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
 }

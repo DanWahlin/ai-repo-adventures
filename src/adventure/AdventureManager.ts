@@ -2,6 +2,7 @@ import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { readFile } from 'fs/promises';
 import { AdventureTheme, THEMES, THEME_EMOJIS } from '../shared/theme.js';
+import { CONFIG, ConfigManager } from '../shared/config.js';
 
 // Core interfaces for LLM-driven adventures
 export interface Adventure {
@@ -106,9 +107,9 @@ Each adventure title MUST follow this pattern: "Theme-Specific Name: Technical D
 - DO NOT COPY these examples directly - create unique titles that fit the theme and keep them positive and non-controversial.
 
 **Adventure Count Logic:**
-- Simple projects (<50 files, <3 technologies): 2-3 adventures
-- Medium projects (50-200 files, 3-5 technologies): 3-4 adventures  
-- Complex projects (>200 files, >5 technologies): 5-6 adventures
+- Simple projects (<${CONFIG.ADVENTURE.SIMPLE_PROJECT_FILES} files, <3 technologies): 2-3 adventures
+- Medium projects (${CONFIG.ADVENTURE.SIMPLE_PROJECT_FILES}-${CONFIG.ADVENTURE.MEDIUM_PROJECT_FILES} files, 3-${CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES} technologies): 3-4 adventures  
+- Complex projects (>${CONFIG.ADVENTURE.MEDIUM_PROJECT_FILES} files, >${CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES} technologies): 5-6 adventures
 
 **Required Adventure Types** (adapt to available project components):
 1. **Architecture Overview** - Overall system design and entry points
@@ -164,7 +165,7 @@ Examples:
 3. Each adventure title MUST start with an appropriate emoji that matches both the theme and adventure type
 
 {
-  "story": "A concise 1-2 paragraph opening (max 150 words) that establishes the ${theme} world and introduces the codebase. Keep it engaging but brief. Reference 1-2 key technologies.",
+  "story": "A concise 1-2 paragraph opening (max ${CONFIG.ADVENTURE.STORY_MAX_WORDS} words) that establishes the ${theme} world and introduces the codebase. Keep it engaging but brief. Reference 1-2 key technologies.",
   "adventures": [
     {
       "id": "1",
@@ -219,7 +220,7 @@ Examples:
       .replace(/[<>{}"`$\\]/g, '') // Remove only dangerous characters for prompts
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
-      .slice(0, 200); // Limit length to prevent DOS
+      .slice(0, 200); // Limit length to prevent DOS attacks
   }
 
   /**
@@ -362,7 +363,7 @@ ${codeContent}
 ## Content Requirements
 
 **Adventure Story:**
-- Write 1-2 concise paragraphs (max 150 words total)
+- Write 1-2 concise paragraphs (max ${CONFIG.ADVENTURE.STORY_MAX_WORDS} words total)
 - Continue the ${this.state.currentTheme} narrative efficiently
 - Use clear ${this.state.currentTheme} metaphors for technical concepts
 - Reference 1-2 specific files or technologies
@@ -392,7 +393,7 @@ Create an interactive "Quest Action Required" section that:
 Your response must be a valid JSON object matching the structure below.
 
 {
-  "adventure": "1-2 concise paragraphs (max 150 words) ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
+  "adventure": "1-2 concise paragraphs (max ${CONFIG.ADVENTURE.STORY_MAX_WORDS} words) ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
   "fileExploration": "Interactive 'Quest Action Required' section with specific file exploration tasks, line number references, code flow explanation, and user engagement prompts using ${this.state.currentTheme} language",
   "codeSnippets": [
     {
@@ -582,8 +583,9 @@ Generate ONLY the celebration message, no extra text.`;
           
           // Truncate very long files (keep first 100 lines)
           const lines = content.split('\n');
-          const truncatedContent = lines.slice(0, 100).join('\n');
-          const truncatedNote = lines.length > 100 ? `\n... (file continues for ${lines.length - 100} more lines)` : '';
+          const maxLines = 100; // TODO: Move to config when file processing constants are added
+          const truncatedContent = lines.slice(0, maxLines).join('\n');
+          const truncatedNote = lines.length > maxLines ? `\n... (file continues for ${lines.length - maxLines} more lines)` : '';
           
           fileContents.push(`**File: ${file}**
 \`\`\`${this.getFileExtension(filePath)}
@@ -616,54 +618,31 @@ Project structure context:
    */
   private getFileExtension(filePath: string): string {
     const ext = filePath.split('.').pop()?.toLowerCase();
-    // Map extensions to common syntax highlighting languages
-    const langMap: Record<string, string> = {
-      'ts': 'typescript',
-      'js': 'javascript',
-      'tsx': 'tsx',
-      'jsx': 'jsx',
-      'json': 'json',
-      'md': 'markdown',
-      'yml': 'yaml',
-      'yaml': 'yaml',
-      'toml': 'toml',
-      'py': 'python',
-      'java': 'java',
-      'go': 'go',
-      'rs': 'rust',
-      'cpp': 'cpp',
-      'c': 'c',
-      'cs': 'csharp',
-      'php': 'php',
-      'rb': 'ruby',
-      'sh': 'bash'
-    };
-    return langMap[ext || ''] || ext || '';
+    if (!ext) return '';
+    
+    const fullExt = `.${ext}`;
+    return ConfigManager.getLanguageForExtension(fullExt);
   }
 
   /**
    * Create formatted project analysis for LLM
    */
   private createProjectAnalysisPrompt(projectInfo: ProjectInfo): string {
-    // Determine complexity level
+    // Determine complexity level using centralized logic
     const fileCount = projectInfo.fileCount;
     const techCount = projectInfo.mainTechnologies.length;
-    let complexityLevel = 'Simple';
-    if (fileCount >= 200 || techCount > 5) {
-      complexityLevel = 'Complex';
-    } else if (fileCount >= 50 || techCount >= 3) {
-      complexityLevel = 'Medium';
-    }
+    const complexity = ConfigManager.determineProjectComplexity(fileCount, techCount);
+    const complexityLevel = complexity.charAt(0).toUpperCase() + complexity.slice(1); // Capitalize first letter
 
     // Get top functions for better context
     const topFunctions = projectInfo.codeAnalysis.functions
-      .slice(0, 5)
+      .slice(0, CONFIG.ANALYSIS.TOP_FUNCTIONS)
       .map(f => `  • ${f.name}() in ${f.fileName} - ${f.summary}`)
       .join('\n') || '  • No functions detected';
 
     // Get top classes for better context  
     const topClasses = projectInfo.codeAnalysis.classes
-      .slice(0, 3)
+      .slice(0, CONFIG.ANALYSIS.TOP_CLASSES)
       .map(c => `  • ${c.name} in ${c.fileName} - ${c.summary}`)
       .join('\n') || '  • No classes detected';
 
@@ -675,7 +654,7 @@ Project structure context:
     }, {} as Record<string, string[]>);
 
     const depSummary = Object.entries(depsByCategory)
-      .map(([category, deps]) => `  • ${category}: ${deps.slice(0, 3).join(', ')}`)
+      .map(([category, deps]) => `  • ${category}: ${deps.slice(0, CONFIG.ANALYSIS.TOP_DEPENDENCIES).join(', ')}`)
       .join('\n') || '  • No dependencies detected';
 
     return `**PROJECT ANALYSIS:**
@@ -704,12 +683,12 @@ ${topClasses}
 ${depSummary}
 
 **File Structure:**
-- Source files: ${projectInfo.structure.sourceFiles.slice(0, 8).join(', ')}
+- Source files: ${projectInfo.structure.sourceFiles.slice(0, CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT).join(', ')}
 - Config files: ${projectInfo.structure.configFiles.join(', ')}
-- Important files: ${projectInfo.structure.importantFiles.slice(0, 5).join(', ')}
+- Important files: ${projectInfo.structure.importantFiles.slice(0, CONFIG.ANALYSIS.TOP_CLASSES).join(', ')}
 
 **Directory Layout:**
-${projectInfo.structure.directories.slice(0, 6).map(dir => `- ${dir}`).join('\n')}
+${projectInfo.structure.directories.slice(0, CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT).map(dir => `- ${dir}`).join('\n')}
 
 **Recommended Adventure Focus Areas:**
 ${this.getRecommendedAdventureFocus(projectInfo)}`;
@@ -757,7 +736,7 @@ ${this.getRecommendedAdventureFocus(projectInfo)}`;
     }
     
     // Dependencies if significant
-    if (projectInfo.codeAnalysis.dependencies.length > 5) {
+    if (projectInfo.codeAnalysis.dependencies.length > CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES) {
       focusAreas.push('• Dependency Network - Understand external libraries and integrations');
     }
     

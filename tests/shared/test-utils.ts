@@ -6,6 +6,11 @@ import { strict as assert } from 'assert';
 import { LLMClient } from '../../src/llm/LLMClient.js';
 import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
 
+// Constants for test configuration
+const DEFAULT_TEST_TIMEOUT = 30000; // 30 seconds
+const MAX_TEST_NAME_LENGTH = 200;
+const MAX_ERROR_MESSAGE_LENGTH = 1000;
+
 // Test execution options
 export interface TestOptions {
   timeout?: number;
@@ -26,7 +31,18 @@ export async function createTestRunner(suiteName: string = 'Tests') {
   const stats: TestStats = { passed: 0, failed: 0, skipped: 0 };
   
   const test = async (name: string, testFn: () => Promise<void> | void, options: TestOptions = {}) => {
-    const timeout = options.timeout || 30000; // 30 second default timeout
+    // Input validation
+    if (!name || typeof name !== 'string') {
+      throw new Error('Test name must be a non-empty string');
+    }
+    if (name.length > MAX_TEST_NAME_LENGTH) {
+      throw new Error(`Test name too long: ${name.length} > ${MAX_TEST_NAME_LENGTH}`);
+    }
+    if (typeof testFn !== 'function') {
+      throw new Error('Test function must be a function');
+    }
+    
+    const timeout = options.timeout || DEFAULT_TEST_TIMEOUT;
     
     try {
       // Check if LLM is available for tests that require it
@@ -40,18 +56,34 @@ export async function createTestRunner(suiteName: string = 'Tests') {
         }
       }
 
-      // Run test with timeout
-      await Promise.race([
-        testFn(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error(`Test timeout after ${timeout}ms`)), timeout)
-        )
-      ]);
+      // Run test with timeout using AbortController for better cleanup
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortController.abort();
+      }, timeout);
+
+      try {
+        await Promise.race([
+          testFn(),
+          new Promise((_, reject) => {
+            abortController.signal.addEventListener('abort', () => {
+              reject(new Error(`Test timeout after ${timeout}ms`));
+            });
+          })
+        ]);
+      } finally {
+        clearTimeout(timeoutId);
+      }
       
       console.log(`✅ ${name}`);
       stats.passed++;
     } catch (error) {
-      console.log(`❌ ${name}: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const truncatedMessage = errorMessage.length > MAX_ERROR_MESSAGE_LENGTH 
+        ? errorMessage.substring(0, MAX_ERROR_MESSAGE_LENGTH) + '... (truncated)'
+        : errorMessage;
+      
+      console.log(`❌ ${name}: ${truncatedMessage}`);
       stats.failed++;
     }
   };
@@ -289,13 +321,31 @@ export async function runTestSuite(
   suiteName: string, 
   testGroups: Array<{ name: string; runner: () => Promise<void> }>
 ): Promise<void> {
+  // Input validation
+  if (!suiteName || typeof suiteName !== 'string') {
+    throw new Error('Suite name must be a non-empty string');
+  }
+  if (!Array.isArray(testGroups) || testGroups.length === 0) {
+    throw new Error('Test groups must be a non-empty array');
+  }
+  
+  // Validate test group structure
+  for (const group of testGroups) {
+    if (!group.name || typeof group.name !== 'string') {
+      throw new Error('Each test group must have a non-empty name');
+    }
+    if (typeof group.runner !== 'function') {
+      throw new Error('Each test group must have a runner function');
+    }
+  }
+
   console.log(`🧪 ${suiteName}`);
   console.log('='.repeat(60));
   console.log(`Running ${testGroups.length} test group(s)`);
   console.log('');
 
-  let totalPassed = 0;
   let totalFailed = 0;
+  const results: Array<{ name: string; success: boolean; error?: Error }> = [];
 
   for (const group of testGroups) {
     console.log('');
@@ -306,10 +356,17 @@ export async function runTestSuite(
       await group.runner();
       console.log('');
       console.log(`✅ ${group.name} tests completed successfully`);
+      results.push({ name: group.name, success: true });
     } catch (error) {
       console.log('');
-      console.log(`❌ ${group.name} tests failed:`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`❌ ${group.name} tests failed: ${errorMessage}`);
       totalFailed++;
+      results.push({ 
+        name: group.name, 
+        success: false, 
+        error: error instanceof Error ? error : new Error(errorMessage)
+      });
     }
   }
 
@@ -321,16 +378,25 @@ export async function runTestSuite(
   const successfulGroups = testGroups.length - totalFailed;
   console.log(`Test Groups: ${successfulGroups}/${testGroups.length} passed`);
   
+  // Show detailed results
+  results.forEach(result => {
+    const status = result.success ? '✅' : '❌';
+    console.log(`  ${status} ${result.name}`);
+    if (!result.success && result.error) {
+      console.log(`    Error: ${result.error.message}`);
+    }
+  });
+  
   if (totalFailed === 0) {
     console.log('');
     console.log('🎉 All test groups passed successfully!');
     console.log('🚀 System is working correctly!');
-    // Exit cleanly when all tests pass
-    process.exit(0);
+    // Set exit code instead of calling process.exit()
+    process.exitCode = 0;
   } else {
     console.log('');
     console.log(`⚠️  ${totalFailed} test group(s) failed.`);
     console.log('🔧 Please review and fix the failing tests.');
-    process.exit(1);
+    process.exitCode = 1;
   }
 }

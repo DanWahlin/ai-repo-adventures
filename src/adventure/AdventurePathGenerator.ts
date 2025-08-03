@@ -14,7 +14,7 @@ export class AdventurePathGenerator {
   generatePaths(projectInfo: ProjectInfo): AdventurePath[] {
     const paths: AdventurePath[] = [];
     const codeFlow = projectInfo.codeAnalysis.codeFlow;
-    const hasComplexFlow = codeFlow && codeFlow.executionOrder.length > 5;
+    const hasComplexFlow = codeFlow && codeFlow.executionOrder && codeFlow.executionOrder.length > 5;
 
     // 1. Always include the main quest
     if (codeFlow?.entryPoint) {
