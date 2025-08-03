@@ -439,6 +439,9 @@ async function runTests() {
   if (stats.failed > 0) {
     console.log('🔧 Please check LLM configuration and connectivity.');
     process.exit(1);
+  } else {
+    // Explicitly exit on success to ensure the process terminates
+    process.exit(0);
   }
 }
 

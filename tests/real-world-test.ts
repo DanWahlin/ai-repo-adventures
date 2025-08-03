@@ -271,7 +271,9 @@ async function testRealWorldScenario() {
   }
 }
 
-testRealWorldScenario().catch((error) => {
-  console.error('💥 Fatal test error:', error);
-  process.exit(1);
-});
+testRealWorldScenario()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error('💥 Fatal test error:', error);
+    process.exit(1);
+  });

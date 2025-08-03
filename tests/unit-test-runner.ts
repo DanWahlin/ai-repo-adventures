@@ -20,7 +20,12 @@ async function runAllUnitTests() {
 }
 
 // Run all tests
-runAllUnitTests().catch(error => {
-  console.error('💥 Unit test runner failed:', error);
-  process.exit(1);
-});
+runAllUnitTests()
+  .then(() => {
+    // Explicitly exit on success to ensure the process terminates
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('💥 Unit test runner failed:', error);
+    process.exit(1);
+  });

@@ -152,6 +152,7 @@ async function main() {
     await client.run();
     clearTimeout(timeout);
     console.log('Interactive functionality validation completed successfully');
+    process.exit(0);
   } catch (error) {
     clearTimeout(timeout);
     console.error('Interactive test failed:', error instanceof Error ? error.message : String(error));

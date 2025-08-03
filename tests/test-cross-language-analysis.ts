@@ -527,10 +527,12 @@ async function runCrossLanguageTests() {
 
 // Run tests if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runCrossLanguageTests().catch(error => {
-    console.error('💥 Cross-language test failed:', error);
-    process.exit(1);
-  });
+  runCrossLanguageTests()
+    .then(() => process.exit(0))
+    .catch(error => {
+      console.error('💥 Cross-language test failed:', error);
+      process.exit(1);
+    });
 }
 
 export { runCrossLanguageTests };
