@@ -387,6 +387,68 @@ function printTestSummaryTable(summary: TestSummary): void {
   console.log('');
 }
 
+function printOverallStatisticsTable(summary: TestSummary): void {
+  // Calculate success rates
+  const suiteSuccessRate = summary.totalSuites > 0 
+    ? Math.round((summary.passedSuites / summary.totalSuites) * 100) 
+    : 0;
+  const testSuccessRate = summary.totalIndividualTests > 0 
+    ? Math.round((summary.totalPassedTests / summary.totalIndividualTests) * 100) 
+    : 0;
+
+  // Create table data
+  const statsData = [
+    {
+      category: '🎯 Test Suites',
+      total: summary.totalSuites.toString(),
+      passed: summary.passedSuites.toString(),
+      failed: summary.failedSuites.toString(),
+      skipped: '0',
+      successRate: `${suiteSuccessRate}%`
+    },
+    {
+      category: '🧪 Individual Tests',
+      total: summary.totalIndividualTests.toString(),
+      passed: summary.totalPassedTests.toString(),
+      failed: summary.totalFailedTests.toString(),
+      skipped: summary.totalSkippedTests.toString(),
+      successRate: `${testSuccessRate}%`
+    }
+  ];
+
+  // Calculate column widths
+  const categoryWidth = Math.max(18, Math.max(...statsData.map(row => row.category.length)));
+  const totalWidth = 7;
+  const passedWidth = 8;
+  const failedWidth = 8;
+  const skippedWidth = 9;
+  const successRateWidth = 13;
+
+  // Print table header
+  console.log('');
+  console.log(`| ${'Category'.padEnd(categoryWidth)} | ${'Total'.padEnd(totalWidth)} | ${'Passed'.padEnd(passedWidth)} | ${'Failed'.padEnd(failedWidth)} | ${'Skipped'.padEnd(skippedWidth)} | ${'Success Rate'.padEnd(successRateWidth)} |`);
+  console.log(`|${'-'.repeat(categoryWidth + 2)}|${'-'.repeat(totalWidth + 2)}|${'-'.repeat(passedWidth + 2)}|${'-'.repeat(failedWidth + 2)}|${'-'.repeat(skippedWidth + 2)}|${'-'.repeat(successRateWidth + 2)}|`);
+
+  // Print table rows
+  statsData.forEach(row => {
+    console.log(`| ${row.category.padEnd(categoryWidth)} | ${row.total.padEnd(totalWidth)} | ${row.passed.padEnd(passedWidth)} | ${row.failed.padEnd(failedWidth)} | ${row.skipped.padEnd(skippedWidth)} | ${row.successRate.padEnd(successRateWidth)} |`);
+  });
+
+  console.log('');
+  
+  // Final status message
+  if (summary.failedSuites === 0 && summary.totalFailedTests === 0) {
+    console.log('🎉 ALL TESTS PASSED! 🎉');
+    console.log('🚀 The system is working correctly across all test suites!');
+    console.log(`✨ Total: ${summary.totalIndividualTests} tests in ${summary.totalSuites} suites`);
+  } else {
+    console.log('⚠️  Some tests failed. Please review the results above.');
+    console.log('🔧 Please review the detailed results above for specific failure information');
+  }
+  
+  console.log('');
+}
+
 function printOverallSummary(summary: TestSummary): void {
   console.log('\n\n');
   console.log('🏆 COMPREHENSIVE TEST RESULTS - HIERARCHICAL VIEW');
@@ -435,51 +497,8 @@ function printOverallSummary(summary: TestSummary): void {
   console.log('\n' + '='.repeat(70));
   console.log('📈 OVERALL STATISTICS');
   console.log('='.repeat(70));
+  printOverallStatisticsTable(summary);
   
-  // Test Suite Statistics
-  console.log('🎯 Test Suite Summary:');
-  console.log(`  Total Suites: ${summary.totalSuites}`);
-  console.log(`  Passed Suites: ${summary.passedSuites}`);
-  console.log(`  Failed Suites: ${summary.failedSuites}`);
-  
-  if (summary.totalSuites > 0) {
-    const suiteSuccessRate = Math.round((summary.passedSuites / summary.totalSuites) * 100);
-    console.log(`  Suite Success Rate: ${suiteSuccessRate}%`);
-  }
-  
-  console.log('');
-  
-  // Individual Test Statistics
-  console.log('🧪 Individual Test Summary:');
-  console.log(`  Total Tests: ${summary.totalIndividualTests}`);
-  console.log(`  Passed Tests: ${summary.totalPassedTests}`);
-  console.log(`  Failed Tests: ${summary.totalFailedTests}`);
-  console.log(`  Skipped Tests: ${summary.totalSkippedTests}`);
-  
-  if (summary.totalIndividualTests > 0) {
-    const testSuccessRate = Math.round((summary.totalPassedTests / summary.totalIndividualTests) * 100);
-    console.log(`  Test Success Rate: ${testSuccessRate}%`);
-  }
-  
-  console.log('');
-  
-  // Final Status
-  if (summary.failedSuites === 0 && summary.totalFailedTests === 0) {
-    console.log('🎉 ALL TESTS PASSED! 🎉');
-    console.log('🚀 The system is working correctly across all test suites!');
-    console.log(`✨ Total: ${summary.totalIndividualTests} tests in ${summary.totalSuites} suites`);
-  } else {
-    console.log('⚠️  SOME TESTS FAILED');
-    if (summary.failedSuites > 0) {
-      console.log(`💡 ${summary.failedSuites} out of ${summary.totalSuites} test suites failed`);
-    }
-    if (summary.totalFailedTests > 0) {
-      console.log(`💡 ${summary.totalFailedTests} out of ${summary.totalIndividualTests} individual tests failed`);
-    }
-    console.log('🔧 Please review the detailed results above for specific failure information');
-  }
-  
-  console.log('');
   console.log('='.repeat(70));
 }
 
