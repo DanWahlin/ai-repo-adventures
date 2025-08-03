@@ -77,7 +77,9 @@ ${truncatedContent}${truncatedNote}
           fileContents.push(`**File: ${file}** - Not found in project structure`);
         }
       } catch (error) {
-        console.warn(`Could not read file ${file}:`, error instanceof Error ? error.message : String(error));
+        // Use debug instead of warn since file read failures during adventure generation are expected
+        // when the LLM references files that don't exist in the specific project structure
+        console.debug(`Could not read file ${file}:`, error instanceof Error ? error.message : String(error));
         fileContents.push(`**File: ${file}** - Could not read file content`);
       }
     }
