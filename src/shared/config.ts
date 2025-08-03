@@ -1,133 +1,155 @@
 /**
- * Centralized configuration management to eliminate magic strings and numbers
- * throughout the codebase and provide a single source of truth for all settings.
+ * Centralized configuration for the MCP Repo Adventure system
+ * All timeouts, limits, and constants are defined here for easy maintenance
  */
 
-// Core system configuration - replaces scattered magic numbers
-export const CONFIG = {
-  // Analysis configuration (previously scattered across ProjectAnalyzer)
-  ANALYSIS: {
-    MAX_DEPTH: 3,
-    MAX_FILE_SIZE_MB: 10,
-    TIMEOUT_MS: 30000,
-    KEY_SOURCE_FILES_LIMIT: 10,
-    TOP_FUNCTIONS: 20,
-    TOP_CLASSES: 5,
-    TOP_DEPENDENCIES: 20,
-    SUMMARY_LINES: 10,
-  },
-
-  // LLM client configuration (previously in LLMClient.ts)
-  LLM: {
-    TIMEOUT_MS: 15000,
-    CACHE_TTL_MS: 300000, // 5 minutes
-    MAX_RETRIES: 3,
-    RETRY_DELAY_MS: 1000,
-  },
-
-  // Adventure system configuration (previously in AdventureManager.ts)
-  ADVENTURE: {
-    MAX_ADVENTURES: 6,
-    MIN_ADVENTURES: 2,
-    SIMPLE_PROJECT_FILES: 50,
-    MEDIUM_PROJECT_FILES: 200,
-    COMPLEX_PROJECT_TECHNOLOGIES: 5,
-    STORY_MAX_WORDS: 150,
-    DESCRIPTION_MAX_WORDS: 50,
-  },
+// Environment configuration
+export const ENV_CONFIG = {
+  // LLM Configuration
+  LLM_API_KEY: process.env.LLM_API_KEY || '',
+  LLM_BASE_URL: process.env.LLM_BASE_URL || 'https://api.openai.com/v1',
+  LLM_MODEL: process.env.LLM_MODEL || 'gpt-4o-mini',
+  LLM_API_VERSION: process.env.LLM_API_VERSION || '2023-12-01-preview',
+  
+  // GitHub Configuration
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
 } as const;
 
-// Technology indicators for project analysis (consolidates duplicate logic)
-export const TECH_INDICATORS = {
-  React: ['react', 'jsx', 'tsx', '.jsx', '.tsx'],
-  Vue: ['vue', '.vue', 'vue-router', 'vuex'], 
-  Angular: ['angular', '@angular', '.component.ts', '.service.ts'],
-  Node: ['node', 'nodejs', 'express', 'koa', 'fastify'],
-  Database: ['database', 'db', 'sql', 'mongodb', 'postgres', 'mysql', 'sqlite'],
+// Timeout configuration (in milliseconds)
+export const TIMEOUTS = {
+  // File operations
+  FILE_READ: 10000,
+  FILE_ANALYSIS: 30000,
+  
+  // LLM operations
+  LLM_REQUEST: 15000,
+  LLM_CACHE: 300000, // 5 minutes
+  
+  // Network operations
+  NETWORK_REQUEST: 10000,
+} as const;
+
+// Analysis limits and constraints
+export const ANALYSIS_LIMITS = {
+  // File system scanning
+  MAX_SCAN_DEPTH: 3,
+  MAX_FILE_SIZE_MB: 10,
+  
+  // Code analysis
+  KEY_SOURCE_FILES: 10,
+  TOP_FUNCTIONS: 20,
+  TOP_CLASSES: 5,
+  TOP_DEPENDENCIES: 20,
+  SUMMARY_LINES: 10,
+  
+  // Story generation specific limits
+  STORY_TOP_FUNCTIONS: 8,
+  STORY_TOP_CLASSES: 5,
+  STORY_TOP_DEPENDENCIES_PER_CATEGORY: 3,
+  STORY_TOP_DIRECTORIES: 8,
+  STORY_TOP_SOURCE_FILES: 10,
+  STORY_TOP_EXECUTION_FLOW: 5,
+} as const;
+
+// File patterns for technology detection
+export const TECH_PATTERNS = {
+  REACT: ['react', 'jsx', 'tsx', '.jsx', '.tsx'],
+  VUE: ['vue', '.vue', '@vue'],
+  ANGULAR: ['angular', '@angular', 'ng-'],
+  DATABASE: ['database', 'db', 'sql', 'mongodb', 'postgres', 'mysql', 'sqlite'],
   API: ['api', 'rest', 'graphql', 'routes', 'controllers', 'endpoints'],
-  Testing: ['test', 'spec', 'jest', 'mocha', 'cypress', 'playwright'],
-  TypeScript: ['typescript', '.ts', '.tsx', 'tsconfig'],
-  JavaScript: ['javascript', '.js', '.jsx'],
-  Python: ['python', '.py', 'django', 'flask', 'fastapi'],
-  Java: ['java', '.java', 'spring', 'gradle', 'maven'],
-  Go: ['golang', '.go', 'gin', 'fiber'],
-  Rust: ['rust', '.rs', 'cargo'],
-  Docker: ['docker', 'dockerfile', 'docker-compose'],
-  Kubernetes: ['kubernetes', 'k8s', '.yaml', '.yml'],
+  TESTING: ['test', 'spec', 'jest', 'mocha', 'cypress', 'playwright'],
+  TYPESCRIPT: ['typescript', 'ts', '.ts', 'tsconfig'],
+  JAVASCRIPT: ['javascript', 'js', '.js', 'package.json'],
+  PYTHON: ['python', 'py', '.py', 'requirements.txt', 'setup.py'],
+  DOCKER: ['docker', 'dockerfile', 'compose', '.dockerignore'],
+  BUILD_TOOLS: ['webpack', 'vite', 'rollup', 'parcel', 'esbuild'],
 } as const;
 
-// File extension to language mapping (removes duplication)
-export const FILE_EXTENSIONS = {
-  '.ts': 'typescript',
-  '.js': 'javascript',
-  '.tsx': 'tsx', 
-  '.jsx': 'jsx',
-  '.json': 'json',
-  '.md': 'markdown',
-  '.yml': 'yaml',
-  '.yaml': 'yaml',
-  '.toml': 'toml',
-  '.py': 'python',
-  '.java': 'java',
-  '.go': 'go',
-  '.rs': 'rust',
-  '.cpp': 'cpp',
-  '.c': 'c',
-  '.cs': 'csharp',
-  '.php': 'php',
-  '.rb': 'ruby',
-  '.sh': 'bash',
+// Directory patterns to ignore during scanning
+export const IGNORE_PATTERNS = [
+  'node_modules',
+  '.git',
+  '.next',
+  '.nuxt',
+  'dist',
+  'build',
+  'coverage',
+  '.nyc_output',
+  'logs',
+  '*.log',
+  '.env',
+  '.DS_Store',
+  'Thumbs.db',
+] as const;
+
+// Adventure system configuration
+export const ADVENTURE_CONFIG = {
+  // Maximum number of adventures a user can have active
+  MAX_ACTIVE_ADVENTURES: 5,
+  
+  // Default theme if none specified
+  DEFAULT_THEME: 'space' as const,
+  
+  // Progress tracking
+  MIN_EXPLORATION_FOR_PROGRESS: 3,
+  
+  // Character generation
+  MAX_CHARACTERS_PER_STORY: 8,
+  DEFAULT_CHARACTERS_COUNT: 3,
 } as const;
 
-// Helper functions for configuration access
-export class ConfigManager {
-  /**
-   * Get configuration value with type safety
-   */
-  static get<T extends keyof typeof CONFIG>(section: T): typeof CONFIG[T] {
-    return CONFIG[section];
-  }
+// Error handling configuration
+export const ERROR_CONFIG = {
+  // Maximum error message length for user display
+  MAX_ERROR_MESSAGE_LENGTH: 200,
+  
+  // Whether to include stack traces in error responses
+  INCLUDE_STACK_TRACES: process.env.NODE_ENV === 'development',
+  
+  // Default error messages
+  DEFAULT_MESSAGES: {
+    LLM_UNAVAILABLE: 'LLM service is currently unavailable. Please check your configuration.',
+    ANALYSIS_FAILED: 'Failed to analyze the project. Please ensure the path is valid.',
+    THEME_INVALID: 'Invalid theme specified. Using default theme.',
+    FILE_NOT_FOUND: 'The requested file could not be found.',
+    PERMISSION_DENIED: 'Permission denied accessing the specified path.',
+  },
+} as const;
 
-  /**
-   * Check if a file extension is supported
-   */
-  static isSupportedExtension(extension: string): extension is keyof typeof FILE_EXTENSIONS {
-    return extension in FILE_EXTENSIONS;
-  }
+// Validation patterns
+export const VALIDATION = {
+  // File path validation
+  SAFE_PATH_PATTERN: /^[a-zA-Z0-9\-_./\s]+$/,
+  DANGEROUS_PATHS: ['/etc/', '/bin/', '/usr/bin/', '/sys/', '/proc/'],
+  
+  // Theme validation
+  VALID_THEMES: ['space', 'mythical', 'ancient'] as const,
+  
+  // Project type validation
+  VALID_PROJECT_TYPES: [
+    'Web Application',
+    'Mobile App', 
+    'Desktop Application',
+    'Library/Package',
+    'API Service',
+    'CLI Tool',
+    'Data Science',
+    'Game',
+    'Unknown'
+  ] as const,
+} as const;
 
-  /**
-   * Get language for file extension
-   */
-  static getLanguageForExtension(extension: string): string {
-    return this.isSupportedExtension(extension) ? FILE_EXTENSIONS[extension] : extension.slice(1);
-  }
+// Export helper functions for configuration access
+export const getTimeout = (operation: keyof typeof TIMEOUTS): number => {
+  return TIMEOUTS[operation];
+};
 
-  /**
-   * Determine project complexity based on metrics
-   */
-  static determineProjectComplexity(fileCount: number, techCount: number): 'simple' | 'medium' | 'complex' {
-    if (fileCount >= CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT * 20 || techCount > CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES) {
-      return 'complex';
-    }
-    if (fileCount >= CONFIG.ADVENTURE.SIMPLE_PROJECT_FILES || techCount >= 3) {
-      return 'medium';
-    }
-    return 'simple';
-  }
+export const getLimit = (limit: keyof typeof ANALYSIS_LIMITS): number => {
+  return ANALYSIS_LIMITS[limit];
+};
 
-  /**
-   * Get adventure count based on project complexity
-   */
-  static getAdventureCount(complexity: 'simple' | 'medium' | 'complex'): { min: number; max: number } {
-    switch (complexity) {
-      case 'simple':
-        return { min: 2, max: 3 };
-      case 'medium':
-        return { min: 3, max: 4 };
-      case 'complex':
-        return { min: 5, max: 6 };
-      default:
-        return { min: CONFIG.ADVENTURE.MIN_ADVENTURES, max: CONFIG.ADVENTURE.MAX_ADVENTURES };
-    }
-  }
-}
+
+export const isValidProjectType = (type: string): type is typeof VALIDATION.VALID_PROJECT_TYPES[number] => {
+  return VALIDATION.VALID_PROJECT_TYPES.includes(type as any);
+};

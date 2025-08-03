@@ -5,11 +5,16 @@
 import { strict as assert } from 'assert';
 import { LLMClient } from '../../src/llm/llm-client.js';
 import type { ProjectInfo } from '../../src/analyzer/project-analyzer.js';
+import { TIMEOUTS } from '../../src/shared/config.js';
 
-// Constants for test configuration
-const DEFAULT_TEST_TIMEOUT = 30000; // 30 seconds
-const MAX_TEST_NAME_LENGTH = 200;
-const MAX_ERROR_MESSAGE_LENGTH = 1000;
+// Test-specific configuration
+const TEST_CONFIG = {
+  DEFAULT_TIMEOUT: 30000, // 30 seconds
+  MAX_TEST_NAME_LENGTH: 200,
+  MAX_ERROR_MESSAGE_LENGTH: 1000,
+  MAX_SUITE_NAME_LENGTH: 100,
+  MIN_TEST_GROUPS: 1
+} as const;
 
 // Test execution options
 export interface TestOptions {
@@ -35,14 +40,14 @@ export async function createTestRunner(suiteName: string = 'Tests') {
     if (!name || typeof name !== 'string') {
       throw new Error('Test name must be a non-empty string');
     }
-    if (name.length > MAX_TEST_NAME_LENGTH) {
-      throw new Error(`Test name too long: ${name.length} > ${MAX_TEST_NAME_LENGTH}`);
+    if (name.length > TEST_CONFIG.MAX_TEST_NAME_LENGTH) {
+      throw new Error(`Test name too long: ${name.length} > ${TEST_CONFIG.MAX_TEST_NAME_LENGTH}`);
     }
     if (typeof testFn !== 'function') {
       throw new Error('Test function must be a function');
     }
     
-    const timeout = options.timeout || DEFAULT_TEST_TIMEOUT;
+    const timeout = options.timeout || TEST_CONFIG.DEFAULT_TIMEOUT;
     
     try {
       // Check if LLM is available for tests that require it
@@ -79,8 +84,8 @@ export async function createTestRunner(suiteName: string = 'Tests') {
       stats.passed++;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const truncatedMessage = errorMessage.length > MAX_ERROR_MESSAGE_LENGTH 
-        ? errorMessage.substring(0, MAX_ERROR_MESSAGE_LENGTH) + '... (truncated)'
+      const truncatedMessage = errorMessage.length > TEST_CONFIG.MAX_ERROR_MESSAGE_LENGTH 
+        ? errorMessage.substring(0, TEST_CONFIG.MAX_ERROR_MESSAGE_LENGTH) + '... (truncated)'
         : errorMessage;
       
       console.log(`❌ ${name}: ${truncatedMessage}`);
@@ -145,7 +150,7 @@ export const mockProjectInfo: ProjectInfo = {
         isAsync: true,
         isExported: true,
         fileName: 'src/server.ts',
-        source: 'typescript-estree',
+        source: 'regex',
         language: 'typescript'
       }
     ],
@@ -157,7 +162,7 @@ export const mockProjectInfo: ProjectInfo = {
         properties: ['router', 'middleware'],
         isExported: true,
         fileName: 'src/controllers/api.ts',
-        source: 'typescript-estree',
+        source: 'regex',
         language: 'typescript'
       }
     ],
@@ -180,7 +185,7 @@ export const realProjectInfo: ProjectInfo = {
     directories: ['src', 'tests', 'dist', 'docs'],
     importantFiles: ['package.json', 'README.md', 'src/index.ts', 'CLAUDE.md'],
     configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/index.ts', 'src/adventure/AdventureManager.ts', 'src/llm/LLMClient.ts', 'src/analyzer/ProjectAnalyzer.ts']
+    sourceFiles: ['src/index.ts', 'src/adventure/adventure-manager.ts', 'src/llm/llm-client.ts', 'src/analyzer/project-analyzer.ts']
   },
   hasTests: true,
   hasDatabase: false,
@@ -194,8 +199,8 @@ export const realProjectInfo: ProjectInfo = {
         parameters: ['projectInfo', 'theme'],
         isAsync: true,
         isExported: true,
-        fileName: 'src/adventure/AdventureManager.ts',
-        source: 'typescript-estree',
+        fileName: 'src/adventure/adventure-manager.ts',
+        source: 'regex',
         language: 'typescript'
       },
       {
@@ -204,8 +209,8 @@ export const realProjectInfo: ProjectInfo = {
         parameters: ['prompt', 'options'],
         isAsync: true,
         isExported: true,
-        fileName: 'src/llm/LLMClient.ts',
-        source: 'typescript-estree', 
+        fileName: 'src/llm/llm-client.ts',
+        source: 'regex', 
         language: 'typescript'
       },
       {
@@ -214,8 +219,8 @@ export const realProjectInfo: ProjectInfo = {
         parameters: ['projectPath'],
         isAsync: true,
         isExported: true,
-        fileName: 'src/analyzer/ProjectAnalyzer.ts',
-        source: 'typescript-estree',
+        fileName: 'src/analyzer/project-analyzer.ts',
+        source: 'regex',
         language: 'typescript'
       }
     ],
@@ -226,8 +231,8 @@ export const realProjectInfo: ProjectInfo = {
         methods: ['initializeAdventure', 'exploreAdventure', 'getProgress'],
         properties: ['state', 'llmClient', 'fileIndex'],
         isExported: true,
-        fileName: 'src/adventure/AdventureManager.ts',
-        source: 'typescript-estree',
+        fileName: 'src/adventure/adventure-manager.ts',
+        source: 'regex',
         language: 'typescript'
       },
       {
@@ -236,8 +241,8 @@ export const realProjectInfo: ProjectInfo = {
         methods: ['generateResponse', 'isAvailable'],
         properties: ['cache', 'provider'],
         isExported: true,
-        fileName: 'src/llm/LLMClient.ts',
-        source: 'typescript-estree',
+        fileName: 'src/llm/llm-client.ts',
+        source: 'regex',
         language: 'typescript'
       }
     ],
@@ -247,7 +252,11 @@ export const realProjectInfo: ProjectInfo = {
       { name: 'zod', version: '^3.25.76', type: 'dependency', category: 'validation' }
     ],
     entryPoints: ['src/index.ts'],
-    keyFiles: ['src/index.ts', 'src/adventure/AdventureManager.ts', 'src/llm/LLMClient.ts']
+    keyFiles: [
+      { path: 'src/index.ts', content: 'export { server };', summary: 'Main MCP server entry point' },
+      { path: 'src/adventure/adventure-manager.ts', content: 'export class AdventureManager {', summary: 'Adventure management class' },
+      { path: 'src/llm/llm-client.ts', content: 'export class LLMClient {', summary: 'LLM API client wrapper' }
+    ]
   }
 };
 

@@ -1,34 +1,11 @@
-import { ProjectInfo } from '../analyzer/project-analyzer.js';
-import { LLMClient } from '../llm/llm-client.js';
-import { readFile } from 'fs/promises';
-import { AdventureTheme, THEMES } from '../shared/theme.js';
-import { CONFIG, ConfigManager } from '../shared/config.js';
+import type { ProjectInfo } from '../analyzer/index.js';
+import type { AdventureTheme } from '../shared/index.js';
+import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
+import { FileContentManager } from './file-content-manager.js';
+import { StoryGenerationError } from '../shared/index.js';
 
-// Core interfaces for LLM-driven adventures
-export interface Adventure {
-  id: string;
-  title: string;
-  description: string;
-  codeFiles?: string[]; // files this adventure will explore
-}
-
-export interface StoryResponse {
-  story: string;
-  adventures: Adventure[];
-}
-
-export interface CodeSnippet {
-  file: string;
-  snippet: string;
-  explanation: string;
-}
-
-export interface AdventureContent {
-  adventure: string;  // Contains the story with analogies woven throughout
-  fileExploration?: string;  // Interactive file exploration prompt
-  codeSnippets: CodeSnippet[];
-  hints: string[];
-}
+// Re-export interfaces from story-generator for backward compatibility
+export type { Adventure, StoryResponse, AdventureContent, CodeSnippet } from './story-generator.js';
 
 export interface AdventureResult {
   narrative: string;
@@ -61,128 +38,16 @@ export class AdventureState {
 
 export class AdventureManager {
   private state: AdventureState = new AdventureState();
-  private llmClient: LLMClient;
-  private fileIndex: Map<string, string> = new Map();
+  private storyGenerator: StoryGenerator;
+  private fileContentManager: FileContentManager;
 
   constructor() {
-    this.llmClient = new LLMClient();
+    this.storyGenerator = new StoryGenerator();
+    this.fileContentManager = new FileContentManager();
   }
 
 
 
-  /**
-   * Build the story generation prompt
-   */
-  private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: AdventureTheme): string {
-    const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
-    const adventureRules = this.getAdventureCreationRules();
-    const themeGuidelines = this.getThemeGuidelines(theme);
-    const responseFormat = this.getStoryResponseFormat(theme);
-    
-    return `You are a technical education specialist who creates immersive code exploration experiences.
-Your goal is to transform this codebase into an engaging ${theme}-themed narrative that helps developers understand the architecture through storytelling.
-
-## Project Analysis
-${projectAnalysis}
-
-${adventureRules}
-
-${themeGuidelines}
-
-${responseFormat}
-`;
-  }
-
-  /**
-   * Get adventure creation rules
-   */
-  private getAdventureCreationRules(): string {
-    return `## Adventure Creation Rules
-
-**Adventure Title Format:**
-Each adventure title MUST follow this pattern: "Theme-Specific Name: Technical Description"
-- Space example: "Starship Design: An Overview of the Codebase Architecture"
-- Medieval example: "Castle Design: Exploring the Kingdom Layout"
-- Ancient example: "Temple Complex Architecture: Understanding the Sacred Layout"
-- DO NOT COPY these examples directly - create unique titles that fit the theme and keep them positive and non-controversial.
-
-**Adventure Count Logic:**
-- Simple projects (<${CONFIG.ADVENTURE.SIMPLE_PROJECT_FILES} files, <3 technologies): 2-3 adventures
-- Medium projects (${CONFIG.ADVENTURE.SIMPLE_PROJECT_FILES}-${CONFIG.ADVENTURE.MEDIUM_PROJECT_FILES} files, 3-${CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES} technologies): 3-4 adventures  
-- Complex projects (>${CONFIG.ADVENTURE.MEDIUM_PROJECT_FILES} files, >${CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES} technologies): 5-6 adventures
-
-**Required Adventure Types** (adapt to available project components):
-1. **Architecture Overview** - Overall system design and entry points
-2. **Configuration & Setup** - How the project is configured and initialized
-3. **Core Logic** - Main business logic and algorithms
-4. **Data Layer** - Database, storage, or data management (if present)
-5. **API/Interface** - External interfaces, APIs, or user interactions (if present)
-6. **Testing & Quality** - Testing setup and quality assurance (if present)`;
-  }
-
-  /**
-   * Get theme-specific guidelines
-   */
-  private getThemeGuidelines(theme: AdventureTheme): string {
-    const THEME_RESTRICTIONS = {
-      [THEMES.SPACE.key]: '(space ships, galaxies, astronauts - NOT kingdoms or magic)',
-      [THEMES.MYTHICAL.key]: '(castles, knights, magic, mythical creatures - NOT space ships or ancient temples)',
-      [THEMES.ANCIENT.key]: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)'
-    } as const;
-    
-    const themeRestrictions = THEME_RESTRICTIONS[theme] || THEME_RESTRICTIONS[THEMES.SPACE.key];
-    
-    return `## Theme Guidelines
-
-**${theme.toUpperCase()} THEME VOCABULARY:**
-${this.getThemeVocabulary(theme)}
-
-**Story Requirements:**
-- Create an overarching narrative that connects all adventures
-- Each adventure should feel like a chapter in a larger story
-- Use ${theme} metaphors that make technical concepts intuitive
-- Reference actual file names and technologies from the analysis
-- Make the story educational but entertaining
-- IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
-  ${themeRestrictions}`;
-  }
-
-  /**
-   * Get story response format
-   */
-  private getStoryResponseFormat(theme: AdventureTheme): string {
-    return `## Response Format
-
-Your response must be a valid JSON object matching the structure below.
-
-IMPORTANT: 
-1. Adventure IDs MUST be simple integers starting from "1", "2", "3", etc.
-2. Adventure titles MUST follow the format "🎯 Theme-Specific Title: Brief Description" with appropriate emojis
-Examples:
-- "🚀 Starship Design: An Overview of the Codebase Architecture"
-- "🏛️ Temple Complex Architecture: Understanding the Sacred Layout"
-- "🏰 Castle Design: Exploring the Kingdom Layout"
-3. Each adventure title MUST start with an appropriate emoji that matches both the theme and adventure type
-
-{
-  "story": "A concise 1-2 paragraph opening (max ${CONFIG.ADVENTURE.STORY_MAX_WORDS} words) that establishes the ${theme} world and introduces the codebase. Keep it engaging but brief. Reference 1-2 key technologies.",
-  "adventures": [
-    {
-      "id": "1",
-      "title": "📍 ${theme}-themed title in format 'Emoji Adventure Name: What It Covers' (e.g., '🚀 Starship Design: An Overview of the Codebase Architecture')",
-      "description": "One concise sentence explaining what this adventure covers",
-      "codeFiles": ["actual-file-names-from-analysis"]
-    },
-    {
-      "id": "2",
-      "title": "Second adventure title",
-      "description": "Description",
-      "codeFiles": ["files"]
-    }
-    // Continue with id "3", "4", etc. for remaining adventures
-  ]
-}`;
-  }
 
   /**
    * Initialize the adventure with project context and generate story + adventures
@@ -194,10 +59,10 @@ Examples:
     this.state.currentTheme = theme;
     
     // Build file index for efficient lookups
-    this.buildFileIndex(projectInfo);
+    this.fileContentManager.buildFileIndex(projectInfo);
 
     // Generate the overall story and adventures using LLM
-    const storyResponse = await this.generateStoryAndAdventures(projectInfo, theme);
+    const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme);
     
     this.state.story = storyResponse.story;
     this.state.adventures = storyResponse.adventures;
@@ -252,14 +117,42 @@ Examples:
       };
     }
 
+    if (!this.state.projectInfo) {
+      throw new StoryGenerationError('No project context available', {
+        operation: 'generateHints'
+      });
+    }
+
+    // Prepare code content for the adventure
+    const codeContent = await this.fileContentManager.prepareCodeContent(
+      adventure.codeFiles || [],
+      this.state.projectInfo
+    );
+
     // Generate adventure content using LLM
-    const adventureContent = await this.generateAdventureContent(adventure);
+    const adventureContent = await this.storyGenerator.generateAdventureContent(
+      adventure,
+      this.state.currentTheme!,
+      this.state.projectInfo,
+      codeContent
+    );
     
     // Mark adventure as completed
     this.state.completedAdventures.add(adventure.id);
 
+    if (!this.state.currentTheme) {
+      throw new StoryGenerationError('No theme selected', {
+        operation: 'getCompletionSummary'
+      });
+    }
+
     // Generate completion summary
-    const completionSummary = await this.generateCompletionSummary(adventure);
+    const completionSummary = await this.storyGenerator.generateCompletionSummary(
+      adventure,
+      this.state.currentTheme,
+      this.state.completedAdventures.size + 1,
+      this.state.adventures.length
+    );
 
     return {
       narrative: this.formatAdventureResult(adventureContent, completionSummary),
@@ -293,459 +186,12 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
     };
   }
 
-  /**
-   * Generate the initial story and adventures using LLM
-   */
-  private async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
-    const prompt = this.buildStoryGenerationPrompt(projectInfo, theme);
-
-    try {
-      const response = await this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
-      
-      // With json_object format, the response should already be valid JSON, but let's be safe
-      let parsed;
-      try {
-        parsed = JSON.parse(response.content);
-      } catch (parseError) {
-        throw new Error(`Failed to parse LLM response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
-      }
-      
-      // Type-safe validation with detailed error messages
-      if (!parsed.story || typeof parsed.story !== 'string') {
-        throw new Error('Invalid LLM response: missing or invalid story field');
-      }
-      
-      if (!Array.isArray(parsed.adventures)) {
-        throw new Error('Invalid LLM response: adventures must be an array');
-      }
-      
-      // Validate each adventure has required fields
-      for (let i = 0; i < parsed.adventures.length; i++) {
-        const adventure = parsed.adventures[i];
-        if (!adventure.id || !adventure.title || !adventure.description) {
-          throw new Error(`Invalid adventure at index ${i}: missing required fields (id, title, description)`);
-        }
-      }
-
-      return parsed;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`LLM story generation failed for theme "${theme}", project type "${projectInfo.type}":`, {
-        error: errorMessage,
-        projectFileCount: projectInfo.fileCount,
-        technologies: projectInfo.mainTechnologies,
-        timestamp: new Date().toISOString()
-      });
-      
-      throw new Error(`Unable to generate adventure story: ${errorMessage}. Please ensure your LLM configuration is correct and the service is available.`);
-    }
-  }
-
-  /**
-   * Generate detailed adventure content using LLM
-   */
-  private async generateAdventureContent(adventure: Adventure): Promise<AdventureContent> {
-    if (!this.state.projectInfo) {
-      throw new Error('No project context available');
-    }
-
-    // Prepare code content if specific files are mentioned
-    const codeContent = await this.prepareCodeContent(adventure.codeFiles || []);
-    
-    const prompt = `You are continuing the ${this.state.currentTheme}-themed code exploration adventure. Create immersive content for: "${adventure.title}"
-
-**Adventure Context:**
-- Description: ${adventure.description}
-- Project Type: ${this.state.projectInfo.type} using ${this.state.projectInfo.mainTechnologies.join(', ')}
-- Theme Vocabulary: ${this.state.currentTheme ? this.getThemeVocabulary(this.state.currentTheme) : 'Not selected'}
-
-**Code Files to Explore:**
-${codeContent}
-
-## Content Requirements
-
-**Adventure Story:**
-- Write 1-2 concise paragraphs (max ${CONFIG.ADVENTURE.STORY_MAX_WORDS} words total)
-- Continue the ${this.state.currentTheme} narrative efficiently
-- Use clear ${this.state.currentTheme} metaphors for technical concepts
-- Reference 1-2 specific files or technologies
-
-**File Exploration Prompt (REQUIRED):**
-Create an interactive "Quest Action Required" section that:
-- Encourages opening specific files in their code editor
-- Provides step-by-step navigation with line numbers
-- Explains the code flow (what connects to what)
-- Uses engaging ${this.state.currentTheme} language
-- Includes specific exploration tasks ("look for X", "trace from line Y to Z")
-- Asks users to report back or type something when done
-
-**Code Snippets (2-3 required):**
-- Extract and show 15-25 lines of ACTUAL code from the files provided above (more context than before)
-- DO NOT create fictional or example code - use only real code from the project
-- Show function signatures AND implementations for better understanding
-- Explain the data flow: what comes in, what gets processed, what goes out
-- Connect this code to other parts of the system
-
-**Hints (exactly 2 required):**
-1. **Practical**: How to work with this code and what to look for when exploring
-2. **Next Steps**: What specific files to explore next and what to look for there
-
-## Response Format
-
-Your response must be a valid JSON object matching the structure below.
-
-{
-  "adventure": "1-2 concise paragraphs (max ${CONFIG.ADVENTURE.STORY_MAX_WORDS} words) ${this.state.currentTheme}-themed story that continues the overarching narrative while teaching about the specific code components. Must weave analogies naturally throughout and reference actual file names.",
-  "fileExploration": "Interactive 'Quest Action Required' section with specific file exploration tasks, line number references, code flow explanation, and user engagement prompts using ${this.state.currentTheme} language",
-  "codeSnippets": [
-    {
-      "file": "actual-filename-from-project",
-      "snippet": "15-25 lines of ACTUAL code from the files provided above showing function signatures and implementations",
-      "explanation": "Clear explanation of data flow: what comes in, what gets processed, what goes out, and how this connects to other parts of the system"
-    }
-  ],
-  "hints": [
-    "Practical: How to work with this code and what to look for when exploring",
-    "Next Steps: What specific files to explore next and what to look for there"
-  ]
-}`;
-
-    try {
-      const response = await this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
-      
-      // With json_object format, the response should already be valid JSON, but let's be safe
-      let parsed;
-      try {
-        parsed = JSON.parse(response.content);
-      } catch (parseError) {
-        throw new Error(`Failed to parse adventure content as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
-      }
-
-      // Type-safe validation with detailed error messages
-      if (!parsed.adventure || typeof parsed.adventure !== 'string') {
-        throw new Error('Invalid adventure content: missing or invalid adventure field');
-      }
-      
-      if (!Array.isArray(parsed.hints)) {
-        throw new Error('Invalid adventure content: hints must be an array');
-      }
-      
-      if (!Array.isArray(parsed.codeSnippets)) {
-        parsed.codeSnippets = []; // Default to empty array if missing
-      }
-
-      return parsed;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`LLM adventure content generation failed for adventure "${adventure.title}", theme "${this.state.currentTheme}":`, {
-        error: errorMessage,
-        adventureId: adventure.id,
-        codeFilesCount: adventure.codeFiles?.length || 0,
-        timestamp: new Date().toISOString()
-      });
-      
-      throw new Error(`Unable to generate content for adventure "${adventure.title}": ${errorMessage}. Please ensure your LLM configuration is correct and the service is available.`);
-    }
-  }
-
-  /**
-   * Generate completion summary using LLM
-   */
-  private async generateCompletionSummary(adventure: Adventure): Promise<string> {
-    const progress = this.state.completedAdventures.size + 1;
-    const total = this.state.adventures.length;
-    const percentComplete = Math.round((progress / total) * 100);
-    
-    const prompt = `Generate a ${this.state.currentTheme}-themed completion celebration for: "${adventure.title}"
-
-**Context:**
-- Adventure completed: ${adventure.title}
-- Progress: ${progress}/${total} adventures (${percentComplete}% complete)
-- Theme: ${this.state.currentTheme}
-- Theme vocabulary: ${this.state.currentTheme ? this.getThemeVocabulary(this.state.currentTheme) : 'Not selected'}
-
-**Requirements:**
-- Write 1-2 sentences using ${this.state.currentTheme} terminology
-- Celebrate the specific learning achievement of this adventure
-- Reference what code concepts were mastered
-- Use encouraging, triumphant tone
-- Connect to the overarching ${this.state.currentTheme} narrative
-
-**Examples:**
-SPACE: "🚀 Mission accomplished, Space Explorer! You've successfully navigated the Configuration Control Center and mastered the art of system initialization protocols."
-MEDIEVAL: "⚔️ Victory is yours, brave Knight! You have conquered the Enchanted Armory and now wield the sacred knowledge of configuration spells."
-ANCIENT: "🏺 The Oracle smiles upon you, Seeker! You have unlocked the secrets of the Sacred Configuration Chamber and gained wisdom of the initialization rituals."
-
-Generate ONLY the celebration message, no extra text.`;
-
-    try {
-      const response = await this.llmClient.generateResponse(prompt);
-      return response.content.trim();
-    } catch (error) {
-      console.warn('LLM completion summary failed, using fallback:', error);
-      return `🎉 Adventure "${adventure.title}" completed! You've gained valuable insights into this part of the codebase.`;
-    }
-  }
-
-  /**
-   * Get theme-specific vocabulary and examples
-   */
-  private getThemeVocabulary(theme: AdventureTheme): string {
-    const vocabularies = {
-      [THEMES.SPACE.key]: `
-**Adventure Emojis:** 🚀 🛸 🌌 ⭐ 🪐 🛰️ 🔭 🌟 🚁 🎯
-- Architecture → "🚀 Starship Design" or "🛰️ Orbital Platform"
-- Configuration → "🎛️ Navigation Control Center" or "🌌 Command Bridge"
-- APIs → "📡 Interstellar Communication Hub" or "⚡ Quantum Data Relay"
-- Database → "🗄️ Data Archive Constellation" or "☁️ Information Nebula"
-- Functions → "🧭 Navigation Protocols" or "⚙️ System Procedures"
-- Classes → "👥 Crew Modules" or "🔧 Ship Components"
-- Tests → "🔬 System Diagnostics" or "🎮 Mission Simulation Chamber"
-- Dependencies → "🤝 Allied Fleet" or "🔗 Support Network"`,
-      
-      [THEMES.MYTHICAL.key]: `
-**Adventure Emojis:** 🏰 ⚔️ 🗡️ 🛡️ 🏺 🔮 🗝️ 👑 🏛️ 🎭
-- Architecture → "🏰 Castle Design" or "🗺️ Kingdom Layout"  
-- Configuration → "⚔️ Enchanted Armory" or "💎 Royal Treasury"
-- APIs → "📜 Royal Messenger Network" or "🏛️ Diplomatic Embassy"
-- Database → "📚 Ancient Knowledge Vault" or "🐉 Dragon's Hoard"
-- Functions → "🔮 Magical Spells" or "✨ Mythical Incantations"
-- Classes → "🏠 Guild Houses" or "👑 Noble Orders"
-- Tests → "⚔️ Trial by Combat" or "🧠 Wisdom Challenges"
-- Dependencies → "🤝 Allied Kingdoms" or "🛡️ Mythical Alliances"`,
-      
-      [THEMES.ANCIENT.key]: `
-**Adventure Emojis:** 🏛️ 📜 🏺 ⚱️ 🗿 🔺 🌅 📿 🕯️ 🧙
-- Architecture → "🏛️ Temple Complex" or "🔺 Pyramid Structure"
-- Configuration → "🕯️ Sacred Ritual Chamber" or "🔮 Oracle's Sanctum"
-- APIs → "🛤️ Trade Route Network" or "📜 Messenger Papyrus System"
-- Database → "📚 Sacred Scroll Library" or "🏺 Stone Tablet Archive"
-- Functions → "🕯️ Ancient Rituals" or "⚱️ Sacred Ceremonies"
-- Classes → "👨‍🏫 Priest Orders" or "🔨 Craftsman Guilds"
-- Tests → "⚖️ Divine Trials" or "🧠 Wisdom Examinations"
-- Dependencies → "🤝 Trade Alliances" or "💰 Tribute Networks"`
-    };
-    
-    return vocabularies[theme as keyof typeof vocabularies] || vocabularies.space;
-  }
 
 
-  /**
-   * Build file index for efficient lookups
-   */
-  private buildFileIndex(projectInfo: ProjectInfo): void {
-    this.fileIndex.clear();
-    
-    // Index all source files
-    [...projectInfo.structure.sourceFiles, ...projectInfo.structure.configFiles].forEach(filePath => {
-      // Index by full path
-      this.fileIndex.set(filePath, filePath);
-      
-      // Also index by filename only for convenience
-      const filename = filePath.split('/').pop() || '';
-      if (filename && !this.fileIndex.has(filename)) {
-        this.fileIndex.set(filename, filePath);
-      }
-    });
-  }
 
-  /**
-   * Find file in index efficiently
-   */
-  private findFileInIndex(file: string): string | undefined {
-    // Direct lookup first
-    if (this.fileIndex.has(file)) {
-      return this.fileIndex.get(file);
-    }
-    
-    // Try partial match
-    for (const [key, value] of this.fileIndex.entries()) {
-      if (key.includes(file) || file.includes(key)) {
-        return value;
-      }
-    }
-    
-    return undefined;
-  }
 
-  /**
-   * Prepare code content for LLM analysis
-   */
-  private async prepareCodeContent(codeFiles: string[]): Promise<string> {
-    if (!this.state.projectInfo || codeFiles.length === 0) {
-      return 'No specific files to explore - general project analysis.';
-    }
 
-    const fileContents: string[] = [];
-    
-    for (const file of codeFiles.slice(0, 3)) { // Limit to 3 files to avoid overwhelming the LLM
-      try {
-        const filePath = this.findFileInIndex(file);
-        if (filePath) {
-          // Try to read the file content
-          const content = await readFile(filePath, 'utf-8');
-          
-          // Truncate very long files (keep first 100 lines)
-          const lines = content.split('\n');
-          const maxLines = 100; // TODO: Move to config when file processing constants are added
-          const truncatedContent = lines.slice(0, maxLines).join('\n');
-          const truncatedNote = lines.length > maxLines ? `\n... (file continues for ${lines.length - maxLines} more lines)` : '';
-          
-          fileContents.push(`**File: ${file}**
-\`\`\`${this.getFileExtension(filePath)}
-${truncatedContent}${truncatedNote}
-\`\`\``);
-        } else {
-          fileContents.push(`**File: ${file}** - Not found in project structure`);
-        }
-      } catch (error) {
-        console.warn(`Could not read file ${file}:`, error instanceof Error ? error.message : String(error));
-        fileContents.push(`**File: ${file}** - Could not read file content`);
-      }
-    }
 
-    return `Files to explore in this adventure:
-
-${fileContents.join('\n\n')}
-
-Project structure context:
-- Total files: ${this.state.projectInfo.fileCount}
-- Main technologies: ${this.state.projectInfo.mainTechnologies.join(', ')}
-- Has tests: ${this.state.projectInfo.hasTests}
-- Has API: ${this.state.projectInfo.hasApi}
-- Has database: ${this.state.projectInfo.hasDatabase}
-- Entry points: ${this.state.projectInfo.codeAnalysis.entryPoints.join(', ')}`;
-  }
-
-  /**
-   * Get file extension for syntax highlighting
-   */
-  private getFileExtension(filePath: string): string {
-    const ext = filePath.split('.').pop()?.toLowerCase();
-    if (!ext) return '';
-    
-    const fullExt = `.${ext}`;
-    return ConfigManager.getLanguageForExtension(fullExt);
-  }
-
-  /**
-   * Create formatted project analysis for LLM
-   */
-  private createProjectAnalysisPrompt(projectInfo: ProjectInfo): string {
-    // Determine complexity level using centralized logic
-    const fileCount = projectInfo.fileCount;
-    const techCount = projectInfo.mainTechnologies.length;
-    const complexity = ConfigManager.determineProjectComplexity(fileCount, techCount);
-    const complexityLevel = complexity.charAt(0).toUpperCase() + complexity.slice(1); // Capitalize first letter
-
-    // Get top functions for better context
-    const topFunctions = projectInfo.codeAnalysis.functions
-      .slice(0, CONFIG.ANALYSIS.TOP_FUNCTIONS)
-      .map(f => `  • ${f.name}() in ${f.fileName} - ${f.summary}`)
-      .join('\n') || '  • No functions detected';
-
-    // Get top classes for better context  
-    const topClasses = projectInfo.codeAnalysis.classes
-      .slice(0, CONFIG.ANALYSIS.TOP_CLASSES)
-      .map(c => `  • ${c.name} in ${c.fileName} - ${c.summary}`)
-      .join('\n') || '  • No classes detected';
-
-    // Categorize dependencies
-    const depsByCategory = projectInfo.codeAnalysis.dependencies.reduce((acc, dep) => {
-      if (!acc[dep.category]) acc[dep.category] = [];
-      acc[dep.category]!.push(dep.name);
-      return acc;
-    }, {} as Record<string, string[]>);
-
-    const depSummary = Object.entries(depsByCategory)
-      .map(([category, deps]) => `  • ${category}: ${deps.slice(0, CONFIG.ANALYSIS.TOP_DEPENDENCIES).join(', ')}`)
-      .join('\n') || '  • No dependencies detected';
-
-    return `**PROJECT ANALYSIS:**
-
-**Complexity Assessment:** ${complexityLevel} project (${fileCount} files, ${techCount} technologies)
-
-**Basic Info:**
-- Project type: ${projectInfo.type}
-- File count: ${projectInfo.fileCount}
-- Main technologies: ${projectInfo.mainTechnologies.join(', ')}
-- Entry points: ${projectInfo.codeAnalysis.entryPoints.join(', ') || 'None detected'}
-
-**Architecture Components:**
-- Database integration: ${projectInfo.hasDatabase ? 'Yes' : 'No'}
-- API/HTTP endpoints: ${projectInfo.hasApi ? 'Yes' : 'No'}
-- Frontend interface: ${projectInfo.hasFrontend ? 'Yes' : 'No'}
-- Testing framework: ${projectInfo.hasTests ? 'Yes' : 'No'}
-
-**Key Functions (most important):**
-${topFunctions}
-
-**Key Classes/Components:**
-${topClasses}
-
-**Dependencies by Category:**
-${depSummary}
-
-**File Structure:**
-- Source files: ${projectInfo.structure.sourceFiles.slice(0, CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT).join(', ')}
-- Config files: ${projectInfo.structure.configFiles.join(', ')}
-- Important files: ${projectInfo.structure.importantFiles.slice(0, CONFIG.ANALYSIS.TOP_CLASSES).join(', ')}
-
-**Directory Layout:**
-${projectInfo.structure.directories.slice(0, CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT).map(dir => `- ${dir}`).join('\n')}
-
-**Recommended Adventure Focus Areas:**
-${this.getRecommendedAdventureFocus(projectInfo)}`;
-  }
-
-  /**
-   * Get recommended adventure focus areas based on project analysis
-   */
-  private getRecommendedAdventureFocus(projectInfo: ProjectInfo): string {
-    const focusAreas = [];
-    
-    // Always include architecture overview for entry points
-    if (projectInfo.codeAnalysis.entryPoints.length > 0) {
-      focusAreas.push('• Architecture Overview - Explore main entry points and system flow');
-    }
-    
-    // Configuration if config files exist
-    if (projectInfo.structure.configFiles.length > 0) {
-      focusAreas.push('• Configuration Setup - Understand project configuration and initialization');
-    }
-    
-    // Core logic based on functions
-    if (projectInfo.codeAnalysis.functions.length > 0) {
-      focusAreas.push('• Core Logic - Dive into main business logic and key algorithms');
-    }
-    
-    // Data layer if database present
-    if (projectInfo.hasDatabase) {
-      focusAreas.push('• Data Management - Explore database integration and data flow');
-    }
-    
-    // API layer if APIs detected
-    if (projectInfo.hasApi) {
-      focusAreas.push('• API Interface - Understand external communication and endpoints');
-    }
-    
-    // Frontend if present
-    if (projectInfo.hasFrontend) {
-      focusAreas.push('• User Interface - Explore frontend components and user interactions');
-    }
-    
-    // Testing if present
-    if (projectInfo.hasTests) {
-      focusAreas.push('• Quality Assurance - Review testing strategies and quality measures');
-    }
-    
-    // Dependencies if significant
-    if (projectInfo.codeAnalysis.dependencies.length > CONFIG.ADVENTURE.COMPLEX_PROJECT_TECHNOLOGIES) {
-      focusAreas.push('• Dependency Network - Understand external libraries and integrations');
-    }
-    
-    return focusAreas.length > 0 ? focusAreas.join('\n') : '• General Code Exploration - Basic project structure and patterns';
-  }
 
   /**
    * Format story with adventures for initial presentation

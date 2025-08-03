@@ -5,6 +5,11 @@
 
 import { detectLanguageForCodeAnalyzer } from './language-mapping.js';
 import type { FunctionInfo, ClassInfo, ParseResult, AnalysisConfig } from './types.js';
+import {
+  isValidProgrammingIdentifier,
+  calculateLineNumberFromIndex,
+  generateClassSummary
+} from './shared-analyzer-utils.js';
 
 export class CodeAnalyzer {
   private static instance: CodeAnalyzer | null = null;
@@ -142,9 +147,9 @@ export class CodeAnalyzer {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const name = match[1];
-        if (name && this.isValidIdentifier(name)) {
-          const lineNumber = this.getLineNumber(content, match.index!);
-          const params = this.extractParameters(match[0], language);
+        if (name && this.isValidProgrammingIdentifier(name)) {
+          const lineNumber = this.calculateLineNumberFromIndex(content, match.index!);
+          const params = this.extractFunctionParameters(match[0], language);
           
           const returnType = this.extractReturnType(match[0], language);
           functions.push({
@@ -168,15 +173,15 @@ export class CodeAnalyzer {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const name = match[1];
-        if (name && this.isValidIdentifier(name)) {
-          const lineNumber = this.getLineNumber(content, match.index!);
+        if (name && isValidProgrammingIdentifier(name)) {
+          const lineNumber = calculateLineNumberFromIndex(content, match.index!);
           const classContent = this.extractClassContent(content, match.index!, language);
           const methods = this.extractClassMethods(classContent, language);
           const properties = this.extractClassProperties(classContent, language);
 
           classes.push({
             name,
-            summary: this.generateClassSummary(name, methods, properties, language),
+            summary: generateClassSummary(name, methods, properties, language),
             methods,
             properties,
             isExported: /\bexport\b/.test(match[0]),
@@ -195,7 +200,7 @@ export class CodeAnalyzer {
   /**
    * Check if identifier is valid (not a keyword)
    */
-  private isValidIdentifier(name: string): boolean {
+  private isValidProgrammingIdentifier(name: string): boolean {
     const keywords = ['if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 
                      'return', 'function', 'class', 'interface', 'import', 'export', 'const', 
                      'let', 'var', 'new', 'this', 'super', 'extends', 'implements'];
@@ -205,14 +210,14 @@ export class CodeAnalyzer {
   /**
    * Get line number from character index
    */
-  private getLineNumber(content: string, index: number): number {
+  private calculateLineNumberFromIndex(content: string, index: number): number {
     return content.substring(0, index).split('\n').length;
   }
 
   /**
    * Extract function parameters from match
    */
-  private extractParameters(matchText: string, language: string): string[] {
+  private extractFunctionParameters(matchText: string, language: string): string[] {
     const params: string[] = [];
     const paramMatch = matchText.match(/\(([^)]*)\)/);
     
@@ -459,32 +464,6 @@ export class CodeAnalyzer {
     return properties;
   }
 
-  /**
-   * Generate class summary
-   */
-  private generateClassSummary(name: string, methods: string[], properties: string[], language: string): string {
-    const methodCount = methods.length;
-    const propertyCount = properties.length;
-    
-    let type = 'Class';
-    if (language === 'typescript' && name[0] && name[0] === name[0].toUpperCase()) {
-      // Could be interface, enum, or type
-      type = 'Interface';
-    }
-    
-    const parts = [`${type} ${name}`];
-    
-    if (methodCount > 0 || propertyCount > 0) {
-      const details = [];
-      if (methodCount > 0) details.push(`${methodCount} method${methodCount > 1 ? 's' : ''}`);
-      if (propertyCount > 0) details.push(`${propertyCount} propert${propertyCount > 1 ? 'ies' : 'y'}`);
-      parts.push(`implements ${name.toLowerCase()} with ${details.join(' and ')}`);
-    } else {
-      parts.push(`manages ${name.toLowerCase()}`);
-    }
-    
-    return parts.join(' - ');
-  }
 
   /**
    * Cleanup resources

@@ -5,7 +5,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { CONFIG, TECH_INDICATORS } from '../shared/config.js';
+import { ANALYSIS_LIMITS, TIMEOUTS, TECH_PATTERNS } from '../shared/index.js';
 import type { ProjectStructure, ScanResult, AnalysisConfig } from './types.js';
 
 export class FileSystemScanner {
@@ -13,14 +13,14 @@ export class FileSystemScanner {
 
   constructor(config?: Partial<AnalysisConfig>) {
     this.config = {
-      maxDepth: CONFIG.ANALYSIS.MAX_DEPTH,
-      maxFileSizeMB: CONFIG.ANALYSIS.MAX_FILE_SIZE_MB,
-      timeoutMs: CONFIG.ANALYSIS.TIMEOUT_MS,
-      keySourceFiles: CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT,
-      topFunctions: CONFIG.ANALYSIS.TOP_FUNCTIONS,
-      topClasses: CONFIG.ANALYSIS.TOP_CLASSES,
-      topDependencies: CONFIG.ANALYSIS.TOP_DEPENDENCIES,
-      summaryLines: CONFIG.ANALYSIS.SUMMARY_LINES,
+      maxDepth: ANALYSIS_LIMITS.MAX_SCAN_DEPTH,
+      maxFileSizeMB: ANALYSIS_LIMITS.MAX_FILE_SIZE_MB,
+      timeoutMs: TIMEOUTS.FILE_ANALYSIS,
+      keySourceFiles: ANALYSIS_LIMITS.KEY_SOURCE_FILES,
+      topFunctions: ANALYSIS_LIMITS.TOP_FUNCTIONS,
+      topClasses: ANALYSIS_LIMITS.TOP_CLASSES,
+      topDependencies: ANALYSIS_LIMITS.TOP_DEPENDENCIES,
+      summaryLines: ANALYSIS_LIMITS.SUMMARY_LINES,
       ...config
     };
   }
@@ -189,8 +189,8 @@ export class FileSystemScanner {
     const technologies: Set<string> = new Set();
     const allFiles = [...structure.sourceFiles, ...structure.configFiles, ...structure.importantFiles];
 
-    for (const [tech, indicators] of Object.entries(TECH_INDICATORS)) {
-      for (const indicator of indicators) {
+    for (const [tech, indicators] of Object.entries(TECH_PATTERNS)) {
+      for (const indicator of (indicators as readonly string[])) {
         const found = allFiles.some(file => 
           file.toLowerCase().includes(indicator.toLowerCase()) ||
           path.basename(file).toLowerCase().includes(indicator.toLowerCase())

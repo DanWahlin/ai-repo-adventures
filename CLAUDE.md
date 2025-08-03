@@ -38,7 +38,7 @@ The system follows a **three-layer pipeline architecture**:
 
 ### Key Components
 
-**`src/index.ts`** - Main MCP server that:
+**`src/server.ts`** - Main MCP server that:
 - Dynamically loads tools from the `/tools` directory
 - Converts Zod schemas to JSON Schema for MCP tool registration
 - Provides centralized error handling and validation
@@ -109,7 +109,7 @@ The server exposes tools that follow the MCP tool pattern:
   "mcpServers": {
     "repo-adventure": {
       "command": "node",
-      "args": ["/path/to/mcp-repo-adventure/dist/index.js"],
+      "args": ["/path/to/mcp-repo-adventure/dist/server.js"],
       "cwd": "/path/to/target/project"
     }
   }

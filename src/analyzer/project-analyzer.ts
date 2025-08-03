@@ -5,7 +5,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { CONFIG } from '../shared/config.js';
+import { ANALYSIS_LIMITS, TIMEOUTS } from '../shared/index.js';
 import { detectLanguageForDisplay } from './language-mapping.js';
 import { FileSystemScanner } from './file-system-scanner.js';
 import { CodeAnalyzer } from './code-analyzer.js';
@@ -39,14 +39,14 @@ export type {
 };
 
 const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
-  maxDepth: CONFIG.ANALYSIS.MAX_DEPTH,
-  maxFileSizeMB: CONFIG.ANALYSIS.MAX_FILE_SIZE_MB,
-  timeoutMs: CONFIG.ANALYSIS.TIMEOUT_MS,
-  keySourceFiles: CONFIG.ANALYSIS.KEY_SOURCE_FILES_LIMIT,
-  topFunctions: CONFIG.ANALYSIS.TOP_FUNCTIONS,
-  topClasses: CONFIG.ANALYSIS.TOP_CLASSES,
-  topDependencies: CONFIG.ANALYSIS.TOP_DEPENDENCIES,
-  summaryLines: CONFIG.ANALYSIS.SUMMARY_LINES
+  maxDepth: ANALYSIS_LIMITS.MAX_SCAN_DEPTH,
+  maxFileSizeMB: ANALYSIS_LIMITS.MAX_FILE_SIZE_MB,
+  timeoutMs: TIMEOUTS.FILE_ANALYSIS,
+  keySourceFiles: ANALYSIS_LIMITS.KEY_SOURCE_FILES,
+  topFunctions: ANALYSIS_LIMITS.TOP_FUNCTIONS,
+  topClasses: ANALYSIS_LIMITS.TOP_CLASSES,
+  topDependencies: ANALYSIS_LIMITS.TOP_DEPENDENCIES,
+  summaryLines: ANALYSIS_LIMITS.SUMMARY_LINES
 };
 
 export class ProjectAnalyzer {

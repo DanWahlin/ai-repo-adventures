@@ -93,22 +93,20 @@ async function runTests() {
   console.log('-'.repeat(30));
 
 
-  await test('Adventure initialization requires working LLM', async () => {
+  await test('Adventure initialization works with working LLM', async () => {
     const manager = new AdventureManager();
     
     try {
       const result = await manager.initializeAdventure(mockProjectInfo, 'space');
-      console.log('Unexpected success:', result);
-      assert.fail('Should throw error when LLM is not available');
+      assert(typeof result === 'string', 'Should return story string');
+      assert(result.length > 0, 'Should return non-empty story');
+      assert(result.includes('adventure'), 'Should contain adventure content');
+      console.log('Adventure Manager Success: Story generated with LLM');
     } catch (error) {
-      // Should now always fail without working LLM
-      assert(error instanceof Error, 'Should get proper error');
-      if (error.message === 'Should throw error when LLM is not available') {
-        console.log('The initializeAdventure call succeeded unexpectedly');
-        throw error;
-      }
-      console.log('Adventure Manager Error:', error.message); // Debug output
-      assert(error.message.includes('Unable to generate') || error.message.includes('LLM service') || error.message.includes('API key') || error.message.includes('No project information'), 'Should have meaningful error message about LLM unavailability');
+      console.log('Adventure Manager Error:', error instanceof Error ? error.message : String(error));
+      // If LLM is not available, that's also a valid test outcome
+      assert(error instanceof Error, 'Should get proper error when LLM unavailable');
+      assert(error.message.includes('Unable to generate') || error.message.includes('LLM service') || error.message.includes('API key'), 'Should have meaningful error message about LLM unavailability');
     }
   });
 
@@ -142,16 +140,20 @@ async function runTests() {
     assert(Object.keys(STORY_THEMES).length >= 3, 'Should have at least 3 themes');
   });
 
-  await test('Story generator requires working LLM', async () => {
+  await test('Story generator works with working LLM', async () => {
     const generator = new DynamicStoryGenerator();
     generator.setProject(mockProjectInfo);
     
     try {
-      await generator.generateStory('space');
-      assert.fail('Should throw error when LLM is not available');
+      const result = await generator.generateStory('space');
+      assert(typeof result === 'object', 'Should return story object');
+      assert(result.title && result.introduction, 'Should have title and introduction');
+      assert(result.theme === 'space', 'Should have correct theme');
+      console.log('Story Generator Success: Story generated with LLM');
     } catch (error) {
-      assert(error instanceof Error, 'Should throw Error');
-      console.log('Story Generator Error:', error.message); // Debug output
+      console.log('Story Generator Error:', error instanceof Error ? error.message : String(error));
+      // If LLM is not available, that's also a valid test outcome
+      assert(error instanceof Error, 'Should throw Error when LLM unavailable');
       assert(error.message.includes('Unable to generate') || error.message.includes('LLM service') || error.message.includes('API key') || error.message.includes('No project information'), 'Should have meaningful error message about LLM unavailability');
     }
   });

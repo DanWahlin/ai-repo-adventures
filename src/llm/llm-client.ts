@@ -1,21 +1,10 @@
 import { OpenAI, AzureOpenAI } from 'openai';
 import { config } from 'dotenv';
 import { createHash } from 'crypto';
+import { ENV_CONFIG, TIMEOUTS, ERROR_CONFIG } from '../shared/index.js';
 
 // Load environment variables
 config();
-
-// Rate limiting configuration
-// Simple configuration for MCP usage (human-paced requests)
-interface LLMClientConfig {
-  timeoutMs?: number;        // Request timeout (default: 15 seconds)
-  cacheTimeoutMs?: number;   // Cache TTL (default: 5 minutes)
-}
-
-const DEFAULT_CONFIG: Required<LLMClientConfig> = {
-  timeoutMs: 15000,      // 15 seconds - generous for MCP usage
-  cacheTimeoutMs: 300000 // 5 minutes - useful for repeated requests
-};
 
 export interface LLMResponse {
   content: string;
@@ -39,8 +28,8 @@ export interface LLMConfig {
   model?: string | undefined;
   temperature?: number | undefined;
   maxTokens?: number | undefined;
-  timeoutMs?: number;        // Request timeout
-  cacheTimeoutMs?: number;   // Cache TTL
+  timeoutMs?: number;
+  cacheTimeoutMs?: number;
 }
 
 export class LLMClient {
@@ -56,19 +45,19 @@ export class LLMClient {
 
   constructor(config?: LLMConfig) {
     // Environment-based configuration with optional overrides
-    this.baseURL = config?.baseURL || process.env.LLM_BASE_URL || 'https://api.openai.com/v1';
-    const apiKey = config?.apiKey || process.env.LLM_API_KEY;
+    this.baseURL = config?.baseURL || ENV_CONFIG.LLM_BASE_URL;
+    const apiKey = config?.apiKey || ENV_CONFIG.LLM_API_KEY;
     if (!apiKey) {
-      throw new Error('LLM_API_KEY environment variable is required. Please set LLM_API_KEY in your environment or .env file.');
+      throw new Error(ERROR_CONFIG.DEFAULT_MESSAGES.LLM_UNAVAILABLE + ' Please set LLM_API_KEY in your environment or .env file.');
     }
     
-    this.model = config?.model || process.env.LLM_MODEL || 'gpt-4o-mini';
+    this.model = config?.model || ENV_CONFIG.LLM_MODEL;
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
     this.maxTokens = config?.maxTokens ?? parseInt(process.env.LLM_MAX_TOKENS || '1000');
     
-    // Simple timeouts for MCP usage
-    this.timeoutMs = config?.timeoutMs || DEFAULT_CONFIG.timeoutMs;
-    this.cacheTimeoutMs = config?.cacheTimeoutMs || DEFAULT_CONFIG.cacheTimeoutMs;
+    // Use centralized timeout configuration
+    this.timeoutMs = config?.timeoutMs || TIMEOUTS.LLM_REQUEST;
+    this.cacheTimeoutMs = config?.cacheTimeoutMs || TIMEOUTS.LLM_CACHE;
     
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
@@ -79,7 +68,7 @@ export class LLMClient {
       this.client = new AzureOpenAI({
         endpoint: this.baseURL,
         apiKey: apiKey,
-        apiVersion: process.env.LLM_API_VERSION || '2024-02-15-preview',
+        apiVersion: ENV_CONFIG.LLM_API_VERSION,
         deployment: this.model
       });
     } else {
@@ -151,7 +140,7 @@ export class LLMClient {
     }
 
     // Validate API version format
-    const apiVersion = process.env.LLM_API_VERSION;
+    const apiVersion = ENV_CONFIG.LLM_API_VERSION;
     if (apiVersion && !apiVersion.match(/^\d{4}-\d{2}-\d{2}(-preview)?$/)) {
       throw new Error(`Invalid LLM_API_VERSION format: ${apiVersion}. Expected format: YYYY-MM-DD or YYYY-MM-DD-preview`);
     }
@@ -305,7 +294,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
 
 
   isAvailable(): boolean {
-    return !!process.env.LLM_API_KEY;
+    return !!ENV_CONFIG.LLM_API_KEY;
   }
 
   private getCacheKey(prompt: string, systemPrompt?: string): string {
@@ -343,7 +332,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
   static forGitHubModels(apiKey?: string): LLMClient {
     return new LLMClient({
       baseURL: 'https://models.inference.ai.azure.com',
-      apiKey: apiKey || process.env.GITHUB_TOKEN,
+      apiKey: apiKey || ENV_CONFIG.GITHUB_TOKEN,
       model: 'gpt-4o-mini'
     });
   }
@@ -351,7 +340,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
   static forOpenAI(apiKey?: string): LLMClient {
     return new LLMClient({
       baseURL: 'https://api.openai.com/v1',
-      apiKey: apiKey || process.env.OPENAI_API_KEY,
+      apiKey: apiKey || ENV_CONFIG.LLM_API_KEY,
       model: 'gpt-4o-mini'
     });
   }
@@ -366,8 +355,8 @@ Focus on creating memorable themes, characters, narratives, and settings that re
 
   static forAzureOpenAI(endpoint?: string, apiKey?: string): LLMClient {
     return new LLMClient({
-      baseURL: endpoint || process.env.LLM_BASE_URL,
-      apiKey: apiKey || process.env.LLM_API_KEY,
+      baseURL: endpoint || ENV_CONFIG.LLM_BASE_URL,
+      apiKey: apiKey || ENV_CONFIG.LLM_API_KEY,
       model: 'gpt-4o'
     });
   }

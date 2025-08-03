@@ -1,5 +1,5 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 export function convertZodSchema(zodSchema: z.ZodTypeAny): object {
   return zodToJsonSchema(zodSchema, { 
