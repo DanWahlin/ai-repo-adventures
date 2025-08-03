@@ -3,8 +3,8 @@
  */
 
 import { strict as assert } from 'assert';
-import { LLMClient } from '../../src/llm/LLMClient.js';
-import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
+import { LLMClient } from '../../src/llm/llm-client.js';
+import type { ProjectInfo } from '../../src/analyzer/project-analyzer.js';
 
 // Constants for test configuration
 const DEFAULT_TEST_TIMEOUT = 30000; // 30 seconds

@@ -1,4 +1,4 @@
-import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
+import { ProjectInfo } from '../analyzer/project-analyzer.js';
 import { AdventureTheme, THEME_EMOJIS } from '../shared/theme.js';
 
 export interface AdventurePath {

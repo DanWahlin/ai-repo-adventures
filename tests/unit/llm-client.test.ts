@@ -4,7 +4,7 @@
  * Unit tests for LLM Client functionality (simplified for MCP usage)
  */
 
-import { LLMClient } from '../../src/llm/LLMClient.js';
+import { LLMClient } from '../../src/llm/llm-client.js';
 import { createTestRunner, assert } from '../shared/test-utils.js';
 
 async function runLLMClientTests() {

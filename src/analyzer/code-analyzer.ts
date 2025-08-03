@@ -3,7 +3,7 @@
  * Supports JavaScript, TypeScript, Python, Java, C#, and more
  */
 
-import * as path from 'path';
+import { detectLanguageForCodeAnalyzer } from './language-mapping.js';
 import type { FunctionInfo, ClassInfo, ParseResult, AnalysisConfig } from './types.js';
 
 export class CodeAnalyzer {
@@ -40,21 +40,7 @@ export class CodeAnalyzer {
    * Detect programming language from file extension
    */
   private detectLanguage(fileName: string): string | null {
-    const ext = path.extname(fileName).toLowerCase();
-    const languageMap: Record<string, string> = {
-      '.ts': 'typescript',
-      '.tsx': 'typescript',
-      '.js': 'javascript',
-      '.jsx': 'javascript',
-      '.mjs': 'javascript',
-      '.py': 'python',
-      '.pyi': 'python',
-      '.java': 'java',
-      '.cs': 'csharp',
-      '.go': 'go',
-      '.rs': 'rust'
-    };
-    return languageMap[ext] || null;
+    return detectLanguageForCodeAnalyzer(fileName);
   }
 
   /**

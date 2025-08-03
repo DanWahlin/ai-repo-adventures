@@ -9,7 +9,7 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { tools } from './tools.js';
-import { convertZodSchema } from './utils/zodToJsonSchema.js';
+import { convertZodSchema } from './utils/zod-to-json-schema.js';
 import { optimizedAnalyzer } from './shared/instances.js';
 
 class RepoAdventureServer {

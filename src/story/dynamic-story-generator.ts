@@ -1,7 +1,7 @@
-import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
-import { LLMClient } from '../llm/LLMClient.js';
+import { ProjectInfo } from '../analyzer/project-analyzer.js';
+import { LLMClient } from '../llm/llm-client.js';
 import { Character, Story } from '../shared/types.js';
-import { AdventurePathGenerator } from '../adventure/AdventurePathGenerator.js';
+import { AdventurePathGenerator } from '../adventure/adventure-path-generator.js';
 import { AdventureTheme, THEMES } from '../shared/theme.js';
 
 // Theme keys for internal use

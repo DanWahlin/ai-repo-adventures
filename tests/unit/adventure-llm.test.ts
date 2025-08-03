@@ -4,10 +4,10 @@
  * Unit tests for LLM-driven adventure generation
  */
 
-import { AdventureManager, StoryResponse, AdventureContent } from '../../src/adventure/AdventureManager.js';
-import { LLMClient } from '../../src/llm/LLMClient.js';
+import { AdventureManager, StoryResponse, AdventureContent } from '../../src/adventure/adventure-manager.js';
+import { LLMClient } from '../../src/llm/llm-client.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
-import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
+import type { ProjectInfo } from '../../src/analyzer/project-analyzer.js';
 
 // Using shared mock project info from test-utils.js
 

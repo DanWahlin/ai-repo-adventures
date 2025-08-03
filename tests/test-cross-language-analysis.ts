@@ -6,7 +6,7 @@
  * Validates regex robustness across different language constructs
  */
 
-import { CodeAnalyzer } from '../src/analyzer/CodeAnalyzer.js';
+import { CodeAnalyzer } from '../src/analyzer/code-analyzer.js';
 import { createTestRunner } from './shared/test-utils.js';
 
 const TEST_CASES = {

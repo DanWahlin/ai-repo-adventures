@@ -4,8 +4,8 @@
  * Integration tests that actually call the LLM and validate responses
  */
 
-import { AdventureManager } from '../../src/adventure/AdventureManager.js';
-import { LLMClient } from '../../src/llm/LLMClient.js';
+import { AdventureManager } from '../../src/adventure/adventure-manager.js';
+import { LLMClient } from '../../src/llm/llm-client.js';
 import { 
   createTestRunner, 
   realProjectInfo, 

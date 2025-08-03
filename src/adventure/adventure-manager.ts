@@ -1,5 +1,5 @@
-import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
-import { LLMClient } from '../llm/LLMClient.js';
+import { ProjectInfo } from '../analyzer/project-analyzer.js';
+import { LLMClient } from '../llm/llm-client.js';
 import { readFile } from 'fs/promises';
 import { AdventureTheme, THEMES } from '../shared/theme.js';
 import { CONFIG, ConfigManager } from '../shared/config.js';

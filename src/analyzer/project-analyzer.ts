@@ -6,10 +6,12 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { CONFIG } from '../shared/config.js';
-import { FileSystemScanner } from './FileSystemScanner.js';
-import { CodeAnalyzer } from './CodeAnalyzer.js';
-import { DependencyParser } from './DependencyParser.js';
-import { CodeFlowAnalyzer } from './CodeFlowAnalyzer.js';
+import { detectLanguageForDisplay } from './language-mapping.js';
+import { FileSystemScanner } from './file-system-scanner.js';
+import { CodeAnalyzer } from './code-analyzer.js';
+import { DependencyParser } from './dependency-parser.js';
+import { CodeFlowAnalyzer } from './code-flow-analyzer.js';
+import { LinguistAnalyzer, type LinguistResult } from './linguist-analyzer.js';
 import type { 
   ProjectInfo, 
   ProjectStructure, 
@@ -51,6 +53,7 @@ export class ProjectAnalyzer {
   private config: AnalysisConfig;
   private fileScanner: FileSystemScanner;
   private codeAnalyzer: CodeAnalyzer | null = null;
+  private linguistAnalyzer: LinguistAnalyzer | null = null;
   private dependencyParser: DependencyParser;
   private codeFlowAnalyzer: CodeFlowAnalyzer;
 
@@ -59,7 +62,7 @@ export class ProjectAnalyzer {
     
     // Initialize specialized analyzers
     this.fileScanner = new FileSystemScanner(this.config);
-    // CodeAnalyzer will be initialized asynchronously when needed
+    // CodeAnalyzer and LinguistAnalyzer will be initialized asynchronously when needed
     this.dependencyParser = new DependencyParser(this.config);
     this.codeFlowAnalyzer = new CodeFlowAnalyzer(this.config);
   }
@@ -72,6 +75,16 @@ export class ProjectAnalyzer {
       this.codeAnalyzer = await CodeAnalyzer.getInstance(this.config);
     }
     return this.codeAnalyzer;
+  }
+
+  /**
+   * Get or initialize the LinguistAnalyzer
+   */
+  private async getLinguistAnalyzer(): Promise<LinguistAnalyzer> {
+    if (!this.linguistAnalyzer) {
+      this.linguistAnalyzer = await LinguistAnalyzer.getInstance(this.config);
+    }
+    return this.linguistAnalyzer;
   }
 
   /**
@@ -88,12 +101,16 @@ export class ProjectAnalyzer {
       context.currentOperation = 'filesystem-scan';
       const scanResult = await this.fileScanner.scanProject(projectPath);
       
-      // Phase 2: Analyze code structure
-      context.currentOperation = 'code-analysis';
-      const codeAnalysis = await this.analyzeCode(projectPath, scanResult.structure);
+      // Phase 2: Linguist language analysis (parallel with filesystem scan results)
+      context.currentOperation = 'linguist-analysis';
+      const linguistResult = await this.performLinguistAnalysis(projectPath);
       
-      // Phase 3: Determine project characteristics
-      const projectType = this.determineProjectType(scanResult.technologies, scanResult.structure);
+      // Phase 3: Analyze code structure
+      context.currentOperation = 'code-analysis';
+      const codeAnalysis = await this.analyzeCode(projectPath, scanResult.structure, linguistResult);
+      
+      // Phase 4: Determine project characteristics (enhanced with linguist data)
+      const projectType = this.determineProjectType(scanResult.technologies, scanResult.structure, linguistResult);
       const features = this.analyzeFeatures(scanResult.technologies, scanResult.structure);
 
       return {
@@ -106,7 +123,7 @@ export class ProjectAnalyzer {
         hasApi: features.hasApi,
         hasFrontend: features.hasFrontend,
         codeAnalysis,
-        llmContextSummary: this.generateLLMContextSummary(codeAnalysis, scanResult)
+        llmContextSummary: this.generateLLMContextSummary(codeAnalysis, scanResult, linguistResult)
       };
     } catch (error) {
       throw new Error(`Project analysis failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -114,9 +131,22 @@ export class ProjectAnalyzer {
   }
 
   /**
+   * Perform linguist analysis on the project directory
+   */
+  private async performLinguistAnalysis(projectPath: string): Promise<LinguistResult | null> {
+    try {
+      const analyzer = await this.getLinguistAnalyzer();
+      return await analyzer.analyzeDirectory(projectPath);
+    } catch (error) {
+      console.warn('Failed to perform linguist analysis:', error instanceof Error ? error.message : String(error));
+      return null;
+    }
+  }
+
+  /**
    * Analyze code structure using specialized analyzers
    */
-  private async analyzeCode(projectPath: string, structure: ProjectStructure): Promise<CodeAnalysis> {
+  private async analyzeCode(projectPath: string, structure: ProjectStructure, _linguistResult?: LinguistResult | null): Promise<CodeAnalysis> {
     const analysis: CodeAnalysis = {
       functions: [],
       classes: [],
@@ -183,7 +213,36 @@ export class ProjectAnalyzer {
   /**
    * Determine project type based on technologies and structure
    */
-  private determineProjectType(technologies: string[], _structure: ProjectStructure): string {
+  private determineProjectType(technologies: string[], _structure: ProjectStructure, linguistResult?: LinguistResult | null): string {
+    // Enhanced project type detection with linguist data
+    if (linguistResult) {
+      
+      // Use linguist primary language for more accurate detection
+      const primaryLang = linguistResult.primaryLanguage;
+      if (primaryLang === 'TypeScript' || primaryLang === 'JavaScript') {
+        if (technologies.includes('React') || technologies.includes('Vue') || technologies.includes('Angular')) {
+          return 'Web Application';
+        }
+        return linguistResult.detectedLanguages.includes('HTML') ? 'Web Application' : 'Node.js Application';
+      }
+      if (primaryLang === 'Python') {
+        return 'Python Application';
+      }
+      if (primaryLang === 'Java') {
+        return 'Java Application';
+      }
+      if (primaryLang === 'C#') {
+        return '.NET Application';
+      }
+      if (primaryLang === 'Go') {
+        return 'Go Application';
+      }
+      if (primaryLang === 'Rust') {
+        return 'Rust Application';
+      }
+    }
+
+    // Fallback to original logic
     if (technologies.includes('React') || technologies.includes('Vue') || technologies.includes('Angular')) {
       return 'Web Application';
     }
@@ -260,7 +319,7 @@ export class ProjectAnalyzer {
   /**
    * Generate LLM context summary for the project
    */
-  private generateLLMContextSummary(codeAnalysis: CodeAnalysis, scanResult: ScanResult): string {
+  private generateLLMContextSummary(codeAnalysis: CodeAnalysis, scanResult: ScanResult, linguistResult?: LinguistResult | null): string {
     const topFunctions = codeAnalysis.functions
       .slice(0, 5)
       .map(f => `${f.name}() - ${f.summary}`)
@@ -271,29 +330,31 @@ export class ProjectAnalyzer {
       .map(c => `${c.name} - ${c.summary}`)
       .join(', ');
 
-    return `Project with ${scanResult.fileCount} files using ${scanResult.technologies.join(', ')}. ` +
-           `Key functions: ${topFunctions || 'None detected'}. ` +
-           `Key classes: ${topClasses || 'None detected'}. ` +
-           `Entry points: ${codeAnalysis.entryPoints.join(', ') || 'None detected'}.`;
+    let summary = `Project with ${scanResult.fileCount} files using ${scanResult.technologies.join(', ')}. `;
+
+    // Enhanced with linguist data
+    if (linguistResult) {
+      const topLanguages = linguistResult.languageDistribution
+        .slice(0, 3)
+        .map(lang => `${lang.language} (${lang.percentage}%)`)
+        .join(', ');
+      
+      summary += `Language distribution: ${topLanguages}. `;
+      summary += `Primary language: ${linguistResult.primaryLanguage}. `;
+    }
+
+    summary += `Key functions: ${topFunctions || 'None detected'}. `;
+    summary += `Key classes: ${topClasses || 'None detected'}. `;
+    summary += `Entry points: ${codeAnalysis.entryPoints.join(', ') || 'None detected'}.`;
+
+    return summary;
   }
 
   /**
    * Helper methods
    */
   private getLanguageFromExtension(filePath: string): string | null {
-    const ext = path.extname(filePath).toLowerCase();
-    const languageMap: Record<string, string> = {
-      '.ts': 'typescript',
-      '.tsx': 'typescript',
-      '.js': 'javascript',
-      '.jsx': 'javascript',
-      '.py': 'python',
-      '.java': 'java',
-      '.cs': 'csharp',
-      '.go': 'go',
-      '.rs': 'rust'
-    };
-    return languageMap[ext] || null;
+    return detectLanguageForDisplay(filePath);
   }
 
   private isKeyFile(filePath: string): boolean {
@@ -359,6 +420,12 @@ export class ProjectAnalyzer {
     if (this.codeAnalyzer) {
       await this.codeAnalyzer.cleanup();
       this.codeAnalyzer = null;
+    }
+    
+    // Clean up LinguistAnalyzer if initialized
+    if (this.linguistAnalyzer) {
+      await this.linguistAnalyzer.cleanup();
+      this.linguistAnalyzer = null;
     }
   }
 

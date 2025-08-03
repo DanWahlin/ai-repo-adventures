@@ -1,4 +1,4 @@
-import { ProjectAnalyzer, ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
+import { ProjectAnalyzer, ProjectInfo } from '../analyzer/project-analyzer.js';
 import { LRUCache } from './cache.js';
 
 // Analysis state management with improved caching

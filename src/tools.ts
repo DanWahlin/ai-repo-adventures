@@ -14,7 +14,7 @@
 
 import { z } from 'zod';
 import { optimizedAnalyzer } from './shared/instances.js';
-import { AdventureManager } from './adventure/AdventureManager.js';
+import { AdventureManager } from './adventure/adventure-manager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { formatErrorForUser } from './shared/errors.js';
 import { parseTheme, getFormattedThemeOptions } from './shared/theme.js';

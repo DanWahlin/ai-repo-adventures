@@ -4,11 +4,11 @@
  * Unit tests for core adventure algorithms - Updated for LLM-driven system
  */
 
-import { AdventureManager } from '../../src/adventure/AdventureManager.js';
-import { DynamicStoryGenerator, STORY_THEMES } from '../../src/story/DynamicStoryGenerator.js';
-import { ProjectAnalyzer } from '../../src/analyzer/ProjectAnalyzer.js';
+import { AdventureManager } from '../../src/adventure/adventure-manager.js';
+import { DynamicStoryGenerator, STORY_THEMES } from '../../src/story/dynamic-story-generator.js';
+import { ProjectAnalyzer } from '../../src/analyzer/project-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
-import type { ProjectInfo } from '../../src/analyzer/ProjectAnalyzer.js';
+import type { ProjectInfo } from '../../src/analyzer/project-analyzer.js';
 
 // Using shared mockProjectInfo from test-utils.js
 /* Commented out local definition - using shared version
