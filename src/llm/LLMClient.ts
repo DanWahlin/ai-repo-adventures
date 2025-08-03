@@ -277,24 +277,15 @@ export class LLMClient {
       }
       
       if (errorType.type === 'timeout') {
-        console.warn(`Request timeout for ${this.provider}, using fallback response`);
+        throw new Error(`Request timeout for ${this.provider} after ${this.timeoutMs}ms. Please try again or check your network connection.`);
       } else if (errorType.type === 'rate_limit') {
-        console.warn(`Rate limit exceeded for ${this.provider}, using fallback response`);
+        throw new Error(`Rate limit exceeded for ${this.provider}. Please wait before making another request.`);
       } else if (errorType.type === 'network') {
-        console.warn(`Network error for ${this.provider}, using fallback response`);
+        throw new Error(`Network error for ${this.provider}: ${errorType.message}. Please check your connection and try again.`);
       }
       
-      // Fallback to a simple template-based response
-      const fallbackResponse = {
-        content: this.generateFallbackResponse(prompt),
-        model: 'fallback-template',
-        provider: 'Fallback System'
-      };
-      
-      // Cache the fallback response too
-      this.requestCache.set(cacheKey, { response: fallbackResponse, timestamp: Date.now() });
-      
-      return fallbackResponse;
+      // Re-throw the original error for other types
+      throw new Error(`LLM service unavailable (${this.provider}): ${errorType.message}`);
     }
   }
 
@@ -312,42 +303,6 @@ Your stories should be suitable for a wide range of developers, from beginners t
 Focus on creating memorable themes, characters, narratives, and settings that represent different technologies and architectural patterns in ways that make complex concepts accessible and fun.`;
   }
 
-  private generateFallbackResponse(prompt: string): string {
-    // Simple fallback when LLM is unavailable
-    if (prompt.includes('space') || prompt.includes('cosmic')) {
-      return `🚀 **Welcome to the Digital Starship!**
-
-You've docked at a magnificent space station where code flows like cosmic energy through the digital universe. Each component of this system is managed by skilled crew members who keep the technological harmony intact.
-
-Your mission: Explore this codebase through the eyes of space travelers, where databases become data archives, APIs become communication channels, and algorithms become navigation systems.
-
-**Choose your path:**
-- Meet the Data Archivist (Database Systems)
-- Visit the Communications Officer (API Layer)
-- Explore the Navigation Bridge (Frontend Interface)
-- Venture to Engineering (Backend Systems)`;
-    }
-    
-    if (prompt.includes('mythical') || prompt.includes('kingdom')) {
-      return `🏰 **Welcome to the Enchanted Kingdom of Code!**
-
-You've entered a mystical realm where digital magic flows through ancient towers and crystalline data chambers. Each area of this kingdom is protected by wise guardians who understand the deepest secrets of their domains.
-
-Your quest: Discover the magical technologies that power this realm, where databases become dragon hoards, APIs become royal messengers, and algorithms become ancient spells.
-
-**Choose your adventure:**
-- Meet the Memory Keeper (Database Magic)
-- Consult the Royal Messenger (API Communications)
-- Visit the Court Wizard (Frontend Enchantments)
-- Explore the Guild Halls (Backend Craftsmanship)`;
-    }
-    
-    return `✨ **Welcome to Your Code Adventure!**
-
-This project contains fascinating technologies that we'll explore through an engaging story. Each part of your codebase has its own character and role in the larger narrative.
-
-**Ready to begin your journey?**`;
-  }
 
   isAvailable(): boolean {
     return !!process.env.LLM_API_KEY;

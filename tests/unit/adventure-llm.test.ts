@@ -21,15 +21,15 @@ async function runTests() {
   console.log('-'.repeat(30));
 
 
-  await test('Adventure manager provides fallback when LLM fails', async () => {
+  await test('Adventure manager requires working LLM service', async () => {
     const manager = new AdventureManager();
     try {
-      const result = await manager.initializeAdventure(mockProjectInfo, 'space');
-      assert(typeof result === 'string', 'Should return a string result');
-      assert(result.length > 0, 'Should return non-empty result');
+      await manager.initializeAdventure(mockProjectInfo, 'space');
+      assert.fail('Should throw error when LLM is not available');
     } catch (error) {
-      // Expected if no LLM available - fallback should still work
-      assert(error instanceof Error, 'Should handle errors gracefully');
+      // Should now always fail without working LLM
+      assert(error instanceof Error, 'Should throw Error when LLM unavailable');
+      assert(error.message.includes('Unable to generate adventure story'), 'Should have meaningful error message');
     }
   });
 
@@ -133,16 +133,16 @@ async function runTests() {
   console.log('\n🔗 Integration Tests');
   console.log('-'.repeat(30));
 
-  await test('Full adventure initialization works with fallback', async () => {
+  await test('Adventure initialization requires working LLM for all themes', async () => {
     const manager = new AdventureManager();
     
     try {
-      const result = await manager.initializeAdventure(mockProjectInfo, 'ancient');
-      assert(typeof result === 'string', 'Should return story string');
-      assert(result.includes('ancient') || result.includes('Ancient'), 'Should include theme');
+      await manager.initializeAdventure(mockProjectInfo, 'ancient');
+      assert.fail('Should throw error when LLM is not available');
     } catch (error) {
-      // If LLM fails, fallback should work
-      assert(error instanceof Error, 'Should handle errors gracefully');
+      // Should now always fail without working LLM for any theme
+      assert(error instanceof Error, 'Should throw Error when LLM unavailable');
+      assert(error.message.includes('Unable to generate adventure story'), 'Should have meaningful error message');
     }
   });
 

@@ -70,28 +70,15 @@ export class DynamicStoryGenerator {
       );
       return this.parseStoryResponse(llmResponse.content, theme);
     } catch (error) {
-      console.warn('Failed to generate dynamic story, using fallback:', error instanceof Error ? error.message : String(error));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Failed to generate dynamic story:', errorMessage);
       
       // Log additional context for debugging
       if (error instanceof Error && error.stack) {
         console.debug('Story generation error stack:', error.stack);
       }
       
-      // Ensure fallback always works
-      try {
-        return this.generateFallbackStory(theme);
-      } catch (fallbackError) {
-        console.error('Fallback story generation also failed:', fallbackError);
-        // Last resort: minimal story
-        return {
-          theme,
-          title: `${theme} Code Adventure`,
-          introduction: `Welcome to your ${theme} adventure! Let's explore this codebase together.`,
-          setting: `A ${theme}-themed exploration`,
-          characters: [],
-          initialChoices: ['Begin exploring', 'Learn about the project']
-        };
-      }
+      throw new Error(`Unable to generate story for ${theme} theme: ${errorMessage}. Please ensure your LLM configuration is correct and the service is available.`);
     }
   }
 
@@ -221,8 +208,9 @@ Remember: The goal is to make learning about this codebase fun and memorable thr
       const parsedData = this.extractStoryData(content);
       return this.buildStoryFromParsedData(parsedData, theme);
     } catch (error) {
-      console.warn('Failed to parse story response:', error instanceof Error ? error.message : String(error));
-      return this.generateFallbackStory(theme);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Failed to parse story response:', errorMessage);
+      throw new Error(`Unable to parse LLM story response: ${errorMessage}. The response may not have followed the expected format.`);
     }
   }
 
@@ -443,22 +431,4 @@ Remember: The goal is to make learning about this codebase fun and memorable thr
     return intros[theme as keyof typeof intros] || intros[STORY_THEMES.SPACE];
   }
 
-  private generateFallbackStory(theme: AdventureTheme): Story {
-    if (!this.currentProject) {
-      const error = new Error('No project information available');
-      console.error('generateFallbackStory error:', error.message);
-      throw error;
-    }
-
-    const fallbackIntro = `Welcome to your ${theme} code adventure! This ${this.currentProject.type} project contains ${this.currentProject.fileCount} files and uses technologies like ${this.currentProject.mainTechnologies.join(', ')}. Let's explore it together!`;
-    
-    return {
-      theme,
-      title: `${theme} Code Adventure`,
-      introduction: fallbackIntro,
-      setting: `A ${theme}-themed exploration`,
-      characters: this.generateDefaultCharacters(theme),
-      initialChoices: ['Begin your adventure', 'Learn about the technologies', 'Explore the structure']
-    };
-  }
 }

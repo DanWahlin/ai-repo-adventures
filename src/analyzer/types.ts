@@ -11,7 +11,7 @@ export interface FunctionInfo {
   isExported: boolean;
   fileName: string;
   lineNumber?: number;
-  source: 'tree-sitter' | 'regex';
+  source: 'regex';
   language?: string;
 }
 
@@ -23,7 +23,7 @@ export interface ClassInfo {
   isExported: boolean;
   fileName: string;
   lineNumber?: number;
-  source: 'tree-sitter' | 'regex';
+  source: 'regex';
   language?: string;
 }
 

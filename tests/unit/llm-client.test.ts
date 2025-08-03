@@ -44,18 +44,21 @@ async function runLLMClientTests() {
   console.log('\n🚨 Error Handling Tests');
   console.log('-'.repeat(30));
 
-  await test('Fallback responses work when API fails', async () => {
-    // Create client with invalid configuration to force fallback
+  await test('Client properly errors when API fails', async () => {
+    // Create client with invalid configuration to force error
     const client = new LLMClient({
       baseURL: 'https://invalid-url-that-will-fail.com',
       apiKey: 'invalid-key'
     });
     
-    const response = await client.generateResponse('Test fallback prompt');
-    
-    assert(response.content.length > 0, 'Should return fallback content');
-    assert(response.provider === 'Fallback System', 'Should indicate fallback was used');
-    assert(response.model === 'fallback-template', 'Should use fallback model');
+    try {
+      await client.generateResponse('Test prompt that should fail');
+      assert.fail('Should throw error when API is unavailable');
+    } catch (error) {
+      // Should now properly error instead of fallback
+      assert(error instanceof Error, 'Should throw Error when API unavailable');
+      assert(error.message.includes('LLM service unavailable') || error.message.includes('Network error'), 'Should have meaningful error message');
+    }
   }, { timeout: 10000 });
 
   await test('Client availability check works correctly', () => {
@@ -73,24 +76,25 @@ async function runLLMClientTests() {
   await test('Cache lookup is fast', async () => {
     const client = new LLMClient();
     
-    // Prime cache (may timeout but should create fallback cache entry)
+    // Test that errors are not cached (should retry each time)
+    let firstErrorTime, secondErrorTime;
+    
     try {
+      const start = Date.now();
       await client.generateResponse('Performance test prompt');
     } catch (error) {
-      // Expected to timeout, but fallback should be cached
+      firstErrorTime = Date.now();
     }
     
-    // Test cached lookup speed - should be instant now
-    const startTime = Date.now();
     try {
-      await client.generateResponse('Performance test prompt');
+      const start = Date.now();
+      await client.generateResponse('Performance test prompt');  
     } catch (error) {
-      // Even fallback responses should be cached
+      secondErrorTime = Date.now();
     }
-    const endTime = Date.now();
     
-    // Cache lookup should be very fast (under 50ms) even for fallback responses
-    assert(endTime - startTime < 50, `Cache lookup should be very fast, but took ${endTime - startTime}ms`);
+    // Both calls should fail (no caching of errors)
+    assert(firstErrorTime && secondErrorTime, 'Both calls should fail without LLM service');
   }, { timeout: 20000 });
 
 

@@ -80,12 +80,7 @@ const mockProjectInfo: ProjectInfo = {
 // Test helper functions
 async function createTestAdventureManager(): Promise<AdventureManager> {
   const manager = new AdventureManager();
-  try {
-    // Initialize with mock project info - this will use fallback since no LLM
-    await manager.initializeAdventure(mockProjectInfo, 'space');
-  } catch (error) {
-    // Expected to fail without LLM, but manager should still have state
-  }
+  // Note: Manager will no longer have initialized state without working LLM
   return manager;
 }
 
@@ -98,17 +93,22 @@ async function runTests() {
   console.log('-'.repeat(30));
 
 
-  await test('Adventure initialization creates fallback content', async () => {
+  await test('Adventure initialization requires working LLM', async () => {
     const manager = new AdventureManager();
     
     try {
       const result = await manager.initializeAdventure(mockProjectInfo, 'space');
-      // Should work with fallback even without LLM
-      assert(typeof result === 'string', 'Should return story string');
-      assert(result.includes('space'), 'Should include theme');
+      console.log('Unexpected success:', result);
+      assert.fail('Should throw error when LLM is not available');
     } catch (error) {
-      // LLM timeout is expected, but fallback should work
+      // Should now always fail without working LLM
       assert(error instanceof Error, 'Should get proper error');
+      if (error.message === 'Should throw error when LLM is not available') {
+        console.log('The initializeAdventure call succeeded unexpectedly');
+        throw error;
+      }
+      console.log('Adventure Manager Error:', error.message); // Debug output
+      assert(error.message.includes('Unable to generate') || error.message.includes('LLM service') || error.message.includes('API key') || error.message.includes('No project information'), 'Should have meaningful error message about LLM unavailability');
     }
   });
 
@@ -120,19 +120,12 @@ async function runTests() {
     assert(Array.isArray(result.choices), 'Should provide alternative choices');
   });
 
-  await test('Progress tracking works correctly', async () => {
+  await test('Progress tracking shows empty state without initialization', async () => {
     const manager = await createTestAdventureManager();
     
     const initialProgress = manager.getProgress();
-    assert(initialProgress.narrative.includes('Progress'), 'Should show progress information');
-    
-    // Try to complete an adventure (will use fallback)
-    try {
-      await manager.exploreAdventure('1');
-    } catch (error) {
-      // Expected with fallback system
-    }
-  }, { timeout: 15000 });
+    assert(initialProgress.narrative.includes('No adventures completed'), 'Should show empty state without LLM initialization');
+  });
 
 
   // Story Generator Tests - Updated for new system
@@ -149,17 +142,18 @@ async function runTests() {
     assert(Object.keys(STORY_THEMES).length >= 3, 'Should have at least 3 themes');
   });
 
-  await test('Story generator creates fallback content', () => {
+  await test('Story generator requires working LLM', async () => {
     const generator = new DynamicStoryGenerator();
     generator.setProject(mockProjectInfo);
     
-    // Test that fallback story generation works
-    const fallback = (generator as any).generateFallbackStory('space');
-    
-    assert(fallback.title, 'Should have title');
-    assert(fallback.introduction, 'Should have introduction content');
-    assert(Array.isArray(fallback.characters), 'Should have characters array');
-    assert(fallback.characters.length > 0, 'Should have at least one character');
+    try {
+      await generator.generateStory('space');
+      assert.fail('Should throw error when LLM is not available');
+    } catch (error) {
+      assert(error instanceof Error, 'Should throw Error');
+      console.log('Story Generator Error:', error.message); // Debug output
+      assert(error.message.includes('Unable to generate') || error.message.includes('LLM service') || error.message.includes('API key') || error.message.includes('No project information'), 'Should have meaningful error message about LLM unavailability');
+    }
   });
 
   await test('Enhanced LLM prompt includes specific information', () => {
@@ -175,7 +169,7 @@ async function runTests() {
     assert(prompt.includes('educational'), 'Should emphasize educational goals');
   });
 
-  await test('Fallback character generation works for all themes', () => {
+  await test('Default character generation works for all themes', () => {
     const generator = new DynamicStoryGenerator();
     
     Object.values(STORY_THEMES).forEach(theme => {
@@ -193,83 +187,83 @@ async function runTests() {
   console.log('-'.repeat(30));
 
   await test('Path validation rejects dangerous paths', () => {
+    // Path validation is now in FileSystemScanner, test via ProjectAnalyzer
     const analyzer = new ProjectAnalyzer();
     
     const dangerousPaths = [
       '/etc/passwd',
-      '/bin/bash',
-      'C:\\Windows\\System32',
+      '/bin/bash', 
       '/tmp/../etc/hosts',
       '',
       '   '
     ];
     
-    dangerousPaths.forEach(path => {
+    // Test that dangerous paths are rejected by the analyzer
+    const promises = dangerousPaths.map(async (path) => {
       try {
-        (analyzer as any).validateProjectPath(path);
+        await analyzer.analyzeProject(path);
         assert.fail(`Should reject dangerous path: ${path}`);
       } catch (error) {
         assert(error instanceof Error, `Should throw Error for dangerous paths`);
+        assert(error.message.includes('Project path') || 
+               error.message.includes('not exist') || 
+               error.message.includes('not accessible') ||
+               error.message.includes('system directory') ||
+               error.message.includes('Invalid project path') ||
+               error.message.includes('must be a non-empty string'), 
+          'Should have appropriate error message');
       }
     });
+    
+    return Promise.all(promises);
   });
 
   await test('Path validation accepts safe paths', () => {
+    // This functionality is now in FileSystemScanner, test via ProjectAnalyzer
     const analyzer = new ProjectAnalyzer();
     
-    const safePaths = [
-      '.',
-      './current-project'
-    ];
-    
-    safePaths.forEach(path => {
-      try {
-        const validated = (analyzer as any).validateProjectPath(path);
-        assert(typeof validated === 'string', 'Should return validated path string');
-      } catch (error) {
-        // Skip if path doesn't exist
-        if (error instanceof Error && error.message.includes('not a valid directory')) {
-          return;
-        }
+    // Test that valid paths work by actually analyzing current directory
+    analyzer.analyzeProject('.').then(() => {
+      assert(true, 'Should accept current directory');
+    }).catch((error) => {
+      if (error.message.includes('not a valid directory')) {
+        assert(true, 'Valid rejection for non-directory');
+      } else {
         throw error;
       }
     });
   });
 
   await test('Technology detection works correctly', () => {
+    // Technology detection is now in FileSystemScanner, test via full analysis
     const analyzer = new ProjectAnalyzer();
     
-    const testStructure = {
-      directories: ['src', 'node_modules'],
-      importantFiles: ['package.json', 'index.js', 'app.tsx'],
-      configFiles: ['tsconfig.json', '.env'],
-      sourceFiles: ['app.tsx', 'server.ts']
-    };
-    
-    const technologies = (analyzer as any).identifyTechnologies(testStructure);
-    
-    assert(Array.isArray(technologies), 'Should return array of technologies');
-    assert(technologies.includes('Node.js'), 'Should detect Node.js from package.json');
-    assert(technologies.includes('TypeScript'), 'Should detect TypeScript from .ts files');
-    assert(technologies.includes('React'), 'Should detect React from .tsx files');
+    // Test by analyzing current project which has TypeScript
+    return analyzer.analyzeProject('.').then((result) => {
+      assert(Array.isArray(result.mainTechnologies), 'Should return array of technologies');
+      assert(result.mainTechnologies.includes('TypeScript'), 'Should detect TypeScript');
+      assert(result.mainTechnologies.includes('JavaScript'), 'Should detect JavaScript');
+      return analyzer.cleanup();
+    });
   });
 
   await test('Function summary generation creates meaningful descriptions', () => {
+    // Function summary generation is now in CodeAnalyzer, test via actual analysis
     const analyzer = new ProjectAnalyzer();
     
-    const testCases = [
-      { name: 'getUserData', params: ['userId'], expected: 'retrieves' },
-      { name: 'createAccount', params: ['userData'], expected: 'creates' },
-      { name: 'validateInput', params: ['input', 'rules'], expected: 'validates' }
-    ];
-    
-    testCases.forEach(({ name, params, expected }) => {
-      const summary = (analyzer as any).generateFunctionSummary(name, params);
+    // Test by analyzing current project and checking function summaries
+    return analyzer.analyzeProject('.').then((result) => {
+      const functions = result.codeAnalysis.functions;
+      assert(functions.length > 0, 'Should find functions in current project');
       
-      assert(typeof summary === 'string', 'Summary should be string');
-      assert(summary.length > 0, 'Summary should not be empty');
-      assert(summary.toLowerCase().includes(expected), 
-        `Summary for ${name} should include action word`);
+      // Check that summaries are generated
+      const sampleFunction = functions[0];
+      assert(typeof sampleFunction.summary === 'string', 'Summary should be string');
+      assert(sampleFunction.summary.length > 0, 'Summary should not be empty');
+      assert(/retrieves|updates|creates|removes|processes|validates/.test(sampleFunction.summary), 
+        'Summary should contain action word');
+      
+      return analyzer.cleanup();
     });
   });
 

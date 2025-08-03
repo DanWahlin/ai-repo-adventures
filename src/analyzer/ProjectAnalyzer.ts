@@ -7,7 +7,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { CONFIG } from '../shared/config.js';
 import { FileSystemScanner } from './FileSystemScanner.js';
-import { TreeSitterAnalyzer } from './TreeSitterAnalyzer.js';
+import { CodeAnalyzer } from './CodeAnalyzer.js';
 import { DependencyParser } from './DependencyParser.js';
 import { CodeFlowAnalyzer } from './CodeFlowAnalyzer.js';
 import type { 
@@ -50,7 +50,7 @@ const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
 export class ProjectAnalyzer {
   private config: AnalysisConfig;
   private fileScanner: FileSystemScanner;
-  private treeSitterAnalyzer: TreeSitterAnalyzer | null = null;
+  private codeAnalyzer: CodeAnalyzer | null = null;
   private dependencyParser: DependencyParser;
   private codeFlowAnalyzer: CodeFlowAnalyzer;
 
@@ -59,19 +59,19 @@ export class ProjectAnalyzer {
     
     // Initialize specialized analyzers
     this.fileScanner = new FileSystemScanner(this.config);
-    // TreeSitterAnalyzer will be initialized asynchronously when needed
+    // CodeAnalyzer will be initialized asynchronously when needed
     this.dependencyParser = new DependencyParser(this.config);
     this.codeFlowAnalyzer = new CodeFlowAnalyzer(this.config);
   }
 
   /**
-   * Get or initialize the TreeSitterAnalyzer
+   * Get or initialize the CodeAnalyzer
    */
-  private async getTreeSitterAnalyzer(): Promise<TreeSitterAnalyzer> {
-    if (!this.treeSitterAnalyzer) {
-      this.treeSitterAnalyzer = await TreeSitterAnalyzer.getInstance(this.config);
+  private async getCodeAnalyzer(): Promise<CodeAnalyzer> {
+    if (!this.codeAnalyzer) {
+      this.codeAnalyzer = await CodeAnalyzer.getInstance(this.config);
     }
-    return this.treeSitterAnalyzer;
+    return this.codeAnalyzer;
   }
 
   /**
@@ -147,8 +147,8 @@ export class ProjectAnalyzer {
         
         const content = await fs.readFile(fullPath, 'utf-8');
         
-        // Use TreeSitterAnalyzer for ALL languages
-        const analyzer = await this.getTreeSitterAnalyzer();
+        // Use CodeAnalyzer for ALL languages
+        const analyzer = await this.getCodeAnalyzer();
         const fileAnalysis = await analyzer.analyzeFile(content, filePath);
         analysis.functions.push(...fileAnalysis.functions);
         analysis.classes.push(...fileAnalysis.classes);
@@ -355,10 +355,10 @@ export class ProjectAnalyzer {
    * Clean up resources
    */
   public async cleanup(): Promise<void> {
-    // Clean up TreeSitterAnalyzer if initialized
-    if (this.treeSitterAnalyzer) {
-      await this.treeSitterAnalyzer.cleanup();
-      this.treeSitterAnalyzer = null;
+    // Clean up CodeAnalyzer if initialized
+    if (this.codeAnalyzer) {
+      await this.codeAnalyzer.cleanup();
+      this.codeAnalyzer = null;
     }
   }
 

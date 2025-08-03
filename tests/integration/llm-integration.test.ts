@@ -393,7 +393,7 @@ async function runTests() {
     assert(TestHelpers.containsAnyWord(result.narrative, educationalWords), 'Should include educational content');
   }, { skipIfNoLLM: true, timeout: 45000 });
 
-  await test('Fallback system works when LLM unavailable', async () => {
+  await test('System properly errors when LLM unavailable', async () => {
     // Create a manager with a broken LLM client (simulate failure)
     const manager = new AdventureManager();
     
@@ -402,17 +402,12 @@ async function runTests() {
     process.env.LLM_PROVIDER = 'invalid-provider';
     
     try {
-      const result = await manager.initializeAdventure(realProjectInfo, 'space');
-      
-      // Should still return a story (fallback)
-      assert(typeof result === 'string', 'Should return fallback story');
-      assert(result.length > 50, 'Fallback story should be substantial');
-      assert(result.includes('adventure'), 'Fallback should mention adventures');
-      
-      // Should have created some adventures
-      const progress = manager.getProgress();
-      assert(progress.choices && progress.choices.length > 0, 'Should have fallback adventures');
-      
+      await manager.initializeAdventure(realProjectInfo, 'space');
+      assert.fail('Should throw error when LLM is unavailable');
+    } catch (error) {
+      // Should now properly error instead of fallback
+      assert(error instanceof Error, 'Should throw Error when LLM unavailable');
+      assert(error.message.includes('Unable to generate adventure story'), 'Should have meaningful error message');
     } finally {
       // Restore environment
       if (originalEnv) {
@@ -421,7 +416,7 @@ async function runTests() {
         delete process.env.LLM_PROVIDER;
       }
     }
-  }, { timeout: 15000 }); // No skipIfNoLLM since we're testing fallback
+  }, { timeout: 15000 });
 
   // Print results using shared utility
   printResults();

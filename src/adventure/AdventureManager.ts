@@ -1,7 +1,7 @@
 import { ProjectInfo } from '../analyzer/ProjectAnalyzer.js';
 import { LLMClient } from '../llm/LLMClient.js';
 import { readFile } from 'fs/promises';
-import { AdventureTheme, THEMES, THEME_EMOJIS } from '../shared/theme.js';
+import { AdventureTheme, THEMES } from '../shared/theme.js';
 import { CONFIG, ConfigManager } from '../shared/config.js';
 
 // Core interfaces for LLM-driven adventures
@@ -329,13 +329,15 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
 
       return parsed;
     } catch (error) {
-      console.warn(`LLM story generation failed for theme "${theme}", project type "${projectInfo.type}":`, {
-        error: error instanceof Error ? error.message : String(error),
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`LLM story generation failed for theme "${theme}", project type "${projectInfo.type}":`, {
+        error: errorMessage,
         projectFileCount: projectInfo.fileCount,
         technologies: projectInfo.mainTechnologies,
         timestamp: new Date().toISOString()
       });
-      return this.generateFallbackStory(projectInfo, theme);
+      
+      throw new Error(`Unable to generate adventure story: ${errorMessage}. Please ensure your LLM configuration is correct and the service is available.`);
     }
   }
 
@@ -434,13 +436,15 @@ Your response must be a valid JSON object matching the structure below.
 
       return parsed;
     } catch (error) {
-      console.warn(`LLM adventure content generation failed for adventure "${adventure.title}", theme "${this.state.currentTheme}":`, {
-        error: error instanceof Error ? error.message : String(error),
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`LLM adventure content generation failed for adventure "${adventure.title}", theme "${this.state.currentTheme}":`, {
+        error: errorMessage,
         adventureId: adventure.id,
         codeFilesCount: adventure.codeFiles?.length || 0,
         timestamp: new Date().toISOString()
       });
-      return this.generateFallbackAdventureContent(adventure);
+      
+      throw new Error(`Unable to generate content for adventure "${adventure.title}": ${errorMessage}. Please ensure your LLM configuration is correct and the service is available.`);
     }
   }
 
@@ -796,42 +800,4 @@ Choose an adventure by using the \`explore_path\` tool with the adventure number
     ];
   }
 
-  /**
-   * Fallback story generation when LLM fails
-   */
-  private generateFallbackStory(projectInfo: ProjectInfo, theme: AdventureTheme): StoryResponse {
-    const emoji = THEME_EMOJIS[theme] || '✨';
-
-    return {
-      story: `${emoji} Welcome to your ${theme} code adventure! This ${projectInfo.type} project contains ${projectInfo.fileCount} files using ${projectInfo.mainTechnologies.join(', ')}. Let's explore it together through an engaging ${theme} journey!`,
-      adventures: [
-        {
-          id: 'main-exploration',
-          title: 'Main Code Exploration',
-          description: 'Explore the core functionality and architecture',
-          codeFiles: projectInfo.codeAnalysis.entryPoints
-        },
-        {
-          id: 'config-adventure',
-          title: 'Configuration Quest',
-          description: 'Discover how the project is configured and set up',
-          codeFiles: projectInfo.structure.configFiles
-        }
-      ]
-    };
-  }
-
-  /**
-   * Fallback adventure content when LLM fails
-   */
-  private generateFallbackAdventureContent(adventure: Adventure): AdventureContent {
-    return {
-      adventure: `You embark on the "${adventure.title}" adventure. ${adventure.description}. This is an important part of understanding how the system works.`,
-      codeSnippets: [],
-      hints: [
-        'Explore the code structure to understand the patterns used',
-        'Look for connections between different parts of the system'
-      ]
-    };
-  }
 }
