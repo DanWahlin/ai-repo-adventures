@@ -3,6 +3,11 @@
  * All timeouts, limits, and constants are defined here for easy maintenance
  */
 
+import { config } from 'dotenv';
+
+// Load environment variables
+config();
+
 // Environment configuration
 export const ENV_CONFIG = {
   // LLM Configuration
