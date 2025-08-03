@@ -45,7 +45,7 @@ interface TestSummary {
 // Constants for configuration
 const MAX_TEST_NAME_LENGTH = 100;
 const MAX_OUTPUT_SIZE = 10 * 1024 * 1024; // 10MB limit
-const DEFAULT_TEST_TIMEOUT = 120000; // 2 minutes for comprehensive test suite
+const DEFAULT_TEST_TIMEOUT = 300000; // 5 minutes for comprehensive test suite (now includes more tests)
 
 // Pre-compiled regex patterns to prevent ReDoS attacks
 const TEST_PATTERNS = {
@@ -66,15 +66,16 @@ const EXCLUSION_PATTERNS = [
 
 // Known non-test result patterns to exclude from test parsing
 const NON_TEST_RESULT_PATTERNS = [
-  'Tests completed', 'test groups', 'System is working', 'All ', 
-  'Connected to MCP', 'Project analysis', 'Progressive exploration',
+  'Tests completed', 'test groups', 'System is working', 'All test groups passed', 
+  'Project analysis', 'Progressive exploration',
   'Discovery tracking', 'Character interactions', 'Code snippet discovery',
   'algorithms tests', 'Client tests', 'Project scanned', 'Functions discovered',
   'Classes detected', 'Dependencies found', 'Themed story generated',
   'Dynamic adventure paths', 'Successfully explored', 'Dynamic choices generated',
   'Adventure Progress:', 'Areas Explored:', 'Discoveries Made:',
   'exploration with character', 'Code snippet discovered', 'Code shown in adventure',
-  'Invalid theme correctly', 'Caching is working', 'Hint 1:', 'Hint 2:'
+  'Invalid theme correctly', 'Caching is working', 'Hint 1:', 'Hint 2:',
+  'Interactive functionality validation completed successfully'
 ];
 
 function validateInput(command: string, args: string[] = []): void {
@@ -268,13 +269,16 @@ async function runCommand(command: string, args: string[] = []): Promise<TestRes
 async function runAllTests(): Promise<TestSummary> {
   console.log('🏃‍♂️ Running Comprehensive Test Suite');
   console.log('=' .repeat(70));
-  console.log('This will run all unit tests, simple tests, and real-world tests');
+  console.log('This will run all unit tests, integration tests, analysis tests, simple tests, real-world tests, and interactive tests');
   console.log('');
   
   const testSuites = [
     { name: 'Unit Tests', command: 'npm', args: ['run', 'test:unit'] },
+    { name: 'Integration Tests', command: 'npm', args: ['run', 'test:integration:llm'] },
+    { name: 'Cross-Language Analysis', command: 'npm', args: ['run', 'test:analysis'] },
     { name: 'Simple Tests', command: 'npm', args: ['run', 'test:simple'] },
-    { name: 'Real-World Tests', command: 'npm', args: ['run', 'test:real-world'] }
+    { name: 'Real-World Tests', command: 'npm', args: ['run', 'test:real-world'] },
+    { name: 'Interactive Tests', command: 'npm', args: ['run', 'test:interactive'] }
   ];
   
   const results: TestResult[] = [];
@@ -338,24 +342,27 @@ function printTestSummaryTable(summary: TestSummary): void {
     if (result.name.includes('Unit Tests')) {
       displayName = 'Unit Test Runner';
       testDescription = `${result.stats.total} tests across ${result.individualTests.length > 0 ? '3' : '1'} groups`;
+    } else if (result.name.includes('Integration Tests')) {
+      displayName = 'Integration Test Runner';
+      testDescription = `${result.stats.total} LLM integration tests`;
+    } else if (result.name.includes('Cross-Language Analysis')) {
+      displayName = 'Cross-Language Analysis';
+      testDescription = `${result.stats.total} language analysis tests`;
     } else if (result.name.includes('Simple Tests')) {
       displayName = 'Simple Test';
       testDescription = 'Basic workflow tests';
     } else if (result.name.includes('Real-World Tests')) {
       displayName = 'Real-World Test';
       testDescription = 'Comprehensive workflow tests';
-    } else if (result.name.includes('Integration')) {
-      displayName = 'Integration Test Runner';
-      testDescription = `${result.stats.total} LLM integration tests`;
+    } else if (result.name.includes('Interactive Tests')) {
+      displayName = 'Interactive Test';
+      testDescription = 'Interactive chat tests';
     } else if (result.name.includes('Algorithm')) {
       displayName = 'Individual Algorithm Tests';
       testDescription = `${result.stats.total} algorithm tests`;
     } else if (result.name.includes('LLM Client')) {
       displayName = 'Individual LLM Client Tests';
       testDescription = `${result.stats.total} client tests`;
-    } else if (result.name.includes('Cross-Language')) {
-      displayName = 'Cross-Language Analysis';
-      testDescription = `${result.stats.total} language analysis tests`;
     } else {
       testDescription = `${result.stats.total} tests`;
     }
@@ -368,11 +375,11 @@ function printTestSummaryTable(summary: TestSummary): void {
     });
   });
 
-  // Calculate column widths
-  const nameWidth = Math.max(28, Math.max(...tableData.map(row => row.name.length)));
+  // Calculate column widths (increased for more test suites)
+  const nameWidth = Math.max(32, Math.max(...tableData.map(row => row.name.length)));
   const statusWidth = 10;
   const passRateWidth = 11;
-  const testsWidth = Math.max(30, Math.max(...tableData.map(row => row.tests.length)));
+  const testsWidth = Math.max(35, Math.max(...tableData.map(row => row.tests.length)));
 
   // Print table header
   console.log('');
