@@ -1,5 +1,5 @@
 import type { AdventureTheme } from '../shared/index.js';
-import { THEMES } from '../shared/index.js';
+import { THEMES, getAllThemes } from '../shared/index.js';
 
 /**
  * ThemeManager - Manages theme vocabulary, guidelines, and theme-specific content
@@ -151,10 +151,10 @@ ${this.getThemeVocabulary(theme)}
   }
 
   /**
-   * Get all available themes
+   * Get all available themes dynamically
    */
   getAvailableThemes(): AdventureTheme[] {
-    return [THEMES.SPACE.key, THEMES.MYTHICAL.key, THEMES.ANCIENT.key];
+    return getAllThemes().map(theme => theme.key as AdventureTheme);
   }
 
   /**

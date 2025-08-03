@@ -100,8 +100,12 @@ export const ADVENTURE_CONFIG = {
   // Maximum number of adventures a user can have active
   MAX_ACTIVE_ADVENTURES: 5,
   
-  // Default theme if none specified
-  DEFAULT_THEME: 'space' as const,
+  // Default theme if none specified (uses first theme from centralized system)
+  get DEFAULT_THEME() {
+    // Dynamic import to get the first theme
+    const { getAllThemes } = require('./theme.js');
+    return getAllThemes()[0].key;
+  },
   
   // Progress tracking
   MIN_EXPLORATION_FOR_PROGRESS: 3,

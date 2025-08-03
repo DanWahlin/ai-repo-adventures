@@ -17,11 +17,20 @@ import { optimizedAnalyzer } from './shared/instances.js';
 import { AdventureManager } from './adventure/adventure-manager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { formatErrorForUser } from './shared/errors.js';
-import { parseTheme, getFormattedThemeOptions } from './shared/theme.js';
+import { parseTheme, getFormattedThemeOptions, getAllThemes } from './shared/theme.js';
 import { InputValidator } from './shared/input-validator.js';
 
 // Create a single shared adventure manager instance
 const adventureManager = new AdventureManager();
+
+// Helper function to generate dynamic theme examples for tool descriptions
+function generateThemeExamples(): string {
+  const themes = getAllThemes();
+  const examples = themes.map(theme => 
+    `"${theme.id}", "${theme.key} theme", "choose ${theme.key}", "select ${theme.key}", "I want ${theme.key}"`
+  ).join(', ');
+  return examples;
+}
 
 // Schema types
 type StartAdventureArgs = z.infer<typeof startAdventureSchema>;
@@ -35,7 +44,7 @@ const startAdventureSchema = z.object({
 });
 
 const chooseThemeSchema = z.object({
-  theme: z.string().describe('The story theme - use "space"/"mythical"/"ancient" or numbers 1/2/3')
+  theme: z.string().describe(`The story theme - use theme names or numbers: ${getAllThemes().map(t => `"${t.key}"`).join('/')} or ${getAllThemes().map(t => t.id).join('/')}`)
 });
 
 const explorePathSchema = z.object({
@@ -98,7 +107,7 @@ Use the \`choose_theme\` tool with your preferred theme (name or number) to begi
 
 // Choose Theme Tool - Now uses LLM to generate story + adventures
 export const choose_theme = {
-  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where: databases become dragon hoards (mythical) or data crystals (space), APIs transform into trade routes (ancient) or communication channels (space), functions become spells (mythical) or ship systems (space). The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: "1", "2", "3" (for numbered themes), "space theme", "mythical theme", "ancient theme", "choose space", "select mythical", "pick ancient", "I want space", "let's do mythical", "give me ancient", "space adventure", "castle adventure", "temple adventure", "sci-fi theme", "fantasy theme", "historical theme", "space exploration", "enchanted kingdom", "ancient civilization", "choose 1", "select 2", "pick 3".`,
+  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where code elements become thematic story elements. The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: ${generateThemeExamples()}.`,
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
@@ -112,9 +121,11 @@ export const choose_theme = {
       const selectedTheme = parseTheme(themeValidation.sanitized);
       
       if (!selectedTheme) {
+        const allThemes = getAllThemes();
+        const validOptions = [...allThemes.map(t => `'${t.key}'`), ...allThemes.map(t => t.id.toString())];
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Invalid theme: ${args.theme}. Please choose 'space', 'mythical', 'ancient', or use numbers 1-3.`
+          `Invalid theme: ${args.theme}. Please choose ${validOptions.join(', ')}.`
         );
       }
       
