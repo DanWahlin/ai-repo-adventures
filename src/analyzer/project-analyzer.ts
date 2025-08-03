@@ -285,27 +285,89 @@ export class ProjectAnalyzer {
   }
 
   /**
-   * Find entry points in project structure
+   * Find entry points in project structure with smart prioritization
    */
   private findEntryPoints(structure: ProjectStructure): string[] {
     const entryPoints: string[] = [];
-    const entryPatterns = [
-      'index.js', 'index.ts', 'main.js', 'main.ts',
-      'app.js', 'app.ts', 'server.js', 'server.ts',
-      'src/index.js', 'src/index.ts', 'src/main.js', 'src/main.ts',
-      'src/app.js', 'src/app.ts'
+    
+    // Priority 1: Executable entry points across multiple languages
+    const executablePatterns = [
+      // JavaScript/TypeScript
+      'server.js', 'server.ts', 'app.js', 'app.ts', 'main.js', 'main.ts',
+      'src/server.js', 'src/server.ts', 'src/app.js', 'src/app.ts', 'src/main.js', 'src/main.ts',
+      
+      // Python
+      'main.py', '__main__.py', 'app.py', 'run.py', 'server.py',
+      'src/main.py', 'src/__main__.py', 'src/app.py', 'src/run.py', 'src/server.py',
+      
+      // Java
+      'Main.java', 'Application.java', 'App.java', 'Server.java',
+      'src/main/java/Main.java', 'src/Main.java', 'src/Application.java',
+      
+      // Go
+      'main.go', 'cmd/main.go', 'cmd/server/main.go', 'cmd/app/main.go',
+      
+      // Rust
+      'main.rs', 'src/main.rs', 'src/bin/main.rs',
+      
+      // C/C++
+      'main.c', 'main.cpp', 'main.cc', 'app.c', 'app.cpp',
+      'src/main.c', 'src/main.cpp', 'src/main.cc',
+      
+      // C#
+      'Program.cs', 'Main.cs', 'Application.cs', 'App.cs', 'Startup.cs',
+      'src/Program.cs', 'src/Main.cs', 'src/Application.cs', 'src/App.cs',
+      'Program.Main.cs', 'ApplicationMain.cs', 'AppMain.cs',
+      
+      // PHP
+      'index.php', 'app.php', 'main.php', 'server.php',
+      'src/index.php', 'src/app.php',
+      
+      // Ruby
+      'main.rb', 'app.rb', 'server.rb',
+      'bin/main', 'bin/app', 'bin/server'
+    ];
+    
+    // Priority 2: Module/Library entry points
+    const modulePatterns = [
+      // JavaScript/TypeScript
+      'index.js', 'index.ts', 'src/index.js', 'src/index.ts',
+      
+      // Python
+      '__init__.py', 'src/__init__.py',
+      
+      // Other languages typically use different module systems
     ];
 
-    entryPatterns.forEach(pattern => {
+    // Find executable entry points first (highest priority)
+    executablePatterns.forEach(pattern => {
       const found = structure.sourceFiles.find(file => 
-        file.endsWith(pattern) || file.includes(pattern)
+        file.endsWith(pattern) || file === pattern
       );
       if (found && !entryPoints.includes(found)) {
         entryPoints.push(found);
       }
     });
+    
+    // Only look for module entry points if no executable found
+    if (entryPoints.length === 0) {
+      modulePatterns.forEach(pattern => {
+        const found = structure.sourceFiles.find(file => 
+          file.endsWith(pattern) || file === pattern
+        );
+        if (found && !entryPoints.includes(found)) {
+          entryPoints.push(found);
+        }
+      });
+    }
 
-    // Fallback: use first source file if no clear entry point
+    // Enhanced analysis: Check package.json for actual entry point
+    const packageJsonEntry = this.getPackageJsonEntry(structure);
+    if (packageJsonEntry && !entryPoints.includes(packageJsonEntry)) {
+      entryPoints.unshift(packageJsonEntry); // Add to front (highest priority)
+    }
+
+    // Final fallback: use first source file if no clear entry point
     if (entryPoints.length === 0 && structure.sourceFiles.length > 0) {
       const firstFile = structure.sourceFiles[0];
       if (firstFile) {
@@ -314,6 +376,27 @@ export class ProjectAnalyzer {
     }
 
     return entryPoints;
+  }
+
+  /**
+   * Extract entry point from package.json if available
+   */
+  private getPackageJsonEntry(structure: ProjectStructure): string | null {
+    // Look for package.json in config files
+    const packageJsonFile = structure.configFiles.find(file => 
+      file.includes('package.json')
+    );
+    
+    if (!packageJsonFile) return null;
+    
+    // For now, we can't read the file content here, but we can infer common patterns
+    // If we find 'src/server.ts' or similar executable files, prioritize them
+    const commonExecutables = ['src/server.ts', 'src/server.js', 'src/app.ts', 'src/app.js'];
+    const found = structure.sourceFiles.find(file => 
+      commonExecutables.some(executable => file.endsWith(executable))
+    );
+    
+    return found || null;
   }
 
   /**

@@ -297,6 +297,7 @@ Generate ONLY the celebration message, no extra text.`;
   private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: AdventureTheme): string {
     const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
     const themeGuidelines = this.themeManager.getThemeGuidelines(theme);
+    const projectInsights = this.generateProjectInsights(theme, projectInfo);
     
     return `You are a technical education specialist creating immersive code exploration experiences.
 Transform this codebase into an engaging ${theme}-themed narrative.
@@ -306,10 +307,22 @@ ${projectAnalysis}
 
 ${themeGuidelines}
 
+## Required Story Structure
+Your story MUST include these specific project insights woven into the narrative:
+
+🗺️ **Discovered Realm Features:**
+${projectInsights}
+
+## Instructions
+1. Start with a thematic introduction that establishes the ${theme} world
+2. Include the "🗺️ **Discovered Realm Features:**" section EXACTLY as provided above
+3. End with "Choose your path wisely, brave adventurer!"
+4. Keep the opening narrative concise (1-2 paragraphs, max 200 words total)
+
 ## Response Format
 Return a valid JSON object:
 {
-  "story": "A concise 1-2 paragraph opening (max 150 words) that establishes the ${theme} world.",
+  "story": "Opening narrative + \\n\\n🗺️ **Discovered Realm Features:**\\n${projectInsights}\\n\\nChoose your path wisely, brave adventurer!",
   "adventures": [
     {
       "id": "1",
@@ -446,17 +459,173 @@ ${topFunctions}
   }
 
   /**
-   * Get theme-specific introduction
+   * Get theme-specific introduction with project insights
    */
   private getThemeIntroduction(theme: AdventureTheme, projectInfo: ProjectInfo): string {
     const projectName = projectInfo.type || 'Codebase';
+    const baseIntro = this.getBaseThemeIntro(theme, projectName, projectInfo);
+    const projectInsights = this.generateProjectInsights(theme, projectInfo);
+    
+    return `${baseIntro}
+
+🗺️ **Discovered Realm Features:**
+${projectInsights}
+
+Choose your path wisely, brave adventurer!`;
+  }
+
+  /**
+   * Generate project-specific insights with thematic flavor
+   */
+  private generateProjectInsights(theme: AdventureTheme, projectInfo: ProjectInfo): string {
+    const insights: string[] = [];
+    
+    // Architecture insight
+    const entryPoint = projectInfo.codeAnalysis.entryPoints[0];
+    if (entryPoint) {
+      const themeMap = {
+        space: `🛸 **Command Bridge**: The starship's control center is located at \`${entryPoint}\``,
+        mythical: `🏰 **Castle Gates**: The kingdom's main entrance lies at \`${entryPoint}\``, 
+        ancient: `🚪 **Temple Entrance**: The sacred portal opens at \`${entryPoint}\``
+      };
+      insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
+    }
+
+    // Functions insight
+    if (projectInfo.codeAnalysis.functions.length > 0) {
+      const meaningfulFunctions = this.filterMeaningfulFunctions(projectInfo.codeAnalysis.functions);
+      if (meaningfulFunctions.length > 0) {
+        const topFunctions = meaningfulFunctions.slice(0, 3).join(', ');
+        const themeMap = {
+          space: `⚙️ **Core Systems**: Advanced algorithms like \`${topFunctions}\` power critical operations`,
+          mythical: `🔮 **Magical Spells**: Powerful incantations including \`${topFunctions}\` weave through the code`,
+          ancient: `📜 **Sacred Rituals**: Ancient ceremonies such as \`${topFunctions}\` hold mystical powers`
+        };
+        insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
+      }
+    }
+
+    // Dependencies insight  
+    if (projectInfo.codeAnalysis.dependencies.length > 0) {
+      const topDeps = projectInfo.codeAnalysis.dependencies.slice(0, 2).map(d => d.name).join(', ');
+      const themeMap = {
+        space: `🤖 **Allied Technologies**: Trusted companions \`${topDeps}\` join your cosmic journey`,
+        mythical: `🧙 **Magical Allies**: Wise wizards \`${topDeps}\` offer their mystical assistance`,
+        ancient: `🏺 **Sacred Artifacts**: Ancient relics \`${topDeps}\` provide divine guidance`
+      };
+      insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
+    }
+
+    // Architecture features insight
+    const hasTests = projectInfo.hasTests;
+    const hasApi = projectInfo.hasApi;
+    const hasDatabase = projectInfo.hasDatabase;
+    
+    if (hasTests || hasApi || hasDatabase) {
+      const features: string[] = [];
+      if (hasTests) features.push('testing chambers');
+      if (hasApi) features.push('communication portals'); 
+      if (hasDatabase) features.push('data vaults');
+      
+      const themeMap = {
+        space: `🛰️ **Special Facilities**: The ship contains ${features.join(', ')} for advanced operations`,
+        mythical: `⚔️ **Sacred Chambers**: The castle houses ${features.join(', ')} with magical properties`,
+        ancient: `🏛️ **Holy Sanctuaries**: The temple includes ${features.join(', ')} blessed by the ancients`
+      };
+      insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
+    }
+
+    return insights.join('\n');
+  }
+
+  /**
+   * Get base theme introduction
+   */
+  private getBaseThemeIntro(theme: AdventureTheme, projectName: string, projectInfo: ProjectInfo): string {
     const intros = {
       space: `🚀 Welcome aboard the Starship ${projectName}! This advanced vessel contains ${projectInfo.fileCount} modules powered by ${projectInfo.mainTechnologies.join(', ')} technology. Your mission: explore its systems and unlock its secrets.`,
       mythical: `🏰 Welcome to the Enchanted Kingdom of ${projectName}! This mystical realm spans ${projectInfo.fileCount} scrolls of wisdom, woven with ${projectInfo.mainTechnologies.join(', ')} magic. Your quest: discover its hidden powers.`,
       ancient: `🏺 Welcome to the Lost Temple of ${projectName}! These ancient halls contain ${projectInfo.fileCount} tablets inscribed with ${projectInfo.mainTechnologies.join(', ')} knowledge. Your journey: uncover its mysteries.`
     };
-
     return intros[theme as keyof typeof intros] || intros.space;
+  }
+
+  /**
+   * Filter functions to focus on meaningful project-specific functions
+   */
+  private filterMeaningfulFunctions(functions: { name: string }[]): string[] {
+    // Built-in functions and constructors to exclude
+    const builtInFunctions = new Set([
+      'Set', 'Map', 'Array', 'Object', 'String', 'Number', 'Boolean', 'Date', 'RegExp',
+      'Promise', 'Error', 'console', 'JSON', 'Math', 'parseInt', 'parseFloat',
+      'constructor', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
+      'propertyIsEnumerable', 'toLocaleString', 'prototype', 'length', 'name',
+      'apply', 'call', 'bind', 'slice', 'splice', 'push', 'pop', 'shift', 'unshift'
+    ]);
+
+    // Generic/common method names to exclude
+    const genericMethods = new Set([
+      'get', 'set', 'add', 'remove', 'delete', 'create', 'update', 'find', 'filter',
+      'map', 'forEach', 'reduce', 'some', 'every', 'includes', 'indexOf', 'join',
+      'split', 'trim', 'replace', 'match', 'search', 'substring', 'slice'
+    ]);
+
+    const filteredNames = functions
+      .map(f => f.name)
+      .filter(name => {
+        // Exclude built-in functions
+        if (builtInFunctions.has(name)) return false;
+        
+        // Exclude very generic method names
+        if (genericMethods.has(name)) return false;
+        
+        // Exclude single letters or very short names
+        if (name.length <= 2) return false;
+        
+        // Exclude names that start with underscore (private/internal)
+        if (name.startsWith('_')) return false;
+        
+        // Exclude test-related functions
+        if (name.includes('test') || name.includes('spec') || name.includes('mock')) return false;
+        
+        // Exclude utility/helper functions that aren't core business logic
+        if (name.includes('detect') || name.includes('util') || name.includes('helper')) return false;
+        
+        return true;
+      });
+
+    // Remove duplicates using Set
+    const uniqueNames = [...new Set(filteredNames)];
+    
+    // Prioritize functions by importance
+    return uniqueNames.sort((a, b) => {
+      // Highest priority: Exact matches for key project functions
+      const keyFunctions = ['initializeAdventure', 'exploreAdventure', 'analyzeProject', 'generateStory', 'generateStoryAndAdventures'];
+      const aIsKey = keyFunctions.includes(a);
+      const bIsKey = keyFunctions.includes(b);
+      
+      if (aIsKey && !bIsKey) return -1;
+      if (!aIsKey && bIsKey) return 1;
+      
+      // Second priority: Core business function patterns
+      const coreFunctions = ['initialize', 'analyze', 'generate', 'explore', 'start', 'create'];
+      const aIsCore = coreFunctions.some(word => a.toLowerCase().includes(word));
+      const bIsCore = coreFunctions.some(word => b.toLowerCase().includes(word));
+      
+      if (aIsCore && !bIsCore) return -1;
+      if (!aIsCore && bIsCore) return 1;
+      
+      // Third priority: Action words
+      const actionWords = ['process', 'handle', 'manage', 'build', 'execute', 'run', 'setup'];
+      const aHasAction = actionWords.some(word => a.toLowerCase().includes(word));
+      const bHasAction = actionWords.some(word => b.toLowerCase().includes(word));
+      
+      if (aHasAction && !bHasAction) return -1;
+      if (!aHasAction && bHasAction) return 1;
+      
+      // Fourth priority: Longer, more descriptive names
+      return b.length - a.length;
+    });
   }
 
   /**
