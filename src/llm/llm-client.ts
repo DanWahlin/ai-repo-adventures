@@ -1,7 +1,18 @@
 import { OpenAI, AzureOpenAI } from 'openai';
 import { config } from 'dotenv';
 import { createHash } from 'crypto';
-import { ENV_CONFIG, TIMEOUTS, ERROR_CONFIG, CACHE_CONFIG, LRUCache } from '../shared/index.js';
+import { 
+  LLM_API_KEY, 
+  LLM_BASE_URL, 
+  LLM_MODEL, 
+  LLM_API_VERSION, 
+  LLM_REQUEST_TIMEOUT, 
+  LLM_CACHE_TTL, 
+  LLM_CACHE_SIZE, 
+  ERROR_MESSAGES,
+  GITHUB_TOKEN
+} from '../shared/config.js';
+import { LRUCache } from '../shared/cache.js';
 
 // Load environment variables
 config();
@@ -48,30 +59,30 @@ export class LLMClient {
 
   constructor(config?: LLMConfig) {
     // Environment-based configuration with optional overrides
-    this.baseURL = config?.baseURL || ENV_CONFIG.LLM_BASE_URL;
-    const apiKey = config?.apiKey || ENV_CONFIG.LLM_API_KEY;
+    this.baseURL = config?.baseURL || LLM_BASE_URL;
+    const apiKey = config?.apiKey || LLM_API_KEY;
     
     // Store API key - can be undefined to allow fallback mode
     this.apiKey = apiKey;
     
-    this.model = config?.model || ENV_CONFIG.LLM_MODEL;
+    this.model = config?.model || LLM_MODEL;
     this.temperature = config?.temperature ?? parseFloat(process.env.LLM_TEMPERATURE || '0.7');
     this.maxTokens = config?.maxTokens ?? parseInt(process.env.LLM_MAX_TOKENS || '1000');
     
     // Use centralized timeout configuration
-    this.timeoutMs = config?.timeoutMs || TIMEOUTS.LLM_REQUEST;
-    this.cacheTimeoutMs = config?.cacheTimeoutMs || TIMEOUTS.LLM_CACHE;
+    this.timeoutMs = config?.timeoutMs || LLM_REQUEST_TIMEOUT;
+    this.cacheTimeoutMs = config?.cacheTimeoutMs || LLM_CACHE_TTL;
     
     // Initialize LRU cache with memory safety
     this.requestCache = new LRUCache(
-      config?.maxCacheSize || CACHE_CONFIG.LLM_MAX_SIZE,
+      config?.maxCacheSize || LLM_CACHE_SIZE,
       this.cacheTimeoutMs
     );
     
     // Set up periodic cache cleanup to prevent memory leaks
     this.cleanupInterval = setInterval(() => {
       this.requestCache.cleanup();
-    }, CACHE_CONFIG.LLM_CLEANUP_INTERVAL_MS);
+    }, 5 * 60 * 1000); // 5 minutes
     
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
@@ -83,7 +94,7 @@ export class LLMClient {
         this.client = new AzureOpenAI({
           endpoint: this.baseURL,
           apiKey: this.apiKey,
-          apiVersion: ENV_CONFIG.LLM_API_VERSION,
+          apiVersion: LLM_API_VERSION,
           deployment: this.model
         });
       } else {
@@ -159,7 +170,7 @@ export class LLMClient {
     }
 
     // Validate API version format
-    const apiVersion = ENV_CONFIG.LLM_API_VERSION;
+    const apiVersion = LLM_API_VERSION;
     if (apiVersion && !apiVersion.match(/^\d{4}-\d{2}-\d{2}(-preview)?$/)) {
       throw new Error(`Invalid LLM_API_VERSION format: ${apiVersion}. Expected format: YYYY-MM-DD or YYYY-MM-DD-preview`);
     }
@@ -208,98 +219,122 @@ export class LLMClient {
   }
 
   async generateResponse(prompt: string, options?: LLMRequestOptions | string): Promise<LLMResponse> {
-    // Check if LLM is available
-    if (!this.client) {
-      throw new Error(ERROR_CONFIG.DEFAULT_MESSAGES.LLM_UNAVAILABLE + ' LLM client not initialized. Please configure API credentials.');
+    this.validateClient();
+    const opts = this.normalizeOptions(options);
+    
+    const cached = this.getCachedResponse(prompt, opts.systemPrompt);
+    if (cached) return cached;
+    
+    try {
+      const response = await this.callLLMAPI(prompt, opts);
+      const llmResponse = this.formatResponse(response);
+      this.cacheResponse(prompt, opts.systemPrompt, llmResponse);
+      return llmResponse;
+    } catch (error) {
+      this.handleLLMError(error);
+      throw error; // Never reached, but TypeScript needs it
     }
+  }
 
-    // Handle legacy string parameter for backward compatibility
-    const opts: LLMRequestOptions = typeof options === 'string' 
+  private validateClient(): void {
+    if (!this.client) {
+      throw new Error(ERROR_MESSAGES.LLM_UNAVAILABLE + ' LLM client not initialized. Please configure API credentials.');
+    }
+  }
+
+  private normalizeOptions(options?: LLMRequestOptions | string): LLMRequestOptions {
+    return typeof options === 'string' 
       ? { systemPrompt: options } 
       : (options || {});
-    
-    const cacheKey = this.getCacheKey(prompt, opts.systemPrompt);
-    
-    // Check cache first
+  }
+
+  private getCachedResponse(prompt: string, systemPrompt?: string): LLMResponse | null {
+    const cacheKey = this.getCacheKey(prompt, systemPrompt);
     const cached = this.requestCache.get(cacheKey);
     if (cached) {
       console.debug('Using cached LLM response');
       return cached as LLMResponse;
     }
+    return null;
+  }
+
+  private async callLLMAPI(prompt: string, opts: LLMRequestOptions): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+    const messages = this.buildMessages(prompt, opts);
+    const completionOptions = this.buildCompletionOptions(messages, opts);
     
-    try {
-      const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
-      
-      // Add system prompt
-      if (opts.systemPrompt || this.getDefaultSystemPrompt()) {
-        messages.push({
-          role: 'system',
-          content: opts.systemPrompt || this.getDefaultSystemPrompt()
-        });
-      }
-      
-      // Add user prompt
+    return await this.withTimeout(
+      this.client!.chat.completions.create(completionOptions),
+      this.timeoutMs
+    );
+  }
+
+  private buildMessages(prompt: string, opts: LLMRequestOptions): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+    
+    if (opts.systemPrompt || this.getDefaultSystemPrompt()) {
       messages.push({
-        role: 'user',
-        content: prompt
+        role: 'system',
+        content: opts.systemPrompt || this.getDefaultSystemPrompt()
       });
-
-      // Prepare completion options
-      const completionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-        model: this.model, // For Azure, this is the deployment name
-        messages,
-        temperature: this.temperature,
-        max_tokens: this.maxTokens,
-      };
-
-      // Add response format if specified
-      if (opts.responseFormat === 'json_object') {
-        completionOptions.response_format = { type: 'json_object' };
-      }
-
-      // Add timeout to API call for MCP usage
-      const response = await this.withTimeout(
-        this.client.chat.completions.create(completionOptions),
-        this.timeoutMs
-      );
-
-      const content = response.choices[0]?.message?.content || '';
-      
-      const llmResponse: LLMResponse = {
-        content,
-        model: this.model,
-        provider: this.provider,
-        usage: response.usage ? {
-          promptTokens: response.usage.prompt_tokens,
-          completionTokens: response.usage.completion_tokens,
-          totalTokens: response.usage.total_tokens,
-        } : undefined
-      };
-      
-      // Cache the response
-      this.requestCache.set(cacheKey, llmResponse);
-      
-      return llmResponse;
-    } catch (error) {
-      const errorType = this.categorizeError(error);
-      console.warn(`LLM API call failed (${this.provider}) - ${errorType.type}:`, errorType.message);
-      
-      // Different handling based on error type
-      if (errorType.type === 'authentication') {
-        throw new Error(`Authentication failed for ${this.provider}. Please check your API key and configuration.`);
-      }
-      
-      if (errorType.type === 'timeout') {
-        throw new Error(`Request timeout for ${this.provider} after ${this.timeoutMs}ms. Please try again or check your network connection.`);
-      } else if (errorType.type === 'rate_limit') {
-        throw new Error(`Rate limit exceeded for ${this.provider}. Please wait before making another request.`);
-      } else if (errorType.type === 'network') {
-        throw new Error(`Network error for ${this.provider}: ${errorType.message}. Please check your connection and try again.`);
-      }
-      
-      // Re-throw the original error for other types
-      throw new Error(`LLM service unavailable (${this.provider}): ${errorType.message}`);
     }
+    
+    messages.push({ role: 'user', content: prompt });
+    return messages;
+  }
+
+  private buildCompletionOptions(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], opts: LLMRequestOptions): OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming {
+    const options: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+      model: this.model,
+      messages,
+      temperature: this.temperature,
+      max_tokens: this.maxTokens,
+    };
+
+    if (opts.responseFormat === 'json_object') {
+      options.response_format = { type: 'json_object' };
+    }
+
+    return options;
+  }
+
+  private formatResponse(response: OpenAI.Chat.Completions.ChatCompletion): LLMResponse {
+    const content = response.choices[0]?.message?.content || '';
+    
+    return {
+      content,
+      model: this.model,
+      provider: this.provider,
+      usage: response.usage ? {
+        promptTokens: response.usage.prompt_tokens,
+        completionTokens: response.usage.completion_tokens,
+        totalTokens: response.usage.total_tokens,
+      } : undefined
+    };
+  }
+
+  private cacheResponse(prompt: string, systemPrompt: string | undefined, response: LLMResponse): void {
+    const cacheKey = this.getCacheKey(prompt, systemPrompt);
+    this.requestCache.set(cacheKey, response);
+  }
+
+  private handleLLMError(error: unknown): never {
+    const errorType = this.categorizeError(error);
+    console.warn(`LLM API call failed (${this.provider}) - ${errorType.type}:`, errorType.message);
+    
+    if (errorType.type === 'authentication') {
+      throw new Error(`Authentication failed for ${this.provider}. Please check your API key and configuration.`);
+    }
+    if (errorType.type === 'timeout') {
+      throw new Error(`Request timeout for ${this.provider} after ${this.timeoutMs}ms. Please try again or check your network connection.`);
+    }
+    if (errorType.type === 'rate_limit') {
+      throw new Error(`Rate limit exceeded for ${this.provider}. Please wait before making another request.`);
+    }
+    if (errorType.type === 'network') {
+      throw new Error(`Network error for ${this.provider}: ${errorType.message}. Please check your connection and try again.`);
+    }
+    
+    throw new Error(`LLM service unavailable (${this.provider}): ${errorType.message}`);
   }
 
   private getDefaultSystemPrompt(): string {
@@ -367,7 +402,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
   static forGitHubModels(apiKey?: string): LLMClient {
     return new LLMClient({
       baseURL: 'https://models.inference.ai.azure.com',
-      apiKey: apiKey || ENV_CONFIG.GITHUB_TOKEN,
+      apiKey: apiKey || GITHUB_TOKEN,
       model: 'gpt-4o-mini'
     });
   }
@@ -375,7 +410,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
   static forOpenAI(apiKey?: string): LLMClient {
     return new LLMClient({
       baseURL: 'https://api.openai.com/v1',
-      apiKey: apiKey || ENV_CONFIG.LLM_API_KEY,
+      apiKey: apiKey || LLM_API_KEY,
       model: 'gpt-4o-mini'
     });
   }
@@ -390,8 +425,8 @@ Focus on creating memorable themes, characters, narratives, and settings that re
 
   static forAzureOpenAI(endpoint?: string, apiKey?: string): LLMClient {
     return new LLMClient({
-      baseURL: endpoint || ENV_CONFIG.LLM_BASE_URL,
-      apiKey: apiKey || ENV_CONFIG.LLM_API_KEY,
+      baseURL: endpoint || LLM_BASE_URL,
+      apiKey: apiKey || LLM_API_KEY,
       model: 'gpt-4o'
     });
   }

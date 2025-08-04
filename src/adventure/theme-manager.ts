@@ -1,5 +1,5 @@
-import type { AdventureTheme } from '../shared/index.js';
-import { THEMES, getAllThemes } from '../shared/index.js';
+import type { AdventureTheme } from '../shared/theme.js';
+import { THEMES, getAllThemes } from '../shared/theme.js';
 
 /**
  * ThemeManager - Manages theme vocabulary, guidelines, and theme-specific content

@@ -18,7 +18,7 @@ import { AdventureManager } from './adventure/adventure-manager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { formatErrorForUser } from './shared/errors.js';
 import { parseTheme, getFormattedThemeOptions, getAllThemes } from './shared/theme.js';
-import { InputValidator } from './shared/input-validator.js';
+import { validateProjectPath, validateTheme, validateAdventureChoice } from './shared/input-validator.js';
 
 // Create a single shared adventure manager instance
 const adventureManager = new AdventureManager();
@@ -59,11 +59,12 @@ export const start_adventure = {
   schema: startAdventureSchema,
   handler: async (args: StartAdventureArgs) => {
     // Validate project path input
-    const pathValidation = InputValidator.validateProjectPath(args.projectPath);
-    if (!pathValidation.isValid) {
-      throw new McpError(ErrorCode.InvalidParams, pathValidation.error || 'Invalid project path');
+    let projectPath: string;
+    try {
+      projectPath = validateProjectPath(args.projectPath);
+    } catch (error) {
+      throw new McpError(ErrorCode.InvalidParams, error instanceof Error ? error.message : 'Invalid project path');
     }
-    const projectPath = pathValidation.sanitized;
     
     try {
       // Analyze the project
@@ -111,14 +112,16 @@ export const choose_theme = {
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
-      // Validate theme input with whitelist-based security
-      const themeValidation = InputValidator.validateTheme(args.theme);
-      if (!themeValidation.isValid) {
-        throw new McpError(ErrorCode.InvalidParams, themeValidation.error || 'Invalid theme');
+      // Validate theme input
+      let validatedTheme: string;
+      try {
+        validatedTheme = validateTheme(args.theme);
+      } catch (error) {
+        throw new McpError(ErrorCode.InvalidParams, error instanceof Error ? error.message : 'Invalid theme');
       }
       
       // Parse the theme input (handles numbers, full names, partial matches)
-      const selectedTheme = parseTheme(themeValidation.sanitized);
+      const selectedTheme = parseTheme(validatedTheme);
       
       if (!selectedTheme) {
         const allThemes = getAllThemes();
@@ -159,15 +162,16 @@ export const explore_path = {
   schema: explorePathSchema,
   handler: async (args: ExplorePathArgs) => {
     try {
-      // Validate choice input with whitelist-based security
-      // Note: The AdventureManager will do additional validation
-      const choiceValidation = InputValidator.validateAdventureChoice(args.choice);
-      if (!choiceValidation.isValid) {
-        throw new McpError(ErrorCode.InvalidParams, choiceValidation.error || 'Invalid adventure choice');
+      // Validate choice input
+      let validatedChoice: string;
+      try {
+        validatedChoice = validateAdventureChoice(args.choice);
+      } catch (error) {
+        throw new McpError(ErrorCode.InvalidParams, error instanceof Error ? error.message : 'Invalid adventure choice');
       }
       
       // AdventureManager now handles numbered choices, titles, and IDs automatically
-      const result = await adventureManager.exploreAdventure(choiceValidation.sanitized);
+      const result = await adventureManager.exploreAdventure(validatedChoice);
       
       let responseText = result.narrative;
       

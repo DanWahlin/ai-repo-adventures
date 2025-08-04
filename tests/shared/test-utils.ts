@@ -4,8 +4,8 @@
 
 import { strict as assert } from 'assert';
 import { LLMClient } from '../../src/llm/llm-client.js';
-import type { ProjectInfo } from '../../src/analyzer/project-analyzer.js';
-import { TIMEOUTS } from '../../src/shared/config.js';
+import type { ProjectInfo } from '../../src/analyzer/repomix-analyzer.js';
+import { LLM_REQUEST_TIMEOUT } from '../../src/shared/config.js';
 
 // Test-specific configuration
 const TEST_CONFIG = {
@@ -133,9 +133,9 @@ export const mockProjectInfo: ProjectInfo = {
   mainTechnologies: ['TypeScript', 'Node.js', 'React'],
   structure: {
     directories: ['src', 'tests', 'dist'],
-    importantFiles: ['package.json', 'README.md', 'src/index.ts'],
+    importantFiles: ['package.json', 'README.md', 'src/server.ts'],
     configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/index.ts', 'src/app.ts', 'src/utils.ts']
+    sourceFiles: ['src/server.ts', 'src/app.ts', 'src/utils.ts']
   },
   hasTests: true,
   hasDatabase: false,
@@ -169,7 +169,7 @@ export const mockProjectInfo: ProjectInfo = {
     dependencies: [
       { name: 'express', version: '^4.18.0', type: 'dependency', category: 'framework' }
     ],
-    entryPoints: ['src/index.ts'],
+    entryPoints: ['src/server.ts'],
     keyFiles: []
   }
 };
@@ -183,9 +183,9 @@ export const realProjectInfo: ProjectInfo = {
   mainTechnologies: ['TypeScript', 'Node.js', 'MCP'],
   structure: {
     directories: ['src', 'tests', 'dist', 'docs'],
-    importantFiles: ['package.json', 'README.md', 'src/index.ts', 'CLAUDE.md'],
+    importantFiles: ['package.json', 'README.md', 'src/server.ts', 'CLAUDE.md'],
     configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/index.ts', 'src/adventure/adventure-manager.ts', 'src/llm/llm-client.ts', 'src/analyzer/project-analyzer.ts']
+    sourceFiles: ['src/server.ts', 'src/adventure/adventure-manager.ts', 'src/llm/llm-client.ts', 'src/analyzer/repomix-analyzer.ts']
   },
   hasTests: true,
   hasDatabase: false,
@@ -219,7 +219,7 @@ export const realProjectInfo: ProjectInfo = {
         parameters: ['projectPath'],
         isAsync: true,
         isExported: true,
-        fileName: 'src/analyzer/project-analyzer.ts',
+        fileName: 'src/analyzer/repomix-analyzer.ts',
         source: 'regex',
         language: 'typescript'
       }
@@ -251,9 +251,9 @@ export const realProjectInfo: ProjectInfo = {
       { name: 'openai', version: '^5.10.2', type: 'dependency', category: 'ai' },
       { name: 'zod', version: '^3.25.76', type: 'dependency', category: 'validation' }
     ],
-    entryPoints: ['src/index.ts'],
+    entryPoints: ['src/server.ts'],
     keyFiles: [
-      { path: 'src/index.ts', content: 'export { server };', summary: 'Main MCP server entry point' },
+      { path: 'src/server.ts', content: 'export { server };', summary: 'Main MCP server entry point' },
       { path: 'src/adventure/adventure-manager.ts', content: 'export class AdventureManager {', summary: 'Adventure management class' },
       { path: 'src/llm/llm-client.ts', content: 'export class LLMClient {', summary: 'LLM API client wrapper' }
     ]

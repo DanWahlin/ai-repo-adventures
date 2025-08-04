@@ -6,9 +6,9 @@
  * Replaces the complex custom analysis with a simpler, more effective approach.
  */
 
-import { runCli, type CliOptions } from 'repomix';
-import * as fs from 'fs/promises';
+import type { CliOptions } from 'repomix';
 import * as path from 'path';
+import { spawn } from 'child_process';
 import { LLMClient } from '../llm/llm-client.js';
 
 // Core types used by RepomixAnalyzer
@@ -87,10 +87,9 @@ export interface RepomixOptions {
 
 export class RepomixAnalyzer {
   private llmClient: LLMClient | null = null;
-  private tempDir: string;
 
   constructor() {
-    this.tempDir = '/tmp/repomix-analysis';
+    // No temp directory needed when using stdout capture
   }
 
   private getLLMClient(): LLMClient {
@@ -100,15 +99,55 @@ export class RepomixAnalyzer {
     return this.llmClient;
   }
 
+  /**
+   * Validate project path for security and correctness
+   */
+  private validateProjectPath(projectPath: string): void {
+    if (!projectPath || typeof projectPath !== 'string') {
+      throw new Error('Project path must be a non-empty string');
+    }
+
+    const trimmedPath = projectPath.trim();
+    if (!trimmedPath) {
+      throw new Error('Project path must be a non-empty string');
+    }
+
+    // Check for dangerous system directories
+    const dangerousPaths = [
+      '/etc/',
+      '/bin/',
+      '/usr/bin/',
+      '/sbin/',
+      '/usr/sbin/',
+      '/root/',
+      '/boot/',
+      '/dev/',
+      '/proc/',
+      '/sys/'
+    ];
+
+    const normalizedPath = path.resolve(trimmedPath);
+    for (const dangerous of dangerousPaths) {
+      if (normalizedPath.startsWith(dangerous)) {
+        throw new Error(`Project path cannot access system directory: ${dangerous}`);
+      }
+    }
+
+    // Check for path traversal attempts
+    if (trimmedPath.includes('..')) {
+      throw new Error('Project path cannot contain path traversal sequences (..)');
+    }
+  }
+
 
   /**
    * Main analysis method using repomix + LLM
    */
   async analyzeProject(projectPath: string, options: RepomixOptions = {}): Promise<ProjectInfo> {
-    const startTime = Date.now();
+    // Validate project path first
+    this.validateProjectPath(projectPath);
     
-    // Ensure temp directory exists
-    await fs.mkdir(this.tempDir, { recursive: true });
+    const startTime = Date.now();
     
     // Generate repomix context
     const repoContext = await this.generateRepomixContext(projectPath, options);
@@ -140,8 +179,6 @@ export class RepomixAnalyzer {
    * Generate compressed codebase context using repomix programmatic API
    */
   private async generateRepomixContext(projectPath: string, options: RepomixOptions): Promise<string> {
-    const outputFile = path.join(this.tempDir, `repomix-${Date.now()}.md`);
-    
     try {
       // Build ignore patterns
       const ignorePatterns = [
@@ -157,10 +194,10 @@ export class RepomixAnalyzer {
         ignorePatterns.push('**/*.test.ts', '**/*.spec.ts', '**/tests/**', '**/test/**');
       }
 
-      // Configure repomix options
+      // Configure repomix options to output to stdout (keeps everything in memory)
       const cliOptions: CliOptions = {
         style: options.style || 'markdown',
-        output: outputFile,
+        stdout: true, // Output to stdout instead of writing to file
         compress: options.compress || false,
         ignore: ignorePatterns.join(','),
         removeComments: true,
@@ -168,25 +205,64 @@ export class RepomixAnalyzer {
         noDirectoryStructure: true
       };
 
-      // Use repomix programmatic API
-      await runCli(['.'], projectPath, cliOptions);
-
-      // Verify file exists and read the generated context
-      try {
-        await fs.access(outputFile);
-        const context = await fs.readFile(outputFile, 'utf-8');
-        
-        // Clean up temp file
-        await fs.unlink(outputFile).catch(() => {}); // Ignore cleanup errors
-        
-        return context;
-      } catch (fileError) {
-        throw new Error(`Repomix output file not found at ${outputFile}: ${fileError instanceof Error ? fileError.message : String(fileError)}`);
-      }
+      // Capture stdout during repomix execution
+      const context = await this.captureRepomixStdout(['.'], projectPath, cliOptions);
+      
+      return context;
     } catch (error) {
       throw new Error(`Repomix API execution failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+  /**
+   * Use repomix CLI as subprocess to capture stdout cleanly (most reliable approach)
+   */
+  private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise<string> {
+    return new Promise((resolve, reject) => {
+      // Build repomix CLI arguments
+      const args = [
+        ...directories,
+        '--stdout',
+        '--style', options.style || 'markdown'
+      ];
+      
+      if (options.compress) args.push('--compress');
+      if (options.removeComments) args.push('--remove-comments');
+      if (options.removeEmptyLines) args.push('--remove-empty-lines');
+      if (options.noDirectoryStructure) args.push('--no-directory-structure');
+      if (options.ignore) args.push('--ignore', options.ignore);
+      
+      // Spawn repomix as subprocess
+      const repomix = spawn('npx', ['repomix', ...args], {
+        cwd,
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      
+      let stdout = '';
+      let stderr = '';
+      
+      repomix.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      repomix.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      repomix.on('close', (code) => {
+        if (code === 0 && stdout.length > 100) {
+          resolve(stdout);
+        } else {
+          reject(new Error(`Repomix subprocess failed (exit code: ${code}). Stdout: ${stdout.substring(0, 200)}. Stderr: ${stderr.substring(0, 200)}`));
+        }
+      });
+      
+      repomix.on('error', (error) => {
+        reject(new Error(`Failed to spawn repomix subprocess: ${error.message}`));
+      });
+    });
+  }
+
 
   /**
    * Perform lightweight analysis of basic project characteristics
@@ -394,15 +470,19 @@ Keep response under 500 words and focus on elements that would make for engaging
   private extractCodeAnalysisFromContext(context: string): CodeAnalysis {
     // Extract function names from repomix compressed output
     const functionMatches = context.match(/(?:function|async function|const \w+ =|export (?:async )?function)\s+(\w+)/g) || [];
-    const functions = functionMatches.map((match) => ({
-      name: match.replace(/.*\s+(\w+).*/, '$1'),
-      summary: 'Function extracted from codebase',
-      parameters: [],
-      isAsync: match.includes('async'),
-      isExported: match.includes('export'),
-      fileName: 'extracted',
-      source: 'regex' as const
-    })).slice(0, 10); // Limit to 10 functions
+    const functions = functionMatches.map((match) => {
+      const name = match.replace(/.*\s+(\w+).*/, '$1');
+      const summary = this.generateFunctionSummary(name);
+      return {
+        name,
+        summary,
+        parameters: [],
+        isAsync: match.includes('async'),
+        isExported: match.includes('export'),
+        fileName: 'extracted',
+        source: 'regex' as const
+      };
+    }).slice(0, 10); // Limit to 10 functions
 
     // Extract class names
     const classMatches = context.match(/(?:class|export class)\s+(\w+)/g) || [];
@@ -431,8 +511,7 @@ Keep response under 500 words and focus on elements that would make for engaging
 
     // Find potential entry points
     const entryPoints = [];
-    if (context.includes('src/server.ts') || context.includes('server.ts')) entryPoints.push('src/server.ts');
-    if (context.includes('src/index.ts') || context.includes('index.ts')) entryPoints.push('src/index.ts');
+    if (context.includes('src/server.ts') || context.includes('server.ts') || context.includes('src/index.ts') || context.includes('index.ts')) entryPoints.push('src/server.ts');
     if (context.includes('src/main.ts') || context.includes('main.ts')) entryPoints.push('src/main.ts');
 
     return {
@@ -442,6 +521,28 @@ Keep response under 500 words and focus on elements that would make for engaging
       entryPoints,
       keyFiles: []
     };
+  }
+
+  /**
+   * Generate meaningful function summary based on function name
+   */
+  private generateFunctionSummary(functionName: string): string {
+    const name = functionName.toLowerCase();
+    
+    // Pattern-based summary generation
+    if (name.includes('get') || name.includes('fetch') || name.includes('retrieve')) return `Retrieves ${name.replace(/get|fetch|retrieve/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} data`;
+    if (name.includes('set') || name.includes('update') || name.includes('modify')) return `Updates ${name.replace(/set|update|modify/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} values`;
+    if (name.includes('create') || name.includes('add') || name.includes('insert')) return `Creates new ${name.replace(/create|add|insert/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
+    if (name.includes('delete') || name.includes('remove') || name.includes('destroy')) return `Removes ${name.replace(/delete|remove|destroy/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
+    if (name.includes('process') || name.includes('handle')) return `Processes ${name.replace(/process|handle/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} operations`;
+    if (name.includes('validate') || name.includes('check') || name.includes('verify')) return `Validates ${name.replace(/validate|check|verify/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} data`;
+    if (name.includes('init') || name.includes('setup') || name.includes('start')) return `Initializes ${name.replace(/init|setup|start/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} components`;
+    if (name.includes('parse') || name.includes('format')) return `Processes ${name.replace(/parse|format/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} formatting`;
+    if (name.includes('generate') || name.includes('build')) return `Generates ${name.replace(/generate|build/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} content`;
+    if (name.includes('clean') || name.includes('clear')) return `Cleans up ${name.replace(/clean|clear/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} resources`;
+    
+    // Default fallback with action words
+    return `Processes ${functionName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} functionality`;
   }
 
   /**
@@ -470,10 +571,8 @@ Keep response under 500 words and focus on elements that would make for engaging
    * Clean up resources
    */
   async cleanup(): Promise<void> {
-    try {
-      await fs.rm(this.tempDir, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
-    }
+    // No temp directory to clean up when using stdout capture
+    // Just clear LLM client if needed
+    this.llmClient = null;
   }
 }

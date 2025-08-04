@@ -1,10 +1,9 @@
-import { ProjectAnalyzer } from '../analyzer/index.js';
-import type { ProjectInfo } from '../analyzer/index.js';
+import { RepomixAnalyzer, type ProjectInfo } from '../analyzer/repomix-analyzer.js';
 import { LRUCache } from './cache.js';
 
 // Analysis state management with improved caching
 class OptimizedAnalyzer {
-  private analyzer = new ProjectAnalyzer();
+  private analyzer = new RepomixAnalyzer();
   private cache = new LRUCache(50, 300000); // 50 entries, 5min TTL
   private activeAnalysis: Map<string, Promise<ProjectInfo>> = new Map();
 

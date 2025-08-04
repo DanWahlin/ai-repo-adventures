@@ -1,6 +1,8 @@
-import type { ProjectInfo } from '../analyzer/index.js';
+import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
 import { AdventureTheme } from '../shared/theme.js';
-import { TIMEOUTS, ADVENTURE_CONFIG, isValidTheme, THEMES, Character, Story } from '../shared/index.js';
+import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
+import { isValidTheme, THEMES } from '../shared/theme.js';
+import { Character, Story } from '../shared/types.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { ThemeManager } from './theme-manager.js';
 import { AdventurePathGenerator } from './adventure-path-generator.js';
@@ -456,7 +458,7 @@ ${topFunctions}
   /**
    * Helper to wrap promises with timeout
    */
-  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number = TIMEOUTS.LLM_REQUEST): Promise<T> {
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number = LLM_REQUEST_TIMEOUT): Promise<T> {
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs);
     });
@@ -469,8 +471,8 @@ ${topFunctions}
    */
   private validateTheme(theme: AdventureTheme): AdventureTheme {
     if (!isValidTheme(theme)) {
-      console.warn(`Invalid theme '${theme}', defaulting to ${ADVENTURE_CONFIG.DEFAULT_THEME}`);
-      return ADVENTURE_CONFIG.DEFAULT_THEME;
+      console.warn(`Invalid theme '${theme}', defaulting to ${DEFAULT_THEME}`);
+      return DEFAULT_THEME;
     }
     return theme;
   }

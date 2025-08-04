@@ -1,9 +1,9 @@
-import type { ProjectInfo } from '../analyzer/index.js';
-import type { AdventureTheme } from '../shared/index.js';
+import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { AdventureTheme } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
 import { FileContentManager } from './file-content-manager.js';
-import { StoryGenerationError } from '../shared/index.js';
-import { InputValidator } from '../shared/input-validator.js';
+import { StoryGenerationError } from '../shared/error-handling.js';
+import { validateAdventureChoice } from '../shared/input-validator.js';
 
 // Re-export interfaces from story-generator for backward compatibility
 export type { Adventure, StoryResponse, AdventureContent, CodeSnippet } from './story-generator.js';
@@ -74,16 +74,13 @@ export class AdventureManager {
 
   /**
    * Validate and sanitize user input for adventure selection
-   * Uses whitelist-based validation to prevent injection attacks
    */
   private validateAndSanitizeChoice(input: string): string {
-    const validation = InputValidator.validateAdventureChoice(input);
-    
-    if (!validation.isValid) {
-      throw new Error(`Invalid adventure choice: ${validation.error}`);
+    try {
+      return validateAdventureChoice(input);
+    } catch (error) {
+      throw new Error(`Invalid adventure choice: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    return validation.sanitized;
   }
 
   /**

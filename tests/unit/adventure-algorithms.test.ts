@@ -6,9 +6,9 @@
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
 import { DynamicStoryGenerator, STORY_THEMES } from '../../src/adventure/story-generator.js';
-import { ProjectAnalyzer } from '../../src/analyzer/project-analyzer.js';
+import { RepomixAnalyzer } from '../../src/analyzer/repomix-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
-import type { ProjectInfo } from '../../src/analyzer/project-analyzer.js';
+import type { ProjectInfo } from '../../src/analyzer/repomix-analyzer.js';
 
 // Using shared mockProjectInfo from test-utils.js
 /* Commented out local definition - using shared version
@@ -18,9 +18,9 @@ const mockProjectInfo: ProjectInfo = {
   mainTechnologies: ['TypeScript', 'Node.js', 'React'],
   structure: {
     directories: ['src', 'tests', 'dist'],
-    importantFiles: ['package.json', 'README.md', 'src/index.ts'],
+    importantFiles: ['package.json', 'README.md', 'src/server.ts'],
     configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/index.ts', 'src/app.ts', 'src/utils.ts']
+    sourceFiles: ['src/server.ts', 'src/app.ts', 'src/utils.ts']
   },
   hasTests: true,
   hasDatabase: false,
@@ -65,10 +65,10 @@ const mockProjectInfo: ProjectInfo = {
       { name: 'express', version: '^4.18.0', type: 'dependency', category: 'framework' },
       { name: 'jest', version: '^29.0.0', type: 'devDependency', category: 'testing' }
     ],
-    entryPoints: ['src/index.ts'],
+    entryPoints: ['src/server.ts'],
     keyFiles: [
       {
-        path: 'src/index.ts',
+        path: 'src/server.ts',
         content: 'import express from "express";\nconst app = express();',
         summary: 'Main application entry point'
       }
@@ -192,7 +192,7 @@ async function runTests() {
 
   await test('Path validation rejects dangerous paths', () => {
     // Path validation is now in FileSystemScanner, test via ProjectAnalyzer
-    const analyzer = new ProjectAnalyzer();
+    const analyzer = new RepomixAnalyzer();
     
     const dangerousPaths = [
       '/etc/passwd',
@@ -224,7 +224,7 @@ async function runTests() {
 
   await test('Path validation accepts safe paths', () => {
     // This functionality is now in FileSystemScanner, test via ProjectAnalyzer
-    const analyzer = new ProjectAnalyzer();
+    const analyzer = new RepomixAnalyzer();
     
     // Test that valid paths work by actually analyzing current directory
     analyzer.analyzeProject('.').then(() => {
@@ -240,7 +240,7 @@ async function runTests() {
 
   await test('Technology detection works correctly', () => {
     // Technology detection is now in FileSystemScanner, test via full analysis
-    const analyzer = new ProjectAnalyzer();
+    const analyzer = new RepomixAnalyzer();
     
     // Test by analyzing current project which has TypeScript
     return analyzer.analyzeProject('.').then((result) => {
@@ -253,7 +253,7 @@ async function runTests() {
 
   await test('Function summary generation creates meaningful descriptions', () => {
     // Function summary generation is now in CodeAnalyzer, test via actual analysis
-    const analyzer = new ProjectAnalyzer();
+    const analyzer = new RepomixAnalyzer();
     
     // Test by analyzing current project and checking function summaries
     return analyzer.analyzeProject('.').then((result) => {
@@ -264,7 +264,7 @@ async function runTests() {
       const sampleFunction = functions[0];
       assert(typeof sampleFunction.summary === 'string', 'Summary should be string');
       assert(sampleFunction.summary.length > 0, 'Summary should not be empty');
-      assert(/retrieves|updates|creates|removes|processes|validates/.test(sampleFunction.summary), 
+      assert(/retrieves|updates|creates|removes|processes|validates/i.test(sampleFunction.summary), 
         'Summary should contain action word');
       
       return analyzer.cleanup();

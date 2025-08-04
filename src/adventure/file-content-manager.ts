@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
-import type { ProjectInfo } from '../analyzer/index.js';
-import { ADVENTURE_CONFIG } from '../shared/config.js';
+import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import { MAX_FILES_PER_ADVENTURE, MAX_FILE_LINES_FOR_LLM } from '../shared/config.js';
 
 /**
  * FileContentManager - Handles file reading and content preparation
@@ -57,7 +57,7 @@ export class FileContentManager {
 
     const fileContents: string[] = [];
     
-    for (const file of codeFiles.slice(0, ADVENTURE_CONFIG.MAX_FILES_PER_ADVENTURE)) { // Limit files to avoid overwhelming the LLM
+    for (const file of codeFiles.slice(0, MAX_FILES_PER_ADVENTURE)) { // Limit files to avoid overwhelming the LLM
       try {
         const filePath = this.findFileInIndex(file);
         if (filePath) {
@@ -66,7 +66,7 @@ export class FileContentManager {
           
           // Truncate very long files to avoid overwhelming the LLM
           const lines = content.split('\n');
-          const maxLines = ADVENTURE_CONFIG.MAX_FILE_LINES_FOR_LLM;
+          const maxLines = MAX_FILE_LINES_FOR_LLM;
           const truncatedContent = lines.slice(0, maxLines).join('\n');
           const truncatedNote = lines.length > maxLines ? `\n... (file continues for ${lines.length - maxLines} more lines)` : '';
           

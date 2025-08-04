@@ -1,6 +1,6 @@
-import type { ProjectInfo } from '../analyzer/index.js';
-import type { AdventureTheme } from '../shared/index.js';
-import { THEME_EMOJIS } from '../shared/index.js';
+import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { AdventureTheme } from '../shared/theme.js';
+import { THEME_EMOJIS } from '../shared/theme.js';
 
 export interface AdventurePath {
   id: string;
