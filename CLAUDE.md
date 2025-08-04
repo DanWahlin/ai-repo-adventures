@@ -213,3 +213,19 @@ The typical user interaction flow:
 ```
 
 **Note**: The `cwd` should point to the project you want to explore, not this MCP server's directory.
+
+## Architectural Principles
+
+### Everything is Dynamic
+
+Stories are generated based on the actual codebase being analyzed:
+- Adventures are created dynamically based on project structure, file count, and complexity
+- Content reflects the real technologies, files, and patterns found in each project
+- Progress tracking adapts to however many adventures are generated
+
+Key implications:
+- No hardcoded adventure counts
+- No assumptions about specific file names or structures
+- No fixed story templates
+- Everything scales based on the actual project being explored
+```
