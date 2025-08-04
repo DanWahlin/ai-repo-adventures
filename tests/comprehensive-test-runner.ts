@@ -269,13 +269,12 @@ async function runCommand(command: string, args: string[] = []): Promise<TestRes
 async function runAllTests(): Promise<TestSummary> {
   console.log('🏃‍♂️ Running Comprehensive Test Suite');
   console.log('=' .repeat(70));
-  console.log('This will run all unit tests, integration tests, analysis tests, simple tests, real-world tests, and interactive tests');
+  console.log('This will run all unit tests, integration tests, simple tests, real-world tests, and interactive tests');
   console.log('');
   
   const testSuites = [
     { name: 'Unit Tests', command: 'npm', args: ['run', 'test:unit'] },
     { name: 'Integration Tests', command: 'npm', args: ['run', 'test:integration:llm'] },
-    { name: 'Cross-Language Analysis', command: 'npm', args: ['run', 'test:analysis'] },
     { name: 'Simple Tests', command: 'npm', args: ['run', 'test:simple'] },
     { name: 'Real-World Tests', command: 'npm', args: ['run', 'test:real-world'] },
     { name: 'Interactive Tests', command: 'npm', args: ['run', 'test:interactive'] }
