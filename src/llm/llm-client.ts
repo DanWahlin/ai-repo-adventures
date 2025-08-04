@@ -114,38 +114,64 @@ export class LLMClient {
    * Categorize errors for better handling
    */
   private categorizeError(error: unknown): { type: string; message: string } {
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      
-      // Check for authentication errors
-      if (message.includes('unauthorized') || message.includes('401') || message.includes('invalid api key') || message.includes('bad credentials')) {
-        return { type: 'authentication', message: this.sanitizeErrorMessage(error.message) };
-      }
-      
-      // Check for rate limiting
-      if (message.includes('rate limit') || message.includes('429') || message.includes('quota exceeded')) {
-        return { type: 'rate_limit', message: this.sanitizeErrorMessage(error.message) };
-      }
-      
-      // Check for timeout errors
-      if (message.includes('timeout') || message.includes('timed out')) {
-        return { type: 'timeout', message: this.sanitizeErrorMessage(error.message) };
-      }
-      
-      // Check for network errors
-      if (message.includes('network') || message.includes('enotfound') || message.includes('econnrefused') || message.includes('fetch')) {
-        return { type: 'network', message: this.sanitizeErrorMessage(error.message) };
-      }
-      
-      // Check for model/resource not found
-      if (message.includes('404') || message.includes('not found') || message.includes('model not found')) {
-        return { type: 'resource_not_found', message: this.sanitizeErrorMessage(error.message) };
-      }
-      
-      return { type: 'unknown', message: this.sanitizeErrorMessage(error.message) };
+    if (!(error instanceof Error)) {
+      return { type: 'unknown', message: 'An unexpected error occurred' };
     }
     
-    return { type: 'unknown', message: 'An unexpected error occurred' };
+    const errorType = this.identifyErrorType(error.message.toLowerCase());
+    const sanitizedMessage = this.sanitizeErrorMessage(error.message);
+    
+    return { type: errorType, message: sanitizedMessage };
+  }
+
+  /**
+   * Identify error type based on message patterns
+   */
+  private identifyErrorType(message: string): string {
+    const patterns = this.getErrorPatterns();
+    
+    for (const pattern of patterns) {
+      if (this.messageMatchesPattern(message, pattern.keywords)) {
+        return pattern.type;
+      }
+    }
+    
+    return 'unknown';
+  }
+
+  /**
+   * Get error pattern definitions
+   */
+  private getErrorPatterns(): Array<{ type: string; keywords: string[] }> {
+    return [
+      { 
+        type: 'authentication', 
+        keywords: ['unauthorized', '401', 'invalid api key', 'bad credentials'] 
+      },
+      { 
+        type: 'rate_limit', 
+        keywords: ['rate limit', '429', 'quota exceeded'] 
+      },
+      { 
+        type: 'timeout', 
+        keywords: ['timeout', 'timed out'] 
+      },
+      { 
+        type: 'network', 
+        keywords: ['network', 'enotfound', 'econnrefused', 'fetch'] 
+      },
+      { 
+        type: 'resource_not_found', 
+        keywords: ['404', 'not found', 'model not found'] 
+      }
+    ];
+  }
+
+  /**
+   * Check if message matches any pattern keywords
+   */
+  private messageMatchesPattern(message: string, keywords: string[]): boolean {
+    return keywords.some(keyword => message.includes(keyword));
   }
 
   /**

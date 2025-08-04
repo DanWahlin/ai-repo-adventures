@@ -2,10 +2,12 @@ import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
 import { AdventureTheme } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
 import { isValidTheme, THEMES } from '../shared/theme.js';
-import { Character, Story } from '../shared/types.js';
+import { Character } from '../shared/types.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { ThemeManager } from './theme-manager.js';
 import { AdventurePathGenerator } from './adventure-path-generator.js';
+import { StoryTemplateEngine } from './story-template-engine.js';
+import { ProjectInsightGenerator } from './project-insight-generator.js';
 
 export interface Adventure {
   id: string;
@@ -14,8 +16,14 @@ export interface Adventure {
   codeFiles?: string[];
 }
 
+export interface Story {
+  content: string;
+  theme: AdventureTheme;
+  setting: string;
+}
+
 export interface StoryResponse {
-  story: string;
+  story: string | Story;
   adventures: Adventure[];
 }
 
@@ -52,12 +60,16 @@ export class StoryGenerator {
   private llmClient: LLMClient;
   private themeManager: ThemeManager;
   private pathGenerator: AdventurePathGenerator;
+  private templateEngine: StoryTemplateEngine;
+  private insightGenerator: ProjectInsightGenerator;
   private currentProject?: ProjectInfo;
 
   constructor() {
     this.llmClient = new LLMClient();
     this.themeManager = new ThemeManager();
     this.pathGenerator = new AdventurePathGenerator();
+    this.templateEngine = new StoryTemplateEngine();
+    this.insightGenerator = new ProjectInsightGenerator();
   }
 
   /**
@@ -202,20 +214,14 @@ Generate ONLY the celebration message, no extra text.`;
   }
 
   /**
-   * Generate with fallback templates
+   * Generate with fallback templates (delegates to template engine)
    */
   private generateWithTemplates(projectInfo: ProjectInfo, theme: AdventureTheme): StoryResponse {
-    const intro = this.getThemeIntroduction(theme, projectInfo);
-    const adventures = this.generateTemplateAdventures(projectInfo, theme);
-
-    return {
-      story: intro,
-      adventures
-    };
+    return this.templateEngine.generateWithTemplates(projectInfo, theme);
   }
 
   /**
-   * Generate template-based adventures
+   * DEPRECATED - Now handled by StoryTemplateEngine
    */
   private generateTemplateAdventures(projectInfo: ProjectInfo, theme: AdventureTheme): Adventure[] {
     const adventures: Adventure[] = [];
@@ -253,30 +259,47 @@ Generate ONLY the celebration message, no extra text.`;
   }
 
   /**
-   * Generate fallback adventure content
+   * Generate fallback adventure content (delegates to template engine)
    */
   private generateAdventureContentFallback(
     adventure: Adventure,
     theme: AdventureTheme,
     codeContent: string
   ): AdventureContent {
-    const themeVocab = this.themeManager.getThemeVocabulary(theme);
+    // Use currentProject if available, otherwise create minimal project info
+    const projectInfo = this.currentProject || ({
+      type: 'Unknown',
+      mainTechnologies: [],
+      fileCount: 0,
+      structure: { directories: [], sourceFiles: [], configFiles: [] },
+      hasTests: false,
+      hasDatabase: false,
+      hasApi: false,
+      hasFrontend: false,
+      codeAnalysis: {
+        functions: [],
+        classes: [],
+        entryPoints: [],
+        dependencies: [],
+        patterns: []
+      }
+    } as unknown as ProjectInfo);
     
-    return {
-      adventure: `Welcome to "${adventure.title}"! ${adventure.description} 
-                  Let's explore the code using our ${theme} lens. ${themeVocab}`,
-      fileExploration: `📍 Quest Action Required: Open the following files in your editor and explore the code structure. 
-                        Look for patterns, connections, and how different parts work together.`,
-      codeSnippets: this.extractCodeSnippets(codeContent),
-      hints: [
-        `Practical: Look for the main functions and understand their purpose in this ${theme} context.`,
-        `Next Steps: After exploring these files, consider looking at related test files or configuration.`
-      ]
-    };
+    const fallbackContent = this.templateEngine.generateAdventureContentFallback(
+      adventure, 
+      theme, 
+      projectInfo,
+      codeContent
+    );
+    
+    // Add code snippets if available
+    fallbackContent.codeSnippets = this.extractCodeSnippets(codeContent);
+    
+    return fallbackContent;
   }
 
   /**
-   * Generate fallback completion summary
+   * Generate fallback completion summary (delegates to template engine)
    */
   private generateCompletionSummaryFallback(
     adventure: Adventure,
@@ -297,9 +320,9 @@ Generate ONLY the celebration message, no extra text.`;
    * Build story generation prompt
    */
   private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: AdventureTheme): string {
-    const projectAnalysis = this.createProjectAnalysisPrompt(projectInfo);
+    const projectAnalysis = this.insightGenerator.createProjectAnalysisPrompt(projectInfo);
     const themeGuidelines = this.themeManager.getThemeGuidelines(theme);
-    const projectInsights = this.generateProjectInsights(theme, projectInfo);
+    const projectInsights = this.insightGenerator.generateProjectInsights(theme, projectInfo);
     
     return `You are a technical education specialist creating immersive code exploration experiences.
 Transform this codebase into an engaging ${theme}-themed narrative that weaves project details into the story.
@@ -381,9 +404,17 @@ ${codeContent}
   }
 
   /**
-   * Create project analysis prompt section
+   * Create project analysis prompt section (delegates to insight generator)
    */
   private createProjectAnalysisPrompt(projectInfo: ProjectInfo): string {
+    return this.insightGenerator.createProjectAnalysisPrompt(projectInfo);
+  }
+
+  /**
+   * DEPRECATED - Original implementation kept for reference
+   * Now handled by ProjectInsightGenerator
+   */
+  private createProjectAnalysisPromptOld(projectInfo: ProjectInfo): string {
     // Use the rich LLM context summary from analyzer if available
     if (projectInfo.llmContextSummary) {
       return `**Comprehensive Project Analysis:**

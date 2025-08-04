@@ -528,21 +528,63 @@ Keep response under 500 words and focus on elements that would make for engaging
    */
   private generateFunctionSummary(functionName: string): string {
     const name = functionName.toLowerCase();
+    const pattern = this.findFunctionPattern(name);
     
-    // Pattern-based summary generation
-    if (name.includes('get') || name.includes('fetch') || name.includes('retrieve')) return `Retrieves ${name.replace(/get|fetch|retrieve/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} data`;
-    if (name.includes('set') || name.includes('update') || name.includes('modify')) return `Updates ${name.replace(/set|update|modify/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} values`;
-    if (name.includes('create') || name.includes('add') || name.includes('insert')) return `Creates new ${name.replace(/create|add|insert/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    if (name.includes('delete') || name.includes('remove') || name.includes('destroy')) return `Removes ${name.replace(/delete|remove|destroy/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    if (name.includes('process') || name.includes('handle')) return `Processes ${name.replace(/process|handle/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} operations`;
-    if (name.includes('validate') || name.includes('check') || name.includes('verify')) return `Validates ${name.replace(/validate|check|verify/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} data`;
-    if (name.includes('init') || name.includes('setup') || name.includes('start')) return `Initializes ${name.replace(/init|setup|start/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} components`;
-    if (name.includes('parse') || name.includes('format')) return `Processes ${name.replace(/parse|format/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} formatting`;
-    if (name.includes('generate') || name.includes('build')) return `Generates ${name.replace(/generate|build/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} content`;
-    if (name.includes('clean') || name.includes('clear')) return `Cleans up ${name.replace(/clean|clear/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()} resources`;
+    if (pattern) {
+      return this.createFunctionSummary(name, pattern);
+    }
     
     // Default fallback with action words
     return `Processes ${functionName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} functionality`;
+  }
+
+  /**
+   * Find matching pattern for function name
+   */
+  private findFunctionPattern(name: string): { keywords: string[]; action: string; suffix?: string } | null {
+    const patterns = this.getFunctionPatterns();
+    
+    for (const pattern of patterns) {
+      if (pattern.keywords.some(keyword => name.includes(keyword))) {
+        return pattern;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Get function name patterns
+   */
+  private getFunctionPatterns(): Array<{ keywords: string[]; action: string; suffix?: string }> {
+    return [
+      { keywords: ['get', 'fetch', 'retrieve'], action: 'Retrieves', suffix: 'data' },
+      { keywords: ['set', 'update', 'modify'], action: 'Updates', suffix: 'values' },
+      { keywords: ['create', 'add', 'insert'], action: 'Creates new' },
+      { keywords: ['delete', 'remove', 'destroy'], action: 'Removes' },
+      { keywords: ['process', 'handle'], action: 'Processes', suffix: 'operations' },
+      { keywords: ['validate', 'check', 'verify'], action: 'Validates', suffix: 'data' },
+      { keywords: ['init', 'setup', 'start'], action: 'Initializes', suffix: 'components' },
+      { keywords: ['parse', 'format'], action: 'Processes', suffix: 'formatting' },
+      { keywords: ['generate', 'build'], action: 'Generates', suffix: 'content' },
+      { keywords: ['clean', 'clear'], action: 'Cleans up', suffix: 'resources' }
+    ];
+  }
+
+  /**
+   * Create function summary from pattern
+   */
+  private createFunctionSummary(name: string, pattern: { keywords: string[]; action: string; suffix?: string }): string {
+    // Remove the pattern keywords from the name
+    const keywordRegex = new RegExp(pattern.keywords.join('|'), 'g');
+    const cleanedName = name.replace(keywordRegex, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim();
+    
+    // Build the summary
+    const parts = [pattern.action];
+    if (cleanedName) parts.push(cleanedName);
+    if (pattern.suffix) parts.push(pattern.suffix);
+    
+    return parts.join(' ');
   }
 
   /**

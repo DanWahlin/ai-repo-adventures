@@ -34,7 +34,7 @@ class InteractiveMCPClient {
     
     this.transport = new StdioClientTransport({
       command: 'node',
-      args: [path.join(process.cwd(), 'dist/index.js')],
+      args: [path.join(process.cwd(), 'dist/server.js')],
       env: process.env as Record<string, string>,
     });
 

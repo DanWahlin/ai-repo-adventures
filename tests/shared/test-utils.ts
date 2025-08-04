@@ -135,7 +135,7 @@ export const mockProjectInfo: ProjectInfo = {
     directories: ['src', 'tests', 'dist'],
     importantFiles: ['package.json', 'README.md', 'src/server.ts'],
     configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/server.ts', 'src/app.ts', 'src/utils.ts']
+    sourceFiles: ['src/server.ts', 'src/app.ts', 'src/utils.ts', 'src/index.ts']
   },
   hasTests: true,
   hasDatabase: false,

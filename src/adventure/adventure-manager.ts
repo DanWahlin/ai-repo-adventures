@@ -88,83 +88,167 @@ export class AdventureManager {
    */
   async exploreAdventure(choice: string): Promise<AdventureResult> {
     const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-    let adventure: Adventure | undefined;
     
-    // Check for "View progress" command first (before parsing numbers)
-    if (sanitizedChoice.toLowerCase().includes('progress') || 
-        sanitizedChoice.toLowerCase().includes('view progress')) {
+    // Check if this is a progress request
+    if (this.isProgressRequest(sanitizedChoice)) {
       return this.getProgress();
     }
     
-    // Try to match by number (1, 2, 3, etc.)
-    const choiceNumber = parseInt(sanitizedChoice);
-    if (!isNaN(choiceNumber) && choiceNumber > 0) {
-      // Check if this number corresponds to "View progress" option (always last item)
-      const choices = this.getAvailableAdventureChoices();
-      if (choiceNumber === choices.length && choices[choices.length - 1] === 'View progress') {
-        return this.getProgress();
-      }
-      // Make sure we don't exceed the actual adventures array
-      if (choiceNumber <= this.state.adventures.length) {
-        adventure = this.state.adventures[choiceNumber - 1];
-      }
-    }
-    
-    // Try to match by ID or title if number didn't work
+    // Find the adventure based on the choice
+    const adventure = this.findAdventure(sanitizedChoice);
     if (!adventure) {
-      adventure = this.state.adventures.find(a => 
-        a.id === sanitizedChoice || 
-        a.title.toLowerCase().includes(sanitizedChoice.toLowerCase()) ||
-        sanitizedChoice.toLowerCase().includes(a.title.toLowerCase())
-      );
-    }
-    
-    if (!adventure) {
-      return {
-        narrative: "Adventure not found. Please choose from the available adventures.",
-        choices: this.getAvailableAdventureChoices()
-      };
+      return this.createNotFoundResult();
     }
 
+    // Execute the adventure
+    return await this.executeAdventure(adventure);
+  }
+
+  /**
+   * Check if the user is requesting progress view
+   */
+  private isProgressRequest(choice: string): boolean {
+    // Check text-based progress request
+    if (choice.toLowerCase().includes('progress') || 
+        choice.toLowerCase().includes('view progress')) {
+      return true;
+    }
+    
+    // Check numeric progress request (last item in choices)
+    const choiceNumber = parseInt(choice);
+    if (!isNaN(choiceNumber) && choiceNumber > 0) {
+      const choices = this.getAvailableAdventureChoices();
+      return choiceNumber === choices.length && 
+             choices[choices.length - 1] === 'View progress';
+    }
+    
+    return false;
+  }
+
+  /**
+   * Find an adventure by number, ID, or title
+   */
+  private findAdventure(choice: string): Adventure | undefined {
+    // Try to find by number first
+    const byNumber = this.findAdventureByNumber(choice);
+    if (byNumber) return byNumber;
+    
+    // Then try by ID or title
+    return this.findAdventureByIdOrTitle(choice);
+  }
+
+  /**
+   * Find adventure by numeric choice
+   */
+  private findAdventureByNumber(choice: string): Adventure | undefined {
+    const choiceNumber = parseInt(choice);
+    if (!isNaN(choiceNumber) && 
+        choiceNumber > 0 && 
+        choiceNumber <= this.state.adventures.length) {
+      return this.state.adventures[choiceNumber - 1];
+    }
+    return undefined;
+  }
+
+  /**
+   * Find adventure by ID or title match
+   */
+  private findAdventureByIdOrTitle(choice: string): Adventure | undefined {
+    const lowerChoice = choice.toLowerCase();
+    return this.state.adventures.find(a => 
+      a.id === choice || 
+      a.title.toLowerCase().includes(lowerChoice) ||
+      lowerChoice.includes(a.title.toLowerCase())
+    );
+  }
+
+  /**
+   * Create result for when adventure is not found
+   */
+  private createNotFoundResult(): AdventureResult {
+    return {
+      narrative: "Adventure not found. Please choose from the available adventures.",
+      choices: this.getAvailableAdventureChoices()
+    };
+  }
+
+  /**
+   * Execute the selected adventure
+   */
+  private async executeAdventure(adventure: Adventure): Promise<AdventureResult> {
+    // Validate prerequisites
+    this.validateAdventurePrerequisites();
+
+    // Generate adventure content
+    const content = await this.generateAdventureContent(adventure);
+    
+    // Mark as completed and generate summary
+    this.markAdventureCompleted(adventure);
+    const summary = await this.generateCompletionSummary(adventure);
+
+    // Return formatted result
+    return this.createAdventureResult(content, summary);
+  }
+
+  /**
+   * Validate that all prerequisites for adventure execution are met
+   */
+  private validateAdventurePrerequisites(): void {
     if (!this.state.projectInfo) {
       throw new StoryGenerationError('No project context available', {
-        operation: 'generateHints'
+        operation: 'generateAdventureContent'
       });
     }
-
-    // Prepare code content for the adventure
-    const codeContent = await this.fileContentManager.prepareCodeContent(
-      adventure.codeFiles || [],
-      this.state.projectInfo
-    );
-
-    // Generate adventure content using LLM
-    const adventureContent = await this.storyGenerator.generateAdventureContent(
-      adventure,
-      this.state.currentTheme!,
-      this.state.projectInfo,
-      codeContent
-    );
     
-    // Mark adventure as completed
-    this.state.completedAdventures.add(adventure.id);
-
     if (!this.state.currentTheme) {
       throw new StoryGenerationError('No theme selected', {
-        operation: 'getCompletionSummary'
+        operation: 'generateAdventureContent'
       });
     }
+  }
 
-    // Generate completion summary
-    const completionSummary = await this.storyGenerator.generateCompletionSummary(
-      adventure,
-      this.state.currentTheme,
-      this.state.completedAdventures.size + 1,
-      this.state.adventures.length
+  /**
+   * Generate content for the adventure
+   */
+  private async generateAdventureContent(adventure: Adventure): Promise<AdventureContent> {
+    const codeContent = await this.fileContentManager.prepareCodeContent(
+      adventure.codeFiles || [],
+      this.state.projectInfo!
     );
 
+    return await this.storyGenerator.generateAdventureContent(
+      adventure,
+      this.state.currentTheme!,
+      this.state.projectInfo!,
+      codeContent
+    );
+  }
+
+  /**
+   * Mark adventure as completed
+   */
+  private markAdventureCompleted(adventure: Adventure): void {
+    this.state.completedAdventures.add(adventure.id);
+  }
+
+  /**
+   * Generate completion summary for the adventure
+   */
+  private async generateCompletionSummary(adventure: Adventure): Promise<string> {
+    return await this.storyGenerator.generateCompletionSummary(
+      adventure,
+      this.state.currentTheme!,
+      this.state.completedAdventures.size,
+      this.state.adventures.length
+    );
+  }
+
+  /**
+   * Create the final adventure result
+   */
+  private createAdventureResult(content: AdventureContent, summary: string): AdventureResult {
     return {
-      narrative: this.formatAdventureResult(adventureContent, completionSummary),
+      narrative: this.formatAdventureResult(content, summary),
       choices: this.getAvailableAdventureChoices(),
       completed: true,
       progressUpdate: `Progress: ${this.state.progressPercentage}% complete (${this.state.completedAdventures.size}/${this.state.adventures.length} adventures finished)`
