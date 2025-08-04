@@ -17,7 +17,7 @@ export const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 // Timeouts in milliseconds
 export const FILE_READ_TIMEOUT = 10000;
 export const FILE_ANALYSIS_TIMEOUT = 30000;
-export const LLM_REQUEST_TIMEOUT = 15000;
+export const LLM_REQUEST_TIMEOUT = 30000; // Increased from 15s to 30s for more reliable LLM responses
 export const LLM_CACHE_TTL = 300000; // 5 minutes
 
 // Analysis limits

@@ -5,26 +5,8 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import type { CallToolResult, TextContent, Tool } from '@modelcontextprotocol/sdk/types.js';
 import * as readline from 'readline';
 import * as path from 'path';
+import chalk from 'chalk';
 
-// ANSI color codes for better terminal output
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  dim: '\x1b[2m',
-  
-  // Foreground colors
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  white: '\x1b[37m',
-  
-  // Background colors
-  bgBlue: '\x1b[44m',
-  bgGreen: '\x1b[42m',
-};
 
 class InteractiveMCPClient {
   private client: Client;
@@ -48,7 +30,7 @@ class InteractiveMCPClient {
   }
 
   private async connectToServer(): Promise<void> {
-    console.log(`${colors.cyan}🔌 Connecting to MCP Repo Adventure Server...${colors.reset}`);
+    console.log(chalk.cyan('🔌 Connecting to MCP Repo Adventure Server...'));
     
     this.transport = new StdioClientTransport({
       command: 'node',
@@ -64,19 +46,19 @@ class InteractiveMCPClient {
       this.tools.set(tool.name, tool);
     });
 
-    console.log(`${colors.green}✅ Connected successfully!${colors.reset}`);
-    console.log(`${colors.dim}Available tools: ${Array.from(this.tools.keys()).join(', ')}${colors.reset}\n`);
+    console.log(chalk.green('✅ Connected successfully!'));
+    console.log(chalk.dim(`Available tools: ${Array.from(this.tools.keys()).join(', ')}`) + '\n');
   }
 
   private formatText(text: string): string {
     // Format markdown-style text for terminal
     return text
-      .replace(/\*\*(.*?)\*\*/g, `${colors.bright}$1${colors.reset}`) // Bold
-      .replace(/`(.*?)`/g, `${colors.cyan}$1${colors.reset}`) // Code
-      .replace(/^(#{1,3}) (.*)$/gm, `${colors.yellow}$2${colors.reset}`) // Headers
-      .replace(/^🚀/gm, `${colors.blue}🚀${colors.reset}`) // Space emoji
-      .replace(/^🏰/gm, `${colors.magenta}🏰${colors.reset}`) // Castle emoji
-      .replace(/^🏺/gm, `${colors.yellow}🏺${colors.reset}`); // Ancient emoji
+      .replace(/\*\*(.*?)\*\*/g, (_, p1) => chalk.bold(p1)) // Bold
+      .replace(/`(.*?)`/g, (_, p1) => chalk.cyan(p1)) // Code
+      .replace(/^(#{1,3}) (.*)$/gm, (_, p1, p2) => chalk.yellow(p2)) // Headers
+      .replace(/^🚀/gm, chalk.blue('🚀')) // Space emoji
+      .replace(/^🏰/gm, chalk.magenta('🏰')) // Castle emoji
+      .replace(/^🏺/gm, chalk.yellow('🏺')); // Ancient emoji
   }
 
   private async callTool(toolName: string, args: Record<string, any>): Promise<string> {
@@ -95,7 +77,7 @@ class InteractiveMCPClient {
 
       return texts.join('\n\n');
     } catch (error) {
-      return `${colors.red}Error: ${error instanceof Error ? error.message : String(error)}${colors.reset}`;
+      return chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -217,35 +199,35 @@ class InteractiveMCPClient {
     }
 
     console.log(this.formatText(response));
-    console.log('\n' + colors.dim + '─'.repeat(60) + colors.reset + '\n');
+    console.log('\n' + chalk.dim('─'.repeat(60)) + '\n');
   }
 
   private async setupProject(): Promise<void> {
     return new Promise((resolve) => {
       console.log(`
-${colors.yellow}📁 Project Setup${colors.reset}
-Current directory: ${colors.cyan}${this.currentProject}${colors.reset}
+${chalk.yellow('📁 Project Setup')}
+Current directory: ${chalk.cyan(this.currentProject)}
 
 Would you like to:
-  1. Analyze current directory: ${colors.dim}${process.cwd()}${colors.reset}
+  1. Analyze current directory: ${chalk.dim(process.cwd())}
   2. Enter a different project path
 
-${colors.green}Press Enter for option 1 (default)${colors.reset}
+${chalk.green('Press Enter for option 1 (default)')}
 `);
 
-      this.rl.question(`${colors.bright}Choose (1-2 or path)>${colors.reset} `, async (input) => {
+      this.rl.question(chalk.bold('Choose (1-2 or path)> '), async (input) => {
         const trimmed = input.trim();
         
         if (!trimmed || trimmed === '1') {
           // Default to current directory
           this.currentProject = process.cwd();
-          console.log(`${colors.green}✓ Using current directory: ${this.currentProject}${colors.reset}`);
+          console.log(chalk.green(`✓ Using current directory: ${this.currentProject}`));
         } else if (trimmed === '2') {
           // Ask for path
-          this.rl.question(`${colors.bright}Enter project path>${colors.reset} `, (path) => {
+          this.rl.question(chalk.bold('Enter project path> '), (path) => {
             this.currentProject = path.trim() || process.cwd();
             console.log(`${colors.green}✓ Project set to: ${this.currentProject}${colors.reset}`);
-            console.log(`\n${colors.cyan}Ready! Type "start adventure" to begin exploring.${colors.reset}\n`);
+            console.log('\n' + chalk.cyan('Ready! Type "start adventure" to begin exploring.') + '\n');
             resolve();
           });
           return;
@@ -255,7 +237,7 @@ ${colors.green}Press Enter for option 1 (default)${colors.reset}
           console.log(`${colors.green}✓ Project set to: ${this.currentProject}${colors.reset}`);
         }
         
-        console.log(`\n${colors.cyan}Ready! Type "start adventure" to begin exploring.${colors.reset}\n`);
+        console.log('\n' + chalk.cyan('Ready! Type "start adventure" to begin exploring.') + '\n');
         resolve();
       });
     });
@@ -263,56 +245,56 @@ ${colors.green}Press Enter for option 1 (default)${colors.reset}
 
   private showHelp(): void {
     console.log(`
-${colors.bright}🎮 MCP Repo Adventure - Interactive Commands${colors.reset}
+${chalk.bold('🎮 MCP Repo Adventure - Interactive Commands')}
 
-${colors.yellow}Starting:${colors.reset}
+${chalk.yellow('Starting:')}
   • "Start a repo adventure" - Begin analyzing current directory
   • "Start adventure for /path/to/project" - Analyze specific directory
 
-${colors.yellow}Themes:${colors.reset}
+${chalk.yellow('Themes:')}
   • "I choose the space theme" / "space" - Space exploration theme
   • "Mythical theme please" / "mythical" - Mythical fantasy theme
   • "Let's go ancient" / "ancient" - Ancient civilization theme
 
-${colors.yellow}Exploration:${colors.reset}
+${chalk.yellow('Exploration:')}
   • "Meet [character name]" - Meet a specific character
   • "Explore [area/path]" - Explore a part of the codebase
   • "Go to [location]" - Navigate to a location
   • Just type the choice text shown in the story
 
-${colors.yellow}New Features:${colors.reset}
+${chalk.yellow('New Features:')}
   • "Review my discoveries" - See your progress and discoveries
   • "Request a hint" - Get helpful guidance
   • "Explore the Configuration Cavern" - Visit configuration files
   • "Enter the Testing Grounds" - Explore test files
   • "Investigate the API Gateway" - Check API routes
 
-${colors.yellow}Commands:${colors.reset}
-  • ${colors.cyan}/help${colors.reset} - Show this help
-  • ${colors.cyan}/tools${colors.reset} - List available MCP tools
-  • ${colors.cyan}/clear${colors.reset} - Clear the screen
-  • ${colors.cyan}/project [path]${colors.reset} - Change project directory
-  • ${colors.cyan}/progress${colors.reset} - Quick progress check
-  • ${colors.cyan}/exit${colors.reset} or ${colors.cyan}/quit${colors.reset} - Exit the client
+${chalk.yellow('Commands:')}
+  • ${chalk.cyan('/help')} - Show this help
+  • ${chalk.cyan('/tools')} - List available MCP tools
+  • ${chalk.cyan('/clear')} - Clear the screen
+  • ${chalk.cyan('/project [path]')} - Change project directory
+  • ${chalk.cyan('/progress')} - Quick progress check
+  • ${chalk.cyan('/exit')} or ${chalk.cyan('/quit')} - Exit the client
 `);
   }
 
   async start(): Promise<void> {
     console.clear();
     console.log(`
-${colors.bgBlue}${colors.white}${colors.bright} 🚀 MCP Repo Adventure - Interactive Test Client ${colors.reset}
-${colors.dim}────────────────────────────────────────────────${colors.reset}
+${chalk.bgBlue.white.bold(' 🚀 MCP Repo Adventure - Interactive Test Client ')}
+${chalk.dim('─'.repeat(48))}
 
 Welcome! This is an interactive client for testing the MCP Repo Adventure server.
 
-${colors.yellow}✨ NEW FEATURES:${colors.reset}
+${chalk.yellow('✨ NEW FEATURES:')}
 • Dynamic choices based on exploration
 • Progress tracking and discoveries journal
 • Hint system for guidance
 • Code snippets when meeting characters
 • New areas: Testing Grounds, API Gateway, Configuration Cavern
 
-Type ${colors.cyan}/help${colors.reset} for available commands, or just start chatting!
+Type ${chalk.cyan('/help')} for available commands, or just start chatting!
 `);
 
     await this.connectToServer();
@@ -322,7 +304,7 @@ Type ${colors.cyan}/help${colors.reset} for available commands, or just start ch
 
     // Main interaction loop
     const prompt = () => {
-      this.rl.question(`${colors.bright}You>${colors.reset} `, async (input) => {
+      this.rl.question(chalk.bold('You> '), async (input) => {
         const trimmed = input.trim();
 
         // Handle special commands
@@ -332,9 +314,9 @@ Type ${colors.cyan}/help${colors.reset} for available commands, or just start ch
           if (command === '/help') {
             this.showHelp();
           } else if (command === '/tools') {
-            console.log(`\n${colors.yellow}Available MCP Tools:${colors.reset}`);
+            console.log('\n' + chalk.yellow('Available MCP Tools:'));
             this.tools.forEach((tool, name) => {
-              console.log(`  • ${colors.cyan}${name}${colors.reset} - ${tool.description}`);
+              console.log(`  • ${chalk.cyan(name)} - ${tool.description}`);
             });
             console.log();
           } else if (command === '/clear') {
@@ -342,17 +324,17 @@ Type ${colors.cyan}/help${colors.reset} for available commands, or just start ch
           } else if (command.startsWith('/project')) {
             const newPath = trimmed.substring(8).trim() || process.cwd();
             this.currentProject = newPath;
-            console.log(`${colors.green}✓ Project directory set to: ${newPath}${colors.reset}\n`);
+            console.log(chalk.green(`✓ Project directory set to: ${newPath}`) + '\n');
           } else if (command === '/progress') {
             // Quick progress check
             const response = await this.callTool('explore_path', { choice: 'Review your discoveries' });
             console.log(this.formatText(response));
-            console.log('\n' + colors.dim + '─'.repeat(60) + colors.reset + '\n');
+            console.log('\n' + chalk.dim('─'.repeat(60)) + '\n');
           } else if (command === '/exit' || command === '/quit') {
             await this.cleanup();
             return;
           } else {
-            console.log(`${colors.red}Unknown command. Type /help for available commands.${colors.reset}\n`);
+            console.log(chalk.red('Unknown command. Type /help for available commands.') + '\n');
           }
         } else if (trimmed) {
           // Handle normal conversation
@@ -367,7 +349,7 @@ Type ${colors.cyan}/help${colors.reset} for available commands, or just start ch
   }
 
   private async cleanup(): Promise<void> {
-    console.log(`\n${colors.cyan}Thanks for exploring! Goodbye! 👋${colors.reset}\n`);
+    console.log('\n' + chalk.cyan('Thanks for exploring! Goodbye! 👋') + '\n');
     this.rl.close();
     if (this.transport) {
       await this.transport.close();
@@ -389,6 +371,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`${colors.red}Fatal error:${colors.reset}`, error);
+  console.error(chalk.red('Fatal error:'), error);
   process.exit(1);
 });
