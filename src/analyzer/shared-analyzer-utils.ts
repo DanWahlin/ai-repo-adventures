@@ -165,13 +165,14 @@ export function cleanParameter(param: string, language: string): string {
       param = param.replace(/:\s*[^=,]+/, '').replace(/=.*$/, '');
       break;
     case 'java':
-    case 'csharp':
+    case 'csharp': {
       // For Java/C#, parameter format is usually "Type name"
       const javaMatch = param.match(/\w+\s+(\w+)$/);
       if (javaMatch && javaMatch[1]) {
         return javaMatch[1];
       }
       break;
+    }
   }
   
   // Extract just the parameter name using regex
@@ -184,17 +185,20 @@ export function cleanParameter(param: string, language: string): string {
  */
 export function extractReturnType(matchText: string, language: string): string | undefined {
   switch (language) {
-    case 'typescript':
+    case 'typescript': {
       const tsReturnMatch = matchText.match(/\)\s*:\s*([^{;]+)/);
       return tsReturnMatch && tsReturnMatch[1] ? tsReturnMatch[1].trim() : undefined;
-    case 'python':
+    }
+    case 'python': {
       const pyReturnMatch = matchText.match(/->\s*([^:]+)/);
       return pyReturnMatch && pyReturnMatch[1] ? pyReturnMatch[1].trim() : undefined;
+    }
     case 'java':
-    case 'csharp':
+    case 'csharp': {
       // For Java/C#, return type is usually before the method name
       const javaReturnMatch = matchText.match(/(?:public|private|protected|static|\s)+\s+(\w+)\s+\w+\s*\(/);
       return javaReturnMatch && javaReturnMatch[1] ? javaReturnMatch[1].trim() : undefined;
+    }
     default:
       return undefined;
   }

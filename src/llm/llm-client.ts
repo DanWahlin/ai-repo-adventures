@@ -43,7 +43,7 @@ export class LLMClient {
   private apiKey: string | undefined;
   private timeoutMs: number;
   private cacheTimeoutMs: number;
-  private requestCache: LRUCache<LLMResponse>;
+  private requestCache: LRUCache;
   private cleanupInterval?: NodeJS.Timeout;
 
   constructor(config?: LLMConfig) {
@@ -224,7 +224,7 @@ export class LLMClient {
     const cached = this.requestCache.get(cacheKey);
     if (cached) {
       console.debug('Using cached LLM response');
-      return cached;
+      return cached as LLMResponse;
     }
     
     try {
@@ -358,7 +358,7 @@ Focus on creating memorable themes, characters, narratives, and settings that re
   cleanup(): void {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
-      this.cleanupInterval = undefined;
+      delete this.cleanupInterval;
     }
     this.clearCache();
   }

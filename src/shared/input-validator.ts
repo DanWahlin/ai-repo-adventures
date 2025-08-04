@@ -2,7 +2,7 @@
  * Comprehensive input validation system with whitelist-based security
  */
 
-import { getAllThemes, THEME_NUMBER_MAP, isValidTheme, parseTheme } from './theme.js';
+import { getAllThemes, isValidTheme, parseTheme } from './theme.js';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -177,7 +177,12 @@ export class InputValidator {
       .replace(/[<>]/g, '') // Remove HTML brackets
       .replace(/[{}]/g, '') // Remove template literal brackets  
       .replace(/["`]/g, '') // Remove string delimiters
-      .replace(/\x00/g, '') // Remove null bytes
+      .split('') // Split to characters, filter, then rejoin
+      .filter(char => {
+        const code = char.charCodeAt(0);
+        return !(code >= 0 && code <= 31) && code !== 127; // Remove control characters
+      })
+      .join('')
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
       .slice(0, maxLength);

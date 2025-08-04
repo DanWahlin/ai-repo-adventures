@@ -513,11 +513,13 @@ export class ProjectAnalyzer {
 
     if (domainKeywords.length > 0) {
       const primaryDomain = domainKeywords[0];
-      if (primaryDomain.includes('user') || primaryDomain.includes('auth')) return 'User management system';
-      if (primaryDomain.includes('order') || primaryDomain.includes('payment')) return 'E-commerce platform';
-      if (primaryDomain.includes('game') || primaryDomain.includes('player')) return 'Gaming application';
-      if (primaryDomain.includes('message') || primaryDomain.includes('chat')) return 'Communication platform';
-      if (primaryDomain.includes('admin') || primaryDomain.includes('dashboard')) return 'Administrative dashboard';
+      if (primaryDomain) {
+        if (primaryDomain.includes('user') || primaryDomain.includes('auth')) return 'User management system';
+        if (primaryDomain.includes('order') || primaryDomain.includes('payment')) return 'E-commerce platform';
+        if (primaryDomain.includes('game') || primaryDomain.includes('player')) return 'Gaming application';
+        if (primaryDomain.includes('message') || primaryDomain.includes('chat')) return 'Communication platform';
+        if (primaryDomain.includes('admin') || primaryDomain.includes('dashboard')) return 'Administrative dashboard';
+      }
     }
 
     return null;

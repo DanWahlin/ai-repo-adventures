@@ -110,6 +110,10 @@ export const ADVENTURE_CONFIG = {
   // Character generation
   MAX_CHARACTERS_PER_STORY: 8,
   DEFAULT_CHARACTERS_COUNT: 3,
+  
+  // File content processing
+  MAX_FILE_LINES_FOR_LLM: 100,
+  MAX_FILES_PER_ADVENTURE: 3,
 } as const;
 
 // Error handling configuration

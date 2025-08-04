@@ -79,12 +79,14 @@ The system follows a **modular domain-driven architecture**:
 - Converts Zod schemas to JSON Schema for MCP tool registration
 - Provides centralized error handling with `McpError` types
 - Uses stdio transport for local file system access
+- Implements graceful shutdown with cache cleanup and signal handling
 
 **`src/tools.ts`** - Tool orchestration layer:
 - Defines 4 main MCP tools: `start_adventure`, `choose_theme`, `explore_path`, `view_progress`
 - Uses Zod schemas for input validation and automatic JSON Schema generation
 - Maintains shared state through singleton `AdventureManager` instance
 - Provides user-friendly error formatting
+- Implements additional security through `InputValidator` whitelist-based validation
 
 ### Analysis Domain (`src/analyzer/`)
 
@@ -113,6 +115,7 @@ Centralized utilities and configuration:
 - **`theme.ts`** - Theme validation and formatting utilities
 - **`instances.ts`** - Singleton instances for state management
 - **`cache.ts`** - LRU cache implementation for performance optimization
+- **`input-validator.ts`** - Comprehensive input validation with whitelist-based security
 
 ### Technology Detection System
 
@@ -152,6 +155,14 @@ Standardized error handling with custom error types:
 - `StoryGenerationError` - LLM and story generation issues  
 - `AdventureError` - Adventure state and user interaction problems
 - All errors include context (theme, project type, file paths, etc.)
+
+### Input Validation & Security
+
+The system implements comprehensive input validation:
+- **Whitelist-based validation** for all user inputs (adventure choices, themes, paths)
+- **`InputValidator` class** with methods for validating different input types
+- **Safe character patterns** to prevent injection attacks while allowing legitimate use cases
+- **Dual validation layers** using both Zod schemas and custom validators
 
 ### LLM Integration
 

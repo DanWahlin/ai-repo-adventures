@@ -220,13 +220,14 @@ export class CodeFlowAnalyzer {
   }
 
   /**
-   * Check if file exists (simplified for async context)
+   * Check if file exists (using sync check for performance in path resolution)
    */
-  private fileExists(_filePath: string): boolean {
+  private fileExists(filePath: string): boolean {
     try {
-      // Note: This is a simplified sync check for path resolution
-      // In a real implementation, you might want to cache file existence
-      return true; // Simplified for this extraction
+      // Use fs.existsSync for actual file existence checking
+      // This is acceptable here since it's used in path resolution which needs to be synchronous
+      const fsSync = require('fs');
+      return fsSync.existsSync(filePath);
     } catch {
       return false;
     }
