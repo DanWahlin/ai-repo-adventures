@@ -116,7 +116,7 @@ export class ProjectAnalyzer {
       return {
         type: projectType,
         fileCount: scanResult.fileCount,
-        mainTechnologies: scanResult.technologies,
+        mainTechnologies: this.prioritizeTechnologies(scanResult.technologies),
         structure: scanResult.structure,
         hasTests: features.hasTests,
         hasDatabase: features.hasDatabase,
@@ -397,6 +397,45 @@ export class ProjectAnalyzer {
     );
     
     return found || null;
+  }
+
+  /**
+   * Prioritize technologies to highlight core functionality over testing infrastructure
+   */
+  private prioritizeTechnologies(technologies: string[]): string[] {
+    // Technology priority tiers (higher priority = shown first and highlighted more)
+    const priorityTiers = {
+      // Tier 1: Core programming languages and frameworks (highest priority)
+      core: ['TYPESCRIPT', 'JAVASCRIPT', 'PYTHON', 'JAVA', 'GO', 'RUST', 'REACT', 'VUE', 'ANGULAR'],
+      
+      // Tier 2: Important infrastructure and tools
+      infrastructure: ['API', 'DATABASE', 'DOCKER', 'BUILD_TOOLS'],
+      
+      // Tier 3: Development support tools (lowest priority)
+      support: ['TESTING']
+    };
+
+    const prioritized: string[] = [];
+    const processed = new Set<string>();
+
+    // Add technologies in priority order
+    for (const techList of Object.values(priorityTiers)) {
+      for (const tech of techList) {
+        if (technologies.includes(tech) && !processed.has(tech)) {
+          prioritized.push(tech);
+          processed.add(tech);
+        }
+      }
+    }
+
+    // Add any remaining technologies that weren't in the priority tiers
+    for (const tech of technologies) {
+      if (!processed.has(tech)) {
+        prioritized.push(tech);
+      }
+    }
+
+    return prioritized;
   }
 
   /**

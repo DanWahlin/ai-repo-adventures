@@ -92,12 +92,26 @@ export class CodeFlowAnalyzer {
                 projectPath,
                 depth + 1
               );
+            } else {
+              // Skip unresolvable imports silently - they're likely external modules or ESM resolution issues
             }
           }
         }
       }
     } catch (error) {
-      console.warn(`Failed to analyze relationships in ${relativePath}:`, error instanceof Error ? error.message : String(error));
+      // Silently skip ESM TypeScript import resolution issues to reduce noise
+      // These are expected when TypeScript uses .js imports but files are .ts
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Only log unexpected errors, not common ESM TypeScript import patterns
+      const isEsmTypeScriptIssue = 
+        relativePath.includes('.js.ts') ||
+        errorMessage.includes('.js.ts') ||
+        filePath.includes('.js.ts');
+      
+      if (!isEsmTypeScriptIssue) {
+        console.warn(`Failed to analyze relationships in ${relativePath}:`, errorMessage);
+      }
     }
   }
 
@@ -195,23 +209,41 @@ export class CodeFlowAnalyzer {
   private resolveImportPath(importPath: string, fromDir: string): string | null {
     // Handle relative imports
     if (importPath.startsWith('./') || importPath.startsWith('../')) {
-      const resolvedPath = path.resolve(fromDir, importPath);
+      let resolvedPath = path.resolve(fromDir, importPath);
       
-      // Try different extensions
-      const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
-      
-      for (const ext of extensions) {
-        const withExt = resolvedPath + ext;
-        if (this.fileExists(withExt)) {
-          return withExt;
+      // Handle ESM TypeScript pattern: imports use .js but files are .ts
+      if (resolvedPath.endsWith('.js')) {
+        // Try .ts first for TypeScript projects
+        const tsPath = resolvedPath.replace(/\.js$/, '.ts');
+        if (this.fileExists(tsPath)) {
+          return tsPath;
         }
-      }
-      
-      // Try index files
-      for (const ext of extensions) {
-        const indexPath = path.join(resolvedPath, `index${ext}`);
-        if (this.fileExists(indexPath)) {
-          return indexPath;
+        // Try .tsx for React TypeScript
+        const tsxPath = resolvedPath.replace(/\.js$/, '.tsx');
+        if (this.fileExists(tsxPath)) {
+          return tsxPath;
+        }
+        // Fall back to actual .js file
+        if (this.fileExists(resolvedPath)) {
+          return resolvedPath;
+        }
+      } else {
+        // Try different extensions for paths without extensions
+        const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
+        
+        for (const ext of extensions) {
+          const withExt = resolvedPath + ext;
+          if (this.fileExists(withExt)) {
+            return withExt;
+          }
+        }
+        
+        // Try index files
+        for (const ext of extensions) {
+          const indexPath = path.join(resolvedPath, `index${ext}`);
+          if (this.fileExists(indexPath)) {
+            return indexPath;
+          }
         }
       }
     }

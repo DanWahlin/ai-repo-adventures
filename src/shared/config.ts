@@ -67,7 +67,7 @@ export const ANALYSIS_LIMITS = {
 export const TECH_PATTERNS = {
   REACT: ['react', 'jsx', 'tsx', '.jsx', '.tsx'],
   VUE: ['vue', '.vue', '@vue'],
-  ANGULAR: ['angular', '@angular', 'ng-'],
+  ANGULAR: ['@angular', 'angular.json', 'ng-cli', 'ng-serve', 'ng-build'],
   DATABASE: ['database', 'db', 'sql', 'mongodb', 'postgres', 'mysql', 'sqlite'],
   API: ['api', 'rest', 'graphql', 'routes', 'controllers', 'endpoints'],
   TESTING: ['test', 'spec', 'jest', 'mocha', 'cypress', 'playwright'],

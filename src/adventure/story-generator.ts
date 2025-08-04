@@ -300,29 +300,32 @@ Generate ONLY the celebration message, no extra text.`;
     const projectInsights = this.generateProjectInsights(theme, projectInfo);
     
     return `You are a technical education specialist creating immersive code exploration experiences.
-Transform this codebase into an engaging ${theme}-themed narrative.
+Transform this codebase into an engaging ${theme}-themed narrative that weaves project details into the story.
 
 ## Project Analysis
 ${projectAnalysis}
 
 ${themeGuidelines}
 
-## Required Story Structure
-Your story MUST include these specific project insights woven into the narrative:
-
-🗺️ **Discovered Realm Features:**
+## Key Project Elements to Integrate
 ${projectInsights}
 
-## Instructions
-1. Start with a thematic introduction that establishes the ${theme} world
-2. Include the "🗺️ **Discovered Realm Features:**" section EXACTLY as provided above
-3. End with "Choose your path wisely, brave adventurer!"
-4. Keep the opening narrative concise (1-2 paragraphs, max 200 words total)
+## Critical Instructions
+1. Create a ${theme}-themed narrative that INTEGRATES the project details naturally into the story
+2. DO NOT create generic stories - weave in specific technologies, file names, and project characteristics
+3. The story should be 2-3 paragraphs (250-350 words) that tells a cohesive narrative
+4. Naturally incorporate the project elements above into the storyline
+5. Make the reader understand what this specific codebase does through the narrative
+6. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
+
+## Example Integration Style
+Instead of: "In a galaxy far away, starships travel..."
+Write: "In the cosmic realm of ${projectInfo.type}, the advanced Starship '${projectInfo.mainTechnologies[0]}' navigates through ${projectInfo.fileCount} star systems, each powered by technologies like ${projectInfo.mainTechnologies.join(', ')}. The ship's command center at \`${projectInfo.codeAnalysis.entryPoints[0] || 'main'}\` coordinates complex operations..."
 
 ## Response Format
 Return a valid JSON object:
 {
-  "story": "Opening narrative + \\n\\n🗺️ **Discovered Realm Features:**\\n${projectInsights}\\n\\nChoose your path wisely, brave adventurer!",
+  "story": "Integrated narrative that weaves in project specifics + ending with mission statement",
   "adventures": [
     {
       "id": "1",
@@ -476,16 +479,81 @@ ${topFunctions}
    * Get theme-specific introduction with project insights
    */
   private getThemeIntroduction(theme: AdventureTheme, projectInfo: ProjectInfo): string {
-    const projectName = projectInfo.type || 'Codebase';
-    const baseIntro = this.getBaseThemeIntro(theme, projectName, projectInfo);
-    const projectInsights = this.generateProjectInsights(theme, projectInfo);
+    // Create an integrated story that weaves in project details naturally
+    const entryPoint = projectInfo.codeAnalysis.entryPoints[0] || 'main';
+    const topFunctions = this.filterMeaningfulFunctions(projectInfo.codeAnalysis.functions).slice(0, 2);
+    const topDeps = projectInfo.codeAnalysis.dependencies.slice(0, 2).map(d => d.name);
     
-    return `${baseIntro}
+    const integratedStories = {
+      space: this.createSpaceIntegratedStory(projectInfo, entryPoint, topFunctions, topDeps),
+      mythical: this.createMythicalIntegratedStory(projectInfo, entryPoint, topFunctions, topDeps),
+      ancient: this.createAncientIntegratedStory(projectInfo, entryPoint, topFunctions, topDeps)
+    };
+    
+    const story = integratedStories[theme as keyof typeof integratedStories] || integratedStories.space;
+    
+    return `${story}
 
-🗺️ **Discovered Realm Features:**
-${projectInsights}
+🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!`;
+  }
 
-Choose your path wisely, brave adventurer!`;
+  /**
+   * Create space-themed integrated story
+   */
+  private createSpaceIntegratedStory(projectInfo: ProjectInfo, entryPoint: string, topFunctions: string[], topDeps: string[]): string {
+    const techList = projectInfo.mainTechnologies.slice(0, 3).join(', ');
+    const functionList = topFunctions.length > 0 ? topFunctions.join(', ') : 'advanced algorithms';
+    const depList = topDeps.length > 0 ? topDeps.join(', ') : 'cutting-edge modules';
+    
+    return `🚀 In the vast digital cosmos, the advanced Starship '${projectInfo.type}' serves as a beacon of innovation, housing ${projectInfo.fileCount} interconnected modules powered by ${techList} technology. The ship's sophisticated command bridge, located at \`${entryPoint}\`, orchestrates a symphony of computational processes that would make even the most seasoned space captains marvel.
+
+The vessel's core systems rely on powerful algorithms like \`${functionList}\` to navigate through complex data streams and coordinate mission-critical operations. These systems work in harmony with trusted companion modules such as \`${depList}\`, forming an intricate network of technological excellence that enables the ship to ${this.inferProjectPurpose(projectInfo)}.
+
+Each deck of this remarkable vessel tells a story of engineering prowess - ${projectInfo.hasApi ? 'communication arrays facilitate interstellar data exchange' : 'internal processing cores handle computational tasks'}, while ${projectInfo.hasDatabase ? 'deep within the ship\'s core lie vast data archives storing the accumulated knowledge of countless digital civilizations' : 'the ship\'s memory banks efficiently manage operational data flows'}${projectInfo.hasTests ? ', with quality assurance protocols ensuring mission success' : ''}. The ship's architecture represents the pinnacle of digital craftsmanship, ready to embark on extraordinary computational voyages.`;
+  }
+
+  /**
+   * Create mythical-themed integrated story
+   */
+  private createMythicalIntegratedStory(projectInfo: ProjectInfo, entryPoint: string, topFunctions: string[], topDeps: string[]): string {
+    const techList = projectInfo.mainTechnologies.slice(0, 3).join(', ');
+    const functionList = topFunctions.length > 0 ? topFunctions.join(', ') : 'ancient spells';
+    const depList = topDeps.length > 0 ? topDeps.join(', ') : 'mystical artifacts';
+    
+    return `🏰 Welcome to the Enchanted Kingdom of ${projectInfo.type}, a realm where ${projectInfo.fileCount} scrolls of digital wisdom are woven together using the mystical arts of ${techList}. At the heart of this magical domain stands the Grand Castle, its gates opening at \`${entryPoint}\`, where the kingdom's most powerful enchantments come to life.
+
+Within these ancient walls, powerful incantations such as \`${functionList}\` channel the raw forces of computation, while wise magical allies like \`${depList}\` lend their mystical powers to ${this.inferProjectPurpose(projectInfo)}. The castle's architecture reflects centuries of accumulated wisdom, each chamber serving a sacred purpose in the greater magical tapestry.
+
+The kingdom flourishes through ${projectInfo.hasApi ? 'crystal communication towers that enable discourse with distant realms' : 'internal magical conduits that maintain harmony'}, while ${projectInfo.hasDatabase ? 'deep beneath the castle lie the Vaults of Eternal Memory, where all the kingdom\'s knowledge is preserved in crystalline archives' : 'the castle\'s memory halls efficiently organize the realm\'s magical essence'}${projectInfo.hasTests ? ', with ancient rituals ensuring the purity of each spell' : ''}. This enchanted realm stands as a testament to the fusion of ancient wisdom and modern digital sorcery.`;
+  }
+
+  /**
+   * Create ancient-themed integrated story
+   */
+  private createAncientIntegratedStory(projectInfo: ProjectInfo, entryPoint: string, topFunctions: string[], topDeps: string[]): string {
+    const techList = projectInfo.mainTechnologies.slice(0, 3).join(', ');
+    const functionList = topFunctions.length > 0 ? topFunctions.join(', ') : 'sacred ceremonies';
+    const depList = topDeps.length > 0 ? topDeps.join(', ') : 'holy relics';
+    
+    return `🏺 Behold the Lost Temple of ${projectInfo.type}, an architectural marvel where ${projectInfo.fileCount} sacred tablets preserve the digital wisdom of an advanced civilization that mastered the arts of ${techList}. The temple's grand entrance, located at \`${entryPoint}\`, serves as the threshold between the mundane world and the realm of computational enlightenment.
+
+Throughout the temple's hallowed halls, ancient ceremonies like \`${functionList}\` are performed with reverent precision, while blessed artifacts such as \`${depList}\` channel divine power to ${this.inferProjectPurpose(projectInfo)}. Each chamber within this sacred space has been carefully designed by master architects who understood the profound mysteries of digital creation.
+
+The temple's sacred architecture features ${projectInfo.hasApi ? 'divine communication altars that facilitate communion with external realms' : 'internal meditation spaces for focused computation'}, while ${projectInfo.hasDatabase ? 'at its heart lies the Chamber of Eternal Records, where all knowledge is inscribed upon immortal stone tablets' : 'memory vaults preserve essential wisdom with ancient precision'}${projectInfo.hasTests ? ', with consecrated rituals maintaining the sanctity of each digital blessing' : ''}. This timeless monument stands as proof that the ancients understood the eternal principles underlying all computational endeavors.`;
+  }
+
+  /**
+   * Infer project purpose from available information
+   */
+  private inferProjectPurpose(projectInfo: ProjectInfo): string {
+    if (projectInfo.type.toLowerCase().includes('api')) return 'facilitate seamless communication between digital realms';
+    if (projectInfo.type.toLowerCase().includes('web')) return 'create immersive digital experiences';
+    if (projectInfo.type.toLowerCase().includes('cli')) return 'provide powerful command-line capabilities';
+    if (projectInfo.type.toLowerCase().includes('library')) return 'offer reusable building blocks to fellow developers';
+    if (projectInfo.hasApi && projectInfo.hasDatabase) return 'manage and serve data across digital networks';
+    if (projectInfo.hasApi) return 'bridge connections between different systems';
+    if (projectInfo.hasDatabase) return 'organize and safeguard valuable information';
+    return 'solve complex computational challenges';
   }
 
   /**
@@ -530,16 +598,18 @@ Choose your path wisely, brave adventurer!`;
       insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
     }
 
-    // Architecture features insight
-    const hasTests = projectInfo.hasTests;
+    // Architecture features insight - prioritize core functionality over testing
     const hasApi = projectInfo.hasApi;
     const hasDatabase = projectInfo.hasDatabase;
+    const hasTests = projectInfo.hasTests;
     
-    if (hasTests || hasApi || hasDatabase) {
+    if (hasApi || hasDatabase || hasTests) {
       const features: string[] = [];
-      if (hasTests) features.push('testing chambers');
+      // Add core features first
       if (hasApi) features.push('communication portals'); 
       if (hasDatabase) features.push('data vaults');
+      // Add testing last as supporting feature
+      if (hasTests) features.push('quality chambers');
       
       const themeMap = {
         space: `🛰️ **Special Facilities**: The ship contains ${features.join(', ')} for advanced operations`,
@@ -552,17 +622,6 @@ Choose your path wisely, brave adventurer!`;
     return insights.join('\n');
   }
 
-  /**
-   * Get base theme introduction
-   */
-  private getBaseThemeIntro(theme: AdventureTheme, projectName: string, projectInfo: ProjectInfo): string {
-    const intros = {
-      space: `🚀 Welcome aboard the Starship ${projectName}! This advanced vessel contains ${projectInfo.fileCount} modules powered by ${projectInfo.mainTechnologies.join(', ')} technology. Your mission: explore its systems and unlock its secrets.`,
-      mythical: `🏰 Welcome to the Enchanted Kingdom of ${projectName}! This mystical realm spans ${projectInfo.fileCount} scrolls of wisdom, woven with ${projectInfo.mainTechnologies.join(', ')} magic. Your quest: discover its hidden powers.`,
-      ancient: `🏺 Welcome to the Lost Temple of ${projectName}! These ancient halls contain ${projectInfo.fileCount} tablets inscribed with ${projectInfo.mainTechnologies.join(', ')} knowledge. Your journey: uncover its mysteries.`
-    };
-    return intros[theme as keyof typeof intros] || intros.space;
-  }
 
   /**
    * Filter functions to focus on meaningful project-specific functions
