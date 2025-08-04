@@ -161,7 +161,7 @@ class InteractiveMCPClient {
   private async handleUserInput(input: string): Promise<void> {
     const { intent, params } = this.parseUserInput(input);
 
-    console.log(`${colors.dim}[Processing: ${intent}]${colors.reset}\n`);
+    console.log(chalk.dim(`[Processing: ${intent}]`) + '\n');
 
     let response: string;
     
@@ -301,6 +301,10 @@ Type ${chalk.cyan('/help')} for available commands, or just start chatting!
 
     // Ask for project path or use default
     await this.setupProject();
+
+    // Auto-start the adventure
+    console.log(chalk.cyan('🚀 Starting adventure automatically...\n'));
+    await this.handleUserInput('start adventure');
 
     // Main interaction loop
     const prompt = () => {

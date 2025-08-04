@@ -90,10 +90,24 @@ export class AdventureManager {
     const sanitizedChoice = this.validateAndSanitizeChoice(choice);
     let adventure: Adventure | undefined;
     
+    // Check for "View progress" command first (before parsing numbers)
+    if (sanitizedChoice.toLowerCase().includes('progress') || 
+        sanitizedChoice.toLowerCase().includes('view progress')) {
+      return this.getProgress();
+    }
+    
     // Try to match by number (1, 2, 3, etc.)
     const choiceNumber = parseInt(sanitizedChoice);
     if (!isNaN(choiceNumber) && choiceNumber > 0) {
-      adventure = this.state.adventures[choiceNumber - 1];
+      // Check if this number corresponds to "View progress" option (always last item)
+      const choices = this.getAvailableAdventureChoices();
+      if (choiceNumber === choices.length && choices[choices.length - 1] === 'View progress') {
+        return this.getProgress();
+      }
+      // Make sure we don't exceed the actual adventures array
+      if (choiceNumber <= this.state.adventures.length) {
+        adventure = this.state.adventures[choiceNumber - 1];
+      }
     }
     
     // Try to match by ID or title if number didn't work

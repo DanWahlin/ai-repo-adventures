@@ -359,6 +359,12 @@ Create 2-6 adventures based on project complexity.`;
 **Code Files:**
 ${codeContent}
 
+## CRITICAL: Code Authenticity Requirements
+- Use ONLY the code provided in the "Code Files" section above
+- DO NOT create, modify, or invent any code examples
+- If no code is available, say "No code available for this file"
+- Show actual imports, actual function names, actual technologies from the files
+
 ## Response Format (JSON)
 {
   "adventure": "1-2 paragraphs (max 150 words) continuing the narrative",
@@ -366,8 +372,8 @@ ${codeContent}
   "codeSnippets": [
     {
       "file": "filename",
-      "snippet": "15-25 lines of ACTUAL code",
-      "explanation": "Clear explanation of the code"
+      "snippet": "EXACT code from the files provided above - DO NOT invent or modify code",
+      "explanation": "Clear explanation of the actual code shown"
     }
   ],
   "hints": ["Practical tip", "Next steps"]
