@@ -226,12 +226,18 @@ Generate ONLY the celebration message, no extra text.`;
     
     // Add adventure config guidance if available
     const adventureGuidance = this.adventureConfig 
-      ? `\n## Adventure Guidance (Optional)
-The following predefined adventure structure can guide your story generation:
+      ? `\n## Adventure Guidance (Technical Reference Only)
+The following predefined adventure structure identifies important code areas to explore:
 
 ${formatConfigForPrompt(this.adventureConfig)}
 
-Use this as inspiration for adventure titles and focus areas, but adapt to the actual codebase content below.\n`
+IMPORTANT: DO NOT use these titles or descriptions literally! They are technical references only.
+You MUST transform them into ${theme}-themed adventures:
+- "Core Server" → Space: "Command Bridge Protocol Systems" / Medieval: "Castle's Command Tower" 
+- "File Management" → Space: "Navigation & Mission Control" / Medieval: "Quest Chronicles Hall"
+
+Use the file paths and function highlights to understand what code areas to focus on,
+but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n`
       : '';
     
     return `You are a technical education specialist creating story-based workshops that provide immersive code exploration experiences.
@@ -311,12 +317,20 @@ Create 2-6 adventures based on the project complexity revealed in the ## Complet
     if (this.adventureConfig && adventure.codeFiles) {
       const highlights = extractHighlightsForFiles(this.adventureConfig, adventure.title, adventure.codeFiles);
       if (highlights.length > 0) {
-        workshopHighlights = `\n## Workshop Highlights (Focus Areas)
-Create a step-by-step workshop that guides users through these key functions/methods:
+        workshopHighlights = `\n## Workshop Highlights (Technical Reference Only)
+These are the technical functions to explore - but present them in ${theme} terms:
 
 ${highlights.map(h => `- **${h.name}**: ${h.description}`).join('\n')}
 
-Structure your exploration as a guided workshop with clear steps for each highlight.\n`;
+IMPORTANT: Do NOT mention these function names directly in your narrative! Instead, create the themed
+narrative around these concepts. You can include the actual file or function name in parentheses next to
+the appropriate place in the story/narrative.
+
+Instead, describe them using ${theme}-appropriate metaphors:
+- Constructor → Space: "Ship initialization sequence" / Medieval: "Castle foundation ritual"
+- Handler → Space: "Communication protocol" / Medieval: "Message courier system"
+Transform the technical concepts into your themed story while exploring the actual code.
+`;
       }
     }
     
