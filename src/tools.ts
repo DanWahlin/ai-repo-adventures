@@ -172,7 +172,7 @@ export const choose_theme = {
       const projectInfo = createProjectInfo(repomixContent);
       
       // Initialize adventure with LLM-generated content
-      const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, selectedTheme);
+      const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, selectedTheme, projectPath);
       
       return {
         content: [

@@ -53,6 +53,54 @@ export class RepomixAnalyzer {
   }
 
   /**
+   * Generate targeted repomix content for specific files
+   */
+  async generateTargetedContent(projectPath: string, targetFiles: string[]): Promise<string> {
+    this.validateProjectPath(projectPath);
+    
+    if (!targetFiles || targetFiles.length === 0) {
+      throw new Error('Target files array cannot be empty');
+    }
+    
+    // Create cache key from path and target files
+    const cacheKey = `${path.resolve(projectPath)}:targeted:${targetFiles.sort().join(',')}`;
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < REPOMIX_CACHE_TTL) {
+      console.log(`📋 Using cached targeted repomix content for ${targetFiles.length} files`);
+      return cached.content;
+    }
+    
+    const startTime = Date.now();
+    
+    try {
+      // Configure repomix options for targeted extraction
+      const cliOptions: CliOptions = {
+        style: 'markdown',
+        stdout: true,
+        compress: false,
+        include: targetFiles.join(','), // Only include specified files
+        removeComments: true,
+        removeEmptyLines: true,
+        noDirectoryStructure: true
+      };
+
+      // Capture stdout during repomix execution
+      const context = await this.captureRepomixStdout(['.'], projectPath, cliOptions);
+      
+      // Cache the result
+      this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+      
+      console.log(`✅ Targeted repomix content generation completed for ${targetFiles.length} files in ${Date.now() - startTime}ms`);
+      
+      return context;
+    } catch (error) {
+      throw new Error(`Targeted repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
    * Generate repomix context for a project
    */
   async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise<string> {
@@ -122,6 +170,7 @@ export class RepomixAnalyzer {
       if (options.removeEmptyLines) args.push('--remove-empty-lines');
       if (options.noDirectoryStructure) args.push('--no-directory-structure');
       if (options.ignore) args.push('--ignore', options.ignore);
+      if (options.include) args.push('--include', options.include);
       
       // Spawn repomix as subprocess
       const repomix = spawn('npx', ['repomix', ...args], {

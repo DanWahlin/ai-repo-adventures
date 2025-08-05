@@ -193,10 +193,10 @@ Generate ONLY the celebration message, no extra text.`;
     const repomixContent = projectInfo.repomixContent || 'No repomix content available';
     const themeGuidelines = this.getThemeGuidelines(theme);
     
-    return `You are a technical education specialist creating immersive code exploration experiences.
+    return `You are a technical education specialist creating story-based workshops that provide immersive code exploration experiences.
 Transform this codebase into an engaging ${theme}-themed narrative that weaves project details into the story.
 
-## Complete Codebase Analysis
+## Complete Codebase
 ${repomixContent}
 
 ${themeGuidelines}
@@ -204,31 +204,55 @@ ${themeGuidelines}
 ## Critical Instructions
 1. First, ANALYZE the repomix content above to INFER what type of project this is (e.g., "Web Application", "API Service", "CLI Tool", "Library", "Mobile App", "Game", "Data Pipeline", etc.) - be specific and descriptive
 2. Create a ${theme}-themed narrative that INTEGRATES the project details naturally into the story
-3. DO NOT create generic stories - weave in specific technologies, file names, and project characteristics from the repomix content
-4. The story should be 2-3 paragraphs (250-350 words) that tells a cohesive narrative
-5. Naturally incorporate actual file names, technologies, and patterns from the repomix analysis
-6. Make the reader understand what this specific codebase does through the narrative
-7. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
+3. **CRITICAL: ONLY reference files that actually exist in the "## Complete Codebase" content above.** 
+   Look for "## File:" headers to identify real files.
+4. **DO NOT invent, create, or hallucinate any file names.** If you reference a file, it MUST appear in the "## File:" sections above.
+5. The story should be 2-3 paragraphs (250-350 words max) that tells a cohesive narrative
+6. Reference actual technologies, patterns, and concepts from the real code, but avoid specific file names unless absolutely certain they exist in the repomix content
+7. Make the reader understand what this specific codebase does through the narrative
+8. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
 
-## Example Integration Style
+## Example Integration Style: Example Only - DO NOT use this exact text
 Instead of: "In a galaxy far away, starships travel..."
-Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE], the advanced Starship navigates through interconnected systems, powered by the technologies revealed in the repomix analysis. The ship's command center coordinates complex operations..."
+Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE WITH A FUN TWIST TO THE NAME], the advanced Starship navigates through interconnected systems, powered by TypeScript and modern development practices. The ship's command center coordinates complex operations through well-structured modules and components..."
+
+**AVOID mentioning specific file names unless you are 100% certain they exist in the repomix content above.**
+**DO NOT copy the example text directly - use it as inspiration for your own narrative. Be creative!**
 
 ## Response Format
 Return a valid JSON object:
 {
-  "story": "Integrated narrative that weaves in project specifics + ending with mission statement",
+  "story": "Integrated narrative that references actual project concepts but avoids specific file names unless certain they exist",
   "adventures": [
     {
       "id": "1",
       "title": "📍 Theme-appropriate title",
-      "description": "One sentence explaining what this covers",
-      "codeFiles": ["actual-file-names"]
+      "description": "One sentence explaining what this adventure covers",
+      "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
     }
   ]
 }
 
-Create 2-6 adventures based on the project complexity revealed in the repomix content.`;
+**Important for codeFiles arrays:**
+- ONLY include file paths that appear as "## File: path/filename" in the repomix content above
+- Double-check each file path exists in the ## Complete Codebase content before including it
+- It's better to have empty codeFiles arrays than incorrect file paths
+- Use the exact file path as shown in the "## File:" headers from ## Complete Codebase
+- **PRIORITIZE core files**: Choose core application files over utility/support files
+- **Preferred file types for adventures**: main server files, core business logic, API endpoints, application entry points, key algorithms
+- **Less preferred for adventures**: configuration files, utility classes, cache implementations, error handlers, type definitions
+
+**Final Validation Step:**
+Before returning your response, review your story and codeFiles arrays to ensure:
+1. No file names are mentioned in the story unless they appear in "## File:" headers in ## Complete Codebase
+2. All codeFiles entries match exactly with "## File:" headers in ## Complete Codebase
+3. When in doubt, omit specific file references and focus on general concepts instead
+
+**File Selection Strategy:**
+- ✅ PREFER: Files that implement core business logic, main application flow, user-facing functionality
+- ❌ AVOID: Files in /shared/, /utils/, /helpers/ directories, files with names like cache, config, error, types, constants
+
+Create 2-6 adventures based on the project complexity revealed in the ## Complete Codebase content.`;
   }
 
   /**
@@ -245,11 +269,11 @@ Create 2-6 adventures based on the project complexity revealed in the repomix co
 
 ${themeGuidelines}
 
-**Complete Codebase Context:**
+## Complete Codebase
 ${codeContent}
 
 ## CRITICAL: Code Authenticity Requirements
-- Use ONLY the code provided in the "Code Files" section above
+- Use ONLY the code provided in the "## Complete Codebase" section above
 - DO NOT create, modify, or invent any code examples
 - If no code is available, say "No code available for this file"
 - Show actual imports, actual function names, actual technologies from the files

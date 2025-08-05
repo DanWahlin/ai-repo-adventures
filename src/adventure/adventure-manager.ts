@@ -3,6 +3,7 @@ import type { AdventureTheme } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
 import { StoryGenerationError } from '../shared/error-handling.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
+import { repomixAnalyzer } from '../analyzer/repomix-analyzer.js';
 
 // Re-export interfaces from story-generator for backward compatibility
 export type { Adventure, StoryResponse, AdventureContent, CodeSnippet } from './story-generator.js';
@@ -20,6 +21,7 @@ export class AdventureState {
   completedAdventures: Set<string> = new Set();
   currentTheme: AdventureTheme | null = null;
   projectInfo: ProjectInfo | undefined = undefined;
+  projectPath: string | undefined = undefined;
 
   get progressPercentage(): number {
     return this.adventures.length > 0 
@@ -33,6 +35,7 @@ export class AdventureState {
     this.completedAdventures.clear();
     this.currentTheme = null;
     this.projectInfo = undefined;
+    this.projectPath = undefined;
   }
 }
 
@@ -47,11 +50,12 @@ export class AdventureManager {
   /**
    * Initialize the adventure with project context and generate story + adventures
    */
-  async initializeAdventure(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<string> {
+  async initializeAdventure(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<string> {
     // Reset state for new adventure
     this.state.reset();
     this.state.projectInfo = projectInfo;
     this.state.currentTheme = theme;
+    this.state.projectPath = projectPath || process.cwd();
     
 
     // Generate the overall story and adventures using LLM
@@ -203,8 +207,24 @@ export class AdventureManager {
    * Generate content for the adventure
    */
   private async generateAdventureContent(adventure: Adventure): Promise<AdventureContent> {
-    // Use repomixContent directly instead of re-reading files
-    const codeContent = this.state.projectInfo!.repomixContent;
+    let codeContent: string;
+    
+    // Use targeted content if adventure has specific files, otherwise use full repomix content
+    if (adventure.codeFiles && adventure.codeFiles.length > 0 && this.state.projectPath) {
+      try {
+        console.log(`🎯 Generating targeted content for ${adventure.codeFiles.length} files`);
+        codeContent = await repomixAnalyzer.generateTargetedContent(
+          this.state.projectPath,
+          adventure.codeFiles
+        );
+      } catch (error) {
+        console.warn(`Failed to generate targeted content, falling back to full repomix content:`, error);
+        codeContent = this.state.projectInfo!.repomixContent;
+      }
+    } else {
+      // Fallback to full repomix content
+      codeContent = this.state.projectInfo!.repomixContent;
+    }
 
     return await this.storyGenerator.generateAdventureContent(
       adventure,
