@@ -44,9 +44,6 @@ export class AdventureManager {
     this.storyGenerator = new StoryGenerator();
   }
 
-
-
-
   /**
    * Initialize the adventure with project context and generate story + adventures
    */
