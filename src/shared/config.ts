@@ -19,6 +19,7 @@ export const FILE_READ_TIMEOUT = 10000;
 export const FILE_ANALYSIS_TIMEOUT = 30000;
 export const LLM_REQUEST_TIMEOUT = 30000; // Increased from 15s to 30s for more reliable LLM responses
 export const LLM_CACHE_TTL = 300000; // 5 minutes
+export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || '60000'); // 60 seconds, configurable via env
 
 // Analysis limits
 export const MAX_SCAN_DEPTH = 3;

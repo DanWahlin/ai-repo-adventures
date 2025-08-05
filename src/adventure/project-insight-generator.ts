@@ -3,12 +3,10 @@
  * Extracted from StoryGenerator to follow single responsibility principle
  */
 
-import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../shared/types.js';
 import { AdventureTheme } from '../shared/theme.js';
-import { ThemeManager } from './theme-manager.js';
 
 export class ProjectInsightGenerator {
-  private themeManager = new ThemeManager();
 
   /**
    * Create comprehensive project analysis prompt
@@ -36,7 +34,10 @@ export class ProjectInsightGenerator {
     
     // Entry points as key locations
     if (projectInfo.codeAnalysis.entryPoints.length > 0) {
-      insights.push(this.formatEntryPointInsight(theme, projectInfo.codeAnalysis.entryPoints[0]));
+      const entryPoint = projectInfo.codeAnalysis.entryPoints[0];
+      if (entryPoint) {
+        insights.push(this.formatEntryPointInsight(theme, entryPoint));
+      }
     }
     
     // Technologies as characters/elements
@@ -80,7 +81,7 @@ ${projectInfo.llmContextSummary}
 - API: ${projectInfo.hasApi ? 'Yes' : 'No'}
 - Frontend: ${projectInfo.hasFrontend ? 'Yes' : 'No'}
 - Tests: ${projectInfo.hasTests ? 'Yes' : 'No'}
-- Structure: ${projectInfo.structure.directories.slice(0, 5).join(', ')}`;
+- Entry Points: ${projectInfo.codeAnalysis.entryPoints.join(', ') || 'None detected'}`;
   }
 
   private createBasicAnalysisPrompt(projectInfo: ProjectInfo): string {
@@ -103,8 +104,8 @@ ${projectInfo.llmContextSummary}
 **Key Functions:**
 ${topFunctions}
 
-**Structure:**
-- Directories: ${projectInfo.structure.directories.slice(0, 5).join(', ')}`;
+**Entry Points:**
+- Main files: ${projectInfo.codeAnalysis.entryPoints.join(', ') || 'None detected'}`;
   }
 
   private getComplexityLevel(fileCount: number): string {

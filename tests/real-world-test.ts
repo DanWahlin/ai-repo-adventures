@@ -17,7 +17,7 @@ async function testRealWorldScenario() {
 
   const transport = new StdioClientTransport({
     command: 'node',
-    args: ['dist/index.js'],
+    args: ['dist/server.js'],
     env: process.env as Record<string, string>,
   });
 

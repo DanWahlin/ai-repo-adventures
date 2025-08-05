@@ -87,6 +87,14 @@ export class LLMClient {
     // Infer provider from baseURL
     this.provider = this.inferProvider(this.baseURL);
 
+    // Initialize the LLM client
+    this.initializeClient();
+  }
+
+  /**
+   * Initialize the LLM client based on provider and API key availability
+   */
+  private initializeClient(): void {
     // Create client with provider-specific configuration only if API key is available
     if (this.apiKey) {
       if (this.provider === 'Azure OpenAI') {
@@ -258,7 +266,6 @@ export class LLMClient {
       return llmResponse;
     } catch (error) {
       this.handleLLMError(error);
-      throw error; // Never reached, but TypeScript needs it
     }
   }
 

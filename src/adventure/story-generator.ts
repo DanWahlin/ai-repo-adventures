@@ -1,11 +1,9 @@
-import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../shared/types.js';
 import { AdventureTheme } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
 import { isValidTheme, THEMES } from '../shared/theme.js';
-import { Character } from '../shared/types.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { ThemeManager } from './theme-manager.js';
-import { AdventurePathGenerator } from './adventure-path-generator.js';
 import { StoryTemplateEngine } from './story-template-engine.js';
 import { ProjectInsightGenerator } from './project-insight-generator.js';
 
@@ -59,7 +57,6 @@ export type StoryTheme = AdventureTheme;
 export class StoryGenerator {
   private llmClient: LLMClient;
   private themeManager: ThemeManager;
-  private pathGenerator: AdventurePathGenerator;
   private templateEngine: StoryTemplateEngine;
   private insightGenerator: ProjectInsightGenerator;
   private currentProject?: ProjectInfo;
@@ -67,7 +64,6 @@ export class StoryGenerator {
   constructor() {
     this.llmClient = new LLMClient();
     this.themeManager = new ThemeManager();
-    this.pathGenerator = new AdventurePathGenerator();
     this.templateEngine = new StoryTemplateEngine();
     this.insightGenerator = new ProjectInsightGenerator();
   }
@@ -112,19 +108,11 @@ export class StoryGenerator {
     const response = await this.generateStoryAndAdventures(this.currentProject, theme);
     
     // Convert StoryResponse to Story format for backward compatibility
-    const characters = this.generateDefaultCharacters(theme);
-    const adventurePaths = this.pathGenerator.generatePaths(this.currentProject);
-    const initialChoices = adventurePaths.length > 0 
-      ? adventurePaths.map(path => path.name)
-      : response.adventures.map(a => `Explore ${a.title}`);
 
     return {
       theme,
-      title: `${theme} Code Adventure`,
-      introduction: response.story,
-      setting: `A ${theme}-themed exploration of your codebase`,
-      characters,
-      initialChoices
+      content: typeof response.story === 'string' ? response.story : response.story.content,
+      setting: `A ${theme}-themed exploration of your codebase`
     };
   }
 
@@ -220,43 +208,6 @@ Generate ONLY the celebration message, no extra text.`;
     return this.templateEngine.generateWithTemplates(projectInfo, theme);
   }
 
-  /**
-   * DEPRECATED - Now handled by StoryTemplateEngine
-   */
-  private generateTemplateAdventures(projectInfo: ProjectInfo, theme: AdventureTheme): Adventure[] {
-    const adventures: Adventure[] = [];
-    const paths = this.pathGenerator.generatePaths(projectInfo);
-    
-    // Convert paths to adventures
-    paths.forEach((path, index) => {
-      adventures.push({
-        id: String(index + 1),
-        title: `${this.getThemeEmoji(theme)} ${path.name}`,
-        description: path.description,
-        codeFiles: this.selectRelevantFiles(projectInfo, path.id)
-      });
-    });
-
-    // Ensure we have at least 2 adventures
-    if (adventures.length === 0) {
-      adventures.push(
-        {
-          id: '1',
-          title: `${this.getThemeEmoji(theme)} System Overview`,
-          description: 'Explore the overall architecture and main components',
-          codeFiles: projectInfo.codeAnalysis.entryPoints
-        },
-        {
-          id: '2',
-          title: `${this.getThemeEmoji(theme)} Core Logic`,
-          description: 'Discover the main business logic and algorithms',
-          codeFiles: projectInfo.codeAnalysis.functions.slice(0, 3).map(f => f.fileName)
-        }
-      );
-    }
-
-    return adventures;
-  }
 
   /**
    * Generate fallback adventure content (delegates to template engine)
@@ -336,16 +287,17 @@ ${themeGuidelines}
 ${projectInsights}
 
 ## Critical Instructions
-1. Create a ${theme}-themed narrative that INTEGRATES the project details naturally into the story
-2. DO NOT create generic stories - weave in specific technologies, file names, and project characteristics
-3. The story should be 2-3 paragraphs (250-350 words) that tells a cohesive narrative
-4. Naturally incorporate the project elements above into the storyline
-5. Make the reader understand what this specific codebase does through the narrative
-6. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
+1. First, INFER what type of project this is based on the analysis (e.g., "Web Application", "API Service", "CLI Tool", "Library", "Mobile App", "Game", "Data Pipeline", etc.) - be specific and descriptive
+2. Create a ${theme}-themed narrative that INTEGRATES the project details naturally into the story
+3. DO NOT create generic stories - weave in specific technologies, file names, and project characteristics
+4. The story should be 2-3 paragraphs (250-350 words) that tells a cohesive narrative
+5. Naturally incorporate the project elements above into the storyline
+6. Make the reader understand what this specific codebase does through the narrative
+7. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
 
 ## Example Integration Style
 Instead of: "In a galaxy far away, starships travel..."
-Write: "In the cosmic realm of ${projectInfo.type}, the advanced Starship '${projectInfo.mainTechnologies[0]}' navigates through ${projectInfo.fileCount} star systems, each powered by technologies like ${projectInfo.mainTechnologies.join(', ')}. The ship's command center at \`${projectInfo.codeAnalysis.entryPoints[0] || 'main'}\` coordinates complex operations..."
+Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE], the advanced Starship '${projectInfo.mainTechnologies[0]}' navigates through ${projectInfo.fileCount} star systems, each powered by technologies like ${projectInfo.mainTechnologies.join(', ')}. The ship's command center at \`${projectInfo.codeAnalysis.entryPoints[0] || 'main'}\` coordinates complex operations..."
 
 ## Response Format
 Return a valid JSON object:
@@ -403,58 +355,7 @@ ${codeContent}
 }`;
   }
 
-  /**
-   * Create project analysis prompt section (delegates to insight generator)
-   */
-  private createProjectAnalysisPrompt(projectInfo: ProjectInfo): string {
-    return this.insightGenerator.createProjectAnalysisPrompt(projectInfo);
-  }
 
-  /**
-   * DEPRECATED - Original implementation kept for reference
-   * Now handled by ProjectInsightGenerator
-   */
-  private createProjectAnalysisPromptOld(projectInfo: ProjectInfo): string {
-    // Use the rich LLM context summary from analyzer if available
-    if (projectInfo.llmContextSummary) {
-      return `**Comprehensive Project Analysis:**
-${projectInfo.llmContextSummary}
-
-**Additional Architecture Details:**
-- Database: ${projectInfo.hasDatabase ? 'Yes' : 'No'}
-- API: ${projectInfo.hasApi ? 'Yes' : 'No'}
-- Frontend: ${projectInfo.hasFrontend ? 'Yes' : 'No'}
-- Tests: ${projectInfo.hasTests ? 'Yes' : 'No'}
-- Structure: ${projectInfo.structure.directories.slice(0, 5).join(', ')}`;
-    }
-
-    // Fallback to basic analysis if no LLM context summary
-    const fileCount = projectInfo.fileCount;
-    const complexity = fileCount < 20 ? 'Simple' : fileCount < 50 ? 'Medium' : 'Complex';
-
-    const topFunctions = projectInfo.codeAnalysis.functions
-      .slice(0, 5)
-      .map(f => `  • ${f.name}() in ${f.fileName}`)
-      .join('\n') || '  • No functions detected';
-
-    return `**Project Overview:**
-- Type: ${projectInfo.type}
-- Complexity: ${complexity} (${fileCount} files)
-- Technologies: ${projectInfo.mainTechnologies.join(', ')}
-- Entry points: ${projectInfo.codeAnalysis.entryPoints.join(', ') || 'None'}
-
-**Architecture:**
-- Database: ${projectInfo.hasDatabase ? 'Yes' : 'No'}
-- API: ${projectInfo.hasApi ? 'Yes' : 'No'}
-- Frontend: ${projectInfo.hasFrontend ? 'Yes' : 'No'}
-- Tests: ${projectInfo.hasTests ? 'Yes' : 'No'}
-
-**Key Functions:**
-${topFunctions}
-
-**Structure:**
-- Directories: ${projectInfo.structure.directories.slice(0, 5).join(', ')}`;
-  }
 
   /**
    * Validate story response structure
@@ -514,255 +415,10 @@ ${topFunctions}
     return theme;
   }
 
-  /**
-   * Get theme-specific introduction with project insights
-   */
-  private getThemeIntroduction(theme: AdventureTheme, projectInfo: ProjectInfo): string {
-    // Create an integrated story that weaves in project details naturally
-    const entryPoint = projectInfo.codeAnalysis.entryPoints[0] || 'main';
-    const topFunctions = this.filterMeaningfulFunctions(projectInfo.codeAnalysis.functions).slice(0, 2);
-    const topDeps = projectInfo.codeAnalysis.dependencies.slice(0, 2).map(d => d.name);
-    
-    const integratedStories = {
-      space: this.createSpaceIntegratedStory(projectInfo, entryPoint, topFunctions, topDeps),
-      mythical: this.createMythicalIntegratedStory(projectInfo, entryPoint, topFunctions, topDeps),
-      ancient: this.createAncientIntegratedStory(projectInfo, entryPoint, topFunctions, topDeps)
-    };
-    
-    const story = integratedStories[theme as keyof typeof integratedStories] || integratedStories.space;
-    
-    return `${story}
-
-🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!`;
-  }
-
-  /**
-   * Create space-themed integrated story
-   */
-  private createSpaceIntegratedStory(projectInfo: ProjectInfo, entryPoint: string, topFunctions: string[], topDeps: string[]): string {
-    const techList = projectInfo.mainTechnologies.slice(0, 3).join(', ');
-    const functionList = topFunctions.length > 0 ? topFunctions.join(', ') : 'advanced algorithms';
-    const depList = topDeps.length > 0 ? topDeps.join(', ') : 'cutting-edge modules';
-    
-    return `🚀 In the vast digital cosmos, the advanced Starship '${projectInfo.type}' serves as a beacon of innovation, housing ${projectInfo.fileCount} interconnected modules powered by ${techList} technology. The ship's sophisticated command bridge, located at \`${entryPoint}\`, orchestrates a symphony of computational processes that would make even the most seasoned space captains marvel.
-
-The vessel's core systems rely on powerful algorithms like \`${functionList}\` to navigate through complex data streams and coordinate mission-critical operations. These systems work in harmony with trusted companion modules such as \`${depList}\`, forming an intricate network of technological excellence that enables the ship to ${this.inferProjectPurpose(projectInfo)}.
-
-Each deck of this remarkable vessel tells a story of engineering prowess - ${projectInfo.hasApi ? 'communication arrays facilitate interstellar data exchange' : 'internal processing cores handle computational tasks'}, while ${projectInfo.hasDatabase ? 'deep within the ship\'s core lie vast data archives storing the accumulated knowledge of countless digital civilizations' : 'the ship\'s memory banks efficiently manage operational data flows'}${projectInfo.hasTests ? ', with quality assurance protocols ensuring mission success' : ''}. The ship's architecture represents the pinnacle of digital craftsmanship, ready to embark on extraordinary computational voyages.`;
-  }
-
-  /**
-   * Create mythical-themed integrated story
-   */
-  private createMythicalIntegratedStory(projectInfo: ProjectInfo, entryPoint: string, topFunctions: string[], topDeps: string[]): string {
-    const techList = projectInfo.mainTechnologies.slice(0, 3).join(', ');
-    const functionList = topFunctions.length > 0 ? topFunctions.join(', ') : 'ancient spells';
-    const depList = topDeps.length > 0 ? topDeps.join(', ') : 'mystical artifacts';
-    
-    return `🏰 Welcome to the Enchanted Kingdom of ${projectInfo.type}, a realm where ${projectInfo.fileCount} scrolls of digital wisdom are woven together using the mystical arts of ${techList}. At the heart of this magical domain stands the Grand Castle, its gates opening at \`${entryPoint}\`, where the kingdom's most powerful enchantments come to life.
-
-Within these ancient walls, powerful incantations such as \`${functionList}\` channel the raw forces of computation, while wise magical allies like \`${depList}\` lend their mystical powers to ${this.inferProjectPurpose(projectInfo)}. The castle's architecture reflects centuries of accumulated wisdom, each chamber serving a sacred purpose in the greater magical tapestry.
-
-The kingdom flourishes through ${projectInfo.hasApi ? 'crystal communication towers that enable discourse with distant realms' : 'internal magical conduits that maintain harmony'}, while ${projectInfo.hasDatabase ? 'deep beneath the castle lie the Vaults of Eternal Memory, where all the kingdom\'s knowledge is preserved in crystalline archives' : 'the castle\'s memory halls efficiently organize the realm\'s magical essence'}${projectInfo.hasTests ? ', with ancient rituals ensuring the purity of each spell' : ''}. This enchanted realm stands as a testament to the fusion of ancient wisdom and modern digital sorcery.`;
-  }
-
-  /**
-   * Create ancient-themed integrated story
-   */
-  private createAncientIntegratedStory(projectInfo: ProjectInfo, entryPoint: string, topFunctions: string[], topDeps: string[]): string {
-    const techList = projectInfo.mainTechnologies.slice(0, 3).join(', ');
-    const functionList = topFunctions.length > 0 ? topFunctions.join(', ') : 'sacred ceremonies';
-    const depList = topDeps.length > 0 ? topDeps.join(', ') : 'holy relics';
-    
-    return `🏺 Behold the Lost Temple of ${projectInfo.type}, an architectural marvel where ${projectInfo.fileCount} sacred tablets preserve the digital wisdom of an advanced civilization that mastered the arts of ${techList}. The temple's grand entrance, located at \`${entryPoint}\`, serves as the threshold between the mundane world and the realm of computational enlightenment.
-
-Throughout the temple's hallowed halls, ancient ceremonies like \`${functionList}\` are performed with reverent precision, while blessed artifacts such as \`${depList}\` channel divine power to ${this.inferProjectPurpose(projectInfo)}. Each chamber within this sacred space has been carefully designed by master architects who understood the profound mysteries of digital creation.
-
-The temple's sacred architecture features ${projectInfo.hasApi ? 'divine communication altars that facilitate communion with external realms' : 'internal meditation spaces for focused computation'}, while ${projectInfo.hasDatabase ? 'at its heart lies the Chamber of Eternal Records, where all knowledge is inscribed upon immortal stone tablets' : 'memory vaults preserve essential wisdom with ancient precision'}${projectInfo.hasTests ? ', with consecrated rituals maintaining the sanctity of each digital blessing' : ''}. This timeless monument stands as proof that the ancients understood the eternal principles underlying all computational endeavors.`;
-  }
-
-  /**
-   * Infer project purpose from available information
-   */
-  private inferProjectPurpose(projectInfo: ProjectInfo): string {
-    if (projectInfo.type.toLowerCase().includes('api')) return 'facilitate seamless communication between digital realms';
-    if (projectInfo.type.toLowerCase().includes('web')) return 'create immersive digital experiences';
-    if (projectInfo.type.toLowerCase().includes('cli')) return 'provide powerful command-line capabilities';
-    if (projectInfo.type.toLowerCase().includes('library')) return 'offer reusable building blocks to fellow developers';
-    if (projectInfo.hasApi && projectInfo.hasDatabase) return 'manage and serve data across digital networks';
-    if (projectInfo.hasApi) return 'bridge connections between different systems';
-    if (projectInfo.hasDatabase) return 'organize and safeguard valuable information';
-    return 'solve complex computational challenges';
-  }
-
-  /**
-   * Generate project-specific insights with thematic flavor
-   */
-  private generateProjectInsights(theme: AdventureTheme, projectInfo: ProjectInfo): string {
-    const insights: string[] = [];
-    
-    // Architecture insight
-    const entryPoint = projectInfo.codeAnalysis.entryPoints[0];
-    if (entryPoint) {
-      const themeMap = {
-        space: `🛸 **Command Bridge**: The starship's control center is located at \`${entryPoint}\``,
-        mythical: `🏰 **Castle Gates**: The kingdom's main entrance lies at \`${entryPoint}\``, 
-        ancient: `🚪 **Temple Entrance**: The sacred portal opens at \`${entryPoint}\``
-      };
-      insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
-    }
-
-    // Functions insight
-    if (projectInfo.codeAnalysis.functions.length > 0) {
-      const meaningfulFunctions = this.filterMeaningfulFunctions(projectInfo.codeAnalysis.functions);
-      if (meaningfulFunctions.length > 0) {
-        const topFunctions = meaningfulFunctions.slice(0, 3).join(', ');
-        const themeMap = {
-          space: `⚙️ **Core Systems**: Advanced algorithms like \`${topFunctions}\` power critical operations`,
-          mythical: `🔮 **Magical Spells**: Powerful incantations including \`${topFunctions}\` weave through the code`,
-          ancient: `📜 **Sacred Rituals**: Ancient ceremonies such as \`${topFunctions}\` hold mystical powers`
-        };
-        insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
-      }
-    }
-
-    // Dependencies insight  
-    if (projectInfo.codeAnalysis.dependencies.length > 0) {
-      const topDeps = projectInfo.codeAnalysis.dependencies.slice(0, 2).map(d => d.name).join(', ');
-      const themeMap = {
-        space: `🤖 **Allied Technologies**: Trusted companions \`${topDeps}\` join your cosmic journey`,
-        mythical: `🧙 **Magical Allies**: Wise wizards \`${topDeps}\` offer their mystical assistance`,
-        ancient: `🏺 **Sacred Artifacts**: Ancient relics \`${topDeps}\` provide divine guidance`
-      };
-      insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
-    }
-
-    // Architecture features insight - prioritize core functionality over testing
-    const hasApi = projectInfo.hasApi;
-    const hasDatabase = projectInfo.hasDatabase;
-    const hasTests = projectInfo.hasTests;
-    
-    if (hasApi || hasDatabase || hasTests) {
-      const features: string[] = [];
-      // Add core features first
-      if (hasApi) features.push('communication portals'); 
-      if (hasDatabase) features.push('data vaults');
-      // Add testing last as supporting feature
-      if (hasTests) features.push('quality chambers');
-      
-      const themeMap = {
-        space: `🛰️ **Special Facilities**: The ship contains ${features.join(', ')} for advanced operations`,
-        mythical: `⚔️ **Sacred Chambers**: The castle houses ${features.join(', ')} with magical properties`,
-        ancient: `🏛️ **Holy Sanctuaries**: The temple includes ${features.join(', ')} blessed by the ancients`
-      };
-      insights.push(themeMap[theme as keyof typeof themeMap] || themeMap.space);
-    }
-
-    return insights.join('\n');
-  }
 
 
-  /**
-   * Filter functions to focus on meaningful project-specific functions
-   */
-  private filterMeaningfulFunctions(functions: { name: string }[]): string[] {
-    // Built-in functions and constructors to exclude
-    const builtInFunctions = new Set([
-      'Set', 'Map', 'Array', 'Object', 'String', 'Number', 'Boolean', 'Date', 'RegExp',
-      'Promise', 'Error', 'console', 'JSON', 'Math', 'parseInt', 'parseFloat',
-      'constructor', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
-      'propertyIsEnumerable', 'toLocaleString', 'prototype', 'length', 'name',
-      'apply', 'call', 'bind', 'slice', 'splice', 'push', 'pop', 'shift', 'unshift'
-    ]);
 
-    // Generic/common method names to exclude
-    const genericMethods = new Set([
-      'get', 'set', 'add', 'remove', 'delete', 'create', 'update', 'find', 'filter',
-      'map', 'forEach', 'reduce', 'some', 'every', 'includes', 'indexOf', 'join',
-      'split', 'trim', 'replace', 'match', 'search', 'substring', 'slice'
-    ]);
 
-    const filteredNames = functions
-      .map(f => f.name)
-      .filter(name => {
-        // Exclude built-in functions
-        if (builtInFunctions.has(name)) return false;
-        
-        // Exclude very generic method names
-        if (genericMethods.has(name)) return false;
-        
-        // Exclude single letters or very short names
-        if (name.length <= 2) return false;
-        
-        // Exclude names that start with underscore (private/internal)
-        if (name.startsWith('_')) return false;
-        
-        // Exclude test-related functions
-        if (name.includes('test') || name.includes('spec') || name.includes('mock')) return false;
-        
-        // Exclude utility/helper functions that aren't core business logic
-        if (name.includes('detect') || name.includes('util') || name.includes('helper')) return false;
-        
-        return true;
-      });
-
-    // Remove duplicates using Set
-    const uniqueNames = [...new Set(filteredNames)];
-    
-    // Prioritize functions by importance
-    return uniqueNames.sort((a, b) => {
-      // Highest priority: Exact matches for key project functions
-      const keyFunctions = ['initializeAdventure', 'exploreAdventure', 'analyzeProject', 'generateStory', 'generateStoryAndAdventures'];
-      const aIsKey = keyFunctions.includes(a);
-      const bIsKey = keyFunctions.includes(b);
-      
-      if (aIsKey && !bIsKey) return -1;
-      if (!aIsKey && bIsKey) return 1;
-      
-      // Second priority: Core business function patterns
-      const coreFunctions = ['initialize', 'analyze', 'generate', 'explore', 'start', 'create'];
-      const aIsCore = coreFunctions.some(word => a.toLowerCase().includes(word));
-      const bIsCore = coreFunctions.some(word => b.toLowerCase().includes(word));
-      
-      if (aIsCore && !bIsCore) return -1;
-      if (!aIsCore && bIsCore) return 1;
-      
-      // Third priority: Action words
-      const actionWords = ['process', 'handle', 'manage', 'build', 'execute', 'run', 'setup'];
-      const aHasAction = actionWords.some(word => a.toLowerCase().includes(word));
-      const bHasAction = actionWords.some(word => b.toLowerCase().includes(word));
-      
-      if (aHasAction && !bHasAction) return -1;
-      if (!aHasAction && bHasAction) return 1;
-      
-      // Fourth priority: Longer, more descriptive names
-      return b.length - a.length;
-    });
-  }
-
-  /**
-   * Get theme-appropriate emoji
-   */
-  private getThemeEmoji(theme: AdventureTheme): string {
-    const emojis = { space: '🚀', mythical: '⚔️', ancient: '🏺' };
-    return emojis[theme as keyof typeof emojis] || '🎯';
-  }
-
-  /**
-   * Select relevant files for an adventure path
-   */
-  private selectRelevantFiles(projectInfo: ProjectInfo, pathId: string): string[] {
-    const analysis = projectInfo.codeAnalysis;
-    
-    switch (pathId) {
-      case 'main-quest':
-        return analysis.entryPoints.slice(0, 3);
-      case 'configuration-caverns':
-        return projectInfo.structure.configFiles.slice(0, 3);
-      default:
-        return analysis.functions.slice(0, 3).map(f => f.fileName);
-    }
-  }
 
   /**
    * Extract code snippets from content
@@ -783,40 +439,6 @@ The temple's sacred architecture features ${projectInfo.hasApi ? 'divine communi
     return snippets;
   }
 
-  /**
-   * Generate default characters for themes
-   */
-  private generateDefaultCharacters(theme: AdventureTheme): Character[] {
-    const templates = {
-      space: {
-        name: 'Data Navigator Zara',
-        role: 'Chief Data Officer',
-        description: 'A brilliant navigator who charts courses through data galaxies.',
-        greeting: 'Welcome aboard, space traveler!',
-        funFact: 'I can process stellar databases faster than light!',
-        technology: 'Database'
-      },
-      mythical: {
-        name: 'Keeper Magnus',
-        role: 'Guardian of Code Archives',
-        description: 'An ancient keeper who protects the scrolls of knowledge.',
-        greeting: 'Hail, brave adventurer!',
-        funFact: 'I have guarded these scrolls for centuries!',
-        technology: 'Database'
-      },
-      ancient: {
-        name: 'Oracle Pythia',
-        role: 'Keeper of Digital Prophecies',
-        description: 'A wise oracle who interprets patterns in code.',
-        greeting: 'Seeker of knowledge, welcome!',
-        funFact: 'I can divine the future from algorithms!',
-        technology: 'Database'
-      }
-    };
-
-    const template = templates[theme as keyof typeof templates] || templates.space;
-    return [template];
-  }
 }
 
 // For backward compatibility with DynamicStoryGenerator usage

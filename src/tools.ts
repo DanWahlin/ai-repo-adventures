@@ -13,7 +13,8 @@
  */
 
 import { z } from 'zod';
-import { optimizedAnalyzer } from './shared/instances.js';
+import { repomixAnalyzer } from './analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from './shared/types.js';
 import { AdventureManager } from './adventure/adventure-manager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { formatErrorForUser } from './shared/errors.js';
@@ -22,6 +23,54 @@ import { validateProjectPath, validateTheme, validateAdventureChoice } from './s
 
 // Create a single shared adventure manager instance
 const adventureManager = new AdventureManager();
+
+// Helper functions to reduce handler complexity
+
+/**
+ * Create minimal ProjectInfo with repomix content
+ */
+function createProjectInfo(repomixContent: string): ProjectInfo {
+  return {
+    type: 'Software Project', // LLM will infer the real type during story generation
+    fileCount: (repomixContent.match(/## File:/g) || []).length,
+    mainTechnologies: [], // LLM will detect these during story generation
+    hasTests: repomixContent.toLowerCase().includes('test'),
+    hasDatabase: false, // LLM will detect during story generation
+    hasApi: false, // LLM will detect during story generation
+    hasFrontend: false, // LLM will detect during story generation
+    codeAnalysis: {
+      functions: [], // LLM will extract during story generation
+      classes: [], // LLM will extract during story generation
+      dependencies: [], // LLM will extract during story generation
+      entryPoints: [] // LLM will detect during story generation
+    },
+    repomixContent, // This is the gold - rich context for story generation
+    llmContextSummary: 'Raw repomix content available for LLM analysis during story generation.'
+  };
+}
+
+/**
+ * Format the initial adventure response
+ */
+function formatInitialResponse(projectInfo: ProjectInfo): string {
+  return `🌟 **Welcome to Repo Adventures!** 🌟
+
+You've discovered a mysterious codebase containing ${projectInfo.fileCount} files of digital wisdom! This project awaits your exploration through immersive storytelling.
+
+📊 **Initial Scan Results:**
+• ${projectInfo.fileCount} files discovered
+• ${projectInfo.hasTests ? 'Testing framework detected' : 'No test files found'}
+• Rich codebase context prepared for adventure generation
+• Ready for LLM-powered analysis and story generation
+
+Your mission: Transform into a digital explorer and uncover the secrets of this codebase through an immersive, LLM-generated adventure! Every story, character, and code insight is dynamically created based on your actual project structure.
+
+**Choose Your Story Theme:**
+
+${getFormattedThemeOptions()}
+
+Use the \`choose_theme\` tool with your preferred theme (name or number) to begin your adventure!`;
+}
 
 // Helper function to generate dynamic theme examples for tool descriptions
 function generateThemeExamples(): string {
@@ -67,30 +116,15 @@ export const start_adventure = {
     }
     
     try {
-      // Analyze the project
-      const projectInfo = await optimizedAnalyzer.analyzeProject(projectPath);
+      // Generate repomix content and create minimal ProjectInfo
+      const repomixContent = await repomixAnalyzer.generateRepomixContext(projectPath);
+      const projectInfo = createProjectInfo(repomixContent);
       
       return {
         content: [
           {
             type: 'text' as const,
-            text: `🌟 **Welcome to Repo Adventures!** 🌟
-
-You've discovered a mysterious codebase containing ${projectInfo.fileCount} files of digital wisdom! This ${projectInfo.type} project harnesses the power of ${projectInfo.mainTechnologies.slice(0, 3).join(', ')}${projectInfo.mainTechnologies.length > 3 ? ` and ${projectInfo.mainTechnologies.length - 3} other technologies` : ''}.
-
-📊 **Initial Scan Results:**
-• ${projectInfo.codeAnalysis.functions.length} functions discovered
-• ${projectInfo.codeAnalysis.classes.length} classes detected
-• ${projectInfo.codeAnalysis.dependencies.length} dependencies connected
-• Entry point: ${projectInfo.codeAnalysis.entryPoints[0] || 'Unknown'}
-
-Your mission: Transform into a digital explorer and uncover the secrets of this codebase through an immersive, LLM-generated adventure! Every story, character, and code insight is dynamically created based on your actual project structure.
-
-**Choose Your Story Theme:**
-
-${getFormattedThemeOptions()}
-
-Use the \`choose_theme\` tool with your preferred theme (name or number) to begin your adventure!`
+            text: formatInitialResponse(projectInfo)
           }
         ]
       };
@@ -132,9 +166,10 @@ export const choose_theme = {
         );
       }
       
-      // Get the current project info
+      // Generate repomix content and create minimal ProjectInfo
       const projectPath = process.cwd();
-      const projectInfo = await optimizedAnalyzer.analyzeProject(projectPath);
+      const repomixContent = await repomixAnalyzer.generateRepomixContext(projectPath);
+      const projectInfo = createProjectInfo(repomixContent);
       
       // Initialize adventure with LLM-generated content
       const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, selectedTheme);

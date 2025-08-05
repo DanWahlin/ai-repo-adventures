@@ -3,14 +3,12 @@
  * Extracted from StoryGenerator to follow single responsibility principle
  */
 
-import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../shared/types.js';
 import { AdventureTheme } from '../shared/theme.js';
 import { AdventurePathGenerator } from './adventure-path-generator.js';
-import { ThemeManager } from './theme-manager.js';
 import type { Adventure, Story, StoryResponse } from '../adventure/story-generator.js';
 
 export class StoryTemplateEngine {
-  private themeManager = new ThemeManager();
   private pathGenerator = new AdventurePathGenerator();
 
   /**

@@ -1,5 +1,44 @@
 import { AdventureTheme } from './theme.js';
 
+// Legacy interfaces - kept minimal for backward compatibility
+// In the future, these should be removed as we move to LLM-first approach
+
+export interface FunctionInfo {
+  name: string;
+  summary: string;
+  fileName: string;
+  source: 'llm';
+}
+
+export interface ClassInfo {
+  name: string;
+}
+
+export interface DependencyInfo {
+  name: string;
+  type: 'dependency';
+}
+
+export interface CodeAnalysis {
+  functions: FunctionInfo[];
+  classes: ClassInfo[];
+  dependencies: DependencyInfo[];
+  entryPoints: string[];
+}
+
+export interface ProjectInfo {
+  type: string;
+  fileCount: number;
+  mainTechnologies: string[];
+  hasTests: boolean;
+  hasDatabase: boolean;
+  hasApi: boolean;
+  hasFrontend: boolean;
+  codeAnalysis: CodeAnalysis;
+  repomixContent: string; // The raw repomix content - this is the important part
+  llmContextSummary?: string;
+}
+
 // Story and Character types
 export interface Character {
   name: string;

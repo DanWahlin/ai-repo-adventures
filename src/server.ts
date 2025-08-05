@@ -10,7 +10,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { tools } from './tools.js';
 import { convertZodSchema } from './utils/zod-to-json-schema.js';
-import { optimizedAnalyzer } from './shared/instances.js';
+import { repomixAnalyzer } from './analyzer/repomix-analyzer.js';
 
 class RepoAdventureServer {
   private server: Server;
@@ -84,11 +84,11 @@ class RepoAdventureServer {
     await this.server.connect(transport);
     console.error('Repo Adventure MCP server running on stdio');
     
-    // Pre-analyze the current working directory to warm up the cache
+    // Pre-generate repomix content for the current working directory to warm up the cache
     // This happens in the background while waiting for user commands
     const projectPath = process.cwd();
-    console.error(`Pre-analyzing project at ${projectPath}...`);
-    optimizedAnalyzer.preAnalyze(projectPath);
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repomixAnalyzer.preGenerate(projectPath);
   }
 }
 
@@ -100,7 +100,7 @@ async function main() {
     process.on('SIGINT', async () => {
       console.error('\nShutting down MCP server...');
       try {
-        await optimizedAnalyzer.cleanup();
+        repomixAnalyzer.cleanup();
       } catch (error) {
         console.error('Error during shutdown cleanup:', error);
       }
@@ -110,7 +110,7 @@ async function main() {
     process.on('SIGTERM', async () => {
       console.error('\nShutting down MCP server...');
       try {
-        await optimizedAnalyzer.cleanup();
+        repomixAnalyzer.cleanup();
       } catch (error) {
         console.error('Error during shutdown cleanup:', error);
       }

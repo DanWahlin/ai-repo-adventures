@@ -8,7 +8,7 @@ import { AdventureManager } from '../../src/adventure/adventure-manager.js';
 import { DynamicStoryGenerator, STORY_THEMES } from '../../src/adventure/story-generator.js';
 import { RepomixAnalyzer } from '../../src/analyzer/repomix-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
-import type { ProjectInfo } from '../../src/analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../../src/shared/types.js';
 
 // Using shared mockProjectInfo from test-utils.js
 /* Commented out local definition - using shared version

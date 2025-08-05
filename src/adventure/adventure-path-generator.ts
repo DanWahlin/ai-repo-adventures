@@ -1,4 +1,4 @@
-import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../shared/types.js';
 import type { AdventureTheme } from '../shared/theme.js';
 import { THEME_EMOJIS } from '../shared/theme.js';
 
@@ -14,21 +14,37 @@ export interface AdventurePath {
 export class AdventurePathGenerator {
   generatePaths(projectInfo: ProjectInfo): AdventurePath[] {
     const paths: AdventurePath[] = [];
-    const codeFlow = projectInfo.codeAnalysis.codeFlow;
-    const hasComplexFlow = codeFlow && codeFlow.executionOrder && codeFlow.executionOrder.length > 5;
 
-    // 1. Always include the main quest
-    if (codeFlow?.entryPoint) {
+    // Each method handles one type of adventure path
+    this.addMainQuestPaths(paths, projectInfo);
+    this.addConfigurationPaths(paths, projectInfo);
+    this.addTestPaths(paths, projectInfo);
+    this.addApiPaths(paths, projectInfo);
+    this.addDatabasePaths(paths, projectInfo);
+    this.addCharacterPaths(paths, projectInfo);
+    this.addDependencyPaths(paths, projectInfo);
+    this.addArchitecturePaths(paths, projectInfo);
+    this.addErrorHandlingPaths(paths, projectInfo);
+
+    return this.sortByComplexity(paths);
+  }
+
+  private addMainQuestPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
+    const entryPoints = projectInfo.codeAnalysis.entryPoints;
+    const hasMultipleEntries = entryPoints.length > 1;
+
+    if (entryPoints.length > 0) {
+      const mainEntry = entryPoints[0];
       paths.push({
         id: 'main-quest',
         name: 'The Main Quest',
-        description: `Follow the primary journey from ${codeFlow.entryPoint} through the core systems`,
-        complexity: hasComplexFlow ? 'intermediate' : 'beginner',
-        estimatedTime: hasComplexFlow ? '15-20 minutes' : '10-15 minutes'
+        description: `Follow the primary journey from ${mainEntry} through the core systems`,
+        complexity: hasMultipleEntries ? 'intermediate' : 'beginner',
+        estimatedTime: hasMultipleEntries ? '15-20 minutes' : '10-15 minutes'
       });
 
-      // For complex flows, break into chapters
-      if (hasComplexFlow) {
+      // For multiple entry points, add exploration of each
+      if (hasMultipleEntries) {
         paths.push({
           id: 'main-quest-chapter-2',
           name: 'The Main Quest - Chapter 2',
@@ -39,20 +55,22 @@ export class AdventurePathGenerator {
         });
       }
     }
+  }
 
-    // 2. Configuration adventure
-    const configFiles = projectInfo.structure.configFiles.length;
-    if (configFiles > 0) {
+  private addConfigurationPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
+    // Always add configuration path since most projects have config
+    if (projectInfo.fileCount > 5) {
       paths.push({
         id: 'configuration-caverns',
         name: 'Configuration Caverns',
-        description: `Explore ${configFiles} ancient scrolls that control the realm's behavior`,
+        description: `Explore the ancient scrolls that control the realm's behavior`,
         complexity: 'beginner',
         estimatedTime: '5-10 minutes'
       });
     }
+  }
 
-    // 3. Test chamber (if tests exist)
+  private addTestPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     if (projectInfo.hasTests) {
       const testFunctions = projectInfo.codeAnalysis.functions.filter(f => 
         f.fileName.includes('test') || f.fileName.includes('spec')
@@ -66,8 +84,9 @@ export class AdventurePathGenerator {
         estimatedTime: '10-15 minutes'
       });
     }
+  }
 
-    // 4. API Gateway (if APIs detected)
+  private addApiPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     if (projectInfo.hasApi) {
       paths.push({
         id: 'api-gateway-expedition',
@@ -77,8 +96,9 @@ export class AdventurePathGenerator {
         estimatedTime: '10-15 minutes'
       });
     }
+  }
 
-    // 5. Database depths (if database detected)
+  private addDatabasePaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     if (projectInfo.hasDatabase) {
       paths.push({
         id: 'database-depths',
@@ -88,10 +108,11 @@ export class AdventurePathGenerator {
         estimatedTime: '10-15 minutes'
       });
     }
+  }
 
-    // 6. Character meet & greet (for many classes/functions)
+  private addCharacterPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     const totalCharacters = projectInfo.codeAnalysis.classes.length + 
-                           projectInfo.codeAnalysis.functions.filter(f => f.isExported).length;
+                           projectInfo.codeAnalysis.functions.length;
     
     if (totalCharacters > 5) {
       paths.push({
@@ -102,8 +123,9 @@ export class AdventurePathGenerator {
         estimatedTime: '15-25 minutes'
       });
     }
+  }
 
-    // 7. Dependency nexus (for projects with many dependencies)
+  private addDependencyPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     const externalDeps = projectInfo.codeAnalysis.dependencies.filter(d => d.type === 'dependency').length;
     if (externalDeps > 5) {
       paths.push({
@@ -114,8 +136,9 @@ export class AdventurePathGenerator {
         estimatedTime: '15-20 minutes'
       });
     }
+  }
 
-    // 8. Architecture overview (for large projects)
+  private addArchitecturePaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     if (projectInfo.fileCount > 20) {
       paths.push({
         id: 'architecture-summit',
@@ -125,8 +148,9 @@ export class AdventurePathGenerator {
         estimatedTime: '20-30 minutes'
       });
     }
+  }
 
-    // 9. Error handling fortress (if error patterns detected)
+  private addErrorHandlingPaths(paths: AdventurePath[], projectInfo: ProjectInfo): void {
     const errorHandlingFunctions = projectInfo.codeAnalysis.functions.filter(f => 
       f.name.toLowerCase().includes('error') || 
       f.name.toLowerCase().includes('catch') ||
@@ -143,8 +167,6 @@ export class AdventurePathGenerator {
         estimatedTime: '10-15 minutes'
       });
     }
-
-    return this.sortByComplexity(paths);
   }
 
   private sortByComplexity(paths: AdventurePath[]): AdventurePath[] {

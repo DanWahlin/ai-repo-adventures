@@ -5,7 +5,7 @@
  */
 
 import { runTestSuite } from './shared/test-utils.js';
-import { runTests as runAdventureAlgorithmTests } from './unit/adventure-algorithms.test.js';
+import { runTests as runAdventureAlgorithmTests } from './unit/simplified-algorithms.test.js';
 import { runLLMClientTests } from './unit/llm-client.test.js';
 import { runTests as runAdventureLLMTests } from './unit/adventure-llm.test.js';
 
@@ -13,7 +13,7 @@ async function runAllUnitTests() {
   console.log('Running comprehensive unit tests for all core algorithms\n');
 
   await runTestSuite('🧪 MCP Repo Adventure - Unit Test Suite', [
-    { name: 'Adventure Algorithms', runner: runAdventureAlgorithmTests },
+    { name: 'Simplified Architecture', runner: runAdventureAlgorithmTests },
     { name: 'LLM Client', runner: runLLMClientTests },
     { name: 'Adventure LLM Integration', runner: runAdventureLLMTests }
   ]);

@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../shared/types.js';
 import { MAX_FILES_PER_ADVENTURE, MAX_FILE_LINES_FOR_LLM } from '../shared/config.js';
 
 /**
@@ -15,8 +15,12 @@ export class FileContentManager {
   buildFileIndex(projectInfo: ProjectInfo): void {
     this.fileIndex.clear();
     
-    // Index all source files
-    [...projectInfo.structure.sourceFiles, ...projectInfo.structure.configFiles].forEach(filePath => {
+    // Index from entry points and function files  
+    const allFiles = [
+      ...projectInfo.codeAnalysis.entryPoints,
+      ...projectInfo.codeAnalysis.functions.map(f => f.fileName)
+    ];
+    allFiles.forEach(filePath => {
       // Index by full path
       this.fileIndex.set(filePath, filePath);
       

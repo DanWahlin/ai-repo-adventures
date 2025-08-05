@@ -12,11 +12,40 @@ A fun, gamified Model Context Protocol (MCP) server that transforms code reposit
 
 ## How It Works
 
-1. **Start Adventure** - The server analyzes your project and presents theme options
-2. **Choose Theme** - Select from Space Exploration, Enchanted Kingdom, or Ancient Civilization
-3. **Meet Characters** - Interact with characters representing different technologies in your project
-4. **Explore Areas** - Dive deep into different architectural components
-5. **Learn Through Story** - Understand complex systems through engaging narratives
+1. **Start Adventure** - The server analyzes your project using repomix and presents theme options
+2. **Choose Theme** - Select from Space Exploration, Mythical Kingdom, or Ancient Civilization
+3. **Explore Adventures** - Follow dynamically generated adventure paths through your codebase
+4. **View Progress** - Track your exploration progress and see completed areas
+5. **Learn Through Story** - Understand complex systems through engaging LLM-generated narratives
+
+## Architecture Flow
+
+```mermaid
+graph TD
+    A[MCP Client] -->|start_adventure| B[RepomixAnalyzer]
+    B --> C[Generate Repomix Content]
+    C --> D[Return Theme Options]
+    
+    A -->|choose_theme| E[AdventureManager]
+    E --> F[StoryGenerator]
+    F --> G[LLM Client]
+    G --> H[Generate Story + Adventures]
+    H --> I[Return Themed Story]
+    
+    A -->|explore_path| J[Find Adventure]
+    J --> K[FileContentManager]
+    K --> L[Read Code Files]
+    L --> M[Generate Adventure Content]
+    M --> N[Update Progress]
+    N --> O[Return Adventure Details]
+    
+    A -->|view_progress| P[Get Progress State]
+    P --> Q[Return Completion Stats]
+    
+    style B fill:#e8f5e8
+    style G fill:#e1f5fe
+    style K fill:#fff3e0
+```
 
 ## Installation
 
@@ -118,57 +147,93 @@ Configure as an MCP server in your development environment.
 ## Available Tools
 
 ### `start_adventure`
-Begin your code repository adventure. Analyzes the project and presents theme options.
+Analyzes your code repository using repomix and begins an interactive, gamified exploration experience. Presents theme options for your adventure.
 
 **Parameters:**
 - `projectPath` (optional): Path to project directory (defaults to current directory)
 
 ### `choose_theme`
-Select your adventure theme.
+Generates a personalized, LLM-powered narrative adventure based on your selected theme. Creates dynamic adventures based on your actual project structure.
 
 **Parameters:**
-- `theme`: "space", "medieval", or "ancient"
+- `theme`: "space", "mythical", or "ancient" (also accepts numbers: 1, 2, 3)
 
 ### `explore_path`
-Choose your adventure path to explore different aspects of the codebase.
+Executes a chosen adventure to explore specific parts of your codebase through LLM-generated narrative content. Reveals code insights wrapped in themed storytelling.
 
 **Parameters:**
-- `choice`: The exploration choice you want to make
+- `choice`: Adventure number (1, 2, 3) or adventure title/partial title
 
-### `meet_character`
-Interact with a specific character to learn about a technology or component.
+### `view_progress`
+Displays comprehensive progress tracking for your code exploration adventure. Shows completion percentage, completed adventures, and remaining areas to explore.
 
 **Parameters:**
-- `characterName`: Name of the character you want to meet
+- None required - automatically tracks state from previous tool calls
 
 ## Example Adventure Flow
 
 ```
 1. start_adventure() 
-   → Analyzes your React/Node.js project
+   → Generates repomix content for your TypeScript/Node.js project
+   → "🌟 Welcome to Repo Adventures! You've discovered 45 files of digital wisdom!"
+   → "Choose Your Story Theme: 1. 🚀 Space 2. 🏰 Mythical 3. 🏛️ Ancient"
 
 2. choose_theme("space")
-   → "Welcome to Starship CodebaseAlpha! Meet Data Archivist Zara..."
+   → LLM analyzes your repomix content and generates personalized story
+   → "In the cosmic realm of API Service, the advanced Starship 'TypeScript' 
+      navigates through 45 star systems..."
+   → "Available Adventures: 1. 🧭 Navigation Protocols 2. 📡 Communication Hub"
 
-3. meet_character("Data Archivist Zara")
-   → Learn about your database architecture through space-themed analogies
+3. explore_path("1")
+   → LLM generates detailed adventure content using actual code files
+   → "As you enter the Navigation Control Center, you discover the sacred 
+      algorithm that guides all requests..."
+   → Shows real code snippets with explanations in space theme
+   → "Progress: 33% complete (1/3 adventures finished)"
 
-4. explore_path("Visit the API Communications Hub")
-   → Understand how your REST APIs work through the story
+4. view_progress()
+   → "📊 Adventure Progress: 33% complete"
+   → "✅ Completed: Navigation Protocols"
+   → "🗺️ Remaining: Communication Hub, System Diagnostics"
 ```
 
 ## Project Structure
 
 ```
 src/
-├── index.ts              # Main MCP server
+├── server.ts                          # Main MCP server with tool orchestration
+├── tools.ts                           # MCP tool definitions and handlers
 ├── analyzer/            
-│   └── ProjectAnalyzer.ts # Analyzes project structure and technologies
-├── story/
-│   └── StoryGenerator.ts  # Generates themed narratives and characters  
-└── adventure/
-    └── AdventureManager.ts # Manages adventure state and choices
+│   └── repomix-analyzer.ts            # Simple repomix wrapper (no LLM analysis)
+├── adventure/
+│   ├── adventure-manager.ts           # Manages adventure state and progression
+│   ├── story-generator.ts             # LLM-powered story generation with fallbacks
+│   ├── story-template-engine.ts       # Template-based fallback stories
+│   ├── theme-manager.ts               # Theme definitions and vocabulary
+│   ├── adventure-path-generator.ts    # Generates exploration paths
+│   └── file-content-manager.ts        # Reads and prepares code files
+├── llm/
+│   └── llm-client.ts                  # Multi-provider LLM client with caching
+├── shared/
+│   ├── config.ts                      # Centralized configuration
+│   ├── types.ts                       # Shared interfaces (ProjectInfo, etc.)
+│   ├── instances.ts                   # Singleton instances with caching
+│   ├── theme.ts                       # Theme utilities and validation
+│   ├── input-validator.ts             # Security-focused input validation
+│   ├── cache.ts                       # LRU cache implementation
+│   └── errors.ts                      # Error handling utilities
+└── utils/
+    └── zod-to-json-schema.ts          # Zod schema conversion for MCP
 ```
+
+## Key Architecture Principles
+
+- **🎯 LLM-First**: Raw repomix content passed directly to LLM for analysis during story generation
+- **💾 Smart Caching**: Both repomix generation and LLM responses are cached (5min TTL)
+- **🔄 Graceful Fallbacks**: Template-based stories when LLM unavailable
+- **🛡️ Security-First**: Comprehensive input validation and path traversal protection
+- **⚡ Performance**: Optimized with singletons, caching, and minimal processing
+- **🧪 Testable**: Modular design with 100% unit test coverage
 
 ## Supported Technologies
 

@@ -16,8 +16,8 @@ export default [
       'max-depth': ['warn', 4],
       'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
       'max-params': ['warn', 4],
-      'max-statements': ['warn', 20],
-      'complexity': ['warn', 10],
+      'max-statements': ['warn', 25],
+      'complexity': ['warn', 12],
       
       // Disable some rules that might conflict with TypeScript
       'no-unused-vars': 'off',

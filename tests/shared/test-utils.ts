@@ -4,7 +4,7 @@
 
 import { strict as assert } from 'assert';
 import { LLMClient } from '../../src/llm/llm-client.js';
-import type { ProjectInfo } from '../../src/analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../../src/shared/types.js';
 import { LLM_REQUEST_TIMEOUT } from '../../src/shared/config.js';
 
 // Test-specific configuration
@@ -131,12 +131,6 @@ export const mockProjectInfo: ProjectInfo = {
   type: 'Web Application',
   fileCount: 45,
   mainTechnologies: ['TypeScript', 'Node.js', 'React'],
-  structure: {
-    directories: ['src', 'tests', 'dist'],
-    importantFiles: ['package.json', 'README.md', 'src/server.ts'],
-    configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/server.ts', 'src/app.ts', 'src/utils.ts', 'src/index.ts']
-  },
   hasTests: true,
   hasDatabase: false,
   hasApi: true,
@@ -146,32 +140,28 @@ export const mockProjectInfo: ProjectInfo = {
       {
         name: 'startServer',
         summary: 'Initializes and starts the web server',
-        parameters: ['port', 'options'],
-        isAsync: true,
-        isExported: true,
         fileName: 'src/server.ts',
-        source: 'regex',
-        language: 'typescript'
+        source: 'llm'
+      },
+      {
+        name: 'main',
+        summary: 'Main entry point function',
+        fileName: 'src/index.ts',
+        source: 'llm'
       }
     ],
     classes: [
       {
-        name: 'ApiController',
-        summary: 'Handles API requests and responses',
-        methods: ['get', 'post', 'delete'],
-        properties: ['router', 'middleware'],
-        isExported: true,
-        fileName: 'src/controllers/api.ts',
-        source: 'regex',
-        language: 'typescript'
+        name: 'ApiController'
       }
     ],
     dependencies: [
-      { name: 'express', version: '^4.18.0', type: 'dependency', category: 'framework' }
+      { name: 'express', type: 'dependency' }
     ],
-    entryPoints: ['src/server.ts'],
-    keyFiles: []
-  }
+    entryPoints: ['src/server.ts', 'package.json', 'src/index.ts']
+  },
+  repomixContent: '# Test Project\n\nThis is mock repomix content for testing.\n\n## File: src/server.ts\n```typescript\nfunction startServer() { }\n```\n\n## File: src/utils.ts\n```typescript\nclass ApiController { }\n```',
+  llmContextSummary: 'Mock project for testing'
 };
 
 /**
@@ -181,12 +171,6 @@ export const realProjectInfo: ProjectInfo = {
   type: 'TypeScript MCP Server',
   fileCount: 45,
   mainTechnologies: ['TypeScript', 'Node.js', 'MCP'],
-  structure: {
-    directories: ['src', 'tests', 'dist', 'docs'],
-    importantFiles: ['package.json', 'README.md', 'src/server.ts', 'CLAUDE.md'],
-    configFiles: ['package.json', 'tsconfig.json', '.env'],
-    sourceFiles: ['src/server.ts', 'src/adventure/adventure-manager.ts', 'src/llm/llm-client.ts', 'src/analyzer/repomix-analyzer.ts']
-  },
   hasTests: true,
   hasDatabase: false,
   hasApi: true,
@@ -196,68 +180,33 @@ export const realProjectInfo: ProjectInfo = {
       {
         name: 'initializeAdventure',
         summary: 'Initializes adventure with project analysis and theme',
-        parameters: ['projectInfo', 'theme'],
-        isAsync: true,
-        isExported: true,
         fileName: 'src/adventure/adventure-manager.ts',
-        source: 'regex',
-        language: 'typescript'
+        source: 'llm'
       },
       {
         name: 'generateResponse',
         summary: 'Generates LLM response with caching and fallbacks',
-        parameters: ['prompt', 'options'],
-        isAsync: true,
-        isExported: true,
         fileName: 'src/llm/llm-client.ts',
-        source: 'regex', 
-        language: 'typescript'
-      },
-      {
-        name: 'analyzeProject',
-        summary: 'Analyzes project structure and code patterns',
-        parameters: ['projectPath'],
-        isAsync: true,
-        isExported: true,
-        fileName: 'src/analyzer/repomix-analyzer.ts',
-        source: 'regex',
-        language: 'typescript'
+        source: 'llm'
       }
     ],
     classes: [
       {
-        name: 'AdventureManager',
-        summary: 'Manages adventure generation and state',
-        methods: ['initializeAdventure', 'exploreAdventure', 'getProgress'],
-        properties: ['state', 'llmClient', 'fileIndex'],
-        isExported: true,
-        fileName: 'src/adventure/adventure-manager.ts',
-        source: 'regex',
-        language: 'typescript'
+        name: 'AdventureManager'
       },
       {
-        name: 'LLMClient', 
-        summary: 'Handles LLM API communication with caching',
-        methods: ['generateResponse', 'isAvailable'],
-        properties: ['cache', 'provider'],
-        isExported: true,
-        fileName: 'src/llm/llm-client.ts',
-        source: 'regex',
-        language: 'typescript'
+        name: 'LLMClient'
       }
     ],
     dependencies: [
-      { name: '@modelcontextprotocol/sdk', version: '^1.17.1', type: 'dependency', category: 'framework' },
-      { name: 'openai', version: '^5.10.2', type: 'dependency', category: 'ai' },
-      { name: 'zod', version: '^3.25.76', type: 'dependency', category: 'validation' }
+      { name: '@modelcontextprotocol/sdk', type: 'dependency' },
+      { name: 'openai', type: 'dependency' },
+      { name: 'zod', type: 'dependency' }
     ],
-    entryPoints: ['src/server.ts'],
-    keyFiles: [
-      { path: 'src/server.ts', content: 'export { server };', summary: 'Main MCP server entry point' },
-      { path: 'src/adventure/adventure-manager.ts', content: 'export class AdventureManager {', summary: 'Adventure management class' },
-      { path: 'src/llm/llm-client.ts', content: 'export class LLMClient {', summary: 'LLM API client wrapper' }
-    ]
-  }
+    entryPoints: ['src/server.ts']
+  },
+  repomixContent: '# MCP Repo Adventure\\n\\nTypeScript MCP server for gamified code exploration.\\n\\n## File: src/server.ts\\n```typescript\\nexport class RepoAdventureServer { }\\n```\\n\\n## File: src/adventure/adventure-manager.ts\\n```typescript\\nexport class AdventureManager { }\\n```',
+  llmContextSummary: 'Real MCP server project for testing'
 };
 
 /**

@@ -1,4 +1,4 @@
-import type { ProjectInfo } from '../analyzer/repomix-analyzer.js';
+import type { ProjectInfo } from '../shared/types.js';
 import type { AdventureTheme } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
 import { FileContentManager } from './file-content-manager.js';
@@ -65,7 +65,7 @@ export class AdventureManager {
     // Generate the overall story and adventures using LLM
     const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme);
     
-    this.state.story = storyResponse.story;
+    this.state.story = typeof storyResponse.story === 'string' ? storyResponse.story : storyResponse.story.content;
     this.state.adventures = storyResponse.adventures;
 
     // Return the story with available adventures
