@@ -7,7 +7,7 @@
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
 import { StoryGenerator } from '../../src/adventure/story-generator.js';
-import { repomixAnalyzer } from '../../src/analyzer/repomix-analyzer.js';
+import { repoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
 import { 
   createTestRunner, 
   realProjectInfo, 
@@ -40,7 +40,7 @@ async function runTests() {
     };
     
     // Generate targeted content
-    const targetedContent = await repomixAnalyzer.generateTargetedContent(
+    const targetedContent = await repoAnalyzer.generateTargetedContent(
       projectPath, 
       mockAdventure.codeFiles
     );
@@ -181,13 +181,13 @@ async function runTests() {
     };
     
     // Generate targeted content
-    const targetedContent = await repomixAnalyzer.generateTargetedContent(
+    const targetedContent = await repoAnalyzer.generateTargetedContent(
       projectPath,
       testAdventure.codeFiles
     );
     
     // Generate full content 
-    const fullContent = await repomixAnalyzer.generateRepomixContext(projectPath);
+    const fullContent = await repoAnalyzer.generateRepomixContext(projectPath);
     
     // Create adventure content with both approaches
     const targetedAdventure = await storyGenerator.generateAdventureContent(

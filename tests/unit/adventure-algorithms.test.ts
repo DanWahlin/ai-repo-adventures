@@ -6,7 +6,7 @@
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
 import { DynamicStoryGenerator, STORY_THEMES } from '../../src/adventure/story-generator.js';
-import { RepomixAnalyzer } from '../../src/analyzer/repomix-analyzer.js';
+import { RepoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 import type { ProjectInfo } from '../../src/shared/types.js';
 
@@ -192,7 +192,7 @@ async function runTests() {
 
   await test('Path validation rejects dangerous paths', () => {
     // Path validation is now in FileSystemScanner, test via ProjectAnalyzer
-    const analyzer = new RepomixAnalyzer();
+    const analyzer = new RepoAnalyzer();
     
     const dangerousPaths = [
       '/etc/passwd',
@@ -224,7 +224,7 @@ async function runTests() {
 
   await test('Path validation accepts safe paths', () => {
     // This functionality is now in FileSystemScanner, test via ProjectAnalyzer
-    const analyzer = new RepomixAnalyzer();
+    const analyzer = new RepoAnalyzer();
     
     // Test that valid paths work by actually analyzing current directory
     analyzer.analyzeProject('.').then(() => {
@@ -240,7 +240,7 @@ async function runTests() {
 
   await test('Technology detection works correctly', () => {
     // Technology detection is now in FileSystemScanner, test via full analysis
-    const analyzer = new RepomixAnalyzer();
+    const analyzer = new RepoAnalyzer();
     
     // Test by analyzing current project which has TypeScript
     return analyzer.analyzeProject('.').then((result) => {
@@ -253,7 +253,7 @@ async function runTests() {
 
   await test('Function summary generation creates meaningful descriptions', () => {
     // Function summary generation is now in CodeAnalyzer, test via actual analysis
-    const analyzer = new RepomixAnalyzer();
+    const analyzer = new RepoAnalyzer();
     
     // Test by analyzing current project and checking function summaries
     return analyzer.analyzeProject('.').then((result) => {

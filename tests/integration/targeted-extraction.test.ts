@@ -6,7 +6,7 @@
  */
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
-import { repomixAnalyzer } from '../../src/analyzer/repomix-analyzer.js';
+import { repoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
 import { StoryGenerator } from '../../src/adventure/story-generator.js';
 import { 
   createTestRunner, 
@@ -97,7 +97,7 @@ async function runTests() {
     ];
     
     // Test targeted extraction directly
-    const targetedContent = await repomixAnalyzer.generateTargetedContent(projectPath, targetFiles);
+    const targetedContent = await repoAnalyzer.generateTargetedContent(projectPath, targetFiles);
     
     assert(typeof targetedContent === 'string', 'Should return string content');
     assert(targetedContent.length > 1000, 'Should have substantial content');

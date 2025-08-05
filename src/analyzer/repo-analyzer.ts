@@ -16,7 +16,7 @@ export interface RepomixOptions {
   style?: 'xml' | 'markdown' | 'plain';
 }
 
-export class RepomixAnalyzer {
+export class RepoAnalyzer {
   private cache = new Map<string, { content: string; timestamp: number }>();
 
   constructor() {}
@@ -227,4 +227,4 @@ export class RepomixAnalyzer {
 }
 
 // Shared singleton instance to maintain cache state across the application
-export const repomixAnalyzer = new RepomixAnalyzer();
+export const repoAnalyzer = new RepoAnalyzer();

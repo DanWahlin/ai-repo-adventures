@@ -7,19 +7,19 @@
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
 import { DynamicStoryGenerator, STORY_THEMES } from '../../src/adventure/story-generator.js';
-import { RepomixAnalyzer } from '../../src/analyzer/repomix-analyzer.js';
+import { RepoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 
 async function runTests() {
   console.log('🧪 Running Simplified Architecture Unit Tests\n');
   const { test, stats, printResults } = await createTestRunner('Simplified Architecture Tests');
 
-  // RepomixAnalyzer Tests - New simplified API
-  console.log('📁 RepomixAnalyzer Tests');
+  // RepoAnalyzer Tests - New simplified API
+  console.log('📁 RepoAnalyzer Tests');
   console.log('-'.repeat(30));
 
-  await test('RepomixAnalyzer generates repomix content', async () => {
-    const analyzer = new RepomixAnalyzer();
+  await test('RepoAnalyzer generates repomix content', async () => {
+    const analyzer = new RepoAnalyzer();
     
     // Test basic repomix generation for current directory
     const content = await analyzer.generateRepomixContext('.');
@@ -28,8 +28,8 @@ async function runTests() {
     assert(content.includes('# '), 'Should contain markdown headers');
   });
 
-  await test('RepomixAnalyzer caches content within TTL', async () => {
-    const analyzer = new RepomixAnalyzer();
+  await test('RepoAnalyzer caches content within TTL', async () => {
+    const analyzer = new RepoAnalyzer();
     
     // First call should generate content
     const content1 = await analyzer.generateRepomixContext('.');
@@ -42,8 +42,8 @@ async function runTests() {
     assert(content1.length > 0, 'Should have non-empty cached content');
   });
 
-  await test('RepomixAnalyzer handles invalid paths', async () => {
-    const analyzer = new RepomixAnalyzer();
+  await test('RepoAnalyzer handles invalid paths', async () => {
+    const analyzer = new RepoAnalyzer();
     
     // Test empty path
     try {
@@ -165,7 +165,7 @@ async function runTests() {
   console.log('-'.repeat(30));
 
   await test('Complete workflow: repomix -> story -> adventure', async () => {
-    const analyzer = new RepomixAnalyzer();
+    const analyzer = new RepoAnalyzer();
     const manager = new AdventureManager();
 
     // Step 1: Generate repomix content

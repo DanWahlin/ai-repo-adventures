@@ -3,6 +3,7 @@ import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
 import { isValidTheme, THEMES } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
+import { loadAdventureConfig, formatConfigForPrompt, extractHighlightsForFiles, type AdventureConfig } from '../shared/adventure-config.js';
 
 export interface Adventure {
   id: string;
@@ -55,6 +56,7 @@ export class StoryGenerator {
   private llmClient: LLMClient;
   private currentProject?: ProjectInfo;
   private customThemeData?: CustomThemeData;
+  private adventureConfig?: AdventureConfig | null;
 
   constructor() {
     this.llmClient = new LLMClient();
@@ -77,8 +79,14 @@ export class StoryGenerator {
   /**
    * Generate the initial story and adventures using LLM
    */
-  async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
+  async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
     this.currentProject = projectInfo;
+    
+    // Load adventure config if projectPath is provided
+    if (projectPath) {
+      this.adventureConfig = loadAdventureConfig(projectPath);
+    }
+    
     const validatedTheme = this.validateTheme(theme);
     return await this.generateWithLLM(projectInfo, validatedTheme);
   }
@@ -216,11 +224,21 @@ Generate ONLY the celebration message, no extra text.`;
     const repomixContent = projectInfo.repomixContent || 'No repomix content available';
     const themeGuidelines = this.getThemeGuidelines(theme);
     
+    // Add adventure config guidance if available
+    const adventureGuidance = this.adventureConfig 
+      ? `\n## Adventure Guidance (Optional)
+The following predefined adventure structure can guide your story generation:
+
+${formatConfigForPrompt(this.adventureConfig)}
+
+Use this as inspiration for adventure titles and focus areas, but adapt to the actual codebase content below.\n`
+      : '';
+    
     return `You are a technical education specialist creating story-based workshops that provide immersive code exploration experiences.
 Transform this codebase into an engaging ${theme}-themed narrative that weaves project details into the story.
 
 ## Complete Codebase
-${repomixContent}
+${repomixContent}${adventureGuidance}
 
 ${themeGuidelines}
 
@@ -288,12 +306,26 @@ Create 2-6 adventures based on the project complexity revealed in the ## Complet
   ): string {
     const themeGuidelines = this.getThemeGuidelines(theme);
     
+    // Find matching adventure config and extract highlights
+    let workshopHighlights = '';
+    if (this.adventureConfig && adventure.codeFiles) {
+      const highlights = extractHighlightsForFiles(this.adventureConfig, adventure.title, adventure.codeFiles);
+      if (highlights.length > 0) {
+        workshopHighlights = `\n## Workshop Highlights (Focus Areas)
+Create a step-by-step workshop that guides users through these key functions/methods:
+
+${highlights.map(h => `- **${h.name}**: ${h.description}`).join('\n')}
+
+Structure your exploration as a guided workshop with clear steps for each highlight.\n`;
+      }
+    }
+    
     return `Continue the ${theme}-themed exploration for: "${adventure.title}"
 
 ${themeGuidelines}
 
 ## Complete Codebase
-${codeContent}
+${codeContent}${workshopHighlights}
 
 ## CRITICAL: Code Authenticity Requirements
 - Use ONLY the code provided in the "## Complete Codebase" section above

@@ -1,10 +1,10 @@
 # Repo Adventure MCP Server
 
-A fun, gamified Model Context Protocol (MCP) server that transforms code repositories into interactive adventures! Explore codebases through engaging stories with characters that represent different technologies and architectural components.
+A fun, Model Context Protocol (MCP) server that transforms code repositories into interactive adventures! Explore codebases through engaging stories with characters that represent different technologies and architectural components.
 
 ## Features
 
-🎮 **Gamified Code Exploration** - Turn learning about codebases into an adventure game
+🎮 **Story-based Code Exploration** - Turn learning about codebases into a "choose your own adventure" story
 📚 **Educational Analogies** - Complex technical concepts explained through relatable story elements  
 🌟 **Multiple Themes** - Choose from Space, Medieval, or Ancient Civilization themes
 🤖 **Character-Based Learning** - Meet characters that represent different technologies (Database Dragons, API Messengers, etc.)
@@ -22,20 +22,20 @@ A fun, gamified Model Context Protocol (MCP) server that transforms code reposit
 
 ```mermaid
 graph TD
-    A[MCP Client] -->|start_adventure| B[RepomixAnalyzer]
+    A[MCP Server] -->|start_adventure| B[RepoAnalyzer]
     B --> C[Generate Repomix Content]
     C --> D[Return Theme Options]
     
     A -->|choose_theme| E[AdventureManager]
     E --> F[StoryGenerator]
-    F --> G[LLM Client]
-    G --> H[Generate Story + Adventures]
-    H --> I[Return Themed Story]
+    F --> G[Load adventure.config.json]
+    G --> H[LLM Client]
+    H --> I[Generate Story + Adventures]
+    I --> J[Return Themed Story]
     
-    A -->|explore_path| J[Find Adventure]
-    J --> K[FileContentManager]
-    K --> L[Read Code Files]
-    L --> M[Generate Adventure Content]
+    A -->|explore_path| K[Find Adventure]
+    K --> L[Generate Targeted Content]
+    L --> M[LLM Adventure Content]
     M --> N[Update Progress]
     N --> O[Return Adventure Details]
     
@@ -43,9 +43,181 @@ graph TD
     P --> Q[Return Completion Stats]
     
     style B fill:#e8f5e8
-    style G fill:#e1f5fe
-    style K fill:#fff3e0
+    style H fill:#e1f5fe
+    style L fill:#fff3e0
 ```
+
+## 🔍 Project Context Gathering & LLM Integration
+
+### Data Flow Architecture
+
+```mermaid
+graph TD
+    A[User: start_adventure] --> B[RepoAnalyzer]
+    B --> C[Repomix CLI]
+    C --> D[Complete Codebase Content]
+    
+    B --> E[adventure.config.json]
+    E --> F[Adventure Guidance]
+    
+    D --> G[LLM Prompt Builder]
+    F --> G
+    
+    G --> H[LLM API]
+    H --> I[Generated Story & Adventures]
+```
+
+### Phase 1: Project Analysis & Context Gathering
+
+#### Step 1: Initial Project Scan
+**Location:** `src/analyzer/repo-analyzer.ts`
+
+When `start_adventure` is called, the system:
+1. **Executes Repomix CLI** as a subprocess (`npx repomix`)
+2. **Captures stdout** containing the entire codebase structure and content
+3. **Caches result** with SHA256 hash for 5-minute reuse
+
+**Repomix Output Structure:**
+```markdown
+# Project Summary
+- Files: 50
+- Languages: TypeScript (85%), JavaScript (15%)
+
+## File: src/server.ts
+```typescript
+class RepoAdventureServer {
+  constructor() { ... }
+  setupHandlers() { ... }
+}
+```
+// ... continues for ALL files in the project
+```
+
+#### Step 2: Adventure Config Loading
+**Location:** `src/shared/adventure-config.ts`
+
+Optionally loads `adventure.config.json` from the project root, which provides:
+- Predefined adventure titles and descriptions
+- Important files and functions to highlight
+- Workshop-style exploration guidance
+
+### Phase 2: LLM Prompt Construction
+
+#### What Gets Sent to LLM for Initial Story Generation
+
+The system sends a comprehensive prompt (~5,000-15,000 tokens) containing:
+
+1. **Complete Repomix Output** - Every file in the project with full content
+2. **Adventure Config Guidance** (if available) - Predefined adventures with highlighted functions
+3. **Theme Guidelines** - Vocabulary, metaphors, and style rules for the selected theme
+4. **Critical Instructions** - Rules for code authenticity and story structure
+
+**Example prompt structure:**
+```markdown
+You are a technical education specialist creating story-based workshops...
+
+## Complete Codebase
+[Full repomix output with all files]
+
+## Adventure Guidance (Optional)
+Adventure: "Core MCP Server"
+Files:
+    File: src/server.ts
+    Key Functions:
+      - RepoAdventureServer.setupHandlers: Registers handlers
+      [... more highlights]
+
+## Theme Guidelines
+[Space/Mythical/Ancient vocabulary and mappings]
+
+## Response Format
+Return JSON with story and adventures array
+```
+
+#### LLM Response
+The LLM generates:
+- A 2-3 paragraph themed story introducing the codebase
+- 2-6 dynamic adventures based on project complexity
+- Each adventure includes specific files to explore
+
+### Phase 3: Individual Adventure Content Generation
+
+#### What Gets Sent for Each Adventure
+
+When exploring a specific adventure (~2,000-5,000 tokens):
+
+1. **Targeted File Content** - Only files relevant to that adventure
+2. **Workshop Highlights** - Specific functions to explore step-by-step
+3. **Theme Continuity** - Same vocabulary for consistent narrative
+4. **Code Authenticity Rules** - Must use actual code from files
+
+**Example adventure prompt:**
+```markdown
+Continue the space-themed exploration for: "Command Protocols"
+
+## Complete Codebase
+[Only relevant files for this adventure]
+
+## Workshop Highlights (Focus Areas)
+Create a step-by-step workshop for:
+- RepoAdventureServer.constructor: Creates MCP server
+- RepoAdventureServer.setupHandlers: Registers handlers
+[... more function highlights]
+
+## Response Format
+Return JSON with adventure narrative, code snippets, and hints
+```
+
+### Adventure Configuration System
+
+#### adventure.config.json Structure
+
+Projects can include an `adventure.config.json` file to guide story generation:
+
+```json
+{
+  "adventures": [
+    {
+      "title": "Core MCP Server",
+      "description": "Explore the MCP protocol implementation",
+      "files": [
+        {
+          "path": "src/server.ts",
+          "description": "Main MCP server",
+          "highlights": [
+            {
+              "name": "RepoAdventureServer.setupHandlers",
+              "description": "Registers ListTools and CallTool handlers"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+This configuration:
+- **Guides adventure titles** toward important code areas
+- **Highlights key functions** for workshop-style exploration
+- **Provides context** for more accurate story generation
+- **Remains optional** - system works without it using dynamic analysis
+
+### Context Flow Summary
+
+| Component | Purpose | What It Adds to LLM Context |
+|-----------|---------|----------------------------|
+| **Repomix** | Full codebase analysis | Actual code, file structure, all content |
+| **Adventure Config** | Guidance structure | Important functions to highlight, suggested titles |
+| **Theme System** | Narrative consistency | Vocabulary, metaphors, character types |
+| **Workshop Highlights** | Educational focus | Step-by-step exploration of key functions |
+
+### Optimization Features
+
+- **Targeted Content**: Adventures only receive relevant file content
+- **Smart Caching**: Repomix output cached for 5 minutes, LLM responses cached
+- **Config Loading**: Loaded once per session if available
+- **Fallback System**: Works without LLM using template-based stories
 
 ## Installation
 
@@ -204,7 +376,7 @@ src/
 ├── server.ts                          # Main MCP server with tool orchestration
 ├── tools.ts                           # MCP tool definitions and handlers
 ├── analyzer/            
-│   └── repomix-analyzer.ts            # Simple repomix wrapper (no LLM analysis)
+│   └── repo-analyzer.ts               # Simple repomix wrapper (no LLM analysis)
 ├── adventure/
 │   ├── adventure-manager.ts           # Manages adventure state and progression
 │   ├── story-generator.ts             # LLM-powered story generation with fallbacks

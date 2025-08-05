@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { repomixAnalyzer } from './analyzer/repomix-analyzer.js';
+import { repoAnalyzer } from './analyzer/repo-analyzer.js';
 import type { ProjectInfo } from './shared/types.js';
 import { AdventureManager } from './adventure/adventure-manager.js';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
@@ -122,7 +122,7 @@ export const start_adventure = {
     
     try {
       // Generate repomix content and create minimal ProjectInfo
-      const repomixContent = await repomixAnalyzer.generateRepomixContext(projectPath);
+      const repomixContent = await repoAnalyzer.generateRepomixContext(projectPath);
       const projectInfo = createProjectInfo(repomixContent);
       
       return {
@@ -194,7 +194,7 @@ export const choose_theme = {
       
       // Generate repomix content and create minimal ProjectInfo
       const projectPath = process.cwd();
-      const repomixContent = await repomixAnalyzer.generateRepomixContext(projectPath);
+      const repomixContent = await repoAnalyzer.generateRepomixContext(projectPath);
       const projectInfo = createProjectInfo(repomixContent);
       
       // Initialize adventure with LLM-generated content

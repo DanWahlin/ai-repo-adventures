@@ -3,7 +3,7 @@ import type { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
 import { StoryGenerationError } from '../shared/error-handling.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
-import { repomixAnalyzer } from '../analyzer/repomix-analyzer.js';
+import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 
 // Re-export interfaces from story-generator for backward compatibility
 export type { Adventure, StoryResponse, AdventureContent, CodeSnippet } from './story-generator.js';
@@ -68,7 +68,7 @@ export class AdventureManager {
     }
 
     // Generate the overall story and adventures using LLM
-    const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme);
+    const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme, this.state.projectPath);
     
     this.state.story = typeof storyResponse.story === 'string' ? storyResponse.story : storyResponse.story.content;
     this.state.adventures = storyResponse.adventures;
@@ -222,7 +222,7 @@ export class AdventureManager {
     if (adventure.codeFiles && adventure.codeFiles.length > 0 && this.state.projectPath) {
       try {
         console.log(`🎯 Generating targeted content for ${adventure.codeFiles.length} files`);
-        codeContent = await repomixAnalyzer.generateTargetedContent(
+        codeContent = await repoAnalyzer.generateTargetedContent(
           this.state.projectPath,
           adventure.codeFiles
         );
