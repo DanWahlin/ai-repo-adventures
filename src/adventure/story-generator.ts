@@ -363,8 +363,8 @@ ${codeContent}
    */
   private getThemeGuidelines(theme: AdventureTheme): string {
     const themeRestrictions = {
-      space: '(space ships, galaxies, astronauts - NOT kingdoms or magic)',
-      mythical: '(castles, knights, magic, mythical creatures - NOT space ships or ancient temples)',
+      space: '(space ships, galaxies, planets, aliens, astronauts - NOT kingdoms or magic)',
+      mythical: '(castles, knights, magic, mythical creatures, spells - NOT space ships or ancient temples)',
       ancient: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)'
     } as const;
     
@@ -373,13 +373,13 @@ ${codeContent}
     return `## Theme Guidelines
 
 **${theme.toUpperCase()} THEME VOCABULARY:**
-- For space: use starship/mission/cosmic/navigation/crew/galaxy terms
-- For mythical: use kingdom/quest/heroic/castle/knight/magic terms
-- For ancient: use temple/wisdom/sacred/pyramid/priest/ritual terms
+- For space: use starship/mission/nebula/cosmic/navigation/crew/galaxy terms
+- For mythical: use kingdom/quest/heroic/castle/knight/magic/mythical/mystic/spells terms
+- For ancient: use temple/wisdom/sacred/pyramid/jungle/ancient terms
 
 **Story Requirements:**
-- Create an overarching narrative that connects all adventures
-- Each adventure should feel like a chapter in a larger story
+- Create an overarching narrative that connects all coding adventures
+- Each adventure should feel like a chapter in the overall story
 - Use ${theme} metaphors that make technical concepts intuitive
 - Reference actual file names and technologies from the analysis
 - Make the story educational but entertaining
