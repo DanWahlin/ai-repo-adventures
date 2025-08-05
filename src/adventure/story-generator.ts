@@ -67,24 +67,12 @@ export class StoryGenerator {
   }
 
   /**
-   * Generate the initial story and adventures
-   * Attempts to use LLM first, falls back to templates if unavailable
+   * Generate the initial story and adventures using LLM
    */
   async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
     this.currentProject = projectInfo;
     const validatedTheme = this.validateTheme(theme);
-
-    // Check if LLM is available
-    if (this.llmClient.isAvailable()) {
-      try {
-        return await this.generateWithLLM(projectInfo, validatedTheme);
-      } catch (error) {
-        console.warn('LLM generation failed, falling back to templates:', error);
-      }
-    }
-
-    // Fallback to template-based generation
-    return this.generateWithTemplates(projectInfo, validatedTheme);
+    return await this.generateWithLLM(projectInfo, validatedTheme);
   }
 
   /**
@@ -116,24 +104,14 @@ export class StoryGenerator {
     projectInfo: ProjectInfo,
     codeContent: string
   ): Promise<AdventureContent> {
-    if (!this.llmClient.isAvailable()) {
-      return this.generateAdventureContentFallback(adventure, theme, codeContent);
-    }
-
     const prompt = this.buildAdventureContentPrompt(adventure, theme, projectInfo, codeContent);
-
-    try {
-      const response = await this.withTimeout(
-        this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' })
-      );
-      
-      const parsed = JSON.parse(response.content);
-      this.validateAdventureContent(parsed);
-      return parsed;
-    } catch (error) {
-      console.warn('LLM adventure content generation failed, using fallback:', error);
-      return this.generateAdventureContentFallback(adventure, theme, codeContent);
-    }
+    const response = await this.withTimeout(
+      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' })
+    );
+    
+    const parsed = JSON.parse(response.content);
+    this.validateAdventureContent(parsed);
+    return parsed;
   }
 
   /**
@@ -147,10 +125,6 @@ export class StoryGenerator {
   ): Promise<string> {
     const percentComplete = Math.round((progress / total) * 100);
     
-    if (!this.llmClient.isAvailable()) {
-      return this.generateCompletionSummaryFallback(adventure, theme, percentComplete);
-    }
-
     const prompt = `Generate a ${theme}-themed completion celebration for: "${adventure.title}"
 
 **Context:**
@@ -168,13 +142,8 @@ export class StoryGenerator {
 
 Generate ONLY the celebration message, no extra text.`;
 
-    try {
-      const response = await this.llmClient.generateResponse(prompt);
-      return response.content.trim();
-    } catch (error) {
-      console.warn('LLM completion summary failed, using fallback:', error);
-      return this.generateCompletionSummaryFallback(adventure, theme, percentComplete);
-    }
+    const response = await this.llmClient.generateResponse(prompt);
+    return response.content.trim();
   }
 
   // ============= Private Methods =============
@@ -194,76 +163,9 @@ Generate ONLY the celebration message, no extra text.`;
     return parsed;
   }
 
-  /**
-   * Generate simple fallback story when LLM is unavailable
-   */
-  private generateWithTemplates(projectInfo: ProjectInfo, theme: AdventureTheme): StoryResponse {
-    const story = `🌟 **Welcome to your ${theme} adventure!**\n\nThis ${projectInfo.type} contains ${projectInfo.fileCount} files ready for exploration.\n\n*Note: This is a basic fallback story. For rich, dynamic narratives, configure an LLM provider.*`;
-    
-    const adventures: Adventure[] = [
-      {
-        id: 'explore-architecture',
-        title: 'Explore the Architecture',
-        description: 'Discover the overall structure and design patterns',
-        codeFiles: []
-      },
-      {
-        id: 'explore-core-logic',
-        title: 'Explore Core Logic',
-        description: 'Dive into the main business logic and algorithms',
-        codeFiles: []
-      },
-      {
-        id: 'explore-configuration',
-        title: 'Explore Configuration',
-        description: 'Understand the setup and configuration files',
-        codeFiles: []
-      }
-    ];
-    
-    return { story, adventures };
-  }
 
 
-  /**
-   * Generate simple fallback adventure content when LLM is unavailable
-   */
-  private generateAdventureContentFallback(
-    adventure: Adventure,
-    theme: AdventureTheme,
-    codeContent: string
-  ): AdventureContent {
-    const content = `🌟 **${adventure.title}**\n\n${adventure.description}\n\nThis adventure explores the codebase structure and reveals insights about the project architecture.\n\n*Note: This is a basic fallback. For rich, dynamic narratives with code analysis, configure an LLM provider.*`;
-    
-    return {
-      adventure: content,
-      fileExploration: codeContent ? 'Code content available for exploration.' : 'No specific code content provided.',
-      codeSnippets: this.extractCodeSnippets(codeContent),
-      hints: [
-        'Configure an LLM provider for detailed code analysis',
-        'The repomix content contains comprehensive project information',
-        'Adventure content is dynamically generated based on your actual codebase'
-      ]
-    };
-  }
 
-  /**
-   * Generate fallback completion summary (delegates to template engine)
-   */
-  private generateCompletionSummaryFallback(
-    adventure: Adventure,
-    theme: AdventureTheme,
-    percentComplete: number
-  ): string {
-    const celebrations = {
-      space: `🚀 Mission accomplished! You've successfully navigated "${adventure.title}" (${percentComplete}% complete).`,
-      mythical: `⚔️ Victory! You've conquered "${adventure.title}" (${percentComplete}% of your quest complete).`,
-      ancient: `🏺 The Oracle smiles! You've unlocked the secrets of "${adventure.title}" (${percentComplete}% wisdom gained).`
-    };
-
-    return celebrations[theme as keyof typeof celebrations] || 
-           `🎉 Adventure "${adventure.title}" completed! (${percentComplete}% progress)`;
-  }
 
   /**
    * Build story generation prompt with repomix content

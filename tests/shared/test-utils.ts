@@ -50,12 +50,13 @@ export async function createTestRunner(suiteName: string = 'Tests') {
     const timeout = options.timeout || TEST_CONFIG.DEFAULT_TIMEOUT;
     
     try {
-      // Check if LLM is available for tests that require it
+      // Check if LLM is configured for tests that require it
       if (options.skipIfNoLLM) {
-        const llmClient = new LLMClient();
-        const isAvailable = await llmClient.isAvailable();
-        if (!isAvailable) {
-          console.log(`⏭️  ${name} (skipped - no LLM available)`);
+        try {
+          const llmClient = new LLMClient();
+          // If client initializes without error, LLM is configured
+        } catch (error) {
+          console.log(`⏭️  ${name} (skipped - no LLM configured)`);
           stats.skipped++;
           return;
         }
