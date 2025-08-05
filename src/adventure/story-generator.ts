@@ -3,9 +3,6 @@ import { AdventureTheme } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
 import { isValidTheme, THEMES } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
-import { ThemeManager } from './theme-manager.js';
-import { StoryTemplateEngine } from './story-template-engine.js';
-import { ProjectInsightGenerator } from './project-insight-generator.js';
 
 export interface Adventure {
   id: string;
@@ -56,16 +53,10 @@ export type StoryTheme = AdventureTheme;
  */
 export class StoryGenerator {
   private llmClient: LLMClient;
-  private themeManager: ThemeManager;
-  private templateEngine: StoryTemplateEngine;
-  private insightGenerator: ProjectInsightGenerator;
   private currentProject?: ProjectInfo;
 
   constructor() {
     this.llmClient = new LLMClient();
-    this.themeManager = new ThemeManager();
-    this.templateEngine = new StoryTemplateEngine();
-    this.insightGenerator = new ProjectInsightGenerator();
   }
 
   /**
@@ -166,12 +157,14 @@ export class StoryGenerator {
 - Adventure completed: ${adventure.title}
 - Progress: ${progress}/${total} adventures (${percentComplete}% complete)
 - Theme: ${theme}
-- Theme vocabulary: ${this.themeManager.getThemeVocabulary(theme)}
 
 **Requirements:**
 - Write 1-2 sentences using ${theme} terminology
 - Celebrate the specific learning achievement
 - Use encouraging, triumphant tone
+- For space: use starship/mission/cosmic terms
+- For mythical: use kingdom/quest/heroic terms  
+- For ancient: use temple/wisdom/sacred terms
 
 Generate ONLY the celebration message, no extra text.`;
 
@@ -202,51 +195,56 @@ Generate ONLY the celebration message, no extra text.`;
   }
 
   /**
-   * Generate with fallback templates (delegates to template engine)
+   * Generate simple fallback story when LLM is unavailable
    */
   private generateWithTemplates(projectInfo: ProjectInfo, theme: AdventureTheme): StoryResponse {
-    return this.templateEngine.generateWithTemplates(projectInfo, theme);
+    const story = `🌟 **Welcome to your ${theme} adventure!**\n\nThis ${projectInfo.type} contains ${projectInfo.fileCount} files ready for exploration.\n\n*Note: This is a basic fallback story. For rich, dynamic narratives, configure an LLM provider.*`;
+    
+    const adventures: Adventure[] = [
+      {
+        id: 'explore-architecture',
+        title: 'Explore the Architecture',
+        description: 'Discover the overall structure and design patterns',
+        codeFiles: []
+      },
+      {
+        id: 'explore-core-logic',
+        title: 'Explore Core Logic',
+        description: 'Dive into the main business logic and algorithms',
+        codeFiles: []
+      },
+      {
+        id: 'explore-configuration',
+        title: 'Explore Configuration',
+        description: 'Understand the setup and configuration files',
+        codeFiles: []
+      }
+    ];
+    
+    return { story, adventures };
   }
 
 
   /**
-   * Generate fallback adventure content (delegates to template engine)
+   * Generate simple fallback adventure content when LLM is unavailable
    */
   private generateAdventureContentFallback(
     adventure: Adventure,
     theme: AdventureTheme,
     codeContent: string
   ): AdventureContent {
-    // Use currentProject if available, otherwise create minimal project info
-    const projectInfo = this.currentProject || ({
-      type: 'Unknown',
-      mainTechnologies: [],
-      fileCount: 0,
-      structure: { directories: [], sourceFiles: [], configFiles: [] },
-      hasTests: false,
-      hasDatabase: false,
-      hasApi: false,
-      hasFrontend: false,
-      codeAnalysis: {
-        functions: [],
-        classes: [],
-        entryPoints: [],
-        dependencies: [],
-        patterns: []
-      }
-    } as unknown as ProjectInfo);
+    const content = `🌟 **${adventure.title}**\n\n${adventure.description}\n\nThis adventure explores the codebase structure and reveals insights about the project architecture.\n\n*Note: This is a basic fallback. For rich, dynamic narratives with code analysis, configure an LLM provider.*`;
     
-    const fallbackContent = this.templateEngine.generateAdventureContentFallback(
-      adventure, 
-      theme, 
-      projectInfo,
-      codeContent
-    );
-    
-    // Add code snippets if available
-    fallbackContent.codeSnippets = this.extractCodeSnippets(codeContent);
-    
-    return fallbackContent;
+    return {
+      adventure: content,
+      fileExploration: codeContent ? 'Code content available for exploration.' : 'No specific code content provided.',
+      codeSnippets: this.extractCodeSnippets(codeContent),
+      hints: [
+        'Configure an LLM provider for detailed code analysis',
+        'The repomix content contains comprehensive project information',
+        'Adventure content is dynamically generated based on your actual codebase'
+      ]
+    };
   }
 
   /**
@@ -268,36 +266,32 @@ Generate ONLY the celebration message, no extra text.`;
   }
 
   /**
-   * Build story generation prompt
+   * Build story generation prompt with repomix content
    */
   private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: AdventureTheme): string {
-    const projectAnalysis = this.insightGenerator.createProjectAnalysisPrompt(projectInfo);
-    const themeGuidelines = this.themeManager.getThemeGuidelines(theme);
-    const projectInsights = this.insightGenerator.generateProjectInsights(theme, projectInfo);
+    const repomixContent = projectInfo.repomixContent || 'No repomix content available';
+    const themeGuidelines = this.getThemeGuidelines(theme);
     
     return `You are a technical education specialist creating immersive code exploration experiences.
 Transform this codebase into an engaging ${theme}-themed narrative that weaves project details into the story.
 
-## Project Analysis
-${projectAnalysis}
+## Complete Codebase Analysis
+${repomixContent}
 
 ${themeGuidelines}
 
-## Key Project Elements to Integrate
-${projectInsights}
-
 ## Critical Instructions
-1. First, INFER what type of project this is based on the analysis (e.g., "Web Application", "API Service", "CLI Tool", "Library", "Mobile App", "Game", "Data Pipeline", etc.) - be specific and descriptive
+1. First, ANALYZE the repomix content above to INFER what type of project this is (e.g., "Web Application", "API Service", "CLI Tool", "Library", "Mobile App", "Game", "Data Pipeline", etc.) - be specific and descriptive
 2. Create a ${theme}-themed narrative that INTEGRATES the project details naturally into the story
-3. DO NOT create generic stories - weave in specific technologies, file names, and project characteristics
+3. DO NOT create generic stories - weave in specific technologies, file names, and project characteristics from the repomix content
 4. The story should be 2-3 paragraphs (250-350 words) that tells a cohesive narrative
-5. Naturally incorporate the project elements above into the storyline
+5. Naturally incorporate actual file names, technologies, and patterns from the repomix analysis
 6. Make the reader understand what this specific codebase does through the narrative
 7. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
 
 ## Example Integration Style
 Instead of: "In a galaxy far away, starships travel..."
-Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE], the advanced Starship '${projectInfo.mainTechnologies[0]}' navigates through ${projectInfo.fileCount} star systems, each powered by technologies like ${projectInfo.mainTechnologies.join(', ')}. The ship's command center at \`${projectInfo.codeAnalysis.entryPoints[0] || 'main'}\` coordinates complex operations..."
+Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE], the advanced Starship navigates through interconnected systems, powered by the technologies revealed in the repomix analysis. The ship's command center coordinates complex operations..."
 
 ## Response Format
 Return a valid JSON object:
@@ -313,7 +307,7 @@ Return a valid JSON object:
   ]
 }
 
-Create 2-6 adventures based on project complexity.`;
+Create 2-6 adventures based on the project complexity revealed in the repomix content.`;
   }
 
   /**
@@ -325,13 +319,13 @@ Create 2-6 adventures based on project complexity.`;
     projectInfo: ProjectInfo,
     codeContent: string
   ): string {
+    const themeGuidelines = this.getThemeGuidelines(theme);
+    
     return `Continue the ${theme}-themed exploration for: "${adventure.title}"
 
-**Context:**
-- Project: ${projectInfo.type} using ${projectInfo.mainTechnologies.join(', ')}
-- Theme vocabulary: ${this.themeManager.getThemeVocabulary(theme)}
+${themeGuidelines}
 
-**Code Files:**
+**Complete Codebase Context:**
 ${codeContent}
 
 ## CRITICAL: Code Authenticity Requirements
@@ -419,6 +413,35 @@ ${codeContent}
 
 
 
+
+  /**
+   * Get theme-specific guidelines for story generation
+   */
+  private getThemeGuidelines(theme: AdventureTheme): string {
+    const themeRestrictions = {
+      space: '(space ships, galaxies, astronauts - NOT kingdoms or magic)',
+      mythical: '(castles, knights, magic, mythical creatures - NOT space ships or ancient temples)',
+      ancient: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)'
+    } as const;
+    
+    const restriction = themeRestrictions[theme as keyof typeof themeRestrictions] || themeRestrictions.space;
+    
+    return `## Theme Guidelines
+
+**${theme.toUpperCase()} THEME VOCABULARY:**
+- For space: use starship/mission/cosmic/navigation/crew/galaxy terms
+- For mythical: use kingdom/quest/heroic/castle/knight/magic terms
+- For ancient: use temple/wisdom/sacred/pyramid/priest/ritual terms
+
+**Story Requirements:**
+- Create an overarching narrative that connects all adventures
+- Each adventure should feel like a chapter in a larger story
+- Use ${theme} metaphors that make technical concepts intuitive
+- Reference actual file names and technologies from the analysis
+- Make the story educational but entertaining
+- IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
+  ${restriction}`;
+  }
 
   /**
    * Extract code snippets from content

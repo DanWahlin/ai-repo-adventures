@@ -1,7 +1,6 @@
 import type { ProjectInfo } from '../shared/types.js';
 import type { AdventureTheme } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
-import { FileContentManager } from './file-content-manager.js';
 import { StoryGenerationError } from '../shared/error-handling.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
 
@@ -40,11 +39,9 @@ export class AdventureState {
 export class AdventureManager {
   private state: AdventureState = new AdventureState();
   private storyGenerator: StoryGenerator;
-  private fileContentManager: FileContentManager;
 
   constructor() {
     this.storyGenerator = new StoryGenerator();
-    this.fileContentManager = new FileContentManager();
   }
 
 
@@ -59,8 +56,6 @@ export class AdventureManager {
     this.state.projectInfo = projectInfo;
     this.state.currentTheme = theme;
     
-    // Build file index for efficient lookups
-    this.fileContentManager.buildFileIndex(projectInfo);
 
     // Generate the overall story and adventures using LLM
     const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme);
@@ -211,10 +206,8 @@ export class AdventureManager {
    * Generate content for the adventure
    */
   private async generateAdventureContent(adventure: Adventure): Promise<AdventureContent> {
-    const codeContent = await this.fileContentManager.prepareCodeContent(
-      adventure.codeFiles || [],
-      this.state.projectInfo!
-    );
+    // Use repomixContent directly instead of re-reading files
+    const codeContent = this.state.projectInfo!.repomixContent;
 
     return await this.storyGenerator.generateAdventureContent(
       adventure,

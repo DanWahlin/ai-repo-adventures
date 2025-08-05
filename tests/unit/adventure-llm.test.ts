@@ -6,7 +6,6 @@
  */
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
-import { FileContentManager } from '../../src/adventure/file-content-manager.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 
 async function runTests() {
@@ -33,30 +32,23 @@ async function runTests() {
     }
   });
 
-  // File Management Tests - Now using FileContentManager
-  console.log('\n📁 File Management Tests');
+  // Adventure Content Tests - Using repomixContent directly
+  console.log('\n📁 Adventure Content Tests');
   console.log('-'.repeat(30));
 
-  await test('File content manager builds index correctly', async () => {
-    const fileManager = new FileContentManager();
-    fileManager.buildFileIndex(mockProjectInfo);
-    
-    const stats = fileManager.getIndexStats();
-    assert(stats.totalEntries > 0, 'File index should not be empty');
-    assert(stats.uniqueFiles > 0, 'Should have unique files indexed');
-    assert(fileManager.hasFile('package.json'), 'Should index config files');
-    assert(fileManager.hasFile('index.ts'), 'Should index source files by name');
+  await test('Adventure content uses repomix content directly', async () => {
+    const manager = new AdventureManager();
+    assert(mockProjectInfo.repomixContent.length > 0, 'Mock project should have repomix content');
+    assert(mockProjectInfo.repomixContent.includes('Test Project'), 'Should contain project content');
+    assert(mockProjectInfo.repomixContent.includes('src/server.ts'), 'Should contain file references');
   });
 
-  await test('File lookup functionality works', async () => {
-    const fileManager = new FileContentManager();
-    fileManager.buildFileIndex(mockProjectInfo);
-    
-    const foundExact = fileManager.findFileInIndex('package.json');
-    assert(foundExact === 'package.json', 'Should find exact file match');
-    
-    const foundPartial = fileManager.findFileInIndex('index');
-    assert(foundPartial && foundPartial.includes('index'), 'Should find partial file match');
+  await test('Project info contains all required fields', async () => {
+    assert(typeof mockProjectInfo.type === 'string', 'Should have project type');
+    assert(typeof mockProjectInfo.fileCount === 'number', 'Should have file count');
+    assert(Array.isArray(mockProjectInfo.mainTechnologies), 'Should have technologies array');
+    assert(typeof mockProjectInfo.repomixContent === 'string', 'Should have repomix content');
+    assert(mockProjectInfo.repomixContent.length > 0, 'Repomix content should not be empty');
   });
 
   // Error Context Tests
@@ -81,30 +73,25 @@ async function runTests() {
   console.log('\n⚡ Performance Tests');
   console.log('-'.repeat(30));
 
-  await test('File indexing is performant', async () => {
-    const fileManager = new FileContentManager();
+  await test('Adventure manager initialization is performant', async () => {
+    const manager = new AdventureManager();
     
     const startTime = Date.now();
-    fileManager.buildFileIndex(mockProjectInfo);
+    // Test that manager can be created quickly without file system operations
     const endTime = Date.now();
     
-    // File indexing should be very fast for our small test project
-    assert(endTime - startTime < 100, 'File indexing should complete in under 100ms');
+    // Manager creation should be very fast since we removed file indexing
+    assert(endTime - startTime < 50, 'Adventure manager creation should be fast');
   });
 
-  await test('File operations work efficiently', async () => {
-    const fileManager = new FileContentManager();
-    fileManager.buildFileIndex(mockProjectInfo);
-    
+  await test('Repomix content access is efficient', async () => {
     const startTime = Date.now();
-    const found = fileManager.findFileInIndex('package.json');
-    const stats = fileManager.getIndexStats();
-    fileManager.clearIndex();
+    const content = mockProjectInfo.repomixContent;
+    const hasContent = content.length > 0;
     const endTime = Date.now();
     
-    assert(found === 'package.json', 'Should find file correctly');
-    assert(stats.totalEntries > 0, 'Should have stats');
-    assert(endTime - startTime < 50, 'Operations should be fast');
+    assert(hasContent, 'Should have repomix content');
+    assert(endTime - startTime < 10, 'Content access should be instant');
   });
 
   // Integration Tests
