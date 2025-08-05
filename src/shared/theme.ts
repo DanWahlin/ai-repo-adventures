@@ -13,6 +13,13 @@ export interface ThemeDefinition {
   readonly keywords: readonly string[];  // For matching user input
 }
 
+// Custom theme data provided by user
+export interface CustomThemeData {
+  name: string;
+  description: string;
+  keywords: string[];
+}
+
 // Single source of truth for all themes
 export const THEMES = {
   SPACE: {
@@ -38,6 +45,22 @@ export const THEMES = {
     emoji: '🏺',
     description: 'Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes',
     keywords: ['ancient', 'temple', 'pyramid', 'archaeology', 'historical', 'civilization', 'ruins']
+  },
+  DEVELOPER: {
+    id: 4,
+    key: 'developer',
+    displayName: 'Developer Documentation',
+    emoji: '📖',
+    description: 'Technical documentation approach with clear explanations, best practices, and code analysis',
+    keywords: ['developer', 'docs', 'technical', 'documentation', 'guide', 'tutorial', 'reference']
+  },
+  CUSTOM: {
+    id: 5,
+    key: 'custom',
+    displayName: 'Custom Theme',
+    emoji: '🎨',
+    description: 'Create your own personalized theme with custom vocabulary and storytelling approach',
+    keywords: ['custom', 'personalized', 'unique', 'creative', 'personal']
   }
 } as const;
 

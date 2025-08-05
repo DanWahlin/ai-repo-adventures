@@ -1,5 +1,5 @@
 import type { ProjectInfo } from '../shared/types.js';
-import type { AdventureTheme } from '../shared/theme.js';
+import type { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
 import { StoryGenerationError } from '../shared/error-handling.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
@@ -50,13 +50,22 @@ export class AdventureManager {
   /**
    * Initialize the adventure with project context and generate story + adventures
    */
-  async initializeAdventure(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<string> {
+  async initializeAdventure(
+    projectInfo: ProjectInfo, 
+    theme: AdventureTheme, 
+    projectPath?: string,
+    customThemeData?: CustomThemeData
+  ): Promise<string> {
     // Reset state for new adventure
     this.state.reset();
     this.state.projectInfo = projectInfo;
     this.state.currentTheme = theme;
     this.state.projectPath = projectPath || process.cwd();
     
+    // Set custom theme data if provided
+    if (theme === 'custom' && customThemeData) {
+      this.storyGenerator.setCustomTheme(customThemeData);
+    }
 
     // Generate the overall story and adventures using LLM
     const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme);

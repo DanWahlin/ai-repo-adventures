@@ -93,7 +93,12 @@ const startAdventureSchema = z.object({
 });
 
 const chooseThemeSchema = z.object({
-  theme: z.string().describe(`The story theme - use theme names or numbers: ${getAllThemes().map(t => `"${t.key}"`).join('/')} or ${getAllThemes().map(t => t.id).join('/')}`)
+  theme: z.string().describe(`The story theme - use theme names or numbers: ${getAllThemes().map(t => `"${t.key}"`).join('/')} or ${getAllThemes().map(t => t.id).join('/')}`),
+  customTheme: z.object({
+    name: z.string().describe('Custom theme name (e.g., "Cyberpunk", "Pirate Adventure")'),
+    description: z.string().describe('Custom theme description explaining the style and setting'),
+    keywords: z.array(z.string()).describe('Array of keywords that define the theme vocabulary (e.g., ["cyber", "neon", "matrix", "digital"])')
+  }).optional().describe('Custom theme data - required only when theme is "custom"')
 });
 
 const explorePathSchema = z.object({
@@ -104,7 +109,7 @@ const progressSchema = z.object({});
 
 // Start Adventure Tool
 export const start_adventure = {
-  description: `Analyzes a code repository and begins an interactive, gamified exploration experience. This tool performs deep project analysis including file counting, technology detection, dependency mapping, and code structure analysis. It identifies functions, classes, entry points, and architectural patterns. After analysis, it presents three immersive theme options (space, mythical, ancient) for the user to choose from. Each theme will transform the codebase exploration into a narrative adventure where code elements become story elements. Use this tool when users want to explore, understand, or learn about a codebase in an engaging way. Perfect for onboarding, code reviews, or educational purposes. INVOKE THIS TOOL when users say things like: "start adventure", "begin adventure", "explore this codebase", "help me understand this project", "analyze this repository", "gamify this code", "make this code fun", "adventure story", "code adventure", "explore repository", "understand codebase", "learn about this project", "onboard me", "show me around", "tour this code", "discover this project".`,
+  description: `Analyzes a code repository and begins an interactive, gamified exploration experience. This tool performs deep project analysis including file counting, technology detection, dependency mapping, and code structure analysis. It identifies functions, classes, entry points, and architectural patterns. After analysis, it presents five immersive theme options (space, mythical, ancient, developer, custom) for the user to choose from. Each theme will transform the codebase exploration into a narrative adventure where code elements become story elements. Use this tool when users want to explore, understand, or learn about a codebase in an engaging way. Perfect for onboarding, code reviews, or educational purposes. INVOKE THIS TOOL when users say things like: "start adventure", "begin adventure", "explore this codebase", "help me understand this project", "analyze this repository", "gamify this code", "make this code fun", "adventure story", "code adventure", "explore repository", "understand codebase", "learn about this project", "onboard me", "show me around", "tour this code", "discover this project".`,
   schema: startAdventureSchema,
   handler: async (args: StartAdventureArgs) => {
     // Validate project path input
@@ -142,7 +147,7 @@ export const start_adventure = {
 
 // Choose Theme Tool - Now uses LLM to generate story + adventures
 export const choose_theme = {
-  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where code elements become thematic story elements. The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: ${generateThemeExamples()}.`,
+  description: `Generates a personalized, LLM-powered narrative adventure based on the analyzed codebase and selected theme. This tool transforms technical project structure into an immersive story where code elements become thematic story elements. Available themes: space exploration, mythical kingdoms, ancient civilizations, developer documentation, or custom user-defined themes. The LLM creates 3-6 contextual adventures based on project complexity, each mapping to different code areas like architecture, configuration, core logic, data layer, or testing. Adventures follow a "Chapter Title: Technical Description" format. The generated content is unique to each project, incorporating actual file names, technologies, and code patterns into the narrative. For custom themes, provide theme name, description, and keywords. Use after start_adventure when user selects their preferred theme. INVOKE THIS TOOL when users say: ${generateThemeExamples()}.`,
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     try {
@@ -165,6 +170,27 @@ export const choose_theme = {
           `Invalid theme: ${args.theme}. Please choose ${validOptions.join(', ')}.`
         );
       }
+
+      // Handle custom theme validation
+      if (selectedTheme === 'custom') {
+        if (!args.customTheme) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            'Custom theme data is required when selecting custom theme. Please provide customTheme with name, description, and keywords.'
+          );
+        }
+        
+        // Validate custom theme data
+        if (!args.customTheme.name?.trim()) {
+          throw new McpError(ErrorCode.InvalidParams, 'Custom theme name is required');
+        }
+        if (!args.customTheme.description?.trim()) {
+          throw new McpError(ErrorCode.InvalidParams, 'Custom theme description is required');
+        }
+        if (!args.customTheme.keywords || args.customTheme.keywords.length === 0) {
+          throw new McpError(ErrorCode.InvalidParams, 'Custom theme keywords array is required');
+        }
+      }
       
       // Generate repomix content and create minimal ProjectInfo
       const projectPath = process.cwd();
@@ -172,7 +198,12 @@ export const choose_theme = {
       const projectInfo = createProjectInfo(repomixContent);
       
       // Initialize adventure with LLM-generated content
-      const storyWithAdventures = await adventureManager.initializeAdventure(projectInfo, selectedTheme, projectPath);
+      const storyWithAdventures = await adventureManager.initializeAdventure(
+        projectInfo, 
+        selectedTheme, 
+        projectPath,
+        args.customTheme
+      );
       
       return {
         content: [

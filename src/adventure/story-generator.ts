@@ -1,5 +1,5 @@
 import type { ProjectInfo } from '../shared/types.js';
-import { AdventureTheme } from '../shared/theme.js';
+import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
 import { isValidTheme, THEMES } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
@@ -54,6 +54,7 @@ export type StoryTheme = AdventureTheme;
 export class StoryGenerator {
   private llmClient: LLMClient;
   private currentProject?: ProjectInfo;
+  private customThemeData?: CustomThemeData;
 
   constructor() {
     this.llmClient = new LLMClient();
@@ -64,6 +65,13 @@ export class StoryGenerator {
    */
   setProject(projectInfo: ProjectInfo): void {
     this.currentProject = projectInfo;
+  }
+
+  /**
+   * Set custom theme data for custom theme stories
+   */
+  setCustomTheme(customThemeData: CustomThemeData): void {
+    this.customThemeData = customThemeData;
   }
 
   /**
@@ -134,20 +142,35 @@ export class StoryGenerator {
   ): Promise<string> {
     const percentComplete = Math.round((progress / total) * 100);
     
-    const prompt = `Generate a ${theme}-themed completion celebration for: "${adventure.title}"
+    let themeDescription: string = theme;
+    let vocabularyHint = '';
+    
+    if (theme === 'custom' && this.customThemeData) {
+      themeDescription = this.customThemeData.name;
+      vocabularyHint = `Use these custom theme keywords: ${this.customThemeData.keywords.join(', ')}`;
+    } else if (theme === 'developer') {
+      vocabularyHint = 'Use professional technical documentation language';
+    } else {
+      const vocabularyMap = {
+        space: 'starship/mission/cosmic terms',
+        mythical: 'kingdom/quest/heroic terms',
+        ancient: 'temple/wisdom/sacred terms'
+      } as const;
+      vocabularyHint = `Use ${vocabularyMap[theme as keyof typeof vocabularyMap] || 'appropriate theme terms'}`;
+    }
+    
+    const prompt = `Generate a ${themeDescription}-themed completion celebration for: "${adventure.title}"
 
 **Context:**
 - Adventure completed: ${adventure.title}
 - Progress: ${progress}/${total} adventures (${percentComplete}% complete)
-- Theme: ${theme}
+- Theme: ${themeDescription}
 
 **Requirements:**
-- Write 1-2 sentences using ${theme} terminology
+- Write 1-2 sentences using ${themeDescription} terminology
 - Celebrate the specific learning achievement
 - Use encouraging, triumphant tone
-- For space: use starship/mission/cosmic terms
-- For mythical: use kingdom/quest/heroic terms  
-- For ancient: use temple/wisdom/sacred terms
+- ${vocabularyHint}
 
 Generate ONLY the celebration message, no extra text.`;
 
@@ -362,29 +385,91 @@ ${codeContent}
    * Get theme-specific guidelines for story generation
    */
   private getThemeGuidelines(theme: AdventureTheme): string {
-    const themeRestrictions = {
-      space: '(space ships, galaxies, planets, aliens, astronauts - NOT kingdoms or magic)',
-      mythical: '(castles, knights, magic, mythical creatures, spells - NOT space ships or ancient temples)',
-      ancient: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)'
+    const themeGuidelinesMap = {
+      space: {
+        vocabulary: 'starship/mission/nebula/cosmic/navigation/crew/galaxy/stellar/orbit/command/exploration terms',
+        restriction: '(space ships, galaxies, planets, aliens, astronauts - NOT kingdoms or magic or temples)',
+        style: 'Create exciting space exploration narratives with technical missions'
+      },
+      mythical: {
+        vocabulary: 'kingdom/quest/heroic/castle/knight/magic/mythical/mystic/spells/enchanted/dragon terms',
+        restriction: '(castles, knights, magic, mythical creatures, spells - NOT space ships or ancient temples)',
+        style: 'Create magical kingdom adventures with heroic quests'
+      },
+      ancient: {
+        vocabulary: 'temple/wisdom/sacred/pyramid/jungle/ancient/archaeological/civilization/ritual/treasure terms',
+        restriction: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)',
+        style: 'Create archaeological discoveries with ancient mysteries'
+      },
+      developer: {
+        vocabulary: 'documentation/guide/tutorial/reference/best-practices/architecture/patterns/implementation terms',
+        restriction: '(technical documentation style - NO fictional narratives or storytelling)',
+        style: 'Write clear, professional technical documentation with practical examples'
+      },
+      custom: {
+        vocabulary: 'user-defined theme vocabulary (will be provided separately)',
+        restriction: '(use only the custom theme elements provided by the user)',
+        style: 'Follow the custom theme guidelines provided by the user'
+      }
     } as const;
     
-    const restriction = themeRestrictions[theme as keyof typeof themeRestrictions] || themeRestrictions.space;
+    const guidelines = themeGuidelinesMap[theme as keyof typeof themeGuidelinesMap] || themeGuidelinesMap.space;
+    
+    if (theme === 'developer') {
+      return `## Developer Documentation Guidelines
+
+**DOCUMENTATION APPROACH:**
+- Write in clear, professional technical documentation style
+- Use headings, bullet points, and structured formatting
+- Focus on practical implementation details and best practices
+- Include code examples with explanations
+- Avoid fictional narratives - keep it factual and educational
+- Use terminology like: ${guidelines.vocabulary}
+
+**Content Requirements:**
+- Create comprehensive technical guides for each code area
+- Each section should be like a chapter in technical documentation
+- Use developer-friendly language and concepts
+- Reference actual technologies, patterns, and architectural decisions
+- Make the content educational and actionable
+- IMPORTANT: ${guidelines.restriction}`;
+    }
+
+    if (theme === 'custom') {
+      const customData = this.customThemeData;
+      if (!customData) {
+        throw new Error('Custom theme data not provided. Call setCustomTheme() before generating custom themed content.');
+      }
+      
+      return `## Custom Theme Guidelines
+
+**CUSTOM THEME: "${customData.name}"**
+- Theme Description: ${customData.description}
+- Keywords to use: ${customData.keywords.join(', ')}
+
+**CUSTOM THEME APPROACH:**
+- Use ONLY the custom theme vocabulary: ${customData.keywords.join(', ')}
+- Stay strictly within the "${customData.name}" theme as described: ${customData.description}
+- Create narratives that match the user's specified "${customData.name}" style
+- Reference the custom theme elements consistently throughout the story
+- Make the story align with the user's creative vision for "${customData.name}"
+- IMPORTANT: Only use the custom theme elements - do not mix with other themes (space, mythical, ancient, etc.)`;
+    }
     
     return `## Theme Guidelines
 
 **${theme.toUpperCase()} THEME VOCABULARY:**
-- For space: use starship/mission/nebula/cosmic/navigation/crew/galaxy terms
-- For mythical: use kingdom/quest/heroic/castle/knight/magic/mythical/mystic/spells terms
-- For ancient: use temple/wisdom/sacred/pyramid/jungle/ancient terms
+- Use ${guidelines.vocabulary}
 
 **Story Requirements:**
+- ${guidelines.style}
 - Create an overarching narrative that connects all coding adventures
 - Each adventure should feel like a chapter in the overall story
 - Use ${theme} metaphors that make technical concepts intuitive
 - Reference actual file names and technologies from the analysis
 - Make the story educational but entertaining
 - IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
-  ${restriction}`;
+  ${guidelines.restriction}`;
   }
 
 
