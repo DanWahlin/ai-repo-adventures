@@ -212,7 +212,6 @@ export class AdventureManager {
     return await this.storyGenerator.generateAdventureContent(
       adventure,
       this.state.currentTheme!,
-      this.state.projectInfo!,
       codeContent
     );
   }

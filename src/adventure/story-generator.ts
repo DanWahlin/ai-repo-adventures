@@ -101,15 +101,24 @@ export class StoryGenerator {
   async generateAdventureContent(
     adventure: Adventure,
     theme: AdventureTheme,
-    projectInfo: ProjectInfo,
     codeContent: string
   ): Promise<AdventureContent> {
-    const prompt = this.buildAdventureContentPrompt(adventure, theme, projectInfo, codeContent);
+    const prompt = this.buildAdventureContentPrompt(adventure, theme, codeContent);
     const response = await this.withTimeout(
       this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' })
     );
     
-    const parsed = JSON.parse(response.content);
+    if (!response.content || response.content.trim() === '') {
+      throw new Error('LLM returned empty response for adventure content');
+    }
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(response.content);
+    } catch (error) {
+      throw new Error(`Invalid JSON response from LLM for adventure content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
+    }
+    
     this.validateAdventureContent(parsed);
     return parsed;
   }
@@ -158,7 +167,17 @@ Generate ONLY the celebration message, no extra text.`;
       this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' })
     );
     
-    const parsed = JSON.parse(response.content);
+    if (!response.content || response.content.trim() === '') {
+      throw new Error('LLM returned empty response');
+    }
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(response.content);
+    } catch (error) {
+      throw new Error(`Invalid JSON response from LLM: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
+    }
+    
     this.validateStoryResponse(parsed);
     return parsed;
   }
@@ -218,7 +237,6 @@ Create 2-6 adventures based on the project complexity revealed in the repomix co
   private buildAdventureContentPrompt(
     adventure: Adventure,
     theme: AdventureTheme,
-    projectInfo: ProjectInfo,
     codeContent: string
   ): string {
     const themeGuidelines = this.getThemeGuidelines(theme);
@@ -345,24 +363,6 @@ ${codeContent}
   ${restriction}`;
   }
 
-  /**
-   * Extract code snippets from content
-   */
-  private extractCodeSnippets(codeContent: string): CodeSnippet[] {
-    const snippets: CodeSnippet[] = [];
-    const lines = codeContent.split('\n');
-    
-    // Simple extraction - take first 20 lines as a snippet
-    if (lines.length > 0) {
-      snippets.push({
-        file: 'current-file',
-        snippet: lines.slice(0, Math.min(20, lines.length)).join('\n'),
-        explanation: 'This code section shows the main structure and key functions.'
-      });
-    }
-    
-    return snippets;
-  }
 
 }
 

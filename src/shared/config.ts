@@ -5,7 +5,7 @@
 import { config } from 'dotenv';
 
 // Load environment variables
-config();
+config({ quiet: true });
 
 // Simple constants instead of complex nested objects
 export const LLM_API_KEY = process.env.LLM_API_KEY || '';
