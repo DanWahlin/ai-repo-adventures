@@ -71,3 +71,11 @@ export const IGNORE_PATTERNS = [
   '.DS_Store',
   'Thumbs.db',
 ] as const;
+
+// Prompt file paths
+export const PROMPT_PATHS = {
+  STORY_GENERATION: 'src/prompts/story-generation-prompt.md',
+  QUEST_CONTENT: 'src/prompts/quest-content-prompt.md',
+  COMPLETION: 'src/prompts/completion-prompt.md',
+  THEME_GUIDELINES: 'src/prompts/theme-guidelines.json'
+} as const;

@@ -4,6 +4,7 @@ import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKEN
 import { isValidTheme, THEMES } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { loadAdventureConfig, formatConfigForPrompt, extractHighlightsForFiles, type AdventureConfig } from '../shared/adventure-config.js';
+import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
 
 export interface Adventure {
   id: string;
@@ -145,7 +146,36 @@ export class StoryGenerator {
     theme: AdventureTheme,
     codeContent: string
   ): Promise<AdventureContent> {
-    const prompt = this.buildAdventureContentPrompt(adventure, theme, codeContent);
+    // Find matching adventure config and extract highlights
+    let workshopHighlights = '';
+    if (this.adventureConfig && adventure.codeFiles) {
+      const highlights = extractHighlightsForFiles(this.adventureConfig, adventure.title, adventure.codeFiles);
+      if (highlights.length > 0) {
+        workshopHighlights = `\n## Workshop Highlights (Technical Reference Only)
+These are the technical functions to explore - but present them in ${theme} terms:
+
+${highlights.map(h => `- **${h.name}**: ${h.description}`).join('\n')}
+
+IMPORTANT: Do NOT mention these function names directly in your narrative! Instead, create the themed
+narrative around these concepts. You can include the actual file or function name in parentheses next to
+the appropriate place in the story/narrative.
+
+Instead, describe them using ${theme}-appropriate metaphors:
+- Constructor → Space: "Ship initialization sequence" / Medieval: "Castle foundation ritual"
+- Handler → Space: "Communication protocol" / Medieval: "Message courier system"
+Transform the technical concepts into your themed story while exploring the actual code.
+`;
+      }
+    }
+
+    const prompt = loadQuestContentPrompt({
+      theme,
+      adventureTitle: adventure.title,
+      codeContent,
+      ...(workshopHighlights && { workshopHighlights }),
+      ...(this.customThemeData && { customThemeData: this.customThemeData })
+    });
+
     const response = await this.withTimeout(
       this.llmClient.generateResponse(prompt, { responseFormat: 'json_object', maxTokens: LLM_MAX_TOKENS_QUEST })
     );
@@ -193,20 +223,14 @@ export class StoryGenerator {
       vocabularyHint = `Use ${vocabularyMap[theme as keyof typeof vocabularyMap] || 'appropriate theme terms'}`;
     }
     
-    const prompt = `Generate a ${themeDescription}-themed completion celebration for: "${adventure.title}"
-
-**Context:**
-- Adventure completed: ${adventure.title}
-- Progress: ${progress}/${total} adventures (${percentComplete}% complete)
-- Theme: ${themeDescription}
-
-**Requirements:**
-- Write 1 sentence using ${themeDescription} terminology
-- Celebrate the specific learning achievement
-- Use encouraging, triumphant tone
-- ${vocabularyHint}
-
-Generate ONLY the celebration message, no extra text.`;
+    const prompt = loadCompletionPrompt({
+      themeDescription,
+      adventureTitle: adventure.title,
+      progress,
+      total,
+      percentComplete,
+      vocabularyHint
+    });
 
     const response = await this.llmClient.generateResponse(prompt);
     return response.content.trim();
@@ -218,7 +242,30 @@ Generate ONLY the celebration message, no extra text.`;
    * Generate with LLM
    */
   private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
-    const prompt = this.buildStoryGenerationPrompt(projectInfo, theme);
+    const repomixContent = projectInfo.repomixContent || 'No repomix content available';
+    
+    // Add adventure config guidance if available
+    const adventureGuidance = this.adventureConfig 
+      ? `\n## Adventure Guidance (Technical Reference Only)
+The following predefined adventure structure identifies important code areas to explore:
+
+${formatConfigForPrompt(this.adventureConfig)}
+
+IMPORTANT: DO NOT use these titles or descriptions literally! They are technical references only.
+You MUST transform them into ${theme}-themed adventures:
+- "Core Server" → Space: "Command Bridge Protocol Systems" / Medieval: "Castle's Command Tower" 
+- "File Management" → Space: "Navigation & Mission Control" / Medieval: "Quest Chronicles Hall"
+
+Use the file paths and function highlights to understand what code areas to focus on,
+but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n`
+      : '';
+
+    const prompt = loadStoryGenerationPrompt({
+      theme,
+      repomixContent,
+      ...(adventureGuidance && { adventureGuidance }),
+      ...(this.customThemeData && { customThemeData: this.customThemeData })
+    });
 
     const response = await this.withTimeout(
       this.llmClient.generateResponse(prompt, { responseFormat: 'json_object', maxTokens: LLM_MAX_TOKENS_STORY })
@@ -240,238 +287,6 @@ Generate ONLY the celebration message, no extra text.`;
   }
 
 
-
-
-
-  /**
-   * Build story generation prompt with repomix content
-   */
-  private buildStoryGenerationPrompt(projectInfo: ProjectInfo, theme: AdventureTheme): string {
-    const repomixContent = projectInfo.repomixContent || 'No repomix content available';
-    const themeGuidelines = this.getThemeGuidelines(theme);
-    
-    // Add adventure config guidance if available
-    const adventureGuidance = this.adventureConfig 
-      ? `\n## Adventure Guidance (Technical Reference Only)
-The following predefined adventure structure identifies important code areas to explore:
-
-${formatConfigForPrompt(this.adventureConfig)}
-
-IMPORTANT: DO NOT use these titles or descriptions literally! They are technical references only.
-You MUST transform them into ${theme}-themed adventures:
-- "Core Server" → Space: "Command Bridge Protocol Systems" / Medieval: "Castle's Command Tower" 
-- "File Management" → Space: "Navigation & Mission Control" / Medieval: "Quest Chronicles Hall"
-
-Use the file paths and function highlights to understand what code areas to focus on,
-but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n`
-      : '';
-    
-    return `🚨 MANDATORY STORY FORMAT:
-
-Your story MUST include:
-1. A themed title with line breaks before and after
-2. The story paragraph (75-100 words)
-3. The quest ending
-
-FORMAT REQUIREMENT:
-[blank line]
-**🚀 [Your Themed Title Here]**
-[blank line]
-[Your story paragraph...]
-
-🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!
-
-EXAMPLE (DO NOT COPY):
-
-**🚀 Starship Nexus Command Mission**
-
-Deep in the cosmic realm, the vessel explores the MCP galaxy...
-
-You are a technical education specialist creating story-based workshops.
-Transform this codebase into an engaging ${theme}-themed narrative.
-
-## Complete Codebase
-${repomixContent}${adventureGuidance}
-
-${themeGuidelines}
-
-## Story Creation Instructions:
-1. ANALYZE the repomix content above to INFER what type of project this is
-2. Create a ${theme}-themed narrative that INTEGRATES the project details naturally
-3. **CRITICAL: ONLY reference files that actually exist in the "## Complete Codebase" content above**
-4. **DO NOT invent, create, or hallucinate any file names**
-5. The story content should be 1-2 paragraphs (75-100 words max) that tells a cohesive narrative
-6. Reference actual technologies, patterns, and concepts from the real code
-7. Make the reader understand what this specific codebase does through the narrative
-8. End with "\n🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!"
-
-
-**EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
-
-"Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an interstellar mission to decode and optimize the galactic repository known as MCP. Guided by the cutting-edge *Repomix Navigator* and powered by *TypeScript Reactors*, the crew must traverse cosmic data streams, align architectural constellations, and unveil the mysteries of adventure-driven exploration. Their ultimate goal: to transform the sprawling complexity of the MCP system into a harmonious and navigable stellar map. The fate of the intergalactic coding alliance rests on their success. Will you join their quest and become a legendary codonaut?"
-
-⚠️ **CRITICAL: This is ONLY a structural template showing excellent integration. DO NOT copy any phrases, words, or concepts. Create completely original content that follows the same integration approach but uses entirely different vocabulary, metaphors, and narrative elements. Notice how it weaves real technologies (MCP, Repomix, TypeScript) into creative metaphors (Starship Refactor-1, codonauts, TypeScript Reactors, cosmic data streams).**
-
-**WHAT MAKES THIS EXCELLENT:**
-1. **Creative Technology Integration**: "Repomix Navigator", "TypeScript Reactors", "cosmic data streams" (real tech as themed elements)
-2. **Purpose Clarity**: "decode and optimize the galactic repository", "transform sprawling complexity into navigable stellar map" (explains what MCP does)
-3. **Themed Vocabulary**: "codonauts", "interstellar mission", "architectural constellations", "intergalactic coding alliance"
-4. **Named Vessel**: "*Starship Refactor-1*" (creative name suggesting code improvement)
-5. **Mission Focus**: Clear goal that matches the actual codebase purpose with engaging call-to-action
-
-**YOUR STORY MUST BE COMPLETELY ORIGINAL:**
-- Give the ${theme === 'space' ? 'starship/vessel' : theme === 'mythical' ? 'kingdom/realm' : theme === 'ancient' ? 'temple/civilization' : 'system'} a UNIQUE creative name that reflects the actual project (NOT "MCP Odyssey" or similar)
-- Mention 3-4 actual technologies from the repomix content as ${theme} elements using YOUR OWN creative metaphors (NOT "reactors", "constellations", etc.)
-- Clearly explain the project's real purpose through the ${theme} narrative using FRESH language and imagery
-- Create a specific ${theme === 'space' ? 'mission' : theme === 'mythical' ? 'quest' : theme === 'ancient' ? 'discovery' : 'objective'} that mirrors what the codebase actually accomplishes with ORIGINAL phrasing
-- Use italics for the main ${theme === 'space' ? 'vessel' : theme === 'mythical' ? 'kingdom' : theme === 'ancient' ? 'temple' : 'system'} name and key systems
-
-🚫 **FORBIDDEN:** DO NOT use any phrases from the template like "vast expanse", "digital cosmos", "embarks on a mission", "coherent constellations", "decode the mysteries", etc. Create entirely new metaphors and descriptions.
-
-## Adventures as Cohesive Story Chapters
-CRITICAL: Adventures must form a single, overarching narrative with interconnected chapters:
-- Chapter 1 should establish the main story arc and introduce the central challenge/mission
-- Each subsequent chapter should advance the same overarching narrative
-- All chapters contribute to resolving the main story conflict/mission
-- The final chapter should complete the overarching narrative with resolution
-- Each chapter builds directly on events from previous chapters
-- The story should have clear narrative continuity and progression toward a unified goal
-
-**CRITICAL FOR DEVELOPERS: Each quest MUST have emoji and technical details**
-- **QUEST TITLES**: Each quest title MUST start with a thematic emoji (🚀⚡🔗🛡️💫🌟✨💎🎯🔧) 
-- **DESCRIPTIONS**: Mention actual file names, technologies, patterns, or code concepts from the repomix content
-- Help developers understand exactly what they'll learn (e.g., "server.ts", "MCP protocol handlers", "TypeScript interfaces", "error handling patterns")
-- Make descriptions informative enough for developers to choose based on their interests
-- **DESCRIPTION REQUIREMENT: Each quest description MUST be exactly 1 sentence that specifically mentions the technologies, files, or code concepts developers will explore (e.g., "Explore server.ts initialization, MCP protocol setup, and tool registration patterns")**
-
-## Response Format
-Return a valid JSON object:
-{
-  "story": "Integrated narrative that establishes a single overarching story with interconnected quests (a quest is like a chapter)",
-  "adventures": [
-    {
-      "id": "quest-1",
-      "title": "🚀 Quest 1: [Theme-appropriate title that begins the main story]",
-      "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
-      "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
-    },
-    {
-      "id": "quest-2", 
-      "title": "⚡ Quest 2: [Title that continues the main narrative from Quest 1]",
-      "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
-      "codeFiles": ["relevant-files"]
-    }
-  ]
-}
-
-**Important for codeFiles arrays:**
-- ONLY include file paths that appear as "## File: path/filename" in the repomix content above
-- Double-check each file path exists in the ## Complete Codebase content before including it
-- It's better to have empty codeFiles arrays than incorrect file paths
-- Use the exact file path as shown in the "## File:" headers from ## Complete Codebase
-- **PRIORITIZE core files**: Choose core application files over utility/support files
-- **Preferred file types for adventures**: main server files, core business logic, API endpoints, application entry points, key algorithms
-- **Less preferred for adventures**: configuration files, utility classes, cache implementations, error handlers, type definitions
-
-**Final Validation Step:**
-Before returning your response, review your story and codeFiles arrays to ensure:
-1. No file names are mentioned in the story unless they appear in "## File:" headers in ## Complete Codebase
-2. All codeFiles entries match exactly with "## File:" headers in ## Complete Codebase
-3. When in doubt, omit specific file references and focus on general concepts instead
-
-**File Selection Strategy:**
-- ✅ PREFER: Files that implement core business logic, main application flow, user-facing functionality
-- ❌ AVOID: Files in /shared/, /utils/, /helpers/ directories, files with names like cache, config, error, types, constants
-
-Create 3-5 interconnected quests (a quest is like a chapter) that form a complete narrative arc with a unified story:
-- Quest 1: Establish the main story mission/challenge and begin the narrative
-- Quests 2-3: Advance the central storyline through progressive discoveries that build on each other
-- Final Quest: Resolve the main narrative conflict and complete the overarching story
-Each quest must directly reference and build upon events from previous quests, creating one cohesive adventure story rather than separate standalone tasks.`;
-  }
-
-  /**
-   * Build adventure content prompt
-   */
-  private buildAdventureContentPrompt(
-    adventure: Adventure,
-    theme: AdventureTheme,
-    codeContent: string
-  ): string {
-    const themeGuidelines = this.getThemeGuidelines(theme);
-    
-    // Find matching adventure config and extract highlights
-    let workshopHighlights = '';
-    if (this.adventureConfig && adventure.codeFiles) {
-      const highlights = extractHighlightsForFiles(this.adventureConfig, adventure.title, adventure.codeFiles);
-      if (highlights.length > 0) {
-        workshopHighlights = `\n## Workshop Highlights (Technical Reference Only)
-These are the technical functions to explore - but present them in ${theme} terms:
-
-${highlights.map(h => `- **${h.name}**: ${h.description}`).join('\n')}
-
-IMPORTANT: Do NOT mention these function names directly in your narrative! Instead, create the themed
-narrative around these concepts. You can include the actual file or function name in parentheses next to
-the appropriate place in the story/narrative.
-
-Instead, describe them using ${theme}-appropriate metaphors:
-- Constructor → Space: "Ship initialization sequence" / Medieval: "Castle foundation ritual"
-- Handler → Space: "Communication protocol" / Medieval: "Message courier system"
-Transform the technical concepts into your themed story while exploring the actual code.
-`;
-      }
-    }
-    
-    return `Continue the ${theme}-themed narrative journey for: "${adventure.title}"
-
-IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
-- Reference events from previous chapters if applicable
-- Advance the overall story arc
-- Build toward the journey's resolution
-- Keep the narrative voice consistent
-
-${themeGuidelines}
-
-## Complete Codebase
-${codeContent}${workshopHighlights}
-
-## CRITICAL: Code Authenticity Requirements
-- Use ONLY the code provided in the "## Complete Codebase" section above
-- DO NOT create, modify, or invent any code examples
-- If no code is available, say "No code available for this file"
-- Show actual imports, actual function names, actual technologies from the files
-
-## Real-World Analogy Guidelines
-For code snippet explanations, use relatable analogies:
-- Functions → Restaurant recipes, factory assembly lines, or instruction manuals
-- Classes → Blueprints, templates, or cookie cutters
-- APIs → Restaurant menus, hotel front desks, or customer service counters
-- Event handlers → Doorbell systems, alarm clocks, or notification services
-- Data structures → Filing cabinets, toolboxes, or organizational systems
-- Always connect the analogy back to the specific code being shown
-
-## Professional Visual Enhancement Guidelines
-Add tasteful visual elements to enhance readability and engagement:
-- Use thematic emoticons as section headers: ⚡ 🔗 🛡️ 📊 🎯 ⭐
-- Include simple ASCII borders for important sections: ┌─ Section ─┐ or ╭─ Title ─╮
-- Add progress indicators where relevant: [██████░░░░] 
-- Use clean separators: ─────────────────
-- Keep visual elements minimal and professional - enhance, don't overwhelm
-
-## Response Format (JSON)
-{
-  "adventure": "1 paragraph (75-100 words) continuing the themed narrative story only - keep brief",
-  "fileExploration": "2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders, thematic emoticons as headers (⚡🔗🛡️📊), and clean formatting for better readability",
-  "codeSnippets": [
-    {
-      "file": "filename",
-      "snippet": "EXACT code from the files provided above - DO NOT invent or modify code",
-      "explanation": "Start with a real-world analogy (like 'This is like a restaurant menu that...'), then explain the actual code and how the analogy relates"
-    }
-  ],
-  "hints": ["Practical tip", "Next steps"]
-}`;
-  }
 
 
 
@@ -546,96 +361,6 @@ Add tasteful visual elements to enhance readability and engagement:
 
 
 
-  /**
-   * Get theme-specific guidelines for story generation
-   */
-  private getThemeGuidelines(theme: AdventureTheme): string {
-    const themeGuidelinesMap = {
-      space: {
-        vocabulary: 'starship/mission/nebula/cosmic/navigation/crew/galaxy/stellar/orbit/command/exploration terms',
-        restriction: '(space ships, galaxies, planets, aliens, astronauts - NOT kingdoms or magic or temples)',
-        style: 'Create exciting space exploration narratives with technical missions'
-      },
-      mythical: {
-        vocabulary: 'kingdom/quest/heroic/castle/knight/magic/mythical/mystic/spells/enchanted/dragon terms',
-        restriction: '(castles, knights, magic, mythical creatures, spells - NOT space ships or ancient temples)',
-        style: 'Create magical kingdom adventures with heroic quests'
-      },
-      ancient: {
-        vocabulary: 'temple/wisdom/sacred/pyramid/jungle/ancient/archaeological/civilization/ritual/treasure terms',
-        restriction: '(temples, pyramids, ancient wisdom - NOT space ships or mythical castles)',
-        style: 'Create archaeological discoveries with ancient mysteries'
-      },
-      developer: {
-        vocabulary: 'documentation/guide/tutorial/reference/best-practices/architecture/patterns/implementation terms',
-        restriction: '(technical documentation style - NO fictional narratives or storytelling)',
-        style: 'Write clear, professional technical documentation with practical examples'
-      },
-      custom: {
-        vocabulary: 'user-defined theme vocabulary (will be provided separately)',
-        restriction: '(use only the custom theme elements provided by the user)',
-        style: 'Follow the custom theme guidelines provided by the user'
-      }
-    } as const;
-    
-    const guidelines = themeGuidelinesMap[theme as keyof typeof themeGuidelinesMap] || themeGuidelinesMap.space;
-    
-    if (theme === 'developer') {
-      return `## Developer Documentation Guidelines
-
-**DOCUMENTATION APPROACH:**
-- Write in clear, professional technical documentation style
-- Use headings, bullet points, and structured formatting
-- Focus on practical implementation details and best practices
-- Include code examples with explanations
-- Avoid fictional narratives - keep it factual and educational
-- Use terminology like: ${guidelines.vocabulary}
-
-**Content Requirements:**
-- Create comprehensive technical guides for each code area
-- Each section should be like a chapter in technical documentation
-- Use developer-friendly language and concepts
-- Reference actual technologies, patterns, and architectural decisions
-- Make the content educational and actionable
-- IMPORTANT: ${guidelines.restriction}`;
-    }
-
-    if (theme === 'custom') {
-      const customData = this.customThemeData;
-      if (!customData) {
-        throw new Error('Custom theme data not provided. Call setCustomTheme() before generating custom themed content.');
-      }
-      
-      return `## Custom Theme Guidelines
-
-**CUSTOM THEME: "${customData.name}"**
-- Theme Description: ${customData.description}
-- Keywords to use: ${customData.keywords.join(', ')}
-
-**CUSTOM THEME APPROACH:**
-- Use ONLY the custom theme vocabulary: ${customData.keywords.join(', ')}
-- Stay strictly within the "${customData.name}" theme as described: ${customData.description}
-- Create narratives that match the user's specified "${customData.name}" style
-- Reference the custom theme elements consistently throughout the story
-- Make the story align with the user's creative vision for "${customData.name}"
-- IMPORTANT: Only use the custom theme elements - do not mix with other themes (space, mythical, ancient, etc.)`;
-    }
-    
-    return `## Theme Guidelines
-
-**${theme.toUpperCase()} THEME VOCABULARY:**
-- Use ${guidelines.vocabulary}
-
-**Story Requirements:**
-- ${guidelines.style}
-- Create an overarching narrative that connects all coding adventures
-- Each adventure should feel like a chapter in the overall story
-- Use ${theme} metaphors that make technical concepts intuitive
-- Reference actual file names and technologies from the analysis
-- Make the story educational but entertaining
-- IMPORTANT: Stay strictly within the ${theme} theme - no mixing of themes!
-  ${guidelines.restriction}`;
-  }
 
 
 }
