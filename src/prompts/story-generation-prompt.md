@@ -2,14 +2,18 @@
 
 ## 🎯 OBJECTIVE
 
-Turn the provided codebase into an immersive, theme-driven story that helps developers understand what the code does through narrative. Then, break that story into 3–5 interconnected **quests** that each focus on specific technical components or files from the codebase.
+Turn the provided codebase into an immersive, theme-driven story that helps developers understand what the code does through narrative. Then, break that story into 3–5 **interconnected quests** that each contribute to the main storyline while exploring specific technical components or files from the codebase.
+
+**CRITICAL: These quests are parts of a single overarching story, NOT standalone tasks. Users can explore them in any order.**
 
 Each quest should:
 
-- Advance the storyline like a chapter in a novel
+- **Contribute to the main narrative** while being explorable independently
+- **Connect to the overall story goal** from different angles  
 - Reference only real files and concepts from the codebase
-- Guide the developer deeper into understanding the repo
+- Guide the developer deeper into understanding the repo through thematic exploration
 - Use a fun, creative theme (e.g., space, mythical, ancient, cyberpunk)
+- **Be self-contained yet part of the larger adventure**
 
 ---
 
@@ -23,14 +27,14 @@ Return a valid JSON object with this structure:
   "adventures": [
     {
       "id": "quest-1",
-      "title": "🚀 Quest 1: [Theme-appropriate title that begins the main story]",
-      "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
+      "title": "🚀 Quest 1: [Theme-appropriate title related to this part of the system]",
+      "description": "1 sentence describing this quest's exploration area, mentioning specific technologies/files/concepts covered (e.g., 'Explore the server.ts command center and discover the MCP protocol foundations')",
       "codeFiles": ["ONLY-files-that-appear-in-'## Project Codebase' above"]
     },
     {
-      "id": "quest-2",
-      "title": "⚡ Quest 2: [Title that continues the main narrative from Quest 1]",
-      "description": "1 sentence mentioning specific technologies/files/concepts covered",
+      "id": "quest-2", 
+      "title": "⚡ Quest 2: [Theme-appropriate title for another part of the system]",
+      "description": "1 sentence describing this quest's unique exploration area, mentioning what technologies/files will be explored",
       "codeFiles": ["relevant-files"]
     }
   ]
@@ -50,10 +54,11 @@ Return a valid JSON object with this structure:
 
 ✅ Quest Structure:
 
-- Each quest builds on the previous (like story chapters)
-- Each description is exactly **1 sentence**, educational and thematic
-- Use second-person POV (“You must…”)
-- No standalone tasks — all quests contribute to the overall story
+- **Each quest contributes to the overarching story** while being explorable independently
+- Each description is exactly **1 sentence** that describes the quest's exploration area and technical focus
+- Use second-person POV ("You venture into...", "You explore...", "You discover...")
+- **NO standalone tasks** — every quest connects to the main story theme and goal
+- **Quests should be self-contained** but part of the larger narrative universe
 
 ---
 
@@ -105,10 +110,11 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 
 ## 🧭 QUEST WRITING GUIDANCE
 
-- Use **second-person** writing: “You uncover…”, “You must navigate…”  
-- Each quest builds on the last — like a progressive story arc  
-- Avoid passive standalone tasks — make every quest meaningful and progressive  
-- Include **only relevant, existing file names**
+- Use **second-person** writing that immerses the reader: "You venture into the depths of...", "You discover the secrets of...", "You explore the ancient chambers of..."  
+- **Each quest should connect to the main story theme** while focusing on its own exploration area  
+- **Avoid standalone tasks** — every quest should feel like part of the larger adventure world  
+- Include **only relevant, existing file names**  
+- **Make each quest compelling on its own** while contributing to the overall narrative
 
 ---
 
@@ -156,10 +162,12 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 ✅ The story clearly explains what the codebase does  
 ✅ All references to files match those in \`## Project Codebase\`  
 ✅ The theme is fully realized in narrative and quests  
-✅ Each quest builds on the last toward a unified goal  
+✅ **Each quest connects to the overarching story** while being explorable independently  
+✅ **Quests are NOT standalone tasks** — they are part of a single thematic adventure world  
 ✅ No hallucinated or invented file names  
-✅ Each quest description is exactly 1 sentence and technical  
+✅ Each quest description is exactly 1 sentence describing its exploration area and technical focus  
 ✅ Each \`codeFiles\` array is accurate and clean  
+✅ **Quests are self-contained but thematically connected** to the main story  
 
 ---
 
@@ -198,4 +206,4 @@ These are provided dynamically in each run of the prompt:
 
 ## ✅ FINAL INSTRUCTION
 
-Create a single overarching story based on the \`## Project Codebase\`, and 3–5 themed developer quests that progress that story through real technical files. Each quest should feel like a chapter in a larger narrative — immersive, creative, and informative.
+Create a single overarching story based on the \`## Project Codebase\`, and 3–5 interconnected quests that explore different aspects of that story through real technical files. **Each quest should contribute to the main narrative while being explorable independently** — users can choose their own adventure path. Each quest should feel like exploring a different area of the same thematic world, connected by the overall story but self-contained enough to be meaningful on its own.
