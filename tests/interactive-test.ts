@@ -62,6 +62,17 @@ class InteractiveMCPClient {
   }
 
   private async callTool(toolName: string, args: Record<string, any>): Promise<string> {
+    // Display what operation is happening
+    const operationMap: Record<string, string> = {
+      'start_adventure': '🚀 Analyzing project and generating theme options',
+      'choose_theme': '📖 Generating themed story and quest adventures',
+      'explore_adventure_quest': '🗺️ Exploring quest and generating walkthrough',
+      'view_progress': '📊 Checking adventure progress'
+    };
+    
+    const operation = operationMap[toolName] || `🔧 Executing ${toolName}`;
+    console.log(chalk.dim(`${operation}...`));
+    
     try {
       const result = await this.client.callTool({
         name: toolName,
@@ -137,7 +148,7 @@ class InteractiveMCPClient {
     // Explore path
     if (lower.includes('explore') || lower.includes('go') || lower.includes('choose')) {
       return {
-        intent: 'explore_adventure_path',
+        intent: 'explore_adventure_quest',
         params: { choice: input }
       };
     }
@@ -160,8 +171,6 @@ class InteractiveMCPClient {
 
   private async handleUserInput(input: string): Promise<void> {
     const { intent, params } = this.parseUserInput(input);
-
-    console.log(chalk.dim(`[Processing: ${intent}]`) + '\n');
 
     let response: string;
     
@@ -190,8 +199,8 @@ class InteractiveMCPClient {
         response = await this.callTool('meet_character', params);
         break;
         
-      case 'explore_adventure_path':
-        response = await this.callTool('explore_adventure_path', params);
+      case 'explore_adventure_quest':
+        response = await this.callTool('explore_adventure_quest', params);
         break;
         
       default:
@@ -331,7 +340,7 @@ Type ${chalk.cyan('/help')} for available commands, or just start chatting!
             console.log(chalk.green(`✓ Project directory set to: ${newPath}`) + '\n');
           } else if (command === '/progress') {
             // Quick progress check
-            const response = await this.callTool('explore_adventure_path', { choice: 'Review your discoveries' });
+            const response = await this.callTool('explore_adventure_quest', { choice: 'Review your discoveries' });
             console.log(this.formatText(response));
             console.log('\n' + chalk.dim('─'.repeat(60)) + '\n');
           } else if (command === '/exit' || command === '/quit') {

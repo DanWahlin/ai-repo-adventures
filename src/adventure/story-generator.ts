@@ -280,22 +280,38 @@ ${themeGuidelines}
 3. **CRITICAL: ONLY reference files that actually exist in the "## Complete Codebase" content above.** 
    Look for "## File:" headers to identify real files.
 4. **DO NOT invent, create, or hallucinate any file names.** If you reference a file, it MUST appear in the "## File:" sections above.
-5. The story should be 1-2 paragraphs (75-100 words max) that tells a cohesive narrative
-6. Reference actual technologies, patterns, and concepts from the real code, but avoid specific file names unless absolutely certain they exist in the repomix content
-7. Make the reader understand what this specific codebase does through the narrative
-8. End with "🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!"
+5. **MANDATORY VISUAL FORMATTING**: The story MUST include ASCII borders and structured layout using the format shown below
+6. The story content should be 1-2 paragraphs (75-100 words max) that tells a cohesive narrative
+7. Reference actual technologies, patterns, and concepts from the real code, but avoid specific file names unless absolutely certain they exist in the repomix content
+8. Make the reader understand what this specific codebase does through the narrative
+9. End with "\n🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!"
 
-## CRITICAL Story Integration Requirements
-**STRUCTURE TEMPLATE ONLY - DO NOT COPY ANY TEXT:**
-"In the vast expanse of the digital cosmos, a starship known as the *MCP Odyssey* embarks on a mission to explore and map uncharted systems of code. This state-of-the-art vessel, powered by TypeScript reactors and navigated by the Model Context Protocol, has a singular purpose: to transform sprawling codebases into coherent constellations of understanding. The crew, equipped with advanced LLM-assisted tools, must decode the mysteries of the *Adventure System*..."
+## MANDATORY STORY FORMAT - MUST FOLLOW THIS STRUCTURE EXACTLY:
 
-⚠️ **CRITICAL: This is ONLY a structural template showing the integration pattern. DO NOT copy any phrases, words, or concepts. Create completely original content that follows the same integration approach but uses entirely different vocabulary, metaphors, and narrative elements.**
+╭─────────────────────────────────────╮
+│   [THEMED EMOJI] [CUSTOM TITLE]     │
+╰─────────────────────────────────────╯
+
+[Your themed narrative paragraph here - 75-100 words]
+
+⚡ **[Technology Point 1]**: [Brief description]
+🔗 **[Technology Point 2]**: [Brief description] 
+🛡️ **[Technology Point 3]**: [Brief description]
+
+**CRITICAL: You MUST use this exact ASCII border format and emoji structure. Replace bracketed placeholders with your original themed content. DO NOT copy the example text - create entirely new content following this visual structure.**
+
+**EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
+
+"Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an interstellar mission to decode and optimize the galactic repository known as MCP. Guided by the cutting-edge *Repomix Navigator* and powered by *TypeScript Reactors*, the crew must traverse cosmic data streams, align architectural constellations, and unveil the mysteries of adventure-driven exploration. Their ultimate goal: to transform the sprawling complexity of the MCP system into a harmonious and navigable stellar map. The fate of the intergalactic coding alliance rests on their success. Will you join their quest and become a legendary codonaut?"
+
+⚠️ **CRITICAL: This is ONLY a structural template showing excellent integration. DO NOT copy any phrases, words, or concepts. Create completely original content that follows the same integration approach but uses entirely different vocabulary, metaphors, and narrative elements. Notice how it weaves real technologies (MCP, Repomix, TypeScript) into creative metaphors (Starship Refactor-1, codonauts, TypeScript Reactors, cosmic data streams).**
 
 **WHAT MAKES THIS EXCELLENT:**
-1. **Specific Technology Integration**: "TypeScript reactors", "Model Context Protocol", "LLM-assisted tools"
-2. **Purpose Clarity**: "transform sprawling codebases into coherent constellations" (explains what the app does)
-3. **Named Vessel**: "*MCP Odyssey*" (creative name tied to the actual tech stack)
-4. **Mission Focus**: Clear goal that matches the actual codebase purpose
+1. **Creative Technology Integration**: "Repomix Navigator", "TypeScript Reactors", "cosmic data streams" (real tech as themed elements)
+2. **Purpose Clarity**: "decode and optimize the galactic repository", "transform sprawling complexity into navigable stellar map" (explains what MCP does)
+3. **Themed Vocabulary**: "codonauts", "interstellar mission", "architectural constellations", "intergalactic coding alliance"
+4. **Named Vessel**: "*Starship Refactor-1*" (creative name suggesting code improvement)
+5. **Mission Focus**: Clear goal that matches the actual codebase purpose with engaging call-to-action
 
 **YOUR STORY MUST BE COMPLETELY ORIGINAL:**
 - Give the ${theme === 'space' ? 'starship/vessel' : theme === 'mythical' ? 'kingdom/realm' : theme === 'ancient' ? 'temple/civilization' : 'system'} a UNIQUE creative name that reflects the actual project (NOT "MCP Odyssey" or similar)
@@ -312,7 +328,12 @@ CRITICAL: Adventures must form a cohesive narrative progression, like interconne
 - Each subsequent quest should build on previous discoveries
 - Quests should tell a progressive story while allowing choice and exploration
 - The final quest should provide resolution or mastery achievement
-- **DESCRIPTION REQUIREMENT: Each quest description MUST be exactly 1 sentence - concise and focused**
+
+**CRITICAL FOR DEVELOPERS: Each quest description MUST include specific technical details**
+- Mention actual file names, technologies, patterns, or code concepts from the repomix content
+- Help developers understand exactly what they'll learn (e.g., "server.ts", "MCP protocol handlers", "TypeScript interfaces", "error handling patterns")
+- Make descriptions informative enough for developers to choose based on their interests
+- **DESCRIPTION REQUIREMENT: Each quest description MUST be exactly 1 sentence that specifically mentions the technologies, files, or code concepts developers will explore (e.g., "Explore server.ts initialization, MCP protocol setup, and tool registration patterns")**
 
 ## Response Format
 Return a valid JSON object:
@@ -322,13 +343,13 @@ Return a valid JSON object:
     {
       "id": "quest-1",
       "title": "Quest 1: [Theme-appropriate beginning title]",
-      "description": "1 sentence max describing the core focus",
+      "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
       "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
     },
     {
       "id": "quest-2", 
       "title": "Quest 2: [Progressive story continuation]",
-      "description": "1 sentence max describing the core focus",
+      "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
       "codeFiles": ["relevant-files"]
     }
   ]
@@ -420,10 +441,18 @@ For code snippet explanations, use relatable analogies:
 - Data structures → Filing cabinets, toolboxes, or organizational systems
 - Always connect the analogy back to the specific code being shown
 
+## Professional Visual Enhancement Guidelines
+Add tasteful visual elements to enhance readability and engagement:
+- Use thematic emoticons as section headers: ⚡ 🔗 🛡️ 📊 🎯 ⭐
+- Include simple ASCII borders for important sections: ┌─ Section ─┐ or ╭─ Title ─╮
+- Add progress indicators where relevant: [██████░░░░] 
+- Use clean separators: ─────────────────
+- Keep visual elements minimal and professional - enhance, don't overwhelm
+
 ## Response Format (JSON)
 {
   "adventure": "1 paragraph (75-100 words) continuing the themed narrative story only - keep brief",
-  "fileExploration": "2-3 paragraphs (200-300 words) providing thorough walkthrough of code concepts, specific tasks, and technical exploration details",
+  "fileExploration": "2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders, thematic emoticons as headers (⚡🔗🛡️📊), and clean formatting for better readability",
   "codeSnippets": [
     {
       "file": "filename",

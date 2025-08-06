@@ -37,7 +37,7 @@ export const viewProgress = {
       
       // Add available choices
       if (progress.choices && progress.choices.length > 0) {
-        responseText += `\n\n**Available Adventures:**\n${progress.choices.map((choice: string, i: number) => `${i + 1}. ${choice}`).join('\n')}\n\nUse \`explore_adventure_path\` with your choice to continue!`;
+        responseText += `\n\n**Available Quests:**\n${progress.choices.map((choice: string) => `${choice}`).join('\n')}\n\nUse \`explore_adventure_quest\` with your choice to continue!`;
       }
       
       return {

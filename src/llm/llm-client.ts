@@ -133,7 +133,9 @@ export class LLMClient {
         const completionTokens = completion.usage.completion_tokens || 0;
         const totalTokens = completion.usage.total_tokens || 0;
         
-        console.log(`🔢 LLM Usage: ${formatTokenCount(promptTokens)} prompt + ${formatTokenCount(completionTokens)} response = ${formatTokenCount(totalTokens)} total tokens`);
+        const green = '\x1b[32m';
+        const reset = '\x1b[0m';
+        console.error(`🔢 LLM Usage: ${green}${formatTokenCount(promptTokens)}${reset} prompt + ${green}${formatTokenCount(completionTokens)}${reset} response = ${green}${formatTokenCount(totalTokens)}${reset} total tokens\n`);
       }
 
       return { content };

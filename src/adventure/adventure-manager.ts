@@ -315,15 +315,15 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
    */
   private formatStoryWithAdventures(storyResponse: StoryResponse): string {
     const adventuresText = storyResponse.adventures
-      .map((adventure, index) => `${index + 1}. **${adventure.title}** - ${adventure.description}`)
+      .map((adventure) => `**${adventure.title}** - ${adventure.description}`)
       .join('\n');
 
     return `${storyResponse.story}
 
-**🗺️ Available Adventures:**
+**🗺️ Available Quests:**
 ${adventuresText}
 
-Choose an adventure by using the \`explore_adventure_path\` tool with the adventure number (1, 2, 3, etc.) or adventure title.`;
+Choose a quest by using the \`explore_adventure_quest\` tool with the quest number (1, 2, 3, etc.) or quest title.`;
   }
 
   /**
