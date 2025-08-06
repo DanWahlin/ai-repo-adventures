@@ -164,7 +164,7 @@ class InteractiveMCPClient {
     
     // Otherwise default to exploration
     return {
-      intent: 'explore_adventure_path',
+      intent: 'explore_adventure_quest',
       params: { choice: input }
     };
   }
@@ -340,7 +340,7 @@ Type ${chalk.cyan('/help')} for available commands, or just start chatting!
             console.log(chalk.green(`✓ Project directory set to: ${newPath}`) + '\n');
           } else if (command === '/progress') {
             // Quick progress check
-            const response = await this.callTool('explore_adventure_quest', { choice: 'Review your discoveries' });
+            const response = await this.callTool('view_progress', {});
             console.log(this.formatText(response));
             console.log('\n' + chalk.dim('─'.repeat(60)) + '\n');
           } else if (command === '/exit' || command === '/quit') {

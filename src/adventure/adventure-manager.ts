@@ -321,9 +321,9 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
     return `${storyResponse.story}
 
 **🗺️ Available Quests:**
-${adventuresText}
 
-Choose a quest by using the \`explore_adventure_quest\` tool with the quest number (1, 2, 3, etc.) or quest title.`;
+${adventuresText}
+`;
   }
 
   /**

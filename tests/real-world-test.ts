@@ -86,7 +86,7 @@ async function testRealWorldScenario() {
       console.log(`\n🔍 Exploring: ${path.name}`);
       try {
         const pathResult = await client.callTool({
-          name: 'explore_path',
+          name: 'explore_adventure_quest',
           arguments: { choice: path.choice }
         }) as CallToolResult;
 
@@ -98,7 +98,7 @@ async function testRealWorldScenario() {
         console.log(`   ✓ Successfully explored ${path.name}`);
         
         // Check for dynamic choices in response
-        const choicesMatch = pathText.match(/Your choices:(.+?)Use `explore_path`/s);
+        const choicesMatch = pathText.match(/Your choices:(.+?)Use `explore_adventure_quest`/s);
         if (choicesMatch) {
           const choices = choicesMatch[1].split('\n').filter(c => c.trim()).slice(0, 3);
           console.log(`   ✓ Dynamic choices generated: ${choices.length} options`);
@@ -117,7 +117,7 @@ async function testRealWorldScenario() {
 
     console.log('📜 Checking adventure progress...');
     const progressResult = await client.callTool({
-      name: 'explore_path',
+      name: 'explore_adventure_quest',
       arguments: { choice: 'Review your discoveries' }
     }) as CallToolResult;
 
@@ -147,7 +147,7 @@ async function testRealWorldScenario() {
       
       // Test character interactions through adventure exploration (using adventure 1)
       const characterResult = await client.callTool({
-        name: 'explore_path',
+        name: 'explore_adventure_quest',
         arguments: { choice: '1' }
       }) as CallToolResult;
 
@@ -178,7 +178,7 @@ async function testRealWorldScenario() {
     for (let i = 0; i < 3; i++) {
       try {
         const hintResult = await client.callTool({
-          name: 'explore_path',
+          name: 'explore_adventure_quest',
           arguments: { choice: 'Request a helpful hint' }
         }) as CallToolResult;
 

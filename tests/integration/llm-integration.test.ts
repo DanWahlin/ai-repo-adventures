@@ -32,7 +32,7 @@ async function runTests() {
     
     // Use shared helper for case-insensitive word checking
     assert(TestHelpers.containsAllWords(response.content, ['hello', 'world']), 'Should contain requested text (case insensitive)');
-  }, { skipIfNoLLM: true, timeout: 20000 });
+  }, { timeout: 20000 });
 
   await test('LLM client can generate JSON response', async () => {
     const llmClient = new LLMClient();
@@ -47,7 +47,7 @@ async function runTests() {
     assert(typeof parsed === 'object', 'Should parse to object');
     assert(typeof parsed.name === 'string', 'Should have name field');
     assert(typeof parsed.description === 'string', 'Should have description field');
-  }, { skipIfNoLLM: true, timeout: 20000 });
+  }, { timeout: 20000 });
 
   await test('LLM client handles multiple requests correctly', async () => {
     const llmClient = new LLMClient();
@@ -64,7 +64,7 @@ async function runTests() {
     // Both responses should be valid
     assert(typeof response1.content === 'string', 'First response should be string');
     assert(typeof response2.content === 'string', 'Second response should be string');
-  }, { skipIfNoLLM: true, timeout: 25000 });
+  }, { timeout: 25000 });
 
   // Adventure Manager Integration Tests  
   console.log('');
@@ -98,7 +98,7 @@ async function runTests() {
     progress.choices?.forEach((choice, index) => {
       console.log(`  ${index + 1}. ${choice}`);
     });
-  }, { skipIfNoLLM: true, timeout: 45000 });
+  }, { timeout: 45000 });
 
   await test('Adventure exploration generates detailed content', async () => {
     const manager = new AdventureManager();
@@ -133,7 +133,7 @@ async function runTests() {
       result.narrative.toLowerCase().includes(indicator)
     );
     assert(hasTheme, 'Should include mythical theme elements');
-  }, { skipIfNoLLM: true, timeout: 60000 });
+  }, { timeout: 60000 });
 
   await test('Multiple themes generate different content', async () => {
     const manager1 = new AdventureManager();
@@ -179,7 +179,7 @@ async function runTests() {
     
     assert(TestHelpers.containsAnyWord(spaceStory, spaceWords), 'Space story should contain space vocabulary');
     assert(TestHelpers.containsAnyWord(ancientStory, ancientWords), 'Ancient story should contain ancient vocabulary');
-  }, { skipIfNoLLM: true, timeout: 90000 });
+  }, { timeout: 90000 });
 
   // Response Quality Tests
   console.log('');
@@ -221,7 +221,7 @@ async function runTests() {
     assert(validationResult.adventuresAreChapters === true, `Adventures should be chapters: ${validationResult.reasoning}`);
     assert(validationResult.themeConsistency === 'good', `Theme should be consistent: ${validationResult.reasoning}`);
     
-  }, { skipIfNoLLM: true, timeout: 60000 });
+  }, { timeout: 60000 });
 
   await test('Adventure chapters validation with LLM analysis', async () => {
     const manager = new AdventureManager();
@@ -258,14 +258,14 @@ async function runTests() {
     assert(chapterResult.mythicalThemeConsistent === true, `Should maintain theme: ${chapterResult.reasoning}`);
     assert(chapterResult.progressesNarrative === true, `Should progress narrative: ${chapterResult.reasoning}`);
     
-  }, { skipIfNoLLM: true, timeout: 75000 });
+  }, { timeout: 75000 });
 
   await test('Theme guidelines compliance validation', async () => {
     const manager = new AdventureManager();
     const llmClient = new LLMClient();
     
     // Test all three themes
-    const themes = ['space', 'mythical', 'ancient'];
+    const themes: Array<'space' | 'mythical' | 'ancient'> = ['space', 'mythical', 'ancient'];
     
     for (const theme of themes) {
       const storyResult = await manager.initializeAdventure(realProjectInfo, theme);
@@ -308,7 +308,7 @@ async function runTests() {
       assert(themeResult.forbiddenElements.length === 0, `${theme} should not have forbidden elements: ${themeResult.forbiddenElements}`);
     }
     
-  }, { skipIfNoLLM: true, timeout: 120000 }); // Longer timeout for 3 themes
+  }, { timeout: 120000 }); // Longer timeout for 3 themes
 
   await test('Multi-chapter story coherence validation', async () => {
     const manager = new AdventureManager();
@@ -319,7 +319,7 @@ async function runTests() {
     const progress = manager.getProgress();
     
     // Explore multiple adventures to get chapter content
-    const chapters = [];
+    const chapters: Array<{ id: number; narrative: string; completed: boolean | undefined }> = [];
     const maxChapters = Math.min(3, progress.choices?.length || 0);
     
     for (let i = 1; i <= maxChapters; i++) {
@@ -370,7 +370,7 @@ async function runTests() {
     assert(coherenceResult.themeConsistency === true, 
            `Theme should be consistent: ${coherenceResult.reasoning}`);
     
-  }, { skipIfNoLLM: true, timeout: 90000 });
+  }, { timeout: 90000 });
 
   await test('LLM responses contain project-specific information', async () => {
     const manager = new AdventureManager();
@@ -383,7 +383,7 @@ async function runTests() {
     // Should reference common project elements (more flexible than exact file names)
     const projectElements = ['src', 'package', 'index', 'test', 'dist', 'adventure', 'analyzer', 'server'];
     assert(TestHelpers.containsAnyWord(result, projectElements), `Should reference project elements. Found in story: "${result.substring(0, 200)}..."`);
-  }, { skipIfNoLLM: true, timeout: 45000 });
+  }, { timeout: 45000 });
 
   await test('Adventure content includes code snippets and hints', async () => {
     const manager = new AdventureManager();
@@ -398,7 +398,7 @@ async function runTests() {
     // Check for educational content using shared helper
     const educationalWords = ['learn', 'understand', 'explore', 'discover', 'pattern', 'architecture'];
     assert(TestHelpers.containsAnyWord(result.narrative, educationalWords), 'Should include educational content');
-  }, { skipIfNoLLM: true, timeout: 45000 });
+  }, { timeout: 45000 });
 
   // Note: LLM misconfiguration test removed due to ES module complexity
   // The LLMClient constructor properly throws 'LLM configuration required' error

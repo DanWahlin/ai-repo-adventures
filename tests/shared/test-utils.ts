@@ -3,7 +3,6 @@
  */
 
 import { strict as assert } from 'assert';
-import { LLMClient } from '../../src/llm/llm-client.js';
 import type { ProjectInfo } from '../../src/shared/types.js';
 import { LLM_REQUEST_TIMEOUT } from '../../src/shared/config.js';
 
@@ -19,7 +18,6 @@ const TEST_CONFIG = {
 // Test execution options
 export interface TestOptions {
   timeout?: number;
-  skipIfNoLLM?: boolean;
 }
 
 // Test statistics
@@ -50,17 +48,6 @@ export async function createTestRunner(suiteName: string = 'Tests') {
     const timeout = options.timeout || TEST_CONFIG.DEFAULT_TIMEOUT;
     
     try {
-      // Check if LLM is configured for tests that require it
-      if (options.skipIfNoLLM) {
-        try {
-          const llmClient = new LLMClient();
-          // If client initializes without error, LLM is configured
-        } catch (error) {
-          console.log(`⏭️  ${name} (skipped - no LLM configured)`);
-          stats.skipped++;
-          return;
-        }
-      }
 
       // Run test with timeout using AbortController for better cleanup
       const abortController = new AbortController();

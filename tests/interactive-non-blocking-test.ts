@@ -99,7 +99,7 @@ class NonInteractiveMCPClient {
 
       // Test 4: Explore path
       console.log('\n🎯 Test 4: Exploring path...');
-      const exploreResult = await this.callTool('explore_path', { 
+      const exploreResult = await this.callTool('explore_adventure_quest', { 
         choice: 'Explore the main components' 
       });
       

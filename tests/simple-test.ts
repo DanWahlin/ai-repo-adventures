@@ -77,7 +77,7 @@ async function testSimpleAdventure() {
       
       try {
         const result = await client.callTool({
-          name: 'explore_path',
+          name: 'explore_adventure_quest',
           arguments: { choice }
         }) as CallToolResult;
 
@@ -99,7 +99,7 @@ async function testSimpleAdventure() {
           console.log(`   ✓ Explored successfully`);
           
           // Check for dynamic choices
-          const choicesMatch = text.match(/Your choices:(.+?)Use `explore_path`/s);
+          const choicesMatch = text.match(/Your choices:(.+?)Use `explore_adventure_quest`/s);
           if (choicesMatch) {
             const choices = choicesMatch[1].split('\n')
               .filter(c => c.trim() && c.includes('.'))
@@ -117,7 +117,7 @@ async function testSimpleAdventure() {
     // Test 4: Request a Hint
     console.log('4️⃣ Testing hint system...');
     const hintResult = await client.callTool({
-      name: 'explore_path',
+      name: 'explore_adventure_quest',
       arguments: { choice: 'Request a helpful hint' }
     }) as CallToolResult;
 
@@ -138,7 +138,7 @@ async function testSimpleAdventure() {
     
     // First find available characters
     const galleryResult = await client.callTool({
-      name: 'explore_path',
+      name: 'explore_adventure_quest',
       arguments: { choice: 'character gallery' }
     }) as CallToolResult;
 

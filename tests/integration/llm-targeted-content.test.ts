@@ -91,7 +91,7 @@ async function runTests() {
       });
     }
     
-  }, { skipIfNoLLM: true, timeout: 60000 });
+  }, { timeout: 60000 });
 
   // Test 2: Full end-to-end adventure flow with targeted content
   console.log('');
@@ -162,7 +162,7 @@ async function runTests() {
                    adventureResult.narrative;
     console.log(preview);
     
-  }, { skipIfNoLLM: true, timeout: 90000 });
+  }, { timeout: 90000 });
 
   // Test 3: Compare targeted vs full content impact
   console.log('');
@@ -227,7 +227,7 @@ async function runTests() {
     console.log(`   Token reduction: ${tokenSavings}%`);
     console.log(`   Efficiency gain: ${tokenSavings > 70 ? '🚀 Excellent' : tokenSavings > 50 ? '✅ Good' : '⚠️ Modest'}`);
     
-  }, { skipIfNoLLM: true, timeout: 120000 });
+  }, { timeout: 120000 });
 
   printResults();
   return stats;

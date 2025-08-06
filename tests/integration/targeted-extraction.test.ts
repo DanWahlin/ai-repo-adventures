@@ -82,7 +82,7 @@ async function runTests() {
     );
     assert(hasValidPaths, 'codeFiles should contain valid file extensions');
     
-  }, { skipIfNoLLM: true, timeout: 30000 });
+  }, { timeout: 30000 });
 
   // Test 2: Targeted repomix extraction works
   console.log('');
@@ -179,7 +179,7 @@ async function runTests() {
     assert(result.narrative.includes('adventure') || result.narrative.includes('explore'), 
            'Should contain adventure-related content');
     
-  }, { skipIfNoLLM: true, timeout: 45000 });
+  }, { timeout: 45000 });
 
   // Test 4: Story coherence verification
   console.log('');
@@ -221,7 +221,7 @@ async function runTests() {
     console.log(`   Main story project refs: ${mainProjectRefs.join(', ')}`);
     console.log(`   Adventure project refs: ${adventureProjectRefs.join(', ')}`);
     
-  }, { skipIfNoLLM: true, timeout: 60000 });
+  }, { timeout: 60000 });
 
   // Restore original console.log
   console.log = originalLog;
