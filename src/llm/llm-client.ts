@@ -88,11 +88,25 @@ export class LLMClient {
         )
       ]);
 
-      const content = completion.choices[0]?.message?.content;
+      const choice = completion.choices[0];
+      const content = choice?.message?.content;
       
-      // Better error handling for empty responses
+      // Enhanced error handling for empty responses
+      if (!choice) {
+        throw new Error('LLM returned no choices in response');
+      }
+      
+      if (!choice.message) {
+        throw new Error('LLM returned choice without message');
+      }
+      
       if (!content || content.trim() === '') {
-        throw new Error('LLM returned empty response');
+        console.error('🚨 LLM Empty Response Debug Info:');
+        console.error('- Model:', this.model);
+        console.error('- Choice finish_reason:', choice.finish_reason);
+        console.error('- Message role:', choice.message.role);
+        console.error('- Content null/empty:', content === null ? 'null' : 'empty string');
+        throw new Error(`LLM returned empty response. Finish reason: ${choice.finish_reason || 'unknown'}`);
       }
       
       return { content };

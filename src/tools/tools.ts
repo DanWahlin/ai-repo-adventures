@@ -23,10 +23,13 @@ import { viewProgress, setAdventureManager as setViewProgressManager } from './v
 // Create a single shared adventure manager instance for tools that need it
 const adventureManager = new AdventureManager();
 
-// Initialize tools that need the adventure manager
+// Initialize tools that need the adventure manager immediately
 setChooseThemeManager(adventureManager);
 setExplorePathManager(adventureManager);
 setViewProgressManager(adventureManager);
+
+// Verify initialization
+console.log('🔧 Adventure manager initialized for all tools');
 
 // Re-export tools with MCP naming convention
 export const start_adventure = startAdventure;
