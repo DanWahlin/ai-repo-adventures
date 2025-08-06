@@ -86,13 +86,14 @@ export class RepoAnalyzer {
     
     try {
       // Configure repomix options for targeted extraction
+      // Use uncompressed content for detailed code exploration
       const cliOptions: CliOptions = {
         style: 'markdown',
         stdout: true,
-        compress: false,
+        compress: false, // Show full code implementations for adventure exploration
         include: targetFiles.join(','), // Only include specified files
-        removeComments: true,
-        removeEmptyLines: true,
+        removeComments: false, // Keep comments for better code understanding
+        removeEmptyLines: false, // Keep formatting for readability
         noDirectoryStructure: true
       };
 
@@ -142,7 +143,7 @@ export class RepoAnalyzer {
       const cliOptions: CliOptions = {
         style: options.style || 'markdown',
         stdout: true,
-        compress: options.compress || false,
+        compress: options.compress !== false, // Default to true unless explicitly disabled
         ignore: ignorePatterns.join(','),
         removeComments: true,
         removeEmptyLines: true,

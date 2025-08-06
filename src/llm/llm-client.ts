@@ -72,7 +72,7 @@ export class LLMClient {
         model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
-        max_tokens: options?.maxTokens || 2000  // Increased default, configurable
+        max_tokens: options?.maxTokens || 4000  // Increased for complex JSON responses
       };
 
       // Azure OpenAI handles deployment differently - no need to modify requestParams
@@ -106,6 +106,11 @@ export class LLMClient {
         console.error('- Choice finish_reason:', choice.finish_reason);
         console.error('- Message role:', choice.message.role);
         console.error('- Content null/empty:', content === null ? 'null' : 'empty string');
+        
+        if (choice.finish_reason === 'length') {
+          throw new Error('LLM response was truncated due to token limit. Try reducing prompt size or increasing max_tokens.');
+        }
+        
         throw new Error(`LLM returned empty response. Finish reason: ${choice.finish_reason || 'unknown'}`);
       }
       
