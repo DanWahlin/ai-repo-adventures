@@ -2,6 +2,19 @@ import { OpenAI, AzureOpenAI } from 'openai';
 import { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_REQUEST_TIMEOUT, 
          LLM_API_VERSION, GITHUB_TOKEN } from '../shared/config.js';
 
+/**
+ * Format numbers in a friendly way (25000 -> 25K)
+ */
+function formatTokenCount(tokens: number): string {
+  if (tokens >= 1000000) {
+    return `${(tokens / 1000000).toFixed(1)}M`;
+  }
+  if (tokens >= 1000) {
+    return `${(tokens / 1000).toFixed(1)}K`;
+  }
+  return tokens.toString();
+}
+
 export interface LLMResponse {
   content: string;
 }
@@ -114,6 +127,15 @@ export class LLMClient {
         throw new Error(`LLM returned empty response. Finish reason: ${choice.finish_reason || 'unknown'}`);
       }
       
+      // Log token usage
+      if (completion.usage) {
+        const promptTokens = completion.usage.prompt_tokens || 0;
+        const completionTokens = completion.usage.completion_tokens || 0;
+        const totalTokens = completion.usage.total_tokens || 0;
+        
+        console.log(`🔢 LLM Usage: ${formatTokenCount(promptTokens)} prompt + ${formatTokenCount(completionTokens)} response = ${formatTokenCount(totalTokens)} total tokens`);
+      }
+
       return { content };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';

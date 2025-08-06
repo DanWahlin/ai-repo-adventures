@@ -323,7 +323,7 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
 **🗺️ Available Adventures:**
 ${adventuresText}
 
-Choose an adventure by using the \`explore_path\` tool with the adventure number (1, 2, 3, etc.) or adventure title.`;
+Choose an adventure by using the \`explore_adventure_path\` tool with the adventure number (1, 2, 3, etc.) or adventure title.`;
   }
 
   /**

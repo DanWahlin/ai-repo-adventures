@@ -137,7 +137,7 @@ class InteractiveMCPClient {
     // Explore path
     if (lower.includes('explore') || lower.includes('go') || lower.includes('choose')) {
       return {
-        intent: 'explore_path',
+        intent: 'explore_adventure_path',
         params: { choice: input }
       };
     }
@@ -153,7 +153,7 @@ class InteractiveMCPClient {
     
     // Otherwise default to exploration
     return {
-      intent: 'explore_path',
+      intent: 'explore_adventure_path',
       params: { choice: input }
     };
   }
@@ -190,8 +190,8 @@ class InteractiveMCPClient {
         response = await this.callTool('meet_character', params);
         break;
         
-      case 'explore_path':
-        response = await this.callTool('explore_path', params);
+      case 'explore_adventure_path':
+        response = await this.callTool('explore_adventure_path', params);
         break;
         
       default:
@@ -331,7 +331,7 @@ Type ${chalk.cyan('/help')} for available commands, or just start chatting!
             console.log(chalk.green(`✓ Project directory set to: ${newPath}`) + '\n');
           } else if (command === '/progress') {
             // Quick progress check
-            const response = await this.callTool('explore_path', { choice: 'Review your discoveries' });
+            const response = await this.callTool('explore_adventure_path', { choice: 'Review your discoveries' });
             console.log(this.formatText(response));
             console.log('\n' + chalk.dim('─'.repeat(60)) + '\n');
           } else if (command === '/exit' || command === '/quit') {

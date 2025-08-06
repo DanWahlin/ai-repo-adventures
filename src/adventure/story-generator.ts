@@ -201,7 +201,7 @@ export class StoryGenerator {
 - Theme: ${themeDescription}
 
 **Requirements:**
-- Write 1-2 sentences using ${themeDescription} terminology
+- Write 1 sentence using ${themeDescription} terminology
 - Celebrate the specific learning achievement
 - Use encouraging, triumphant tone
 - ${vocabularyHint}
@@ -280,40 +280,55 @@ ${themeGuidelines}
 3. **CRITICAL: ONLY reference files that actually exist in the "## Complete Codebase" content above.** 
    Look for "## File:" headers to identify real files.
 4. **DO NOT invent, create, or hallucinate any file names.** If you reference a file, it MUST appear in the "## File:" sections above.
-5. The story should be 2-3 paragraphs (250-350 words max) that tells a cohesive narrative
+5. The story should be 1-2 paragraphs (75-100 words max) that tells a cohesive narrative
 6. Reference actual technologies, patterns, and concepts from the real code, but avoid specific file names unless absolutely certain they exist in the repomix content
 7. Make the reader understand what this specific codebase does through the narrative
-8. End with "🗺️ **Your Mission Awaits** - Choose your path wisely, brave adventurer!"
+8. End with "🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!"
 
-## Example Integration Style: Example Only - DO NOT use this exact text
-Instead of: "In a galaxy far away, starships travel..."
-Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE WITH A FUN TWIST TO THE NAME], the advanced Starship navigates through interconnected systems, powered by TypeScript and modern development practices. The ship's command center coordinates complex operations through well-structured modules and components..."
+## CRITICAL Story Integration Requirements
+**STRUCTURE TEMPLATE ONLY - DO NOT COPY ANY TEXT:**
+"In the vast expanse of the digital cosmos, a starship known as the *MCP Odyssey* embarks on a mission to explore and map uncharted systems of code. This state-of-the-art vessel, powered by TypeScript reactors and navigated by the Model Context Protocol, has a singular purpose: to transform sprawling codebases into coherent constellations of understanding. The crew, equipped with advanced LLM-assisted tools, must decode the mysteries of the *Adventure System*..."
 
-**AVOID mentioning specific file names unless you are 100% certain they exist in the repomix content above.**
-**DO NOT copy the example text directly - use it as inspiration for your own narrative. Be creative!**
+⚠️ **CRITICAL: This is ONLY a structural template showing the integration pattern. DO NOT copy any phrases, words, or concepts. Create completely original content that follows the same integration approach but uses entirely different vocabulary, metaphors, and narrative elements.**
 
-## Adventures as Story Chapters
-CRITICAL: Adventures must form a cohesive narrative progression, like chapters in a book:
-- Chapter 1 should introduce the setting and begin the journey
-- Each subsequent chapter should build on the previous one
-- Adventures should tell a progressive story, not be standalone modules
-- The final chapter should provide resolution or achievement
+**WHAT MAKES THIS EXCELLENT:**
+1. **Specific Technology Integration**: "TypeScript reactors", "Model Context Protocol", "LLM-assisted tools"
+2. **Purpose Clarity**: "transform sprawling codebases into coherent constellations" (explains what the app does)
+3. **Named Vessel**: "*MCP Odyssey*" (creative name tied to the actual tech stack)
+4. **Mission Focus**: Clear goal that matches the actual codebase purpose
+
+**YOUR STORY MUST BE COMPLETELY ORIGINAL:**
+- Give the ${theme === 'space' ? 'starship/vessel' : theme === 'mythical' ? 'kingdom/realm' : theme === 'ancient' ? 'temple/civilization' : 'system'} a UNIQUE creative name that reflects the actual project (NOT "MCP Odyssey" or similar)
+- Mention 3-4 actual technologies from the repomix content as ${theme} elements using YOUR OWN creative metaphors (NOT "reactors", "constellations", etc.)
+- Clearly explain the project's real purpose through the ${theme} narrative using FRESH language and imagery
+- Create a specific ${theme === 'space' ? 'mission' : theme === 'mythical' ? 'quest' : theme === 'ancient' ? 'discovery' : 'objective'} that mirrors what the codebase actually accomplishes with ORIGINAL phrasing
+- Use italics for the main ${theme === 'space' ? 'vessel' : theme === 'mythical' ? 'kingdom' : theme === 'ancient' ? 'temple' : 'system'} name and key systems
+
+🚫 **FORBIDDEN:** DO NOT use any phrases from the template like "vast expanse", "digital cosmos", "embarks on a mission", "coherent constellations", "decode the mysteries", etc. Create entirely new metaphors and descriptions.
+
+## Adventures as Interactive Quests
+CRITICAL: Adventures must form a cohesive narrative progression, like interconnected quests:
+- Quest 1 should introduce the setting and begin the interactive journey
+- Each subsequent quest should build on previous discoveries
+- Quests should tell a progressive story while allowing choice and exploration
+- The final quest should provide resolution or mastery achievement
+- **DESCRIPTION REQUIREMENT: Each quest description MUST be exactly 1 sentence - concise and focused**
 
 ## Response Format
 Return a valid JSON object:
 {
-  "story": "Integrated narrative that sets up a multi-chapter journey through the codebase",
+  "story": "Integrated narrative that sets up an interactive quest-based journey through the codebase",
   "adventures": [
     {
-      "id": "chapter-1",
-      "title": "Chapter 1: [Theme-appropriate beginning title]",
-      "description": "Sets the stage and begins the narrative journey",
+      "id": "quest-1",
+      "title": "Quest 1: [Theme-appropriate beginning title]",
+      "description": "1 sentence max describing the core focus",
       "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
     },
     {
-      "id": "chapter-2", 
-      "title": "Chapter 2: [Progressive story continuation]",
-      "description": "Builds on Chapter 1, advancing the narrative",
+      "id": "quest-2", 
+      "title": "Quest 2: [Progressive story continuation]",
+      "description": "1 sentence max describing the core focus",
       "codeFiles": ["relevant-files"]
     }
   ]
@@ -396,15 +411,24 @@ ${codeContent}${workshopHighlights}
 - If no code is available, say "No code available for this file"
 - Show actual imports, actual function names, actual technologies from the files
 
+## Real-World Analogy Guidelines
+For code snippet explanations, use relatable analogies:
+- Functions → Restaurant recipes, factory assembly lines, or instruction manuals
+- Classes → Blueprints, templates, or cookie cutters
+- APIs → Restaurant menus, hotel front desks, or customer service counters
+- Event handlers → Doorbell systems, alarm clocks, or notification services
+- Data structures → Filing cabinets, toolboxes, or organizational systems
+- Always connect the analogy back to the specific code being shown
+
 ## Response Format (JSON)
 {
-  "adventure": "1-2 paragraphs (max 150 words) continuing the narrative",
-  "fileExploration": "Interactive quest section with specific tasks",
+  "adventure": "1 paragraph (75-100 words) continuing the themed narrative story only - keep brief",
+  "fileExploration": "2-3 paragraphs (200-300 words) providing thorough walkthrough of code concepts, specific tasks, and technical exploration details",
   "codeSnippets": [
     {
       "file": "filename",
       "snippet": "EXACT code from the files provided above - DO NOT invent or modify code",
-      "explanation": "Clear explanation of the actual code shown"
+      "explanation": "Start with a real-world analogy (like 'This is like a restaurant menu that...'), then explain the actual code and how the analogy relates"
     }
   ],
   "hints": ["Practical tip", "Next steps"]
