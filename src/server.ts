@@ -8,7 +8,7 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { tools } from './tools.js';
+import { tools } from './tools/tools.js';
 import { convertZodSchema } from './utils/zod-to-json-schema.js';
 import { repoAnalyzer } from './analyzer/repo-analyzer.js';
 
