@@ -41,14 +41,24 @@ export class RepoAnalyzer {
     ];
 
     const normalizedPath = path.resolve(trimmedPath);
+    
+    // Enhanced path traversal protection
+    const normalizedInput = path.normalize(trimmedPath);
+    if (normalizedInput.includes('..') || normalizedPath !== path.resolve(normalizedInput)) {
+      throw new Error('Project path cannot contain path traversal sequences or invalid path components');
+    }
+    
     for (const dangerous of dangerousPaths) {
       if (normalizedPath.startsWith(dangerous)) {
         throw new Error(`Project path cannot access system directory: ${dangerous}`);
       }
     }
 
-    if (trimmedPath.includes('..')) {
-      throw new Error('Project path cannot contain path traversal sequences (..)');
+    // Additional security check: ensure path doesn't escape to parent directories
+    const cwd = process.cwd();
+    const relativePath = path.relative(cwd, normalizedPath);
+    if (relativePath.startsWith('..')) {
+      throw new Error('Project path cannot escape current working directory tree');
     }
   }
 

@@ -22,20 +22,20 @@ export const LLM_CACHE_TTL = 300000; // 5 minutes
 export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || '60000'); // 60 seconds, configurable via env
 
 // Analysis limits
-export const MAX_SCAN_DEPTH = 3;
-export const MAX_FILE_SIZE_MB = 10;
-export const KEY_SOURCE_FILES = 10;
-export const TOP_FUNCTIONS = 20;
-export const TOP_CLASSES = 5;
+export const MAX_SCAN_DEPTH = 3; // Maximum directory depth to prevent infinite recursion and keep analysis focused
+export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
+export const KEY_SOURCE_FILES = 10; // Number of key files to highlight in adventure generation
+export const TOP_FUNCTIONS = 20; // Maximum functions to include in code analysis summaries
+export const TOP_CLASSES = 5; // Maximum classes to include in analysis to keep stories focused
 
 // Cache settings
 export const LLM_CACHE_SIZE = parseInt(process.env.LLM_CACHE_SIZE || '100');
 
 // Adventure settings
-export const MAX_ACTIVE_ADVENTURES = 5;
+export const MAX_ACTIVE_ADVENTURES = 5; // Maximum concurrent adventures to prevent overwhelming users
 export const DEFAULT_THEME = 'space' as const;
-export const MAX_FILE_LINES_FOR_LLM = 100;
-export const MAX_FILES_PER_ADVENTURE = 3;
+export const MAX_FILE_LINES_FOR_LLM = 100; // Truncate files to keep LLM prompts manageable
+export const MAX_FILES_PER_ADVENTURE = 3; // Limit files per adventure to maintain focus and readability
 
 // Error settings
 export const MAX_ERROR_MESSAGE_LENGTH = 200;

@@ -36,6 +36,32 @@ export interface CodeSnippet {
   explanation: string;
 }
 
+// Internal interfaces for validation
+interface ParsedStoryResponse {
+  story: string;
+  adventures: ParsedAdventure[];
+}
+
+interface ParsedAdventure {
+  id: string;
+  title: string;
+  description: string;
+  codeFiles?: string[];
+}
+
+interface ParsedAdventureContent {
+  adventure: string;
+  fileExploration?: string;
+  codeSnippets: ParsedCodeSnippet[];
+  hints: string[];
+}
+
+interface ParsedCodeSnippet {
+  file: string;
+  snippet: string;
+  explanation: string;
+}
+
 // Export story themes for backward compatibility with tests
 export const STORY_THEMES = {
   SPACE: THEMES.SPACE.key,
@@ -390,37 +416,45 @@ ${codeContent}${workshopHighlights}
   /**
    * Validate story response structure
    */
-  private validateStoryResponse(parsed: any): void {
-    if (!parsed.story || typeof parsed.story !== 'string') {
+  private validateStoryResponse(parsed: unknown): parsed is ParsedStoryResponse {
+    const candidate = parsed as ParsedStoryResponse;
+    
+    if (!candidate.story || typeof candidate.story !== 'string') {
       throw new Error('Invalid response: missing or invalid story field');
     }
     
-    if (!Array.isArray(parsed.adventures)) {
+    if (!Array.isArray(candidate.adventures)) {
       throw new Error('Invalid response: adventures must be an array');
     }
     
-    parsed.adventures.forEach((adventure: any, i: number) => {
+    candidate.adventures.forEach((adventure, i: number) => {
       if (!adventure.id || !adventure.title || !adventure.description) {
         throw new Error(`Invalid adventure at index ${i}: missing required fields`);
       }
     });
+    
+    return true;
   }
 
   /**
    * Validate adventure content structure
    */
-  private validateAdventureContent(parsed: any): void {
-    if (!parsed.adventure || typeof parsed.adventure !== 'string') {
+  private validateAdventureContent(parsed: unknown): parsed is ParsedAdventureContent {
+    const candidate = parsed as ParsedAdventureContent;
+    
+    if (!candidate.adventure || typeof candidate.adventure !== 'string') {
       throw new Error('Invalid content: missing adventure field');
     }
     
-    if (!Array.isArray(parsed.hints)) {
+    if (!Array.isArray(candidate.hints)) {
       throw new Error('Invalid content: hints must be an array');
     }
     
-    if (!Array.isArray(parsed.codeSnippets)) {
-      parsed.codeSnippets = [];
+    if (!Array.isArray(candidate.codeSnippets)) {
+      candidate.codeSnippets = [];
     }
+    
+    return true;
   }
 
   /**

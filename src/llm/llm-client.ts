@@ -11,6 +11,14 @@ export interface LLMRequestOptions {
   maxTokens?: number;
 }
 
+interface OpenAIRequestParams {
+  model: string;
+  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
+  temperature: number;
+  max_tokens: number;
+  response_format?: { type: 'text' | 'json_object' };
+}
+
 export class LLMClient {
   private client: OpenAI | AzureOpenAI;
   private model: string;
@@ -60,7 +68,7 @@ export class LLMClient {
   async generateResponse(prompt: string, options?: LLMRequestOptions): Promise<LLMResponse> {
 
     try {
-      const requestParams: any = {
+      const requestParams: OpenAIRequestParams = {
         model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,

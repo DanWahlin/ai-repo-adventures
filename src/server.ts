@@ -58,7 +58,7 @@ class RepoAdventureServer {
         // Validate arguments using the tool's Zod schema
         const validationResult = tool.schema.safeParse(args);
         if (!validationResult.success) {
-          const errorMessages = validationResult.error.issues.map((err: any) => 
+          const errorMessages = validationResult.error.issues.map((err) => 
             `${err.path.join('.')}: ${err.message}`
           ).join(', ');
           throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);

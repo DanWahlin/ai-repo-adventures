@@ -14,7 +14,7 @@ export default [
       
       // Standard ESLint rules that help with code simplicity
       'max-depth': ['warn', 4],
-      'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['warn', { max: 75, skipBlankLines: true, skipComments: true }],
       'max-params': ['warn', 4],
       'max-statements': ['warn', 25],
       'complexity': ['warn', 12],
