@@ -66,20 +66,3 @@ export const IGNORE_PATTERNS = [
   '.DS_Store',
   'Thumbs.db',
 ] as const;
-
-// Valid project types
-export const VALID_PROJECT_TYPES = [
-  'Web Application',
-  'Mobile App', 
-  'Desktop Application',
-  'Library/Package',
-  'API Service',
-  'CLI Tool',
-  'Data Science',
-  'Game',
-  'Unknown'
-] as const;
-
-export const isValidProjectType = (type: string): type is typeof VALID_PROJECT_TYPES[number] => {
-  return VALID_PROJECT_TYPES.includes(type as any);
-};

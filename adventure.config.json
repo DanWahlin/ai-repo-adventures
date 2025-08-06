@@ -1,20 +1,38 @@
 {
     "adventures": [
         {
-            "title": "Core MCP Server",
-            "description": "Explore the MCP protocol implementation and adventure orchestration system",
+            "title": "MCP Tool Interface",
+            "description": "Understanding how users interact with the system through the 4 main MCP tools",
             "files": [
                 {
-                    "path": "src/server.ts",
-                    "description": "Main MCP server that implements stdio transport and tool execution",
+                    "path": "src/tools.ts",
+                    "description": "The 4 main MCP tools that provide the user interface to the adventure system",
                     "highlights": [
                         {
-                            "name": "RepoAdventureServer.constructor",
-                            "description": "Creates MCP server instance with capabilities and sets up handlers"
+                            "name": "start_adventure.handler",
+                            "description": "Analyzes repositories and presents theme options to users"
                         },
                         {
+                            "name": "choose_theme.handler",
+                            "description": "Generates themed stories and adventures based on user selection"
+                        },
+                        {
+                            "name": "explore_path.handler",
+                            "description": "Executes individual adventure exploration with progress tracking"
+                        },
+                        {
+                            "name": "view_progress.handler",
+                            "description": "Shows completion stats and remaining adventures"
+                        }
+                    ]
+                },
+                {
+                    "path": "src/server.ts",
+                    "description": "MCP server protocol implementation that hosts the adventure tools",
+                    "highlights": [
+                        {
                             "name": "RepoAdventureServer.setupHandlers",
-                            "description": "Registers ListTools and CallTool handlers with dynamic tool discovery"
+                            "description": "Registers MCP protocol handlers for ListTools and CallTool requests"
                         },
                         {
                             "name": "RepoAdventureServer.run",
@@ -29,16 +47,16 @@
             ]
         },
         {
-            "title": "Adventure Management",
-            "description": "Explore the story generation engine, LLM integration, and content analysis system",
+            "title": "Adventure Generation Engine",
+            "description": "The core story creation and management system that powers the adventure experience",
             "files": [
                 {
                     "path": "src/adventure/adventure-manager.ts",
-                    "description": "Core adventure orchestration managing state, themes, and user interactions",
+                    "description": "Adventure orchestration managing state, themes, and user interactions",
                     "highlights": [
                         {
                             "name": "AdventureManager.initializeAdventure",
-                            "description": "Sets up project context, generates story and adventures using LLM"
+                            "description": "Sets up project context and generates story and adventures using LLM"
                         },
                         {
                             "name": "AdventureManager.exploreAdventure",
@@ -49,26 +67,26 @@
                             "description": "Creates targeted or full repomix content for adventure exploration"
                         },
                         {
-                            "name": "AdventureState.reset",
-                            "description": "Clears all adventure state for new session initialization"
+                            "name": "AdventureState.progressPercentage",
+                            "description": "Calculates completion percentage based on finished adventures"
                         }
                     ]
                 },
                 {
                     "path": "src/adventure/story-generator.ts",
-                    "description": "Dynamic story generation with LLM integration and theme-based narratives",
+                    "description": "LLM-powered story creation with theme-based narratives and prompt engineering",
                     "highlights": [
                         {
                             "name": "StoryGenerator.generateStoryAndAdventures",
                             "description": "Creates complete story and adventure list using LLM with JSON responses"
                         },
                         {
-                            "name": "StoryGenerator.generateAdventureContent",
-                            "description": "Generates detailed adventure content with code snippets and exploration tasks"
-                        },
-                        {
                             "name": "StoryGenerator.buildStoryGenerationPrompt",
                             "description": "Constructs detailed prompts for LLM story generation with theme guidelines"
+                        },
+                        {
+                            "name": "StoryGenerator.generateAdventureContent",
+                            "description": "Generates detailed adventure content with code snippets and exploration tasks"
                         },
                         {
                             "name": "StoryGenerator.getThemeGuidelines",
@@ -77,16 +95,40 @@
                     ]
                 },
                 {
+                    "path": "src/shared/adventure-config.ts",
+                    "description": "Configuration system for guided adventures that enhance story generation",
+                    "highlights": [
+                        {
+                            "name": "loadAdventureConfig",
+                            "description": "Loads guidance configuration from adventure.config.json"
+                        },
+                        {
+                            "name": "formatConfigForPrompt",
+                            "description": "Formats adventure config for LLM prompt inclusion"
+                        },
+                        {
+                            "name": "extractHighlightsForFiles",
+                            "description": "Extracts function highlights for workshop-style exploration"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Code Analysis & Content Pipeline",
+            "description": "How the system analyzes codebases and generates content through repomix and LLM integration",
+            "files": [
+                {
                     "path": "src/analyzer/repo-analyzer.ts",
                     "description": "Repomix integration for codebase analysis and targeted content extraction",
                     "highlights": [
                         {
-                            "name": "RepoAnalyzer.generateTargetedContent",
-                            "description": "Creates focused repomix content for specific files using include patterns"
-                        },
-                        {
                             "name": "RepoAnalyzer.generateRepomixContext",
                             "description": "Generates full project context with caching and security validation"
+                        },
+                        {
+                            "name": "RepoAnalyzer.generateTargetedContent",
+                            "description": "Creates focused repomix content for specific files using include patterns"
                         },
                         {
                             "name": "RepoAnalyzer.captureRepomixStdout",
@@ -100,15 +142,15 @@
                 },
                 {
                     "path": "src/llm/llm-client.ts",
-                    "description": "Multi-provider LLM client supporting OpenAI, Azure OpenAI, and GitHub Models",
+                    "description": "Multi-provider LLM integration supporting OpenAI, Azure OpenAI, and GitHub Models",
                     "highlights": [
-                        {
-                            "name": "LLMClient.constructor",
-                            "description": "Auto-detects provider type and configures appropriate API client"
-                        },
                         {
                             "name": "LLMClient.generateResponse",
                             "description": "Handles LLM requests with timeout protection and JSON response formatting"
+                        },
+                        {
+                            "name": "LLMClient.constructor",
+                            "description": "Auto-detects provider type and configures appropriate API client"
                         },
                         {
                             "name": "LLMClient.getApiKey",
@@ -117,6 +159,122 @@
                         {
                             "name": "LLMClient.isAzureOpenAI",
                             "description": "Provider detection for Azure-specific configuration handling"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Configuration & Theme System",
+            "description": "Project setup, themes, and customization options that control the adventure experience",
+            "files": [
+                {
+                    "path": "src/shared/config.ts",
+                    "description": "Central configuration for timeouts, limits, and environment settings",
+                    "highlights": [
+                        {
+                            "name": "LLM_REQUEST_TIMEOUT",
+                            "description": "Timeout configuration for LLM API requests"
+                        },
+                        {
+                            "name": "REPOMIX_CACHE_TTL",
+                            "description": "Cache time-to-live for repomix content analysis"
+                        },
+                        {
+                            "name": "MAX_FILE_SIZE_MB",
+                            "description": "File size limits for analysis to prevent memory issues"
+                        }
+                    ]
+                },
+                {
+                    "path": "src/shared/theme.ts",
+                    "description": "Theme definitions and validation for space, medieval, and ancient themes",
+                    "highlights": [
+                        {
+                            "name": "THEMES",
+                            "description": "Built-in theme definitions with vocabulary and display information"
+                        },
+                        {
+                            "name": "validateThemeInput",
+                            "description": "Theme validation logic supporting names, numbers, and keywords"
+                        },
+                        {
+                            "name": "getAllThemes",
+                            "description": "Returns all available themes for user selection"
+                        },
+                        {
+                            "name": "ThemeDefinition",
+                            "description": "Interface defining the structure of theme objects"
+                        }
+                    ]
+                },
+                {
+                    "path": "src/shared/input-validator.ts",
+                    "description": "Security and input validation preventing injection attacks",
+                    "highlights": [
+                        {
+                            "name": "validateAdventureChoice",
+                            "description": "Input sanitization for adventure selection using whitelist validation"
+                        },
+                        {
+                            "name": "validateProjectPath",
+                            "description": "Path validation preventing access to system directories"
+                        },
+                        {
+                            "name": "InputValidator",
+                            "description": "Class providing comprehensive input validation methods"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Foundation & Utilities",
+            "description": "Core infrastructure and shared utilities that support the entire system",
+            "files": [
+                {
+                    "path": "src/shared/types.ts",
+                    "description": "Core data structures and interfaces used throughout the system",
+                    "highlights": [
+                        {
+                            "name": "ProjectInfo",
+                            "description": "Core project data structure containing repomix content and metadata"
+                        },
+                        {
+                            "name": "Adventure",
+                            "description": "Interface defining adventure structure with title, description, and files"
+                        },
+                        {
+                            "name": "AdventureContent",
+                            "description": "Structure for generated adventure content with snippets and hints"
+                        }
+                    ]
+                },
+                {
+                    "path": "src/shared/error-handling.ts",
+                    "description": "Comprehensive error management with context and structured error types",
+                    "highlights": [
+                        {
+                            "name": "AnalysisError",
+                            "description": "Error class for file system and code analysis failures"
+                        },
+                        {
+                            "name": "StoryGenerationError",
+                            "description": "Error class for LLM and story generation issues"
+                        },
+                        {
+                            "name": "AdventureError",
+                            "description": "Error class for adventure state and user interaction problems"
+                        }
+                    ]
+                },
+                {
+                    "path": "src/utils/zod-to-json-schema.ts",
+                    "description": "Schema conversion utility for MCP tool registration and validation",
+                    "highlights": [
+                        {
+                            "name": "convertZodSchema",
+                            "description": "Converts Zod schemas to JSON Schema format required by MCP protocol"
                         }
                     ]
                 }

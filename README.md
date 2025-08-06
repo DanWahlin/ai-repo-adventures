@@ -376,23 +376,18 @@ src/
 ├── server.ts                          # Main MCP server with tool orchestration
 ├── tools.ts                           # MCP tool definitions and handlers
 ├── analyzer/            
-│   └── repo-analyzer.ts               # Simple repomix wrapper (no LLM analysis)
+│   └── repo-analyzer.ts               # Repomix integration for codebase analysis
 ├── adventure/
 │   ├── adventure-manager.ts           # Manages adventure state and progression
-│   ├── story-generator.ts             # LLM-powered story generation with fallbacks
-│   ├── story-template-engine.ts       # Template-based fallback stories
-│   ├── theme-manager.ts               # Theme definitions and vocabulary
-│   ├── adventure-path-generator.ts    # Generates exploration paths
-│   └── file-content-manager.ts        # Reads and prepares code files
+│   └── story-generator.ts             # LLM-powered story generation with themes
 ├── llm/
 │   └── llm-client.ts                  # Multi-provider LLM client with caching
 ├── shared/
 │   ├── config.ts                      # Centralized configuration
 │   ├── types.ts                       # Shared interfaces (ProjectInfo, etc.)
-│   ├── instances.ts                   # Singleton instances with caching
 │   ├── theme.ts                       # Theme utilities and validation
 │   ├── input-validator.ts             # Security-focused input validation
-│   ├── cache.ts                       # LRU cache implementation
+│   ├── adventure-config.ts            # Adventure configuration system
 │   └── errors.ts                      # Error handling utilities
 └── utils/
     └── zod-to-json-schema.ts          # Zod schema conversion for MCP
@@ -424,3 +419,42 @@ Contributions welcome! Feel free to add new themes, characters, or adventure pat
 ## License
 
 MIT
+
+## Prompt for adventure.config.json
+
+Analyze the overall project and determine key "adventure" paths to help people understand the repo (main functionality, configuration, tooling, any other major aspects of the project, etc.). Your results will go into the root of the project into a file named adventure.config.json. Once you've identified key adventure paths, identify the key files and members within the files. If members are in a class, use the "ClassName.membername" format as shown in the following JSON:
+
+{
+    "adventures": [
+        {
+            "title": "MCP Tool Interface",
+            "description": "Understanding how users interact with the system through the 4 main MCP tools",
+            "files": [
+                {
+                    "path": "src/tools.ts",
+                    "description": "The 4 main MCP tools that provide the user interface to the adventure system",
+                    "highlights": [
+                        {
+                            "name": "start_adventure.handler",
+                            "description": "Analyzes repositories and presents theme options to users"
+                        },
+                        {
+                            "name": "choose_theme.handler",
+                            "description": "Generates themed stories and adventures based on user selection"
+                        },
+                        {
+                            "name": "explore_path.handler",
+                            "description": "Executes individual adventure exploration with progress tracking"
+                        },
+                        {
+                            "name": "view_progress.handler",
+                            "description": "Shows completion stats and remaining adventures"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+Show me what you plan to use for adventures and files members before proceeding and doing any updates adventure.config.json.

@@ -1,7 +1,13 @@
 import type { ProjectInfo } from '../shared/types.js';
 import type { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
-import { StoryGenerationError } from '../shared/error-handling.js';
+// Simple inline error for the two places we need it
+class StoryGenerationError extends Error {
+  constructor(message: string, _context?: Record<string, unknown>) {
+    super(message);
+    this.name = 'StoryGenerationError';
+  }
+}
 import { validateAdventureChoice } from '../shared/input-validator.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 
