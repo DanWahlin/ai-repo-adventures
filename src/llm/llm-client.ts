@@ -8,6 +8,7 @@ export interface LLMResponse {
 
 export interface LLMRequestOptions {
   responseFormat?: 'text' | 'json_object';
+  maxTokens?: number;
 }
 
 export class LLMClient {
@@ -63,7 +64,7 @@ export class LLMClient {
         model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: options?.maxTokens || 2000  // Increased default, configurable
       };
 
       // Azure OpenAI handles deployment differently - no need to modify requestParams
@@ -79,7 +80,13 @@ export class LLMClient {
         )
       ]);
 
-      const content = completion.choices[0]?.message?.content || '';
+      const content = completion.choices[0]?.message?.content;
+      
+      // Better error handling for empty responses
+      if (!content || content.trim() === '') {
+        throw new Error('LLM returned empty response');
+      }
+      
       return { content };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';

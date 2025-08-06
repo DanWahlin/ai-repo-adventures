@@ -266,16 +266,29 @@ Write: "In the cosmic realm of [YOUR INFERRED PROJECT TYPE WITH A FUN TWIST TO T
 **AVOID mentioning specific file names unless you are 100% certain they exist in the repomix content above.**
 **DO NOT copy the example text directly - use it as inspiration for your own narrative. Be creative!**
 
+## Adventures as Story Chapters
+CRITICAL: Adventures must form a cohesive narrative progression, like chapters in a book:
+- Chapter 1 should introduce the setting and begin the journey
+- Each subsequent chapter should build on the previous one
+- Adventures should tell a progressive story, not be standalone modules
+- The final chapter should provide resolution or achievement
+
 ## Response Format
 Return a valid JSON object:
 {
-  "story": "Integrated narrative that references actual project concepts but avoids specific file names unless certain they exist",
+  "story": "Integrated narrative that sets up a multi-chapter journey through the codebase",
   "adventures": [
     {
-      "id": "1",
-      "title": "📍 Theme-appropriate title",
-      "description": "One sentence explaining what this adventure covers",
+      "id": "chapter-1",
+      "title": "Chapter 1: [Theme-appropriate beginning title]",
+      "description": "Sets the stage and begins the narrative journey",
       "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
+    },
+    {
+      "id": "chapter-2", 
+      "title": "Chapter 2: [Progressive story continuation]",
+      "description": "Builds on Chapter 1, advancing the narrative",
+      "codeFiles": ["relevant-files"]
     }
   ]
 }
@@ -299,7 +312,11 @@ Before returning your response, review your story and codeFiles arrays to ensure
 - ✅ PREFER: Files that implement core business logic, main application flow, user-facing functionality
 - ❌ AVOID: Files in /shared/, /utils/, /helpers/ directories, files with names like cache, config, error, types, constants
 
-Create 2-6 adventures based on the project complexity revealed in the ## Complete Codebase content.`;
+Create 3-5 chapter-like adventures that form a complete narrative arc:
+- Begin with discovery/arrival (Chapter 1)
+- Build through exploration and challenges (Chapters 2-3)
+- Culminate in mastery or achievement (Final Chapter)
+Each chapter should flow naturally into the next, creating a cohesive story journey through the codebase.`;
   }
 
   /**
@@ -334,7 +351,13 @@ Transform the technical concepts into your themed story while exploring the actu
       }
     }
     
-    return `Continue the ${theme}-themed exploration for: "${adventure.title}"
+    return `Continue the ${theme}-themed narrative journey for: "${adventure.title}"
+
+IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
+- Reference events from previous chapters if applicable
+- Advance the overall story arc
+- Build toward the journey's resolution
+- Keep the narrative voice consistent
 
 ${themeGuidelines}
 
