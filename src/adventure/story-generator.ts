@@ -328,12 +328,14 @@ ${themeGuidelines}
 
 🚫 **FORBIDDEN:** DO NOT use any phrases from the template like "vast expanse", "digital cosmos", "embarks on a mission", "coherent constellations", "decode the mysteries", etc. Create entirely new metaphors and descriptions.
 
-## Adventures as Interactive Quests
-CRITICAL: Adventures must form a cohesive narrative progression, like interconnected quests:
-- Quest 1 should introduce the setting and begin the interactive journey
-- Each subsequent quest should build on previous discoveries
-- Quests should tell a progressive story while allowing choice and exploration
-- The final quest should provide resolution or mastery achievement
+## Adventures as Cohesive Story Chapters
+CRITICAL: Adventures must form a single, overarching narrative with interconnected chapters:
+- Chapter 1 should establish the main story arc and introduce the central challenge/mission
+- Each subsequent chapter should advance the same overarching narrative
+- All chapters contribute to resolving the main story conflict/mission
+- The final chapter should complete the overarching narrative with resolution
+- Each chapter builds directly on events from previous chapters
+- The story should have clear narrative continuity and progression toward a unified goal
 
 **CRITICAL FOR DEVELOPERS: Each quest MUST have emoji and technical details**
 - **QUEST TITLES**: Each quest title MUST start with a thematic emoji (🚀⚡🔗🛡️💫🌟✨💎🎯🔧) 
@@ -345,17 +347,17 @@ CRITICAL: Adventures must form a cohesive narrative progression, like interconne
 ## Response Format
 Return a valid JSON object:
 {
-  "story": "Integrated narrative that sets up an interactive quest-based journey through the codebase",
+  "story": "Integrated narrative that establishes a single overarching story with interconnected quests (a quest is like a chapter)",
   "adventures": [
     {
       "id": "quest-1",
-      "title": "🚀 Quest 1: [Theme-appropriate beginning title]",
+      "title": "🚀 Quest 1: [Theme-appropriate title that begins the main story]",
       "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
       "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
     },
     {
       "id": "quest-2", 
-      "title": "⚡ Quest 2: [Progressive story continuation]",
+      "title": "⚡ Quest 2: [Title that continues the main narrative from Quest 1]",
       "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
       "codeFiles": ["relevant-files"]
     }
@@ -381,11 +383,11 @@ Before returning your response, review your story and codeFiles arrays to ensure
 - ✅ PREFER: Files that implement core business logic, main application flow, user-facing functionality
 - ❌ AVOID: Files in /shared/, /utils/, /helpers/ directories, files with names like cache, config, error, types, constants
 
-Create 3-5 chapter-like adventures that form a complete narrative arc:
-- Begin with discovery/arrival (Chapter 1)
-- Build through exploration and challenges (Chapters 2-3)
-- Culminate in mastery or achievement (Final Chapter)
-Each chapter should flow naturally into the next, creating a cohesive story journey through the codebase.`;
+Create 3-5 interconnected quests (a quest is like a chapter) that form a complete narrative arc with a unified story:
+- Quest 1: Establish the main story mission/challenge and begin the narrative
+- Quests 2-3: Advance the central storyline through progressive discoveries that build on each other
+- Final Quest: Resolve the main narrative conflict and complete the overarching story
+Each quest must directly reference and build upon events from previous quests, creating one cohesive adventure story rather than separate standalone tasks.`;
   }
 
   /**
