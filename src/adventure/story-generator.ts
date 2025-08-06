@@ -1,6 +1,6 @@
 import type { ProjectInfo } from '../shared/types.js';
 import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
-import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME } from '../shared/config.js';
+import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKENS_QUEST } from '../shared/config.js';
 import { isValidTheme, THEMES } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { loadAdventureConfig, formatConfigForPrompt, extractHighlightsForFiles, type AdventureConfig } from '../shared/adventure-config.js';
@@ -147,7 +147,7 @@ export class StoryGenerator {
   ): Promise<AdventureContent> {
     const prompt = this.buildAdventureContentPrompt(adventure, theme, codeContent);
     const response = await this.withTimeout(
-      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' })
+      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object', maxTokens: LLM_MAX_TOKENS_QUEST })
     );
     
     if (!response.content || response.content.trim() === '') {
@@ -221,7 +221,7 @@ Generate ONLY the celebration message, no extra text.`;
     const prompt = this.buildStoryGenerationPrompt(projectInfo, theme);
 
     const response = await this.withTimeout(
-      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object' })
+      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object', maxTokens: LLM_MAX_TOKENS_STORY })
     );
     
     if (!response.content || response.content.trim() === '') {
@@ -266,39 +266,45 @@ Use the file paths and function highlights to understand what code areas to focu
 but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n`
       : '';
     
-    return `You are a technical education specialist creating story-based workshops that provide immersive code exploration experiences.
-Transform this codebase into an engaging ${theme}-themed narrative that weaves project details into the story.
+    return `🚨 MANDATORY STORY FORMAT:
+
+Your story MUST include:
+1. A themed title with line breaks before and after
+2. The story paragraph (75-100 words)
+3. The quest ending
+
+FORMAT REQUIREMENT:
+[blank line]
+**🚀 [Your Themed Title Here]**
+[blank line]
+[Your story paragraph...]
+
+🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!
+
+EXAMPLE (DO NOT COPY):
+
+**🚀 Starship Nexus Command Mission**
+
+Deep in the cosmic realm, the vessel explores the MCP galaxy...
+
+You are a technical education specialist creating story-based workshops.
+Transform this codebase into an engaging ${theme}-themed narrative.
 
 ## Complete Codebase
 ${repomixContent}${adventureGuidance}
 
 ${themeGuidelines}
 
-## Critical Instructions
-1. First, ANALYZE the repomix content above to INFER what type of project this is (e.g., "Web Application", "API Service", "CLI Tool", "Library", "Mobile App", "Game", "Data Pipeline", etc.) - be specific and descriptive
-2. Create a ${theme}-themed narrative that INTEGRATES the project details naturally into the story
-3. **CRITICAL: ONLY reference files that actually exist in the "## Complete Codebase" content above.** 
-   Look for "## File:" headers to identify real files.
-4. **DO NOT invent, create, or hallucinate any file names.** If you reference a file, it MUST appear in the "## File:" sections above.
-5. **MANDATORY VISUAL FORMATTING**: The story MUST include ASCII borders and structured layout using the format shown below
-6. The story content should be 1-2 paragraphs (75-100 words max) that tells a cohesive narrative
-7. Reference actual technologies, patterns, and concepts from the real code, but avoid specific file names unless absolutely certain they exist in the repomix content
-8. Make the reader understand what this specific codebase does through the narrative
-9. End with "\n🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!"
+## Story Creation Instructions:
+1. ANALYZE the repomix content above to INFER what type of project this is
+2. Create a ${theme}-themed narrative that INTEGRATES the project details naturally
+3. **CRITICAL: ONLY reference files that actually exist in the "## Complete Codebase" content above**
+4. **DO NOT invent, create, or hallucinate any file names**
+5. The story content should be 1-2 paragraphs (75-100 words max) that tells a cohesive narrative
+6. Reference actual technologies, patterns, and concepts from the real code
+7. Make the reader understand what this specific codebase does through the narrative
+8. End with "\n🗺️ **Your Quest Awaits** - Choose your path wisely, brave adventurer!"
 
-## MANDATORY STORY FORMAT - MUST FOLLOW THIS STRUCTURE EXACTLY:
-
-╭─────────────────────────────────────╮
-│   [THEMED EMOJI] [CUSTOM TITLE]     │
-╰─────────────────────────────────────╯
-
-[Your themed narrative paragraph here - 75-100 words]
-
-⚡ **[Technology Point 1]**: [Brief description]
-🔗 **[Technology Point 2]**: [Brief description] 
-🛡️ **[Technology Point 3]**: [Brief description]
-
-**CRITICAL: You MUST use this exact ASCII border format and emoji structure. Replace bracketed placeholders with your original themed content. DO NOT copy the example text - create entirely new content following this visual structure.**
 
 **EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
 
@@ -329,8 +335,9 @@ CRITICAL: Adventures must form a cohesive narrative progression, like interconne
 - Quests should tell a progressive story while allowing choice and exploration
 - The final quest should provide resolution or mastery achievement
 
-**CRITICAL FOR DEVELOPERS: Each quest description MUST include specific technical details**
-- Mention actual file names, technologies, patterns, or code concepts from the repomix content
+**CRITICAL FOR DEVELOPERS: Each quest MUST have emoji and technical details**
+- **QUEST TITLES**: Each quest title MUST start with a thematic emoji (🚀⚡🔗🛡️💫🌟✨💎🎯🔧) 
+- **DESCRIPTIONS**: Mention actual file names, technologies, patterns, or code concepts from the repomix content
 - Help developers understand exactly what they'll learn (e.g., "server.ts", "MCP protocol handlers", "TypeScript interfaces", "error handling patterns")
 - Make descriptions informative enough for developers to choose based on their interests
 - **DESCRIPTION REQUIREMENT: Each quest description MUST be exactly 1 sentence that specifically mentions the technologies, files, or code concepts developers will explore (e.g., "Explore server.ts initialization, MCP protocol setup, and tool registration patterns")**
@@ -342,13 +349,13 @@ Return a valid JSON object:
   "adventures": [
     {
       "id": "quest-1",
-      "title": "Quest 1: [Theme-appropriate beginning title]",
+      "title": "🚀 Quest 1: [Theme-appropriate beginning title]",
       "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
       "codeFiles": ["ONLY-files-that-appear-in-'## Complete Codebase' above"]
     },
     {
       "id": "quest-2", 
-      "title": "Quest 2: [Progressive story continuation]",
+      "title": "⚡ Quest 2: [Progressive story continuation]",
       "description": "1 sentence mentioning specific technologies/files/concepts covered (e.g., 'Explore server.ts, MCP protocol handlers, and TypeScript tool registration')",
       "codeFiles": ["relevant-files"]
     }

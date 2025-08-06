@@ -1,6 +1,6 @@
 import { OpenAI, AzureOpenAI } from 'openai';
 import { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_REQUEST_TIMEOUT, 
-         LLM_API_VERSION, GITHUB_TOKEN } from '../shared/config.js';
+         LLM_API_VERSION, GITHUB_TOKEN, LLM_MAX_TOKENS_DEFAULT } from '../shared/config.js';
 
 /**
  * Format numbers in a friendly way (25000 -> 25K)
@@ -85,8 +85,10 @@ export class LLMClient {
         model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
-        max_tokens: options?.maxTokens || 4000  // Increased for complex JSON responses
+        max_tokens: options?.maxTokens || LLM_MAX_TOKENS_DEFAULT
       };
+
+      console.error(`🔄 Starting LLM request to ${this.model} (timeout: ${LLM_REQUEST_TIMEOUT}ms, prompt length: ${prompt.length} chars)`);
 
       // Azure OpenAI handles deployment differently - no need to modify requestParams
 
@@ -97,7 +99,7 @@ export class LLMClient {
       const completion = await Promise.race([
         this.client.chat.completions.create(requestParams),
         new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), LLM_REQUEST_TIMEOUT)
+          setTimeout(() => reject(new Error(`LLM request timeout after ${LLM_REQUEST_TIMEOUT}ms`)), LLM_REQUEST_TIMEOUT)
         )
       ]);
 

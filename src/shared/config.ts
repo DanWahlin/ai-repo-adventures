@@ -17,7 +17,7 @@ export const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 // Timeouts in milliseconds
 export const FILE_READ_TIMEOUT = 10000;
 export const FILE_ANALYSIS_TIMEOUT = 30000;
-export const LLM_REQUEST_TIMEOUT = 30000; // Increased from 15s to 30s for more reliable LLM responses
+export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
 export const LLM_CACHE_TTL = 300000; // 5 minutes
 export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || '60000'); // 60 seconds, configurable via env
 
@@ -28,8 +28,13 @@ export const KEY_SOURCE_FILES = 10; // Number of key files to highlight in adven
 export const TOP_FUNCTIONS = 20; // Maximum functions to include in code analysis summaries
 export const TOP_CLASSES = 5; // Maximum classes to include in analysis to keep stories focused
 
-// Cache settings
+// LLM settings
 export const LLM_CACHE_SIZE = parseInt(process.env.LLM_CACHE_SIZE || '100');
+export const LLM_MAX_TOKENS_STORY = 8000; // Maximum tokens for story generation (includes story + all quest descriptions)
+export const LLM_MAX_TOKENS_QUEST = 6000; // Maximum tokens for individual quest exploration content
+export const LLM_MAX_TOKENS_DEFAULT = 4000; // Default maximum tokens for general LLM requests
+
+// Cache settings
 
 // Adventure settings
 export const MAX_ACTIVE_ADVENTURES = 5; // Maximum concurrent adventures to prevent overwhelming users
