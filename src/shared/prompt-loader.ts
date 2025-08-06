@@ -14,23 +14,12 @@ interface ThemeGuidelinesMap {
 }
 
 /**
- * Cache for loaded prompts to avoid repeated file reads
- */
-const promptCache = new Map<string, string>();
-const themeGuidelinesCache = new Map<string, ThemeGuidelinesMap>();
-
-/**
- * Load a prompt file with caching
+ * Load a prompt file directly
  */
 function loadPromptFile(filePath: string): string {
-  if (promptCache.has(filePath)) {
-    return promptCache.get(filePath)!;
-  }
-
   try {
     const fullPath = join(process.cwd(), filePath);
     const content = readFileSync(fullPath, 'utf-8');
-    promptCache.set(filePath, content);
     return content;
   } catch (error) {
     console.warn(`Failed to load prompt file ${filePath}, using fallback`);
@@ -42,16 +31,10 @@ function loadPromptFile(filePath: string): string {
  * Load theme guidelines from JSON file
  */
 function loadThemeGuidelines(): ThemeGuidelinesMap {
-  const cacheKey = PROMPT_PATHS.THEME_GUIDELINES;
-  if (themeGuidelinesCache.has(cacheKey)) {
-    return themeGuidelinesCache.get(cacheKey)!;
-  }
-
   try {
     const fullPath = join(process.cwd(), PROMPT_PATHS.THEME_GUIDELINES);
     const content = readFileSync(fullPath, 'utf-8');
     const guidelines = JSON.parse(content) as ThemeGuidelinesMap;
-    themeGuidelinesCache.set(cacheKey, guidelines);
     return guidelines;
   } catch (error) {
     console.warn(`Failed to load theme guidelines, using fallback`);

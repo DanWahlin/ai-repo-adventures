@@ -28,8 +28,7 @@ setChooseThemeManager(adventureManager);
 setExploreAdventureQuestManager(adventureManager);
 setViewProgressManager(adventureManager);
 
-// Verify initialization
-console.log('🔧 Adventure manager initialized for all tools');
+// Adventure manager initialized for all tools
 
 // Re-export tools with MCP naming convention
 export const start_adventure = startAdventure;

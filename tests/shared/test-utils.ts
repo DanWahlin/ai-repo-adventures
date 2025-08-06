@@ -123,31 +123,6 @@ export const mockProjectInfo: ProjectInfo = {
   hasDatabase: false,
   hasApi: true,
   hasFrontend: true,
-  codeAnalysis: {
-    functions: [
-      {
-        name: 'startServer',
-        summary: 'Initializes and starts the web server',
-        fileName: 'src/server.ts',
-        source: 'llm'
-      },
-      {
-        name: 'main',
-        summary: 'Main entry point function',
-        fileName: 'src/index.ts',
-        source: 'llm'
-      }
-    ],
-    classes: [
-      {
-        name: 'ApiController'
-      }
-    ],
-    dependencies: [
-      { name: 'express', type: 'dependency' }
-    ],
-    entryPoints: ['src/server.ts', 'package.json', 'src/index.ts']
-  },
   repomixContent: '# Test Project\n\nThis is mock repomix content for testing.\n\n## File: src/server.ts\n```typescript\nfunction startServer() { }\n```\n\n## File: src/utils.ts\n```typescript\nclass ApiController { }\n```',
   llmContextSummary: 'Mock project for testing'
 };
@@ -163,36 +138,6 @@ export const realProjectInfo: ProjectInfo = {
   hasDatabase: false,
   hasApi: true,
   hasFrontend: false,
-  codeAnalysis: {
-    functions: [
-      {
-        name: 'initializeAdventure',
-        summary: 'Initializes adventure with project analysis and theme',
-        fileName: 'src/adventure/adventure-manager.ts',
-        source: 'llm'
-      },
-      {
-        name: 'generateResponse',
-        summary: 'Generates LLM response with caching and fallbacks',
-        fileName: 'src/llm/llm-client.ts',
-        source: 'llm'
-      }
-    ],
-    classes: [
-      {
-        name: 'AdventureManager'
-      },
-      {
-        name: 'LLMClient'
-      }
-    ],
-    dependencies: [
-      { name: '@modelcontextprotocol/sdk', type: 'dependency' },
-      { name: 'openai', type: 'dependency' },
-      { name: 'zod', type: 'dependency' }
-    ],
-    entryPoints: ['src/server.ts']
-  },
   repomixContent: '# MCP Repo Adventure\\n\\nTypeScript MCP server for gamified code exploration.\\n\\n## File: src/server.ts\\n```typescript\\nexport class RepoAdventureServer { }\\n```\\n\\n## File: src/adventure/adventure-manager.ts\\n```typescript\\nexport class AdventureManager { }\\n```',
   llmContextSummary: 'Real MCP server project for testing'
 };

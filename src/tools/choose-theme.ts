@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 import { AdventureManager } from '../adventure/adventure-manager.js';
-import { parseTheme, getAllThemes } from '../shared/theme.js';
+import { parseTheme, getAllThemes, AdventureTheme } from '../shared/theme.js';
 import { validateTheme } from '../shared/input-validator.js';
 import { createProjectInfo, generateThemeExamples } from './shared.js';
 
@@ -32,66 +32,81 @@ const chooseThemeSchema = z.object({
 // Types
 type ChooseThemeArgs = z.infer<typeof chooseThemeSchema>;
 
+/**
+ * Validate and parse the theme input
+ */
+function validateAndParseTheme(themeInput: string): AdventureTheme {
+  let validatedTheme: string;
+  try {
+    validatedTheme = validateTheme(themeInput);
+  } catch (error) {
+    throw new McpError(ErrorCode.InvalidParams, error instanceof Error ? error.message : 'Invalid theme');
+  }
+  
+  const selectedTheme = parseTheme(validatedTheme);
+  
+  if (!selectedTheme) {
+    const allThemes = getAllThemes();
+    const validOptions = [...allThemes.map(t => `'${t.key}'`), ...allThemes.map(t => t.id.toString())];
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Invalid theme: ${themeInput}. Please choose ${validOptions.join(', ')}.`
+    );
+  }
+
+  return selectedTheme;
+}
+
+/**
+ * Validate custom theme data
+ */
+function validateCustomTheme(selectedTheme: AdventureTheme, customThemeData?: { name: string; description: string; keywords: string[] }): void {
+  if (selectedTheme !== 'custom') return;
+
+  if (!customThemeData) {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      'Custom theme data is required when selecting custom theme. Please provide customTheme with name, description, and keywords.'
+    );
+  }
+  
+  if (!customThemeData.name?.trim()) {
+    throw new McpError(ErrorCode.InvalidParams, 'Custom theme name is required');
+  }
+  if (!customThemeData.description?.trim()) {
+    throw new McpError(ErrorCode.InvalidParams, 'Custom theme description is required');
+  }
+  if (!customThemeData.keywords || customThemeData.keywords.length === 0) {
+    throw new McpError(ErrorCode.InvalidParams, 'Custom theme keywords array is required');
+  }
+}
+
+/**
+ * Generate project info from repomix content
+ */
+async function generateProjectInfo(): Promise<{ projectPath: string; projectInfo: any }> {
+  const projectPath = process.cwd();
+  const repomixContent = await repoAnalyzer.generateRepomixContext(projectPath);
+  const projectInfo = createProjectInfo(repomixContent);
+  
+  return { projectPath, projectInfo };
+}
+
 // Tool Definition
 export const chooseTheme = {
   description: `Creates a complete themed adventure experience using advanced LLM prompt engineering and optional adventure.config.json guidance. This tool takes the selected theme and generates a cohesive narrative that weaves actual codebase details into an immersive story. The LLM receives the full repomix content plus structured guidance about important functions and code areas, then transforms technical concepts into theme-appropriate metaphors. Generates 2-6 dynamic adventures targeting key system areas: MCP Tool Interface, Adventure Generation Engine, Code Analysis Pipeline, Configuration & Themes, and Foundation & Utilities. Each adventure includes specific files to explore, code snippets to discover, and workshop-style learning objectives. Supports custom themes with user-defined vocabulary. The result is a personalized learning journey unique to each codebase. INVOKE after start_adventure when user selects theme: ${generateThemeExamples()}.`,
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
-    console.log('🎯 choose_theme handler called with theme:', args.theme);
     if (!adventureManager) {
-      console.error('❌ Adventure manager is not initialized in choose-theme.ts');
       throw new McpError(ErrorCode.InternalError, 'Adventure manager not initialized');
     }
-    console.log('✅ Adventure manager is available');
 
     try {
-      // Validate theme input
-      let validatedTheme: string;
-      try {
-        validatedTheme = validateTheme(args.theme);
-      } catch (error) {
-        throw new McpError(ErrorCode.InvalidParams, error instanceof Error ? error.message : 'Invalid theme');
-      }
+      const selectedTheme = validateAndParseTheme(args.theme);
+      validateCustomTheme(selectedTheme, args.customTheme);
       
-      // Parse the theme input (handles numbers, full names, partial matches)
-      const selectedTheme = parseTheme(validatedTheme);
+      const { projectPath, projectInfo } = await generateProjectInfo();
       
-      if (!selectedTheme) {
-        const allThemes = getAllThemes();
-        const validOptions = [...allThemes.map(t => `'${t.key}'`), ...allThemes.map(t => t.id.toString())];
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Invalid theme: ${args.theme}. Please choose ${validOptions.join(', ')}.`
-        );
-      }
-
-      // Handle custom theme validation
-      if (selectedTheme === 'custom') {
-        if (!args.customTheme) {
-          throw new McpError(
-            ErrorCode.InvalidParams,
-            'Custom theme data is required when selecting custom theme. Please provide customTheme with name, description, and keywords.'
-          );
-        }
-        
-        // Validate custom theme data
-        if (!args.customTheme.name?.trim()) {
-          throw new McpError(ErrorCode.InvalidParams, 'Custom theme name is required');
-        }
-        if (!args.customTheme.description?.trim()) {
-          throw new McpError(ErrorCode.InvalidParams, 'Custom theme description is required');
-        }
-        if (!args.customTheme.keywords || args.customTheme.keywords.length === 0) {
-          throw new McpError(ErrorCode.InvalidParams, 'Custom theme keywords array is required');
-        }
-      }
-      
-      // Generate repomix content and create minimal ProjectInfo
-      const projectPath = process.cwd();
-      const repomixContent = await repoAnalyzer.generateRepomixContext(projectPath);
-      const projectInfo = createProjectInfo(repomixContent);
-      
-      // Initialize adventure with LLM-generated content
       const storyWithAdventures = await adventureManager.initializeAdventure(
         projectInfo, 
         selectedTheme, 

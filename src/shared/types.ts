@@ -2,29 +2,6 @@ import { AdventureTheme } from './theme.js';
 
 // Minimal interfaces for actual usage
 
-export interface FunctionInfo {
-  name: string;
-  summary: string;
-  fileName: string;
-  source: 'llm';
-}
-
-export interface ClassInfo {
-  name: string;
-}
-
-export interface DependencyInfo {
-  name: string;
-  type: 'dependency';
-}
-
-export interface CodeAnalysis {
-  functions: FunctionInfo[];
-  classes: ClassInfo[];
-  dependencies: DependencyInfo[];
-  entryPoints: string[];
-}
-
 export interface ProjectInfo {
   type: string;
   fileCount: number;
@@ -33,7 +10,6 @@ export interface ProjectInfo {
   hasDatabase: boolean;
   hasApi: boolean;
   hasFrontend: boolean;
-  codeAnalysis: CodeAnalysis;
   repomixContent: string; // The raw repomix content - this is the important part
   llmContextSummary?: string;
 }

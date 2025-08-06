@@ -17,12 +17,6 @@ export function createProjectInfo(repomixContent: string): ProjectInfo {
     hasDatabase: false, // LLM will detect during story generation
     hasApi: false, // LLM will detect during story generation
     hasFrontend: false, // LLM will detect during story generation
-    codeAnalysis: {
-      functions: [], // LLM will extract during story generation
-      classes: [], // LLM will extract during story generation
-      dependencies: [], // LLM will extract during story generation
-      entryPoints: [] // LLM will detect during story generation
-    },
     repomixContent, // This is the gold - rich context for story generation
     llmContextSummary: 'Raw repomix content available for LLM analysis during story generation.'
   };

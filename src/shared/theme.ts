@@ -67,33 +67,23 @@ export const THEMES = {
 // Extract the theme type from the keys
 export type AdventureTheme = typeof THEMES[keyof typeof THEMES]['key'];
 
-// Pre-compute lookup structures for O(1) access (performance optimization)
+// Simple array of themes - no need for complex Maps with only 5 themes
 const THEMES_ARRAY = Object.values(THEMES);
-const THEME_BY_ID = new Map<number, ThemeDefinition>(THEMES_ARRAY.map(theme => [theme.id, theme]));
-const THEME_BY_KEY = new Map<string, ThemeDefinition>(THEMES_ARRAY.map(theme => [theme.key, theme]));
 
-// Pre-compile regex patterns for keyword matching (performance optimization)
-const THEME_KEYWORD_PATTERNS = new Map<string, RegExp[]>(
-  THEMES_ARRAY.map(theme => [
-    theme.key,
-    theme.keywords.map(keyword => new RegExp(`\\b${keyword}\\b`, 'i'))
-  ])
-);
-
-// Helper functions to access theme data (now O(1) instead of O(n))
+// Helper functions to access theme data using simple array iteration
 export function getThemeById(id: number): ThemeDefinition | null {
-  return THEME_BY_ID.get(id) || null;
+  return THEMES_ARRAY.find(theme => theme.id === id) || null;
 }
 
 export function getThemeByKey(key: string): ThemeDefinition | null {
-  return THEME_BY_KEY.get(key) || null;
+  return THEMES_ARRAY.find(theme => theme.key === key) || null;
 }
 
 export function getAllThemes(): ThemeDefinition[] {
   return THEMES_ARRAY;
 }
 
-// Build derived mappings using Object.fromEntries for better performance
+// Simple derived mappings
 export const THEME_DISPLAY_NAMES = Object.fromEntries(
   THEMES_ARRAY.map(theme => [theme.key, theme.displayName])
 ) as Record<AdventureTheme, string>;
@@ -102,36 +92,31 @@ export const THEME_EMOJIS = Object.fromEntries(
   THEMES_ARRAY.map(theme => [theme.key, theme.emoji])
 ) as Record<AdventureTheme, string>;
 
-export const THEME_NUMBER_MAP = Object.fromEntries(
-  THEMES_ARRAY.map(theme => [theme.id.toString(), theme.key])
-) as Record<string, AdventureTheme>;
-
-// Type guard to check if a string is a valid theme (now uses pre-computed Map)
+// Type guard using simple find
 export function isValidTheme(theme: string): theme is AdventureTheme {
-  return THEME_BY_KEY.has(theme);
+  return THEMES_ARRAY.some(t => t.key === theme);
 }
 
-// Enhanced theme parser with keyword matching and better validation
+// Simple theme parser using basic string matching
 export function parseTheme(input: string): AdventureTheme | null {
   if (!input) return null;
   
   const normalized = input.trim().toLowerCase();
   
-  // Check for exact key match (now O(1) lookup)
+  // Check for exact key match
   const exactMatch = getThemeByKey(normalized);
   if (exactMatch) return exactMatch.key as AdventureTheme;
   
-  // Check for numeric ID with proper validation
+  // Check for numeric ID
   const numericId = parseInt(normalized, 10);
   if (!isNaN(numericId)) {
     const byId = getThemeById(numericId);
     if (byId) return byId.key as AdventureTheme;
   }
   
-  // Check keywords with pre-compiled patterns for better accuracy and performance
+  // Check keywords using simple includes check
   for (const theme of THEMES_ARRAY) {
-    const patterns = THEME_KEYWORD_PATTERNS.get(theme.key)!;
-    if (patterns.some(pattern => pattern.test(normalized))) {
+    if (theme.keywords.some(keyword => normalized.includes(keyword.toLowerCase()))) {
       return theme.key as AdventureTheme;
     }
   }
