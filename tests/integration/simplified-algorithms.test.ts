@@ -90,7 +90,7 @@ async function runTests() {
   await test('Adventure manager handles invalid choices', async () => {
     const manager = new AdventureManager();
     
-    const result = await manager.exploreAdventure('invalid-choice-12345');
+    const result = await manager.exploreQuest('invalid-choice-12345');
     assert(typeof result.narrative === 'string', 'Should return narrative');
     assert(result.narrative.includes('not found') || result.narrative.includes('invalid'), 'Should handle invalid choices gracefully');
   });

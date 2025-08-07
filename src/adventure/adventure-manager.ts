@@ -98,7 +98,7 @@ export class AdventureManager {
   /**
    * Execute a chosen quest by ID, number, or title
    */
-  async exploreAdventure(choice: string): Promise<AdventureResult> {
+  async exploreQuest(choice: string): Promise<AdventureResult> {
     const sanitizedChoice = this.validateAndSanitizeChoice(choice);
     
     // Check if this is a progress request
@@ -354,7 +354,7 @@ ${questsText}
       ? `\n\n**💡 Helpful Hints:**\n${content.hints.map(hint => `• ${hint}`).join('\n')}`
       : '';
 
-    return `**${questTitle}**\n\n${content.quest}${fileExplorationText}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
+    return `**${questTitle}**\n\n${content.adventure}${fileExplorationText}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
   }
   
 

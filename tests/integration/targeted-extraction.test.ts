@@ -151,7 +151,7 @@ async function runTests() {
     console.log(`   Target files: ${adventureWithFiles.codeFiles.join(', ')}`);
     
     // Explore the adventure - this should trigger targeted extraction
-    const result = await manager.exploreAdventure('1');
+    const result = await manager.exploreQuest('1');
     
     assert(typeof result === 'object', 'Should return adventure result object');
     assert(typeof result.narrative === 'string', 'Should have narrative');
@@ -200,7 +200,7 @@ async function runTests() {
     assert(mainStoryWords.length > 0, `Main story should contain ancient theme elements. Found: ${mainStoryWords}`);
     
     // Explore first adventure and check theme consistency
-    const adventureResult = await manager.exploreAdventure('1');
+    const adventureResult = await manager.exploreQuest('1');
     const adventureWords = TestHelpers.getFoundWords(adventureResult.narrative.toLowerCase(), ancientWords);
     
     assert(adventureWords.length > 0, `Adventure content should maintain ancient theme. Found: ${adventureWords}`);

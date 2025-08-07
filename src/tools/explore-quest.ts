@@ -43,7 +43,7 @@ export const exploreQuest = {
       }
       
       // AdventureManager now handles numbered choices, titles, and IDs automatically
-      const result = await adventureManager.exploreAdventure(validatedChoice);
+      const result = await adventureManager.exploreQuest(validatedChoice);
       
       let responseText = result.narrative;
       

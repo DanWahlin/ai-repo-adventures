@@ -115,7 +115,7 @@ async function runTests() {
     console.log(`🎯 Adventure Title: ${progress.choices?.[0] || 'No adventures available'}`);
     
     // Explore first adventure
-    const result = await manager.exploreAdventure('1');
+    const result = await manager.exploreQuest('1');
     
     assert(typeof result.narrative === 'string', 'Should return narrative string');
     assert(result.narrative.length > 200, 'Narrative should be detailed (>200 chars)');
@@ -231,7 +231,7 @@ async function runTests() {
     const storyResult = await manager.initializeAdventure(realProjectInfo, 'mythical');
     
     // Explore first adventure to get detailed content
-    const adventure1 = await manager.exploreAdventure('1');
+    const adventure1 = await manager.exploreQuest('1');
     
     // Use LLM to validate the adventure content
     const chapterValidationPrompt = `Analyze this adventure content to verify it's a proper "chapter" of a larger story. Return JSON:
@@ -324,7 +324,7 @@ async function runTests() {
     
     for (let i = 1; i <= maxChapters; i++) {
       try {
-        const chapter = await manager.exploreAdventure(i.toString());
+        const chapter = await manager.exploreQuest(i.toString());
         chapters.push({
           id: i,
           narrative: chapter.narrative,
@@ -389,7 +389,7 @@ async function runTests() {
     const manager = new AdventureManager();
     await manager.initializeAdventure(realProjectInfo, 'ancient');
     
-    const result = await manager.exploreAdventure('1');
+    const result = await manager.exploreQuest('1');
     
     // Check for code-related content using shared helper
     const codeIndicators = ['function', 'class', 'import', 'export', 'const', 'let', '()', '{}'];

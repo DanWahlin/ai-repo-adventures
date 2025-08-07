@@ -118,7 +118,7 @@ async function runTests() {
     }
     
     // Explore the first adventure
-    const adventureResult = await manager.exploreAdventure('1');
+    const adventureResult = await manager.exploreQuest('1');
     
     assert(typeof adventureResult.narrative === 'string', 'Should have narrative');
     assert(adventureResult.narrative.length > 200, 'Should have substantial narrative content');

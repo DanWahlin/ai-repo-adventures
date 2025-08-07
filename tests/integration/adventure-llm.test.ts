@@ -60,7 +60,7 @@ async function runTests() {
     
     // This test just verifies our error handling works without relying on specific LLM failures
     try {
-      await manager.exploreAdventure('non-existent-adventure');
+      await manager.exploreQuest('non-existent-adventure');
       assert(false, 'Should handle non-existent adventure');
     } catch (error) {
       // Adventure exploration should handle missing adventures gracefully

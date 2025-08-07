@@ -164,7 +164,7 @@ class InteractiveMCPClient {
     
     // Otherwise default to exploration
     return {
-      intent: 'explore_adventure_quest',
+      intent: 'explore_quest',
       params: { choice: input }
     };
   }
