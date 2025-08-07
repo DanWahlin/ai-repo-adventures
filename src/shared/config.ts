@@ -37,10 +37,10 @@ export const LLM_MAX_TOKENS_DEFAULT = 4000; // Default maximum tokens for genera
 // Cache settings
 
 // Adventure settings
-export const MAX_ACTIVE_ADVENTURES = 5; // Maximum concurrent adventures to prevent overwhelming users
+export const MAX_ACTIVE_QUESTS = 5; // Maximum concurrent quests to prevent overwhelming users
 export const DEFAULT_THEME = 'space' as const;
 export const MAX_FILE_LINES_FOR_LLM = 100; // Truncate files to keep LLM prompts manageable
-export const MAX_FILES_PER_ADVENTURE = 3; // Limit files per adventure to maintain focus and readability
+export const MAX_FILES_PER_QUEST = 3; // Limit files per quest to maintain focus and readability
 
 // Error settings
 export const MAX_ERROR_MESSAGE_LENGTH = 200;

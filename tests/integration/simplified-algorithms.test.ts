@@ -6,7 +6,8 @@
  */
 
 import { AdventureManager } from '../../src/adventure/adventure-manager.js';
-import { DynamicStoryGenerator, STORY_THEMES } from '../../src/adventure/story-generator.js';
+import { DynamicStoryGenerator } from '../../src/adventure/story-generator.js';
+import { THEMES } from '../../src/shared/theme.js';
 import { RepoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 
@@ -110,11 +111,11 @@ async function runTests() {
     generator.setProject(mockProjectInfo);
 
     // Test valid themes
-    for (const theme of Object.values(STORY_THEMES)) {
+    for (const theme of Object.values(THEMES)) {
       try {
-        const story = await generator.generateStory(theme as any);
-        assert(typeof story.content === 'string', `Should generate story for ${theme}`);
-        assert(story.theme === theme, `Should return correct theme for ${theme}`);
+        const story = await generator.generateStory(theme.key as any);
+        assert(typeof story.content === 'string', `Should generate story for ${theme.key}`);
+        assert(story.theme === theme.key, `Should return correct theme for ${theme.key}`);
       } catch (error) {
         // LLM might not be available - that's okay for unit tests
         if (error instanceof Error && (error.message.includes('LLM') || error.message.includes('template'))) {
@@ -220,7 +221,7 @@ async function runTests() {
     try {
       // This should default to a valid theme
       const story = await generator.generateStory('invalid-theme' as any);
-      assert(Object.values(STORY_THEMES).includes(story.theme as any), 'Should default to valid theme');
+      assert(Object.values(THEMES).some(t => t.key === story.theme), 'Should default to valid theme');
     } catch (error) {
       // This is also acceptable
       assert(error instanceof Error, 'Should handle invalid theme gracefully');

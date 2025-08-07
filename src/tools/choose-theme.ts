@@ -94,7 +94,7 @@ async function generateProjectInfo(): Promise<{ projectPath: string; projectInfo
 
 // Tool Definition
 export const chooseTheme = {
-  description: `Creates a complete themed adventure experience using advanced LLM prompt engineering and optional adventure.config.json guidance. This tool takes the selected theme and generates a cohesive narrative that weaves actual codebase details into an immersive story. The LLM receives the full repomix content plus structured guidance about important functions and code areas, then transforms technical concepts into theme-appropriate metaphors. Generates 2-6 dynamic adventures targeting key system areas: MCP Tool Interface, Adventure Generation Engine, Code Analysis Pipeline, Configuration & Themes, and Foundation & Utilities. Each adventure includes specific files to explore, code snippets to discover, and workshop-style learning objectives. Supports custom themes with user-defined vocabulary. The result is a personalized learning journey unique to each codebase. INVOKE after start_adventure when user selects theme: ${generateThemeExamples()}.`,
+  description: `Creates a complete themed quest experience using advanced LLM prompt engineering and optional adventure.config.json guidance. This tool takes the selected theme and generates a cohesive narrative that weaves actual codebase details into an immersive story. The LLM receives the full repomix content plus structured guidance about important functions and code areas, then transforms technical concepts into theme-appropriate metaphors. Generates 2-6 dynamic quests targeting key system areas: MCP Tool Interface, Adventure Generation Engine, Code Analysis Pipeline, Configuration & Themes, and Foundation & Utilities. Each quest includes specific files to explore, code snippets to discover, and workshop-style learning objectives. Supports custom themes with user-defined vocabulary. The result is a personalized learning journey unique to each codebase. INVOKE after start_adventure when user selects theme: ${generateThemeExamples()}.`,
   schema: chooseThemeSchema,
   handler: async (args: ChooseThemeArgs) => {
     if (!adventureManager) {
@@ -107,7 +107,7 @@ export const chooseTheme = {
       
       const { projectPath, projectInfo } = await generateProjectInfo();
       
-      const storyWithAdventures = await adventureManager.initializeAdventure(
+      const storyWithQuests = await adventureManager.initializeAdventure(
         projectInfo, 
         selectedTheme, 
         projectPath,
@@ -118,7 +118,7 @@ export const chooseTheme = {
         content: [
           {
             type: 'text' as const,
-            text: storyWithAdventures
+            text: storyWithQuests
           }
         ]
       };

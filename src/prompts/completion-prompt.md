@@ -3,8 +3,8 @@
 Generate a {{themeDescription}}-themed completion celebration for: "{{adventureTitle}}"
 
 **Context:**
-- Adventure completed: {{adventureTitle}}
-- Progress: {{progress}}/{{total}} adventures ({{percentComplete}}% complete)
+- Quest completed: {{adventureTitle}}
+- Progress: {{progress}}/{{total}} quests ({{percentComplete}}% complete)
 - Theme: {{themeDescription}}
 
 **Requirements:**

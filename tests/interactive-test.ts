@@ -66,7 +66,7 @@ class InteractiveMCPClient {
     const operationMap: Record<string, string> = {
       'start_adventure': '🚀 Analyzing project and generating theme options',
       'choose_theme': '📖 Generating themed story and quest adventures',
-      'explore_adventure_quest': '🗺️ Exploring quest and generating walkthrough',
+      'explore_quest': '🗺️ Exploring quest and generating walkthrough',
       'view_progress': '📊 Checking adventure progress'
     };
     
@@ -148,7 +148,7 @@ class InteractiveMCPClient {
     // Explore path
     if (lower.includes('explore') || lower.includes('go') || lower.includes('choose')) {
       return {
-        intent: 'explore_adventure_quest',
+        intent: 'explore_quest',
         params: { choice: input }
       };
     }
@@ -199,8 +199,8 @@ class InteractiveMCPClient {
         response = await this.callTool('meet_character', params);
         break;
         
-      case 'explore_adventure_quest':
-        response = await this.callTool('explore_adventure_quest', params);
+      case 'explore_quest':
+        response = await this.callTool('explore_quest', params);
         break;
         
       default:

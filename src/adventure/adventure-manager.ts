@@ -1,6 +1,6 @@
 import type { ProjectInfo } from '../shared/types.js';
 import type { AdventureTheme, CustomThemeData } from '../shared/theme.js';
-import { StoryGenerator, Adventure, StoryResponse, AdventureContent } from './story-generator.js';
+import { StoryGenerator, Quest, StoryResponse, QuestContent } from './story-generator.js';
 // Simple inline error for the two places we need it
 class StoryGenerationError extends Error {
   constructor(message: string, _context?: Record<string, unknown>) {
@@ -11,8 +11,8 @@ class StoryGenerationError extends Error {
 import { validateAdventureChoice } from '../shared/input-validator.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 
-// Re-export interfaces from story-generator for backward compatibility
-export type { Adventure, StoryResponse, AdventureContent, CodeSnippet } from './story-generator.js';
+// Re-export interfaces from story-generator
+export type { Quest, StoryResponse, QuestContent, CodeSnippet } from './story-generator.js';
 
 export interface AdventureResult {
   narrative: string;
@@ -23,22 +23,23 @@ export interface AdventureResult {
 
 export class AdventureState {
   story: string | undefined = undefined;
-  adventures: Adventure[] = [];
-  completedAdventures: Set<string> = new Set();
+  quests: Quest[] = [];
+  completedQuests: Set<string> = new Set();
   currentTheme: AdventureTheme | null = null;
   projectInfo: ProjectInfo | undefined = undefined;
   projectPath: string | undefined = undefined;
 
+
   get progressPercentage(): number {
-    return this.adventures.length > 0 
-      ? Math.round((this.completedAdventures.size / this.adventures.length) * 100)
+    return this.quests.length > 0 
+      ? Math.round((this.completedQuests.size / this.quests.length) * 100)
       : 0;
   }
 
   reset() {
     this.story = undefined;
-    this.adventures = [];
-    this.completedAdventures.clear();
+    this.quests = [];
+    this.completedQuests.clear();
     this.currentTheme = null;
     this.projectInfo = undefined;
     this.projectPath = undefined;
@@ -54,7 +55,7 @@ export class AdventureManager {
   }
 
   /**
-   * Initialize the adventure with project context and generate story + adventures
+   * Initialize the adventure with project context and generate story + quests
    */
   async initializeAdventure(
     projectInfo: ProjectInfo, 
@@ -73,14 +74,14 @@ export class AdventureManager {
       this.storyGenerator.setCustomTheme(customThemeData);
     }
 
-    // Generate the overall story and adventures using LLM
-    const storyResponse = await this.storyGenerator.generateStoryAndAdventures(projectInfo, theme, this.state.projectPath);
+    // Generate the overall story and quests using LLM
+    const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
     
     this.state.story = typeof storyResponse.story === 'string' ? storyResponse.story : storyResponse.story.content;
-    this.state.adventures = storyResponse.adventures;
+    this.state.quests = storyResponse.quests;
 
-    // Return the story with available adventures
-    return this.formatStoryWithAdventures(storyResponse);
+    // Return the story with available quests
+    return this.formatStoryWithQuests(storyResponse);
   }
 
   /**
@@ -95,7 +96,7 @@ export class AdventureManager {
   }
 
   /**
-   * Execute a chosen adventure by ID, number, or title
+   * Execute a chosen quest by ID, number, or title
    */
   async exploreAdventure(choice: string): Promise<AdventureResult> {
     const sanitizedChoice = this.validateAndSanitizeChoice(choice);
@@ -105,14 +106,14 @@ export class AdventureManager {
       return this.getProgress();
     }
     
-    // Find the adventure based on the choice
-    const adventure = this.findAdventure(sanitizedChoice);
-    if (!adventure) {
+    // Find the quest based on the choice
+    const quest = this.findQuest(sanitizedChoice);
+    if (!quest) {
       return this.createNotFoundResult();
     }
 
-    // Execute the adventure
-    return await this.executeAdventure(adventure);
+    // Execute the quest
+    return await this.executeQuest(quest);
   }
 
   /**
@@ -128,7 +129,7 @@ export class AdventureManager {
     // Check numeric progress request (last item in choices)
     const choiceNumber = parseInt(choice);
     if (!isNaN(choiceNumber) && choiceNumber > 0) {
-      const choices = this.getAvailableAdventureChoices();
+      const choices = this.getAvailableQuestChoices();
       return choiceNumber === choices.length && 
              choices[choices.length - 1] === 'View progress';
     }
@@ -137,100 +138,105 @@ export class AdventureManager {
   }
 
   /**
-   * Find an adventure by number, ID, or title
+   * Find a quest by number, ID, or title
    */
-  private findAdventure(choice: string): Adventure | undefined {
+  private findQuest(choice: string): Quest | undefined {
     // Try to find by number first
-    const byNumber = this.findAdventureByNumber(choice);
+    const byNumber = this.findQuestByNumber(choice);
     if (byNumber) return byNumber;
     
     // Then try by ID or title
-    return this.findAdventureByIdOrTitle(choice);
+    return this.findQuestByIdOrTitle(choice);
   }
+  
 
   /**
-   * Find adventure by numeric choice
+   * Find quest by numeric choice
    */
-  private findAdventureByNumber(choice: string): Adventure | undefined {
+  private findQuestByNumber(choice: string): Quest | undefined {
     const choiceNumber = parseInt(choice);
     if (!isNaN(choiceNumber) && 
         choiceNumber > 0 && 
-        choiceNumber <= this.state.adventures.length) {
-      return this.state.adventures[choiceNumber - 1];
+        choiceNumber <= this.state.quests.length) {
+      return this.state.quests[choiceNumber - 1];
     }
     return undefined;
   }
+  
 
   /**
-   * Find adventure by ID or title match
+   * Find quest by ID or title match
    */
-  private findAdventureByIdOrTitle(choice: string): Adventure | undefined {
+  private findQuestByIdOrTitle(choice: string): Quest | undefined {
     const lowerChoice = choice.toLowerCase();
-    return this.state.adventures.find(a => 
-      a.id === choice || 
-      a.title.toLowerCase().includes(lowerChoice) ||
-      lowerChoice.includes(a.title.toLowerCase())
+    return this.state.quests.find(q => 
+      q.id === choice || 
+      q.title.toLowerCase().includes(lowerChoice) ||
+      lowerChoice.includes(q.title.toLowerCase())
     );
   }
+  
 
   /**
-   * Create result for when adventure is not found
+   * Create result for when quest is not found
    */
   private createNotFoundResult(): AdventureResult {
     return {
-      narrative: "Adventure not found. Please choose from the available adventures.",
-      choices: this.getAvailableAdventureChoices()
+      narrative: "Quest not found. Please choose from the available quests.",
+      choices: this.getAvailableQuestChoices()
     };
   }
 
   /**
-   * Execute the selected adventure
+   * Execute the selected quest
    */
-  private async executeAdventure(adventure: Adventure): Promise<AdventureResult> {
+  private async executeQuest(quest: Quest): Promise<AdventureResult> {
     // Validate prerequisites
-    this.validateAdventurePrerequisites();
+    this.validateQuestPrerequisites();
 
-    // Generate adventure content
-    const content = await this.generateAdventureContent(adventure);
+    // Generate quest content
+    const content = await this.generateQuestContent(quest);
     
     // Mark as completed and generate summary
-    this.markAdventureCompleted(adventure);
-    const summary = await this.generateCompletionSummary(adventure);
+    this.markQuestCompleted(quest);
+    const summary = await this.generateCompletionSummary(quest);
 
     // Return formatted result
-    return this.createAdventureResult(content, summary);
+    return this.createQuestResult(content, summary, quest);
   }
+  
 
   /**
-   * Validate that all prerequisites for adventure execution are met
+   * Validate that all prerequisites for quest execution are met
    */
-  private validateAdventurePrerequisites(): void {
+  private validateQuestPrerequisites(): void {
     if (!this.state.projectInfo) {
       throw new StoryGenerationError('No project context available', {
-        operation: 'generateAdventureContent'
+        operation: 'generateQuestContent'
       });
     }
     
     if (!this.state.currentTheme) {
       throw new StoryGenerationError('No theme selected', {
-        operation: 'generateAdventureContent'
+        operation: 'generateQuestContent'
       });
     }
   }
+  
 
   /**
-   * Generate content for the adventure
+   * Generate content for the quest
    */
-  private async generateAdventureContent(adventure: Adventure): Promise<AdventureContent> {
+  private async generateQuestContent(quest: Quest): Promise<QuestContent> {
     let codeContent: string;
     
-    // Use targeted content if adventure has specific files, otherwise use full repomix content
-    if (adventure.codeFiles && adventure.codeFiles.length > 0 && this.state.projectPath) {
+    // Use targeted content if quest has specific files, otherwise use full repomix content
+    if (quest.codeFiles && quest.codeFiles.length > 0 && this.state.projectPath) {
       try {
-        console.log(`🎯 Generating targeted content for ${adventure.codeFiles.length} files`);
+        console.log(`🎯 Generating targeted content for ${quest.codeFiles.length} files`);
         codeContent = await repoAnalyzer.generateTargetedContent(
           this.state.projectPath,
-          adventure.codeFiles
+          quest.codeFiles
         );
       } catch (error) {
         console.warn(`Failed to generate targeted content, falling back to full repomix content:`, error);
@@ -241,65 +247,68 @@ export class AdventureManager {
       codeContent = this.state.projectInfo!.repomixContent;
     }
 
-    return await this.storyGenerator.generateAdventureContent(
-      adventure,
+    return await this.storyGenerator.generateQuestContent(
+      quest,
       this.state.currentTheme!,
       codeContent
     );
   }
+  
 
   /**
-   * Mark adventure as completed
+   * Mark quest as completed
    */
-  private markAdventureCompleted(adventure: Adventure): void {
-    this.state.completedAdventures.add(adventure.id);
+  private markQuestCompleted(quest: Quest): void {
+    this.state.completedQuests.add(quest.id);
   }
+  
 
   /**
-   * Generate completion summary for the adventure
+   * Generate completion summary for the quest
    */
-  private async generateCompletionSummary(adventure: Adventure): Promise<string> {
+  private async generateCompletionSummary(quest: Quest): Promise<string> {
     return await this.storyGenerator.generateCompletionSummary(
-      adventure,
+      quest,
       this.state.currentTheme!,
-      this.state.completedAdventures.size,
-      this.state.adventures.length
+      this.state.completedQuests.size,
+      this.state.quests.length
     );
   }
 
   /**
-   * Create the final adventure result
+   * Create the final quest result
    */
-  private createAdventureResult(content: AdventureContent, summary: string): AdventureResult {
+  private createQuestResult(content: QuestContent, summary: string, quest: Quest): AdventureResult {
     return {
-      narrative: this.formatAdventureResult(content, summary),
-      choices: this.getAvailableAdventureChoices(),
+      narrative: this.formatQuestResult(content, summary, quest.title),
+      choices: this.getAvailableQuestChoices(),
       completed: true,
-      progressUpdate: `Progress: ${this.state.progressPercentage}% complete (${this.state.completedAdventures.size}/${this.state.adventures.length} adventures finished)`
+      progressUpdate: `Progress: ${this.state.progressPercentage}% complete (${this.state.completedQuests.size}/${this.state.quests.length} quests finished)`
     };
   }
+  
 
   /**
-   * Get current progress and available adventures
+   * Get current progress and available quests
    */
   getProgress(): AdventureResult {
-    const completedList = Array.from(this.state.completedAdventures)
-      .map(id => this.state.adventures.find(a => a.id === id)?.title)
+    const completedList = Array.from(this.state.completedQuests)
+      .map(id => this.state.quests.find(q => q.id === id)?.title)
       .filter(Boolean);
 
-    const narrative = `📊 **Adventure Progress**
+    const narrative = `📊 **Quest Progress**
 
 **Overall Progress**: ${this.state.progressPercentage}% complete
-**Adventures Completed**: ${this.state.completedAdventures.size}/${this.state.adventures.length}
+**Quests Completed**: ${this.state.completedQuests.size}/${this.state.quests.length}
 
-${completedList.length > 0 ? `**Completed Adventures:**
-${completedList.map((title, i) => `${i + 1}. ${title}`).join('\n')}` : '**No adventures completed yet.** Choose your first adventure below!'}
+${completedList.length > 0 ? `**Completed Quests:**
+${completedList.map((title, i) => `${i + 1}. ${title}`).join('\n')}` : '**No quests completed yet.** Choose your first quest below!'}
 
-${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have successfully explored this codebase through your epic adventures!' : 'Continue your journey by selecting another adventure:'}`;
+${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have successfully explored this codebase through your epic quests!' : 'Continue your journey by selecting another quest:'}`;
 
     return {
       narrative,
-      choices: this.getAvailableAdventureChoices()
+      choices: this.getAvailableQuestChoices()
     };
   }
 
@@ -311,25 +320,26 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
 
 
   /**
-   * Format story with adventures for initial presentation
+   * Format story with quests for initial presentation
    */
-  private formatStoryWithAdventures(storyResponse: StoryResponse): string {
-    const adventuresText = storyResponse.adventures
-      .map((adventure) => `**${adventure.title}** - ${adventure.description}`)
+  private formatStoryWithQuests(storyResponse: StoryResponse): string {
+    const questsText = storyResponse.quests
+      .map((quest) => `**${quest.title}** - ${quest.description}`)
       .join('\n');
 
     return `${storyResponse.story}
 
 **🗺️ Available Quests:**
 
-${adventuresText}
+${questsText}
 `;
   }
+  
 
   /**
-   * Format complete adventure result
+   * Format complete quest result
    */
-  private formatAdventureResult(content: AdventureContent, completionSummary: string): string {
+  private formatQuestResult(content: QuestContent, completionSummary: string, questTitle: string): string {
     const fileExplorationText = content.fileExploration 
       ? `\n\n${content.fileExploration}`
       : '';
@@ -344,23 +354,25 @@ ${adventuresText}
       ? `\n\n**💡 Helpful Hints:**\n${content.hints.map(hint => `• ${hint}`).join('\n')}`
       : '';
 
-    return `${content.adventure}${fileExplorationText}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
+    return `**${questTitle}**\n\n${content.quest}${fileExplorationText}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
   }
+  
 
   /**
-   * Get available adventure choices for user
+   * Get available quest choices for user
    */
-  private getAvailableAdventureChoices(): string[] {
-    const incomplete = this.state.adventures.filter(a => !this.state.completedAdventures.has(a.id));
+  private getAvailableQuestChoices(): string[] {
+    const incomplete = this.state.quests.filter(q => !this.state.completedQuests.has(q.id));
     
     if (incomplete.length === 0) {
-      return ['View progress', 'Start new adventure'];
+      return ['View progress', 'Start new quest'];
     }
 
     return [
-      ...incomplete.slice(0, 4).map(a => a.title),
+      ...incomplete.slice(0, 4).map(q => q.title),
       'View progress'
     ];
   }
+  
 
 }

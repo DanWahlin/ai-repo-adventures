@@ -11,7 +11,7 @@ IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
 {{themeGuidelines}}
 
 ## Complete Codebase
-{{codeContent}}{{workshopHighlights}}
+{{codeContent}}{{adventureGuidance}}
 
 ## CRITICAL: Code Authenticity Requirements
 - Use ONLY the code provided in the "## Complete Codebase" section above

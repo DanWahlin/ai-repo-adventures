@@ -24,7 +24,7 @@ Return a valid JSON object with this structure:
 \`\`\`json
 {
   "story": "MUST include formatted title + narrative + quest invitation (see MANDATORY STORY FORMAT below)",
-  "adventures": [
+  "quests": [
     {
       "id": "quest-1",
       "title": "🚀 Quest 1: [Theme-appropriate title related to this part of the system]",

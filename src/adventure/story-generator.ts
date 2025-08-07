@@ -1,17 +1,18 @@
 import type { ProjectInfo } from '../shared/types.js';
 import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKENS_QUEST } from '../shared/config.js';
-import { isValidTheme, THEMES } from '../shared/theme.js';
+import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
-import { loadAdventureConfig, formatConfigForPrompt, extractHighlightsForFiles, type AdventureConfig } from '../shared/adventure-config.js';
+import { loadAdventureConfig } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
 
-export interface Adventure {
+export interface Quest {
   id: string;
   title: string;
   description: string;
   codeFiles?: string[];
 }
+
 
 export interface Story {
   content: string;
@@ -21,15 +22,16 @@ export interface Story {
 
 export interface StoryResponse {
   story: string | Story;
-  adventures: Adventure[];
+  quests: Quest[];
 }
 
-export interface AdventureContent {
+export interface QuestContent {
   adventure: string;
   fileExploration?: string;
   codeSnippets: CodeSnippet[];
   hints: string[];
 }
+
 
 export interface CodeSnippet {
   file: string;
@@ -40,22 +42,24 @@ export interface CodeSnippet {
 // Internal interfaces for validation
 interface ParsedStoryResponse {
   story: string;
-  adventures: ParsedAdventure[];
+  quests: ParsedQuest[];
 }
 
-interface ParsedAdventure {
+interface ParsedQuest {
   id: string;
   title: string;
   description: string;
   codeFiles?: string[];
 }
 
-interface ParsedAdventureContent {
+
+interface ParsedQuestContent {
   adventure: string;
   fileExploration?: string;
   codeSnippets: ParsedCodeSnippet[];
   hints: string[];
 }
+
 
 interface ParsedCodeSnippet {
   file: string;
@@ -63,14 +67,6 @@ interface ParsedCodeSnippet {
   explanation: string;
 }
 
-// Export story themes for backward compatibility with tests
-export const STORY_THEMES = {
-  SPACE: THEMES.SPACE.key,
-  MYTHICAL: THEMES.MYTHICAL.key,
-  ANCIENT: THEMES.ANCIENT.key
-} as const;
-
-export type StoryTheme = AdventureTheme;
 
 /**
  * Consolidated StoryGenerator - Combines the best of both implementations
@@ -83,7 +79,7 @@ export class StoryGenerator {
   private llmClient: LLMClient;
   private currentProject?: ProjectInfo;
   private customThemeData?: CustomThemeData;
-  private adventureConfig?: AdventureConfig | null;
+  private adventureConfigJson?: string | null;
 
   constructor() {
     this.llmClient = new LLMClient();
@@ -104,14 +100,14 @@ export class StoryGenerator {
   }
 
   /**
-   * Generate the initial story and adventures using LLM
+   * Generate the initial story and quests using LLM
    */
-  async generateStoryAndAdventures(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
+  async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
     this.currentProject = projectInfo;
     
     // Load adventure config if projectPath is provided
     if (projectPath) {
-      this.adventureConfig = loadAdventureConfig(projectPath);
+      this.adventureConfigJson = loadAdventureConfig(projectPath);
     }
     
     const validatedTheme = this.validateTheme(theme);
@@ -120,16 +116,16 @@ export class StoryGenerator {
 
   /**
    * Generate story - for backward compatibility with tests
-   * Maps to generateStoryAndAdventures but returns a Story object
+   * Maps to generateStoryAndQuests but returns a Story object
    */
   async generateStory(theme: AdventureTheme): Promise<Story> {
     if (!this.currentProject) {
       throw new Error('No project information available. Please analyze a project first.');
     }
 
-    const response = await this.generateStoryAndAdventures(this.currentProject, theme);
+    const response = await this.generateStoryAndQuests(this.currentProject, theme);
     
-    // Convert StoryResponse to Story format for backward compatibility
+    // Convert StoryResponse to Story format
 
     return {
       theme,
@@ -139,40 +135,25 @@ export class StoryGenerator {
   }
 
   /**
-   * Generate detailed adventure content using LLM
+   * Generate detailed quest content using LLM
    */
-  async generateAdventureContent(
-    adventure: Adventure,
+  async generateQuestContent(
+    quest: Quest,
     theme: AdventureTheme,
     codeContent: string
-  ): Promise<AdventureContent> {
-    // Find matching adventure config and extract highlights
-    let workshopHighlights = '';
-    if (this.adventureConfig && adventure.codeFiles) {
-      const highlights = extractHighlightsForFiles(this.adventureConfig, adventure.title, adventure.codeFiles);
-      if (highlights.length > 0) {
-        workshopHighlights = `\n## Workshop Highlights (Technical Reference Only)
-These are the technical functions to explore - but present them in ${theme} terms:
-
-${highlights.map(h => `- **${h.name}**: ${h.description}`).join('\n')}
-
-IMPORTANT: Do NOT mention these function names directly in your narrative! Instead, create the themed
-narrative around these concepts. You can include the actual file or function name in parentheses next to
-the appropriate place in the story/narrative.
-
-Instead, describe them using ${theme}-appropriate metaphors:
-- Constructor → Space: "Ship initialization sequence" / Medieval: "Castle foundation ritual"
-- Handler → Space: "Communication protocol" / Medieval: "Message courier system"
-Transform the technical concepts into your themed story while exploring the actual code.
-`;
-      }
+  ): Promise<QuestContent> {
+    // Include adventure config as context if available
+    let adventureGuidance = '';
+    if (this.adventureConfigJson) {
+      adventureGuidance = `\n## Adventure Configuration Context
+${this.adventureConfigJson}`;
     }
 
     const prompt = loadQuestContentPrompt({
       theme,
-      adventureTitle: adventure.title,
+      adventureTitle: quest.title,
       codeContent,
-      ...(workshopHighlights && { workshopHighlights }),
+      ...(adventureGuidance && { adventureGuidance }),
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     });
 
@@ -181,25 +162,26 @@ Transform the technical concepts into your themed story while exploring the actu
     );
     
     if (!response.content || response.content.trim() === '') {
-      throw new Error('LLM returned empty response for adventure content');
+      throw new Error('LLM returned empty response for quest content');
     }
     
     let parsed;
     try {
       parsed = JSON.parse(response.content);
     } catch (error) {
-      throw new Error(`Invalid JSON response from LLM for adventure content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
+      throw new Error(`Invalid JSON response from LLM for quest content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
     }
     
-    this.validateAdventureContent(parsed);
+    this.validateQuestContent(parsed);
     return parsed;
   }
+
 
   /**
    * Generate completion summary using LLM
    */
   async generateCompletionSummary(
-    adventure: Adventure,
+    quest: Quest,
     theme: AdventureTheme,
     progress: number,
     total: number
@@ -225,7 +207,7 @@ Transform the technical concepts into your themed story while exploring the actu
     
     const prompt = loadCompletionPrompt({
       themeDescription,
-      adventureTitle: adventure.title,
+      adventureTitle: quest.title,
       progress,
       total,
       percentComplete,
@@ -244,20 +226,11 @@ Transform the technical concepts into your themed story while exploring the actu
   private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
     const repomixContent = projectInfo.repomixContent || 'No repomix content available';
     
-    // Add adventure config guidance if available
-    const adventureGuidance = this.adventureConfig 
-      ? `\n## Adventure Guidance (Technical Reference Only)
-The following predefined adventure structure identifies important code areas to explore:
-
-${formatConfigForPrompt(this.adventureConfig)}
-
-IMPORTANT: DO NOT use these titles or descriptions literally! They are technical references only.
-You MUST transform them into ${theme}-themed adventures:
-- "Core Server" → Space: "Command Bridge Protocol Systems" / Medieval: "Castle's Command Tower" 
-- "File Management" → Space: "Navigation & Mission Control" / Medieval: "Quest Chronicles Hall"
-
-Use the file paths and function highlights to understand what code areas to focus on,
-but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n`
+    // Add adventure config as context if available
+    const adventureGuidance = this.adventureConfigJson 
+      ? `\n## Adventure Configuration Context
+${this.adventureConfigJson}
+`
       : '';
 
     const prompt = loadStoryGenerationPrompt({
@@ -300,13 +273,14 @@ but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n
       throw new Error('Invalid response: missing or invalid story field');
     }
     
-    if (!Array.isArray(candidate.adventures)) {
-      throw new Error('Invalid response: adventures must be an array');
+    // Validate quests array
+    if (!Array.isArray(candidate.quests)) {
+      throw new Error('Invalid response: quests must be an array');
     }
     
-    candidate.adventures.forEach((adventure, i: number) => {
-      if (!adventure.id || !adventure.title || !adventure.description) {
-        throw new Error(`Invalid adventure at index ${i}: missing required fields`);
+    candidate.quests.forEach((quest, i: number) => {
+      if (!quest.id || !quest.title || !quest.description) {
+        throw new Error(`Invalid quest at index ${i}: missing required fields`);
       }
     });
     
@@ -314,10 +288,10 @@ but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n
   }
 
   /**
-   * Validate adventure content structure
+   * Validate quest content structure
    */
-  private validateAdventureContent(parsed: unknown): parsed is ParsedAdventureContent {
-    const candidate = parsed as ParsedAdventureContent;
+  private validateQuestContent(parsed: unknown): parsed is ParsedQuestContent {
+    const candidate = parsed as ParsedQuestContent;
     
     if (!candidate.adventure || typeof candidate.adventure !== 'string') {
       throw new Error('Invalid content: missing adventure field');
@@ -333,6 +307,7 @@ but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n
     
     return true;
   }
+  
 
   /**
    * Helper to wrap promises with timeout
@@ -365,5 +340,5 @@ but CREATE NEW themed titles and descriptions that fit the ${theme} narrative.\n
 
 }
 
-// For backward compatibility with DynamicStoryGenerator usage
+// Legacy export name for consistency
 export { StoryGenerator as DynamicStoryGenerator };

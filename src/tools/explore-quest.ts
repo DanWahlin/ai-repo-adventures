@@ -1,5 +1,5 @@
 /**
- * Explore Adventure Path Tool
+ * Explore Quest Tool
  * 
  * Delivers deep, workshop-style code exploration through LLM-generated 
  * themed content with adventure.config.json guidance.
@@ -17,18 +17,18 @@ export function setAdventureManager(manager: AdventureManager) {
 }
 
 // Schema
-const exploreAdventureQuestSchema = z.object({
+const exploreQuestSchema = z.object({
   choice: z.string().describe('The quest choice - can be quest number (1, 2, 3) or quest title')
 });
 
 // Types
-type ExploreAdventureQuestArgs = z.infer<typeof exploreAdventureQuestSchema>;
+type ExploreQuestArgs = z.infer<typeof exploreQuestSchema>;
 
 // Tool Definition
-export const exploreAdventureQuest = {
+export const exploreQuest = {
   description: `Delivers deep, workshop-style code exploration through LLM-generated themed content with adventure.config.json guidance. This tool accepts quest numbers (1-5) or partial titles and creates detailed educational experiences that blend actual code analysis with immersive storytelling. Uses targeted repomix content for specific files plus workshop highlights that guide users through key functions step-by-step. The LLM transforms technical function names into theme-appropriate metaphors while maintaining educational value - constructors become "initialization rituals", handlers become "communication protocols", analyzers become "scanning systems". Each exploration includes real code snippets, architectural insights, dependency explanations, and practical hints wrapped in engaging narrative. Tracks completion progress and suggests logical next steps. Perfect for learning complex codebases through structured, gamified exploration. INVOKE to dive into specific quest areas: "explore 1", "quest 2", "visit the command center", "enter the temple", "explore MCP tools", "dive into story generation".`,
-  schema: exploreAdventureQuestSchema,
-  handler: async (args: ExploreAdventureQuestArgs) => {
+  schema: exploreQuestSchema,
+  handler: async (args: ExploreQuestArgs) => {
     if (!adventureManager) {
       throw new McpError(ErrorCode.InternalError, 'Adventure manager not initialized');
     }
@@ -54,7 +54,7 @@ export const exploreAdventureQuest = {
       
       // Add available choices
       if (result.choices && result.choices.length > 0) {
-        responseText += `\n\n**Available Quests:**\n${result.choices.map((choice: string) => `${choice}`).join('\n')}\n\nUse \`explore_adventure_quest\` with your choice to continue your journey!`;
+        responseText += `\n\n**Available Quests:**\n${result.choices.map((choice: string) => `${choice}`).join('\n')}\n\nUse \`explore_quest\` with your choice to continue your journey!`;
       }
       
       return {
@@ -73,3 +73,4 @@ export const exploreAdventureQuest = {
     }
   }
 };
+

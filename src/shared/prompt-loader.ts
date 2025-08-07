@@ -109,7 +109,7 @@ function getThemeGuidelines(theme: AdventureTheme, customThemeData?: CustomTheme
 
 **Story Requirements:**
 - ${guidelines.style}
-- Create an overarching narrative that connects all coding adventures
+- Create an overarching narrative that connects all coding quests
 - Each adventure should feel like a chapter in the overall story
 - Use ${theme} metaphors that make technical concepts intuitive
 - Reference actual file names and technologies from the analysis
@@ -209,7 +209,7 @@ function getFallbackThemeGuidelines(): ThemeGuidelinesMap {
     mythical: {
       vocabulary: 'kingdom/quest/magic/castle terms', 
       restriction: '(mythical themes only)',
-      style: 'Create magical kingdom adventures'
+      style: 'Create magical kingdom quests'
     },
     ancient: {
       vocabulary: 'temple/wisdom/ancient/pyramid terms',
