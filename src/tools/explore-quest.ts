@@ -54,7 +54,16 @@ export const exploreQuest = {
       
       // Add available choices
       if (result.choices && result.choices.length > 0) {
-        responseText += `\n\n**Available Quests:**\n${result.choices.map((choice: string) => `${choice}`).join('\n')}\n\nUse \`explore_quest\` with your choice to continue your journey!`;
+        const questChoices = result.choices.filter(c => !c.includes('View progress'));
+        const hasProgress = result.choices.includes('View progress');
+        
+        responseText += `\n\n**🗺️ Available Quests:**\n${questChoices.join('\n')}`;
+        
+        if (hasProgress) {
+          responseText += `\n\n**📊 Other Options:**\n  View progress`;
+        }
+        
+        responseText += `\n\nUse \`explore_quest\` with your choice to continue your journey!`;
       }
       
       return {

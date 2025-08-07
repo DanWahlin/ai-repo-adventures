@@ -25,6 +25,7 @@ export class AdventureState {
   story: string | undefined = undefined;
   quests: Quest[] = [];
   completedQuests: Set<string> = new Set();
+  questContentCache: Map<string, { content: QuestContent; summary: string }> = new Map();
   currentTheme: AdventureTheme | null = null;
   projectInfo: ProjectInfo | undefined = undefined;
   projectPath: string | undefined = undefined;
@@ -40,6 +41,7 @@ export class AdventureState {
     this.story = undefined;
     this.quests = [];
     this.completedQuests.clear();
+    this.questContentCache.clear();
     this.currentTheme = null;
     this.projectInfo = undefined;
     this.projectPath = undefined;
@@ -165,15 +167,22 @@ export class AdventureManager {
   
 
   /**
-   * Find quest by ID or title match
+   * Find quest by ID or title match - handles checkmark prefix for completed quests
    */
   private findQuestByIdOrTitle(choice: string): Quest | undefined {
-    const lowerChoice = choice.toLowerCase();
-    return this.state.quests.find(q => 
-      q.id === choice || 
-      q.title.toLowerCase().includes(lowerChoice) ||
-      lowerChoice.includes(q.title.toLowerCase())
-    );
+    // Remove checkmark if present in the choice
+    const cleanedChoice = choice.replace(/^✅\s*/, '').trim();
+    const lowerChoice = cleanedChoice.toLowerCase();
+    
+    return this.state.quests.find(q => {
+      // Clean the quest title for comparison (remove emoji)
+      const cleanTitle = q.title.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '').toLowerCase();
+      
+      return q.id === cleanedChoice || 
+             q.title.toLowerCase().includes(lowerChoice) ||
+             cleanTitle.includes(lowerChoice) ||
+             lowerChoice.includes(cleanTitle);
+    });
   }
   
 
@@ -188,18 +197,46 @@ export class AdventureManager {
   }
 
   /**
-   * Execute the selected quest
+   * Execute the selected quest - uses cache for completed quests
    */
   private async executeQuest(quest: Quest): Promise<AdventureResult> {
     // Validate prerequisites
     this.validateQuestPrerequisites();
 
-    // Generate quest content
-    const content = await this.generateQuestContent(quest);
+    let content: QuestContent;
+    let summary: string;
+
+    // Check if quest content is already cached (completed quest)
+    const cached = this.state.questContentCache.get(quest.id);
+    if (cached) {
+      // Use cached content - no LLM calls needed  
+      console.log(`🔄 Retrieving completed quest from cache...`);
+      
+      // Add a small delay to make the loading feel more natural
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      content = cached.content;
+      summary = cached.summary;
+      
+      // Add visual indicator that this is cached content
+      content = {
+        ...content,
+        adventure: `🔄 **[REVISITING COMPLETED QUEST]**\n\n${content.adventure}`
+      };
+    } else {
+      // Generate new quest content (LLM call)
+      console.log(`🎯 Generating new content for quest: ${quest.title}`);
+      content = await this.generateQuestContent(quest);
+      
+      // Generate completion summary (LLM call)
+      summary = await this.generateCompletionSummary(quest);
+      
+      // Cache the content for future access
+      this.state.questContentCache.set(quest.id, { content, summary });
+    }
     
-    // Mark as completed and generate summary
+    // Mark as completed (or update completion if revisiting)
     this.markQuestCompleted(quest);
-    const summary = await this.generateCompletionSummary(quest);
 
     // Return formatted result
     return this.createQuestResult(content, summary, quest);
@@ -293,7 +330,15 @@ export class AdventureManager {
    */
   getProgress(): AdventureResult {
     const completedList = Array.from(this.state.completedQuests)
-      .map(id => this.state.quests.find(q => q.id === id)?.title)
+      .map(id => {
+        const quest = this.state.quests.find(q => q.id === id);
+        if (quest) {
+          // Replace emoji with checkmark for completed quests
+          const titleWithoutEmoji = quest.title.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '');
+          return `✅ ${titleWithoutEmoji}`;
+        }
+        return null;
+      })
       .filter(Boolean);
 
     const narrative = `📊 **Quest Progress**
@@ -359,20 +404,29 @@ ${questsText}
   
 
   /**
-   * Get available quest choices for user
+   * Get available quest choices for user - shows all quests with completion status
    */
   private getAvailableQuestChoices(): string[] {
-    const incomplete = this.state.quests.filter(q => !this.state.completedQuests.has(q.id));
-    
-    if (incomplete.length === 0) {
+    if (this.state.quests.length === 0) {
       return ['View progress', 'Start new quest'];
     }
 
+    // Show all quests with checkmarks for completed ones
+    const questChoices = this.state.quests.map((q, index) => {
+      const questNumber = index + 1;
+      if (this.state.completedQuests.has(q.id)) {
+        // Replace the emoji at the start with a checkmark for completed quests
+        const titleWithoutEmoji = q.title.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '');
+        return `  ${questNumber}. ✅ ${titleWithoutEmoji}`;
+      }
+      return `  ${questNumber}. ${q.title}`;
+    });
+
     return [
-      ...incomplete.map(q => q.title),
+      ...questChoices,
       'View progress'
     ];
   }
-  
+
 
 }

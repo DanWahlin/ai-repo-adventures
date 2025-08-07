@@ -92,6 +92,7 @@ class InteractiveMCPClient {
     }
   }
 
+
   private parseUserInput(input: string): { intent: string; params: any } {
     const lower = input.toLowerCase();
 
@@ -181,13 +182,13 @@ class InteractiveMCPClient {
         if (!response.includes('Error') && !response.includes('Failed')) {
           this.adventureStarted = true;
         } else if (response.includes('not a valid directory')) {
-          response += `\n\n${colors.yellow}💡 Tip: Use /project to set a valid project path, or just press Enter during setup to use this project.${colors.reset}`;
+          response += `\n\n${chalk.yellow('💡 Tip: Use /project to set a valid project path, or just press Enter during setup to use this project.')}`;
         }
         break;
         
       case 'choose_theme':
         if (!this.adventureStarted) {
-          console.log(`${colors.yellow}💡 Let me start the adventure first...${colors.reset}\n`);
+          console.log(chalk.yellow('💡 Let me start the adventure first...\n'));
           await this.callTool('start_adventure', { projectPath: this.currentProject });
           this.adventureStarted = true;
         }
@@ -235,7 +236,7 @@ ${chalk.green('Press Enter for option 1 (default)')}
           // Ask for path
           this.rl.question(chalk.bold('Enter project path> '), (path) => {
             this.currentProject = path.trim() || process.cwd();
-            console.log(`${colors.green}✓ Project set to: ${this.currentProject}${colors.reset}`);
+            console.log(chalk.green(`✓ Project set to: ${this.currentProject}`));
             console.log('\n' + chalk.cyan('Ready! Type "start adventure" to begin exploring.') + '\n');
             resolve();
           });
@@ -243,7 +244,7 @@ ${chalk.green('Press Enter for option 1 (default)')}
         } else {
           // Assume they entered a path
           this.currentProject = trimmed;
-          console.log(`${colors.green}✓ Project set to: ${this.currentProject}${colors.reset}`);
+          console.log(chalk.green(`✓ Project set to: ${this.currentProject}`));
         }
         
         console.log('\n' + chalk.cyan('Ready! Type "start adventure" to begin exploring.') + '\n');

@@ -331,13 +331,6 @@ ${this.adventureConfigJson}
     return theme;
   }
 
-
-
-
-
-
-
-
 }
 
 // Legacy export name for consistency
