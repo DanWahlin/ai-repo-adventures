@@ -2,7 +2,7 @@
 
 ## 🎯 OBJECTIVE
 
-Turn the provided codebase into an immersive, theme-driven story that helps developers understand what the code does through narrative. Then, break that story into 3–5 **interconnected quests** that each contribute to the main storyline while exploring specific technical components or files from the codebase.
+Turn the provided codebase into an immersive, theme-driven story that helps developers understand what the code does through narrative. Then, break that story into **interconnected quests** (typically 3-7 based on codebase size and complexity) that each contribute to the main storyline while exploring specific technical components or files from the codebase.
 
 **CRITICAL: These quests are parts of a single overarching story, NOT standalone tasks. Users can explore them in any order.**
 
@@ -206,4 +206,4 @@ These are provided dynamically in each run of the prompt:
 
 ## ✅ FINAL INSTRUCTION
 
-Create a single overarching story based on the \`## Project Codebase\`, and 3–5 interconnected quests that explore different aspects of that story through real technical files. **Each quest should contribute to the main narrative while being explorable independently** — users can choose their own adventure path. Each quest should feel like exploring a different area of the same thematic world, connected by the overall story but self-contained enough to be meaningful on its own.
+Create a single overarching story based on the \`## Project Codebase\`, and interconnected quests (dynamically sized based on project complexity) that explore different aspects of that story through real technical files. **Each quest should contribute to the main narrative while being explorable independently** — users can choose their own adventure path. Each quest should feel like exploring a different area of the same thematic world, connected by the overall story but self-contained enough to be meaningful on its own.

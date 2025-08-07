@@ -22,7 +22,7 @@ export class RepoAnalyzer {
   constructor() {}
 
   /**
-   * Validate project path for security
+   * Basic validation for project path - minimal checks for actual use case
    */
   private validateProjectPath(projectPath: string): void {
     if (!projectPath || typeof projectPath !== 'string') {
@@ -34,31 +34,9 @@ export class RepoAnalyzer {
       throw new Error('Project path must be a non-empty string');
     }
 
-    // Check for dangerous system directories
-    const dangerousPaths = [
-      '/etc/', '/bin/', '/usr/bin/', '/sbin/', '/usr/sbin/',
-      '/root/', '/boot/', '/dev/', '/proc/', '/sys/'
-    ];
-
-    const normalizedPath = path.resolve(trimmedPath);
-    
-    // Enhanced path traversal protection
-    const normalizedInput = path.normalize(trimmedPath);
-    if (normalizedInput.includes('..') || normalizedPath !== path.resolve(normalizedInput)) {
-      throw new Error('Project path cannot contain path traversal sequences or invalid path components');
-    }
-    
-    for (const dangerous of dangerousPaths) {
-      if (normalizedPath.startsWith(dangerous)) {
-        throw new Error(`Project path cannot access system directory: ${dangerous}`);
-      }
-    }
-
-    // Additional security check: ensure path doesn't escape to parent directories
-    const cwd = process.cwd();
-    const relativePath = path.relative(cwd, normalizedPath);
-    if (relativePath.startsWith('..')) {
-      throw new Error('Project path cannot escape current working directory tree');
+    // Basic safety check for null bytes (can break file system operations)
+    if (trimmedPath.includes('\0')) {
+      throw new Error('Project path contains invalid null bytes');
     }
   }
 

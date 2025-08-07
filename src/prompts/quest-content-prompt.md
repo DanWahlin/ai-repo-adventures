@@ -13,11 +13,13 @@ IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
 ## Complete Codebase
 {{codeContent}}{{adventureGuidance}}
 
-## CRITICAL: Code Authenticity Requirements
-- Use ONLY the code provided in the "## Complete Codebase" section above
-- DO NOT create, modify, or invent any code examples
-- If no code is available, say "No code available for this file"
-- Show actual imports, actual function names, actual technologies from the files
+## ⚠️ CRITICAL: Code Authenticity Requirements - ZERO TOLERANCE FOR FAKE CODE
+- **NEVER INVENT FUNCTIONS**: Use ONLY code that exists in the "## Complete Codebase" section above
+- **NEVER CREATE EXAMPLES**: DO NOT create, modify, or invent any code examples whatsoever
+- **VERIFY BEFORE INCLUDING**: Every function, variable, and code snippet MUST exist in the actual files
+- **If no relevant code exists**: Say "No specific code functions were found for this file"
+- **Show ONLY actual**: imports, function names, class names, and technologies from the files
+- **FORBIDDEN**: Creating example functions like `calculateTrajectory()`, `processData()`, or any invented code
 
 ## Real-World Analogy Guidelines
 For code snippet explanations, use relatable analogies:
@@ -43,9 +45,17 @@ Add tasteful visual elements to enhance readability and engagement:
   "codeSnippets": [
     {
       "file": "filename",
-      "snippet": "EXACT code from the files provided above - DO NOT invent or modify code",
-      "explanation": "Start with a real-world analogy (like 'This is like a restaurant menu that...'), then explain the actual code and how the analogy relates"
+      "snippet": "EXACT code from the files - ZERO INVENTED CODE - Use 'No code found' if none exists",
+      "explanation": "Start with a real-world analogy, then explain ONLY the actual code shown - NEVER explain fake/invented code"
     }
   ],
   "hints": ["Practical tip", "Next steps"]
 }
+
+## ⚠️ FINAL VERIFICATION CHECKLIST
+Before submitting your response, verify:
+✅ Every code snippet exists in the "## Complete Codebase" section
+✅ Every function name mentioned exists in the actual files  
+✅ No invented/example code was created
+✅ If no relevant code exists, you used "No code found" or similar
+❌ NEVER submit responses with fake functions like `calculateTrajectory()`, `processData()`, etc.

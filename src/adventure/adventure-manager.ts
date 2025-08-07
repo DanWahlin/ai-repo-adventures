@@ -369,7 +369,7 @@ ${questsText}
     }
 
     return [
-      ...incomplete.slice(0, 4).map(q => q.title),
+      ...incomplete.map(q => q.title),
       'View progress'
     ];
   }
