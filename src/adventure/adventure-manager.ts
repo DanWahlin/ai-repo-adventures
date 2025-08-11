@@ -1,13 +1,6 @@
 import type { ProjectInfo } from '../shared/types.js';
 import type { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { StoryGenerator, Quest, StoryResponse, QuestContent } from './story-generator.js';
-// Simple inline error for the two places we need it
-class StoryGenerationError extends Error {
-  constructor(message: string, _context?: Record<string, unknown>) {
-    super(message);
-    this.name = 'StoryGenerationError';
-  }
-}
 import { validateAdventureChoice } from '../shared/input-validator.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 
@@ -248,15 +241,11 @@ export class AdventureManager {
    */
   private validateQuestPrerequisites(): void {
     if (!this.state.projectInfo) {
-      throw new StoryGenerationError('No project context available', {
-        operation: 'generateQuestContent'
-      });
+      throw new Error('No project context available');
     }
     
     if (!this.state.currentTheme) {
-      throw new StoryGenerationError('No theme selected', {
-        operation: 'generateQuestContent'
-      });
+      throw new Error('No theme selected');
     }
   }
   
@@ -419,7 +408,11 @@ ${questsText}
         const titleWithoutEmoji = q.title.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*/u, '');
         return `  ${questNumber}. ✅ ${titleWithoutEmoji}`;
       }
-      return `  ${questNumber}. ${q.title}`;
+      
+      // For non-completed quests, ensure proper spacing after emoji
+      // Handle compound emojis (emoji + variant selector) properly
+      const formattedTitle = q.title.replace(/^((?:\p{Emoji_Presentation}|\p{Extended_Pictographic})(?:\uFE0F)?)(\S)/u, '$1 $2');
+      return `  ${questNumber}. ${formattedTitle}`;
     });
 
     return [

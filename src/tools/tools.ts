@@ -16,19 +16,12 @@
 
 import { AdventureManager } from '../adventure/adventure-manager.js';
 import { startAdventure } from './start-adventure.js';
-import { chooseTheme, setAdventureManager as setChooseThemeManager } from './choose-theme.js';
-import { exploreQuest, setAdventureManager as setExploreQuestManager } from './explore-quest.js';
-import { viewProgress, setAdventureManager as setViewProgressManager } from './view-progress.js';
+import { chooseTheme } from './choose-theme.js';
+import { exploreQuest } from './explore-quest.js';
+import { viewProgress } from './view-progress.js';
 
-// Create a single shared adventure manager instance for tools that need it
-const adventureManager = new AdventureManager();
-
-// Initialize tools that need the adventure manager immediately
-setChooseThemeManager(adventureManager);
-setExploreQuestManager(adventureManager);
-setViewProgressManager(adventureManager);
-
-// Adventure manager initialized for all tools
+// Create and export a single shared adventure manager instance
+export const adventureManager = new AdventureManager();
 
 // Re-export tools with MCP naming convention
 export const start_adventure = startAdventure;

@@ -39,33 +39,6 @@ export interface CodeSnippet {
   explanation: string;
 }
 
-// Internal interfaces for validation
-interface ParsedStoryResponse {
-  story: string;
-  quests: ParsedQuest[];
-}
-
-interface ParsedQuest {
-  id: string;
-  title: string;
-  description: string;
-  codeFiles?: string[];
-}
-
-
-interface ParsedQuestContent {
-  adventure: string;
-  fileExploration?: string;
-  codeSnippets: ParsedCodeSnippet[];
-  hints: string[];
-}
-
-
-interface ParsedCodeSnippet {
-  file: string;
-  snippet: string;
-  explanation: string;
-}
 
 
 /**
@@ -266,8 +239,8 @@ ${this.adventureConfigJson}
   /**
    * Validate story response structure
    */
-  private validateStoryResponse(parsed: unknown): parsed is ParsedStoryResponse {
-    const candidate = parsed as ParsedStoryResponse;
+  private validateStoryResponse(parsed: unknown): parsed is StoryResponse {
+    const candidate = parsed as any;
     
     if (!candidate.story || typeof candidate.story !== 'string') {
       throw new Error('Invalid response: missing or invalid story field');
@@ -278,7 +251,7 @@ ${this.adventureConfigJson}
       throw new Error('Invalid response: quests must be an array');
     }
     
-    candidate.quests.forEach((quest, i: number) => {
+    candidate.quests.forEach((quest: any, i: number) => {
       if (!quest.id || !quest.title || !quest.description) {
         throw new Error(`Invalid quest at index ${i}: missing required fields`);
       }
@@ -290,8 +263,8 @@ ${this.adventureConfigJson}
   /**
    * Validate quest content structure
    */
-  private validateQuestContent(parsed: unknown): parsed is ParsedQuestContent {
-    const candidate = parsed as ParsedQuestContent;
+  private validateQuestContent(parsed: unknown): parsed is QuestContent {
+    const candidate = parsed as any;
     
     if (!candidate.adventure || typeof candidate.adventure !== 'string') {
       throw new Error('Invalid content: missing adventure field');

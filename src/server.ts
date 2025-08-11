@@ -9,7 +9,7 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { tools } from './tools/tools.js';
-import { convertZodSchema } from './utils/zod-to-json-schema.js';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { repoAnalyzer } from './analyzer/repo-analyzer.js';
 
 class RepoAdventureServer {
@@ -38,7 +38,13 @@ class RepoAdventureServer {
       const toolList = Object.entries(tools).map(([name, tool]) => ({
         name,
         description: tool.description,
-        inputSchema: convertZodSchema(tool.schema)
+        inputSchema: {
+          ...zodToJsonSchema(tool.schema, { 
+            target: 'jsonSchema7',
+            $refStrategy: 'none'
+          }),
+          type: 'object' // MCP SDK expects inputSchema.type to be 'object'
+        }
       }));
 
       return { tools: toolList };

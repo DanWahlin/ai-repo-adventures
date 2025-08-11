@@ -8,16 +8,10 @@
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
-import { AdventureManager } from '../adventure/adventure-manager.js';
 import { parseTheme, getAllThemes, AdventureTheme } from '../shared/theme.js';
 import { validateTheme } from '../shared/input-validator.js';
 import { createProjectInfo, generateThemeExamples } from './shared.js';
-
-// Create a shared adventure manager instance (imported from main tools.ts)
-let adventureManager: AdventureManager;
-export function setAdventureManager(manager: AdventureManager) {
-  adventureManager = manager;
-}
+import { adventureManager } from './tools.js';
 
 // Schema
 const chooseThemeSchema = z.object({

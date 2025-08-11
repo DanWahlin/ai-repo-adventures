@@ -7,14 +7,8 @@
 
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { AdventureManager } from '../adventure/adventure-manager.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
-
-// Create a shared adventure manager instance (imported from main tools.ts)
-let adventureManager: AdventureManager;
-export function setAdventureManager(manager: AdventureManager) {
-  adventureManager = manager;
-}
+import { adventureManager } from './tools.js';
 
 // Schema
 const exploreQuestSchema = z.object({

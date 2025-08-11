@@ -83,14 +83,6 @@ export function getAllThemes(): ThemeDefinition[] {
   return THEMES_ARRAY;
 }
 
-// Simple derived mappings
-export const THEME_DISPLAY_NAMES = Object.fromEntries(
-  THEMES_ARRAY.map(theme => [theme.key, theme.displayName])
-) as Record<AdventureTheme, string>;
-
-export const THEME_EMOJIS = Object.fromEntries(
-  THEMES_ARRAY.map(theme => [theme.key, theme.emoji])
-) as Record<AdventureTheme, string>;
 
 // Type guard using simple find
 export function isValidTheme(theme: string): theme is AdventureTheme {
