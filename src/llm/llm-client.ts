@@ -1,6 +1,7 @@
 import { OpenAI, AzureOpenAI } from 'openai';
 import { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_REQUEST_TIMEOUT, 
-         LLM_API_VERSION, GITHUB_TOKEN, LLM_MAX_TOKENS_DEFAULT } from '../shared/config.js';
+         LLM_API_VERSION, GITHUB_TOKEN, LLM_MAX_TOKENS_DEFAULT, LLM_TEMPERATURE,
+         GPT5_VERBOSITY, GPT5_REASONING_EFFORT } from '../shared/config.js';
 
 /**
  * Format numbers in a friendly way (25000 -> 25K)
@@ -22,14 +23,21 @@ export interface LLMResponse {
 export interface LLMRequestOptions {
   responseFormat?: 'text' | 'json_object';
   maxTokens?: number;
+  // GPT-5 specific parameters
+  verbosity?: 'low' | 'medium' | 'high';
+  reasoningEffort?: 'minimal' | 'medium' | 'high';
 }
 
 interface OpenAIRequestParams {
   model: string;
   messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
-  temperature: number;
-  max_tokens: number;
+  temperature?: number;
+  max_tokens?: number;
+  max_completion_tokens?: number;
   response_format?: { type: 'text' | 'json_object' };
+  // GPT-5 specific parameters
+  verbosity?: 'low' | 'medium' | 'high';
+  reasoning_effort?: 'minimal' | 'medium' | 'high';
 }
 
 export class LLMClient {
@@ -72,7 +80,12 @@ export class LLMClient {
   }
 
   private isAzureOpenAI(): boolean {
-    return LLM_BASE_URL.includes('.openai.azure.com');
+    return LLM_BASE_URL.includes('.openai.azure.com') || LLM_BASE_URL.includes('cognitiveservices.azure.com');
+  }
+
+  private isGPT5Model(): boolean {
+    // Match gpt-5, gpt5, gpt-5-mini, gpt5-mini, etc.
+    return /\bgpt[-]?5(?:[-]?\w+)?\b/.test(this.model.toLowerCase());
   }
 
   /**
@@ -98,10 +111,23 @@ export class LLMClient {
   private buildRequestParams(prompt: string, options?: LLMRequestOptions): OpenAIRequestParams {
     const requestParams: OpenAIRequestParams = {
       model: this.model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: options?.maxTokens || LLM_MAX_TOKENS_DEFAULT
+      messages: [{ role: 'user', content: prompt }]
     };
+
+    // Use model-specific parameters
+    if (this.isGPT5Model()) {
+      // GPT-5 models use different parameters
+      requestParams.temperature = 1; // GPT-5 only supports default temperature (ignore env var)
+      requestParams.max_completion_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+      
+      // Add GPT-5 specific parameters
+      requestParams.verbosity = options?.verbosity || GPT5_VERBOSITY;
+      requestParams.reasoning_effort = options?.reasoningEffort || GPT5_REASONING_EFFORT;
+    } else {
+      // GPT-4, GPT-3.5, and other models use standard parameters
+      requestParams.temperature = LLM_TEMPERATURE; // Use environment variable
+      requestParams.max_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+    }
 
     console.error(`🔄 Starting LLM request to ${this.model} (timeout: ${LLM_REQUEST_TIMEOUT}ms, prompt length: ${prompt.length} chars)`);
 
@@ -159,7 +185,7 @@ export class LLMClient {
     console.error('- Content null/empty:', content === null ? 'null' : 'empty string');
     
     if (choice.finish_reason === 'length') {
-      throw new Error('LLM response was truncated due to token limit. Try reducing prompt size or increasing max_tokens.');
+      throw new Error('LLM response was truncated due to token limit. Try reducing prompt size or increasing maxTokens option.');
     }
     
     throw new Error(`LLM returned empty response. Finish reason: ${choice.finish_reason || 'unknown'}`);

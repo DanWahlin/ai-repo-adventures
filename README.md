@@ -248,14 +248,14 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 
    **🔥 OpenAI (Direct)**:
    ```bash
-   OPENAI_API_KEY=your_openai_key_here
+   LLM_API_KEY=your_openai_key_here
    LLM_BASE_URL=https://api.openai.com/v1
    LLM_MODEL=gpt-4o-mini
    ```
 
    **🏢 Azure OpenAI**:
    ```bash
-   AZURE_OPENAI_API_KEY=your_azure_key_here
+   LLM_API_KEY=your_azure_key_here
    LLM_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
    LLM_MODEL=gpt-4o
    ```

@@ -1,3 +1,4 @@
+import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -20,7 +21,8 @@ export function loadAdventureConfig(projectPath: string): string | null {
     
     return configContent;
   } catch (error) {
-    console.warn(`Failed to load adventure.config.json: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Silently return null for missing or invalid config files
+    // This is expected behavior when adventure.config.json is optional
     return null;
   }
 }
