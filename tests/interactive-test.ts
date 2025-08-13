@@ -16,6 +16,8 @@ class InteractiveMCPClient {
   private currentProject: string = process.cwd();
   private adventureStarted: boolean = false;
   private currentTheme?: string;
+  private awaitingCustomTheme: boolean = false;
+  private customThemeData: { name?: string; description?: string; keywords?: string[] } = {};
 
   constructor() {
     this.client = new Client(
@@ -48,6 +50,56 @@ class InteractiveMCPClient {
 
     console.log(chalk.green('✅ Connected successfully!'));
     console.log(chalk.dim(`Available tools: ${Array.from(this.tools.keys()).join(', ')}`) + '\n');
+  }
+
+  private async handleCustomTheme(): Promise<void> {
+    console.log(chalk.cyan('\n✨ Creating a Custom Theme Adventure!\n'));
+    
+    // Collect custom theme data interactively
+    const customTheme = await new Promise<{ name: string; description: string; keywords: string[] }>((resolve) => {
+      const themeData: { name?: string; description?: string; keywords?: string[] } = {};
+      
+      // Step 1: Get theme name
+      this.rl.question(chalk.bold('Theme Name (e.g., "Pirate Adventure", "Cyberpunk"): '), (name) => {
+        themeData.name = name.trim();
+        
+        // Step 2: Get theme description
+        this.rl.question(chalk.bold('Theme Description (e.g., "A swashbuckling journey across the seven seas of code"): '), (desc) => {
+          themeData.description = desc.trim();
+          
+          // Step 3: Get keywords
+          this.rl.question(chalk.bold('Keywords (comma-separated, e.g., "pirate, ship, treasure, ocean"): '), (keywordsInput) => {
+            themeData.keywords = keywordsInput.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            
+            // Validate we have all required data
+            if (!themeData.name || !themeData.description || !themeData.keywords || themeData.keywords.length === 0) {
+              console.log(chalk.red('\n❌ Custom theme requires a name, description, and at least one keyword. Please try again.\n'));
+              this.handleCustomTheme(); // Retry
+              return;
+            }
+            
+            resolve(themeData as { name: string; description: string; keywords: string[] });
+          });
+        });
+      });
+    });
+    
+    // Display what we're creating
+    console.log(chalk.green('\n✅ Creating custom theme:'));
+    console.log(chalk.dim(`  Name: ${customTheme.name}`));
+    console.log(chalk.dim(`  Description: ${customTheme.description}`));
+    console.log(chalk.dim(`  Keywords: ${customTheme.keywords.join(', ')}`));
+    console.log();
+    
+    // Call the tool with custom theme data
+    const response = await this.callTool('choose_theme', {
+      theme: 'custom',
+      customTheme
+    });
+    
+    this.currentTheme = 'custom';
+    console.log(this.formatText(response));
+    console.log('\n' + chalk.dim('─'.repeat(60)) + '\n');
   }
 
   private formatText(text: string): string {
@@ -118,9 +170,11 @@ class InteractiveMCPClient {
     }
 
     // Choose theme
-    if (lower.includes('space') || lower.includes('mythical') || lower.includes('ancient')) {
+    if (lower.includes('space') || lower.includes('mythical') || lower.includes('ancient') || lower.includes('developer') || lower.includes('custom')) {
       const theme = lower.includes('space') ? 'space' : 
-                    lower.includes('mythical') ? 'mythical' : 'ancient';
+                    lower.includes('mythical') ? 'mythical' :
+                    lower.includes('ancient') ? 'ancient' :
+                    lower.includes('developer') ? 'developer' : 'custom';
       return {
         intent: 'choose_theme',
         params: { theme }
@@ -128,7 +182,7 @@ class InteractiveMCPClient {
     }
     
     // Check if this is a numeric theme selection (adventure started but no theme chosen)
-    if (this.adventureStarted && !this.currentTheme && /^[1-3]$/.test(input.trim())) {
+    if (this.adventureStarted && !this.currentTheme && /^[1-5]$/.test(input.trim())) {
       return {
         intent: 'choose_theme',
         params: { theme: input.trim() }  // Pass the number directly, the tool will handle conversion
@@ -192,6 +246,13 @@ class InteractiveMCPClient {
           await this.callTool('start_adventure', { projectPath: this.currentProject });
           this.adventureStarted = true;
         }
+        
+        // Handle custom theme specially
+        if (params.theme === 'custom' || params.theme === '5') {
+          await this.handleCustomTheme();
+          return; // handleCustomTheme will handle the response
+        }
+        
         response = await this.callTool('choose_theme', params);
         this.currentTheme = params.theme;
         break;
@@ -262,9 +323,11 @@ ${chalk.yellow('Starting:')}
   • "Start adventure for /path/to/project" - Analyze specific directory
 
 ${chalk.yellow('Themes:')}
-  • "I choose the space theme" / "space" - Space exploration theme
-  • "Mythical theme please" / "mythical" - Mythical fantasy theme
-  • "Let's go ancient" / "ancient" - Ancient civilization theme
+  • "I choose the space theme" / "space" / "1" - Space exploration theme
+  • "Mythical theme please" / "mythical" / "2" - Mythical fantasy theme
+  • "Let's go ancient" / "ancient" / "3" - Ancient civilization theme
+  • "Developer documentation" / "developer" / "4" - Technical documentation style
+  • "Custom theme" / "custom" / "5" - Create your own personalized theme
 
 ${chalk.yellow('Exploration:')}
   • "Meet [character name]" - Meet a specific character

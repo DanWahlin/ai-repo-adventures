@@ -58,9 +58,64 @@ function validateCustomTheme(selectedTheme: AdventureTheme, customThemeData?: { 
   if (selectedTheme !== 'custom') return;
 
   if (!customThemeData) {
+    // Provide helpful guidance for custom theme creation
+    const helpMessage = `
+✨ **Creating a Custom Theme**
+
+To create a custom themed adventure, please call choose_theme again with:
+
+\`\`\`json
+{
+  "theme": "custom",
+  "customTheme": {
+    "name": "Your Theme Name",
+    "description": "Description of your theme's style and setting",
+    "keywords": ["keyword1", "keyword2", "keyword3"]
+  }
+}
+\`\`\`
+
+**Examples:**
+
+🌊 **Pirate Adventure:**
+\`\`\`json
+{
+  "theme": "custom",
+  "customTheme": {
+    "name": "Pirate Adventure",
+    "description": "A swashbuckling journey across the seven seas of code",
+    "keywords": ["pirate", "ship", "treasure", "ocean", "captain", "crew"]
+  }
+}
+\`\`\`
+
+🌆 **Cyberpunk:**
+\`\`\`json
+{
+  "theme": "custom",
+  "customTheme": {
+    "name": "Cyberpunk",
+    "description": "Navigate neon-lit digital streets where code is power",
+    "keywords": ["cyber", "neon", "hacker", "matrix", "digital", "tech"]
+  }
+}
+\`\`\`
+
+🕵️ **Detective Mystery:**
+\`\`\`json
+{
+  "theme": "custom",
+  "customTheme": {
+    "name": "Detective Mystery",
+    "description": "Solve coding mysteries as a detective investigating bugs",
+    "keywords": ["detective", "mystery", "clue", "investigate", "case", "evidence"]
+  }
+}
+\`\`\``;
+    
     throw new McpError(
       ErrorCode.InvalidParams,
-      'Custom theme data is required when selecting custom theme. Please provide customTheme with name, description, and keywords.'
+      helpMessage
     );
   }
   
@@ -71,7 +126,7 @@ function validateCustomTheme(selectedTheme: AdventureTheme, customThemeData?: { 
     throw new McpError(ErrorCode.InvalidParams, 'Custom theme description is required');
   }
   if (!customThemeData.keywords || customThemeData.keywords.length === 0) {
-    throw new McpError(ErrorCode.InvalidParams, 'Custom theme keywords array is required');
+    throw new McpError(ErrorCode.InvalidParams, 'Custom theme keywords array is required (provide at least 3 keywords)');
   }
 }
 

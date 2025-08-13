@@ -11,6 +11,7 @@ import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 import { formatErrorForUser } from '../shared/errors.js';
 import { validateProjectPath } from '../shared/input-validator.js';
 import { createProjectInfo, formatInitialResponse } from './shared.js';
+import { extractUniqueFilePaths } from '../shared/adventure-config.js';
 
 // Schema
 const startAdventureSchema = z.object({
@@ -34,6 +35,10 @@ export const startAdventure = {
     }
     
     try {
+      // Check if we're using targeted analysis
+      const configuredFiles = extractUniqueFilePaths(projectPath);
+      const isUsingConfig = configuredFiles.length > 0;
+      
       // Generate repomix content and create minimal ProjectInfo
       const repomixContent = await repoAnalyzer.generateRepomixContext(projectPath);
       const projectInfo = createProjectInfo(repomixContent);
@@ -42,7 +47,7 @@ export const startAdventure = {
         content: [
           {
             type: 'text' as const,
-            text: formatInitialResponse(projectInfo)
+            text: formatInitialResponse(projectInfo, isUsingConfig)
           }
         ]
       };

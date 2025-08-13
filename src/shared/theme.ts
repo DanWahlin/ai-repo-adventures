@@ -59,7 +59,7 @@ export const THEMES = {
     key: 'custom',
     displayName: 'Custom Theme',
     emoji: '🎨',
-    description: 'Create your own personalized theme with custom vocabulary and storytelling approach',
+    description: 'Design your own adventure! You\'ll be prompted to provide theme name, description, and keywords',
     keywords: ['custom', 'personalized', 'unique', 'creative', 'personal']
   }
 } as const;

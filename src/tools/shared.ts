@@ -25,13 +25,17 @@ export function createProjectInfo(repomixContent: string): ProjectInfo {
 /**
  * Format the initial adventure response
  */
-export function formatInitialResponse(projectInfo: ProjectInfo): string {
+export function formatInitialResponse(projectInfo: ProjectInfo, isUsingConfig: boolean = false): string {
   return `🌟 **Welcome to Repo Adventures!** 🌟
 
-You've discovered a mysterious codebase containing ${projectInfo.fileCount} files of digital wisdom! This project awaits your exploration through immersive storytelling.
+You've discovered a mysterious codebase awaiting your exploration through immersive storytelling!
 
 📊 **Initial Scan Results:**
-• ${projectInfo.fileCount} files discovered
+• ${isUsingConfig 
+    ? `Analyzing ${projectInfo.fileCount} key files from adventure configuration` 
+    : projectInfo.fileCount > 0 
+      ? `Analyzed ${projectInfo.fileCount} files in the codebase`
+      : 'Full codebase analysis prepared'}
 • ${projectInfo.hasTests ? 'Testing framework detected' : 'No test files found'}
 • Rich codebase context prepared for adventure generation
 • Ready for LLM-powered analysis and story generation
