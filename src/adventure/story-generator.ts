@@ -22,6 +22,7 @@ export interface Story {
 }
 
 export interface StoryResponse {
+  title: string;
   story: string | Story;
   quests: Quest[];
 }
@@ -49,6 +50,7 @@ const QuestSchema = z.object({
 });
 
 const StoryResponseSchema = z.object({
+  title: z.string(),
   story: z.string(), // Note: simplified to string only (Story interface not used by LLM)
   quests: z.array(QuestSchema)
 });

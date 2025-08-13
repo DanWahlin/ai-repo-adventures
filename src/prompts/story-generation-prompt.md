@@ -23,7 +23,8 @@ Return a valid JSON object with this structure:
 
 \`\`\`json
 {
-  "story": "MUST include formatted title + narrative + quest invitation (see MANDATORY STORY FORMAT below)",
+  "title": "🚀 [Your Themed Title Here] (just the title, no markdown formatting)",
+  "story": "MUST include narrative + quest invitation (see MANDATORY STORY FORMAT below - NO TITLE)",
   "quests": [
     {
       "id": "quest-1",
@@ -75,15 +76,12 @@ Return a valid JSON object with this structure:
 
 ## 📜 MANDATORY STORY FORMAT
 
-Your story MUST include:
+Your JSON response MUST include:
 
-1. A themed title with line breaks before and after  
-2. A narrative paragraph (75–100 words)  
-3. The quest invitation line  
+1. **"title" field**: Just the themed title (e.g., "🚀 Mission Control: The Space Station")
+2. **"story" field**: Narrative paragraph + quest invitation (NO TITLE)
 
-**CRITICAL: The "story" field in your JSON response MUST be formatted exactly like this:**
-
-**🚀 [Your Themed Title Here]**
+**CRITICAL: The "story" field in your JSON response MUST be formatted exactly like this (NO TITLE):**
 
 Your narrative paragraph about the mission, journey, or adventure goes here. Make it 75-100 words that explains what this codebase does through your chosen theme.
 
@@ -91,8 +89,9 @@ Your narrative paragraph about the mission, journey, or adventure goes here. Mak
 
 **EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
 
-**🚀 Mission MCP: Refactor-1 and the Codebase Constellation**
+**Title field:** "🚀 Mission MCP: Refactor-1 and the Codebase Constellation"
 
+**Story field:** 
 Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an interstellar mission to decode and optimize the galactic repository known as MCP. Guided by the cutting-edge *Repomix Navigator* and powered by *TypeScript Reactors*, the crew must traverse cosmic data streams, align architectural constellations, and unveil the mysteries of adventure-driven exploration. Their ultimate goal: to transform the sprawling complexity of the MCP system into a harmonious and navigable stellar map. The fate of the intergalactic coding alliance rests on their success.
 
 🗺️ **Your Quest Awaits** – Choose your path wisely, brave adventurer!
@@ -158,7 +157,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 
 ## ✅ SUCCESS CHECKLIST
 
-✅ The "story" field includes **🚀 [Title]** + narrative + quest invitation line  
+✅ The "title" field contains just the themed title and the "story" field contains narrative + quest invitation (NO TITLE)  
 ✅ The story clearly explains what the codebase does  
 ✅ All references to files match those in \`## Project Codebase\`  
 ✅ The theme is fully realized in narrative and quests  

@@ -15,6 +15,7 @@ export interface AdventureResult {
 }
 
 export class AdventureState {
+  title: string | undefined = undefined;
   story: string | undefined = undefined;
   quests: Quest[] = [];
   completedQuests: Set<string> = new Set();
@@ -31,6 +32,7 @@ export class AdventureState {
   }
 
   reset() {
+    this.title = undefined;
     this.story = undefined;
     this.quests = [];
     this.completedQuests.clear();
@@ -72,6 +74,7 @@ export class AdventureManager {
     // Generate the overall story and quests using LLM
     const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
     
+    this.state.title = storyResponse.title;
     this.state.story = typeof storyResponse.story === 'string' ? storyResponse.story : storyResponse.story.content;
     this.state.quests = storyResponse.quests;
 
@@ -420,6 +423,34 @@ ${questsText}
       ...questChoices,
       'View progress'
     ];
+  }
+
+  /**
+   * Get the adventure title
+   */
+  getTitle(): string {
+    return this.state.title || 'Repo Adventure';
+  }
+
+  /**
+   * Get the raw story content without quest listings
+   */
+  getStoryContent(): string {
+    return this.state.story || '';
+  }
+
+  /**
+   * Get all quests with structured data
+   */
+  getAllQuests(): Quest[] {
+    return this.state.quests;
+  }
+
+  /**
+   * Get current theme
+   */
+  getCurrentTheme(): AdventureTheme | null {
+    return this.state.currentTheme;
   }
 
 

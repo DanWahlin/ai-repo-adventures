@@ -33,7 +33,7 @@ For code snippet explanations, use relatable analogies:
 ## Professional Visual Enhancement Guidelines
 Add tasteful visual elements to enhance readability and engagement:
 - Use thematic emoticons as section headers: ⚡ 🔗 🛡️ 📊 🎯 ⭐
-- Include simple ASCII borders for important sections: ┌─ Section ─┐ or ╭─ Title ─╮
+- Include simple ASCII borders for important sections: ─ Section ─ or ─ Title ─
 - Add progress indicators where relevant: [██████░░░░] 
 - Use clean separators: ─────────────────
 - Keep visual elements minimal and professional - enhance, don't overwhelm
