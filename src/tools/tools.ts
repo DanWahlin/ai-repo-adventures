@@ -14,14 +14,14 @@
  * Tools are now organized in separate files for better maintainability.
  */
 
-import { AdventureManager } from '../adventure/adventure-manager.js';
+import { adventureManager } from '../adventure/state.js';
 import { startAdventure } from './start-adventure.js';
 import { chooseTheme } from './choose-theme.js';
 import { exploreQuest } from './explore-quest.js';
 import { viewProgress } from './view-progress.js';
 
-// Create and export a single shared adventure manager instance
-export const adventureManager = new AdventureManager();
+// Export the shared adventure manager for tools that need it
+export { adventureManager };
 
 // Re-export tools with MCP naming convention
 export const start_adventure = startAdventure;

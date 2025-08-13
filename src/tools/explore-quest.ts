@@ -8,7 +8,7 @@
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
-import { adventureManager } from './tools.js';
+import { adventureManager } from '../adventure/state.js';
 
 // Schema
 const exploreQuestSchema = z.object({

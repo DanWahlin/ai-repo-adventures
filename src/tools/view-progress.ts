@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { adventureManager } from './tools.js';
+import { adventureManager } from '../adventure/state.js';
 
 // Schema
 const progressSchema = z.object({});

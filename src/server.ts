@@ -98,29 +98,29 @@ class RepoAdventureServer {
   }
 }
 
+function gracefulShutdown() {
+  console.error('\nShutting down MCP server...');
+  try {
+    repoAnalyzer.cleanup();
+  } catch (e) {
+    console.error('Cleanup error:', e);
+  }
+  process.exit(0);
+}
+
 async function main() {
   try {
     const server = new RepoAdventureServer();
     
-    // Handle graceful shutdown
-    process.on('SIGINT', async () => {
-      console.error('\nShutting down MCP server...');
-      try {
-        repoAnalyzer.cleanup();
-      } catch (error) {
-        console.error('Error during shutdown cleanup:', error);
-      }
-      process.exit(0);
-    });
+    // Handle graceful shutdown for both signals
+    ['SIGINT', 'SIGTERM'].forEach(sig => 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
     
-    process.on('SIGTERM', async () => {
-      console.error('\nShutting down MCP server...');
-      try {
-        repoAnalyzer.cleanup();
-      } catch (error) {
-        console.error('Error during shutdown cleanup:', error);
-      }
-      process.exit(0);
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason) => {
+      console.error('Unhandled promise rejection:', reason);
+      gracefulShutdown();
     });
     
     await server.run();

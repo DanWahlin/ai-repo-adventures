@@ -126,7 +126,7 @@ async function runAllUnitTests() {
     },
     { 
       name: 'Adventure Configuration', 
-      runner: createStatsWrapper(runAdventureConfigTests, 'Adventure Configuration', 7, 'File system operations, error handling')
+      runner: createStatsWrapper(runAdventureConfigTests, 'Adventure Configuration', 15, 'File system operations, flexible parsing')
     },
     { 
       name: 'Prompt Template Processing', 

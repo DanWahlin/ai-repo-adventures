@@ -7,8 +7,10 @@
 
 import type { CliOptions } from 'repomix';
 import * as path from 'path';
+import * as fs from 'fs';
 import { spawn } from 'child_process';
 import { REPOMIX_CACHE_TTL } from '../shared/config.js';
+import { extractUniqueFilePaths } from '../shared/adventure-config.js';
 
 export interface RepomixOptions {
   compress?: boolean;
@@ -41,17 +43,75 @@ export class RepoAnalyzer {
   }
 
   /**
+   * Validate and normalize target files for security and reliability
+   * Prevents path traversal, ensures files exist, deduplicates, and limits count
+   */
+  private validateAndNormalizeTargetFiles(projectPath: string, targetFiles: string[]): string[] {
+    const MAX_TARGET_FILES = 50; // Reasonable limit to prevent resource exhaustion
+    const projectRoot = path.resolve(projectPath);
+    
+    // Deduplicate, validate, and normalize target files
+    const safeFiles = [...new Set(targetFiles)]
+      .slice(0, MAX_TARGET_FILES) // Limit count early
+      .map(file => {
+        if (typeof file !== 'string' || !file.trim()) {
+          return null; // Skip invalid entries
+        }
+        
+        const trimmed = file.trim();
+        
+        // Basic security checks
+        if (trimmed.includes('\0') || trimmed.includes('..')) {
+          console.warn(`Rejecting potentially unsafe file path: ${trimmed}`);
+          return null;
+        }
+        
+        return trimmed;
+      })
+      .filter((file): file is string => file !== null)
+      .map(file => {
+        // Resolve to absolute path for security validation
+        const fullPath = path.resolve(projectPath, file);
+        
+        // Security: Ensure file is within project directory
+        if (!fullPath.startsWith(projectRoot + path.sep) && fullPath !== projectRoot) {
+          console.warn(`Rejecting file outside project directory: ${file}`);
+          return null;
+        }
+        
+        // Reliability: Ensure file exists
+        if (!fs.existsSync(fullPath)) {
+          console.warn(`Skipping non-existent file: ${file}`);
+          return null;
+        }
+        
+        // Return relative path for consistent cache keys
+        return path.relative(projectPath, fullPath);
+      })
+      .filter((file): file is string => file !== null)
+      .sort(); // Sort for stable cache keys
+    
+    return safeFiles;
+  }
+
+  /**
    * Generate targeted repomix content for specific files
    */
-  async generateTargetedContent(projectPath: string, targetFiles: string[]): Promise<string> {
+  async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise<string> {
     this.validateProjectPath(projectPath);
     
     if (!targetFiles || targetFiles.length === 0) {
       throw new Error('Target files array cannot be empty');
     }
     
-    // Create cache key from path and target files
-    const cacheKey = `${path.resolve(projectPath)}:targeted:${targetFiles.sort().join(',')}`;
+    // Harden and validate target files
+    const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+    if (safeFiles.length === 0) {
+      throw new Error('No valid target files found after validation');
+    }
+    
+    // Create stable cache key from normalized files
+    const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(',')}:compress=${compress}`;
     
     // Check cache first
     const cached = this.cache.get(cacheKey);
@@ -62,14 +122,13 @@ export class RepoAnalyzer {
     
     try {
       // Configure repomix options for targeted extraction
-      // Use uncompressed content for detailed code exploration
       const cliOptions: CliOptions = {
         style: 'markdown',
         stdout: true,
-        compress: false, // Show full code implementations for adventure exploration
-        include: targetFiles.join(','), // Only include specified files
-        removeComments: false, // Keep comments for better code understanding
-        removeEmptyLines: false, // Keep formatting for readability
+        compress: compress, // Configurable compression
+        include: safeFiles.join(','), // Only include validated files
+        removeComments: compress, // Remove comments if compressing
+        removeEmptyLines: compress, // Remove empty lines if compressing
         noDirectoryStructure: true
       };
 
@@ -90,6 +149,18 @@ export class RepoAnalyzer {
    */
   async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise<string> {
     this.validateProjectPath(projectPath);
+    
+    // Check if adventure.config.json has specific files to include
+    const configuredFiles = extractUniqueFilePaths(projectPath);
+    
+    if (configuredFiles.length > 0) {
+      // Use configured files with targeted content generation
+      console.log(`Using adventure.config.json: analyzing ${configuredFiles.length} configured files`);
+      return await this.generateTargetedContent(projectPath, configuredFiles);
+    }
+    
+    // Fallback: use existing behavior with all files (compressed)
+    console.log('No adventure.config.json found: analyzing full codebase (compressed)');
     
     // Create cache key from path and options
     const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;

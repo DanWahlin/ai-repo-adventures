@@ -1,28 +1,70 @@
-import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 
-/**
- * Load adventure configuration from adventure.config.json if it exists
- * Returns the raw JSON content to pass to LLM as context
- */
-export function loadAdventureConfig(projectPath: string): string | null {
+const ADVENTURE_CONFIG_FILE = 'adventure.config.json';
+
+function readFileIfExists(filePath: string): string | null {
   try {
-    const configPath = path.join(projectPath, 'adventure.config.json');
-    
-    if (!fs.existsSync(configPath)) {
-      return null;
-    }
-    
-    const configContent = fs.readFileSync(configPath, 'utf-8');
-    
-    // Basic validation - just ensure it's valid JSON
-    JSON.parse(configContent);
-    
-    return configContent;
-  } catch (error) {
-    // Silently return null for missing or invalid config files
-    // This is expected behavior when adventure.config.json is optional
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch {
+    // Missing or unreadable file is non-fatal
     return null;
   }
+}
+
+/**
+ * Loads the raw adventure config text if present.
+ * Pure file read - no parsing here.
+ */
+export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
+}
+
+/**
+ * Parses the adventure config into an object (or null on error/missing).
+ * Single point of JSON parsing and validation.
+ */
+export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extracts all unique, existing file paths referenced by "path" fields anywhere in the config.
+ */
+export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') return [];
+
+  const unique = new Set<string>();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== 'object') continue;
+
+    // If this node contains a "path" field, consider it
+    const p = (node as any).path;
+    if (typeof p === 'string') {
+      const rel = p.trim();
+      if (rel) {
+        const full = path.resolve(projectPath, rel);
+        if (fs.existsSync(full)) unique.add(rel);
+      }
+    }
+
+    // Traverse children for both objects and arrays
+    const children = Array.isArray(node) ? node : Object.values(node);
+    for (const child of children) {
+      if (child && typeof child === 'object') stack.push(child);
+    }
+  }
+
+  return Array.from(unique);
 }

@@ -262,7 +262,8 @@ export class AdventureManager {
         console.log(`🎯 Generating targeted content for ${quest.codeFiles.length} files`);
         codeContent = await repoAnalyzer.generateTargetedContent(
           this.state.projectPath,
-          quest.codeFiles
+          quest.codeFiles,
+          false  // Use uncompressed content for detailed quest exploration
         );
       } catch (error) {
         console.warn(`Failed to generate targeted content, falling back to full repomix content:`, error);

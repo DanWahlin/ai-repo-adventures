@@ -11,7 +11,7 @@ import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 import { parseTheme, getAllThemes, AdventureTheme } from '../shared/theme.js';
 import { validateTheme } from '../shared/input-validator.js';
 import { createProjectInfo, generateThemeExamples } from './shared.js';
-import { adventureManager } from './tools.js';
+import { adventureManager } from '../adventure/state.js';
 
 // Schema
 const chooseThemeSchema = z.object({

@@ -143,7 +143,7 @@ export class LLMClient {
    */
   private async executeRequest(requestParams: OpenAIRequestParams) {
     return Promise.race([
-      this.client.chat.completions.create(requestParams),
+      this.client.chat.completions.create(requestParams as any),
       new Promise<never>((_, reject) => 
         setTimeout(() => reject(new Error(`LLM request timeout after ${LLM_REQUEST_TIMEOUT}ms`)), LLM_REQUEST_TIMEOUT)
       )
