@@ -38,13 +38,10 @@ class RepoAdventureServer {
       const toolList = Object.entries(tools).map(([name, tool]) => ({
         name,
         description: tool.description,
-        inputSchema: {
-          ...zodToJsonSchema(tool.schema, { 
-            target: 'jsonSchema7',
-            $refStrategy: 'none'
-          }),
-          type: 'object' // MCP SDK expects inputSchema.type to be 'object'
-        }
+        inputSchema: zodToJsonSchema(tool.schema, { 
+          target: 'jsonSchema7',
+          $refStrategy: 'none'
+        })
       }));
 
       return { tools: toolList };

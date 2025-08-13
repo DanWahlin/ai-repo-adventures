@@ -9,7 +9,7 @@ import type { CliOptions } from 'repomix';
 import * as path from 'path';
 import * as fs from 'fs';
 import { spawn } from 'child_process';
-import { REPOMIX_CACHE_TTL } from '../shared/config.js';
+import { REPOMIX_CACHE_TTL, REPOMIX_SUBPROCESS_TIMEOUT, REPOMIX_GRACEFUL_TIMEOUT, REPOMIX_MAX_BUFFER_SIZE } from '../shared/config.js';
 import { extractUniqueFilePaths } from '../shared/adventure-config.js';
 
 export interface RepomixOptions {
@@ -206,7 +206,7 @@ export class RepoAnalyzer {
   }
 
   /**
-   * Use repomix CLI as subprocess to capture stdout
+   * Use repomix CLI as subprocess to capture stdout with timeout and memory protection
    */
   private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -232,9 +232,36 @@ export class RepoAnalyzer {
       
       let stdout = '';
       let stderr = '';
+      let stdoutSize = 0;
+      let isResolved = false;
+      
+      // Set up timeout with graceful then force kill
+      const timeout = setTimeout(() => {
+        if (!isResolved) {
+          console.warn(`Repomix subprocess timeout (${REPOMIX_SUBPROCESS_TIMEOUT}ms), killing process...`);
+          repomix.kill('SIGTERM');
+          setTimeout(() => repomix.kill('SIGKILL'), REPOMIX_GRACEFUL_TIMEOUT);
+          isResolved = true;
+          reject(new Error(`Repomix subprocess timed out after ${REPOMIX_SUBPROCESS_TIMEOUT}ms (${cwd})`));
+        }
+      }, REPOMIX_SUBPROCESS_TIMEOUT);
       
       repomix.stdout.on('data', (data) => {
-        stdout += data.toString();
+        const chunk = data.toString();
+        stdoutSize += chunk.length;
+        
+        // Memory protection
+        if (stdoutSize > REPOMIX_MAX_BUFFER_SIZE) {
+          if (!isResolved) {
+            isResolved = true;
+            clearTimeout(timeout);
+            repomix.kill('SIGKILL');
+            reject(new Error(`Repomix output too large (${stdoutSize} bytes) for ${cwd}`));
+          }
+          return;
+        }
+        
+        stdout += chunk;
       });
       
       repomix.stderr.on('data', (data) => {
@@ -242,15 +269,24 @@ export class RepoAnalyzer {
       });
       
       repomix.on('close', (code) => {
-        if (code === 0 && stdout.length > 100) {
-          resolve(stdout);
-        } else {
-          reject(new Error(`Repomix subprocess failed (exit code: ${code}). Stdout: ${stdout.substring(0, 200)}. Stderr: ${stderr.substring(0, 200)}`));
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeout);
+          
+          if (code === 0 && stdout.trim().length > 0) {
+            resolve(stdout);
+          } else {
+            reject(new Error(`Repomix failed (exit ${code}): ${stderr.substring(0, 200)}`));
+          }
         }
       });
       
       repomix.on('error', (error) => {
-        reject(new Error(`Failed to spawn repomix subprocess: ${error.message}`));
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeout);
+          reject(new Error(`Repomix spawn failed: ${error.message}`));
+        }
       });
     });
   }

@@ -49,21 +49,19 @@ export function extractUniqueFilePaths(projectPath: string): string[] {
     const node = stack.pop();
     if (!node || typeof node !== 'object') continue;
 
-    // If this node contains a "path" field, consider it
-    const p = (node as any).path;
-    if (typeof p === 'string') {
-      const rel = p.trim();
-      if (rel) {
-        const full = path.resolve(projectPath, rel);
-        if (fs.existsSync(full)) unique.add(rel);
+    // Extract and validate path
+    if (typeof node.path === 'string' && node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
       }
     }
 
-    // Traverse children for both objects and arrays
+    // Add children to stack
     const children = Array.isArray(node) ? node : Object.values(node);
-    for (const child of children) {
+    children.forEach(child => {
       if (child && typeof child === 'object') stack.push(child);
-    }
+    });
   }
 
   return Array.from(unique);

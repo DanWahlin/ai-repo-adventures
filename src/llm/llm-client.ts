@@ -71,11 +71,17 @@ export class LLMClient {
   }
 
   private getApiKey(): string {
-    // GitHub Models uses GITHUB_TOKEN
+    // GitHub Models (hosted on Azure) uses GITHUB_TOKEN
     if (LLM_BASE_URL.includes('models.inference.ai.azure.com')) {
+      if (!GITHUB_TOKEN) {
+        throw new Error('GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN environment variable.');
+      }
       return GITHUB_TOKEN;
     }
-    // All other providers use LLM_API_KEY
+    // All other providers (OpenAI, Azure OpenAI, Ollama, etc.) use LLM_API_KEY
+    if (!LLM_API_KEY) {
+      throw new Error('LLM_API_KEY required. Set LLM_API_KEY environment variable.');
+    }
     return LLM_API_KEY;
   }
 

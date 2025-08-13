@@ -20,6 +20,9 @@ export const FILE_ANALYSIS_TIMEOUT = 30000;
 export const LLM_REQUEST_TIMEOUT = 30000; // 30 seconds for complex story generation with large prompts
 export const LLM_CACHE_TTL = 300000; // 5 minutes
 export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || '60000'); // 60 seconds, configurable via env
+export const REPOMIX_SUBPROCESS_TIMEOUT = parseInt(process.env.REPOMIX_SUBPROCESS_TIMEOUT || '120000'); // 2 minutes, configurable via env
+export const REPOMIX_GRACEFUL_TIMEOUT = 5000; // 5 seconds for graceful shutdown before SIGKILL
+export const REPOMIX_MAX_BUFFER_SIZE = 100 * 1024 * 1024; // 100MB max buffer to prevent memory exhaustion
 
 // Analysis limits
 export const MAX_SCAN_DEPTH = 3; // Maximum directory depth to prevent infinite recursion and keep analysis focused

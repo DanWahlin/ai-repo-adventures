@@ -5,6 +5,7 @@ import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { loadAdventureConfig } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
+import { z } from 'zod';
 
 export interface Quest {
   id: string;
@@ -38,6 +39,32 @@ export interface CodeSnippet {
   snippet: string;
   explanation: string;
 }
+
+// Zod schemas for LLM response validation
+const QuestSchema = z.object({
+  id: z.string(),
+  title: z.string(), 
+  description: z.string(),
+  codeFiles: z.array(z.string()).optional()
+});
+
+const StoryResponseSchema = z.object({
+  story: z.string(), // Note: simplified to string only (Story interface not used by LLM)
+  quests: z.array(QuestSchema)
+});
+
+const CodeSnippetSchema = z.object({
+  file: z.string(),
+  snippet: z.string(),
+  explanation: z.string()
+});
+
+const QuestContentSchema = z.object({
+  adventure: z.string(),
+  fileExploration: z.string().optional(),
+  codeSnippets: z.array(CodeSnippetSchema).default([]),
+  hints: z.array(z.string())
+});
 
 
 
@@ -140,12 +167,11 @@ ${this.adventureConfigJson}`;
     
     let parsed;
     try {
-      parsed = JSON.parse(response.content);
+      const rawParsed = JSON.parse(response.content);
+      parsed = QuestContentSchema.parse(rawParsed) as QuestContent;
     } catch (error) {
-      throw new Error(`Invalid JSON response from LLM for quest content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
+      throw new Error(`Invalid LLM response for quest content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
     }
-    
-    this.validateQuestContent(parsed);
     return parsed;
   }
 
@@ -223,64 +249,13 @@ ${this.adventureConfigJson}
     
     let parsed;
     try {
-      parsed = JSON.parse(response.content);
+      const rawParsed = JSON.parse(response.content);
+      parsed = StoryResponseSchema.parse(rawParsed) as StoryResponse;
     } catch (error) {
-      throw new Error(`Invalid JSON response from LLM: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
+      throw new Error(`Invalid LLM response for story: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
     }
-    
-    this.validateStoryResponse(parsed);
     return parsed;
   }
-
-
-
-
-
-  /**
-   * Validate story response structure
-   */
-  private validateStoryResponse(parsed: unknown): parsed is StoryResponse {
-    const candidate = parsed as any;
-    
-    if (!candidate.story || typeof candidate.story !== 'string') {
-      throw new Error('Invalid response: missing or invalid story field');
-    }
-    
-    // Validate quests array
-    if (!Array.isArray(candidate.quests)) {
-      throw new Error('Invalid response: quests must be an array');
-    }
-    
-    candidate.quests.forEach((quest: any, i: number) => {
-      if (!quest.id || !quest.title || !quest.description) {
-        throw new Error(`Invalid quest at index ${i}: missing required fields`);
-      }
-    });
-    
-    return true;
-  }
-
-  /**
-   * Validate quest content structure
-   */
-  private validateQuestContent(parsed: unknown): parsed is QuestContent {
-    const candidate = parsed as any;
-    
-    if (!candidate.adventure || typeof candidate.adventure !== 'string') {
-      throw new Error('Invalid content: missing adventure field');
-    }
-    
-    if (!Array.isArray(candidate.hints)) {
-      throw new Error('Invalid content: hints must be an array');
-    }
-    
-    if (!Array.isArray(candidate.codeSnippets)) {
-      candidate.codeSnippets = [];
-    }
-    
-    return true;
-  }
-  
 
   /**
    * Helper to wrap promises with timeout

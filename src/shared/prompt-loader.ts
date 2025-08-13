@@ -1,7 +1,12 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { PROMPT_PATHS } from './config.js';
 import { AdventureTheme, CustomThemeData } from './theme.js';
+
+// Get the directory of this module, then go up to repo root
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = join(__dirname, '..', '..');
 
 interface ThemeGuidelines {
   vocabulary: string;
@@ -18,7 +23,7 @@ interface ThemeGuidelinesMap {
  */
 function loadPromptFile(filePath: string): string {
   try {
-    const fullPath = join(process.cwd(), filePath);
+    const fullPath = join(REPO_ROOT, filePath);
     const content = readFileSync(fullPath, 'utf-8');
     return content;
   } catch (error) {
@@ -32,7 +37,7 @@ function loadPromptFile(filePath: string): string {
  */
 function loadThemeGuidelines(): ThemeGuidelinesMap {
   try {
-    const fullPath = join(process.cwd(), PROMPT_PATHS.THEME_GUIDELINES);
+    const fullPath = join(REPO_ROOT, PROMPT_PATHS.THEME_GUIDELINES);
     const content = readFileSync(fullPath, 'utf-8');
     const guidelines = JSON.parse(content) as ThemeGuidelinesMap;
     return guidelines;
