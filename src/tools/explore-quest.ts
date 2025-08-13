@@ -20,7 +20,7 @@ type ExploreQuestArgs = z.infer<typeof exploreQuestSchema>;
 
 // Tool Definition
 export const exploreQuest = {
-  description: `Delivers deep, workshop-style code exploration through LLM-generated themed content with adventure.config.json guidance. This tool accepts quest numbers or partial titles and creates detailed educational experiences that blend actual code analysis with immersive storytelling. Uses targeted repomix content for specific files plus workshop highlights that guide users through key functions step-by-step. The LLM transforms technical function names into theme-appropriate metaphors while maintaining educational value - constructors become "initialization rituals", handlers become "communication protocols", analyzers become "scanning systems". Each exploration includes real code snippets, architectural insights, dependency explanations, and practical hints wrapped in engaging narrative. Tracks completion progress and suggests logical next steps. Perfect for learning complex codebases through structured, gamified exploration. INVOKE to dive into specific quest areas: "explore 1", "quest 2", "visit the command center", "enter the temple", "explore MCP tools", "dive into story generation".`,
+  description: `Explore specific quest with detailed code analysis and themed narrative. Accepts quest numbers or titles for guided codebase learning.`,
   schema: exploreQuestSchema,
   handler: async (args: ExploreQuestArgs) => {
     if (!adventureManager) {

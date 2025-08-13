@@ -22,7 +22,7 @@ type StartAdventureArgs = z.infer<typeof startAdventureSchema>;
 
 // Tool Definition
 export const startAdventure = {
-  description: `Transforms any codebase into an interactive adventure using repomix analysis and LLM-powered storytelling. This tool analyzes the entire project structure, counting files, detecting technologies, and preparing comprehensive context for adventure generation. It uses repomix to capture complete codebase content, then presents 5 immersive theme options (🚀 Space, 🏰 Medieval, 🏛️ Ancient, 📚 Developer, ✨ Custom). Each theme transforms technical concepts into narrative elements - classes become starships or castles, functions become spells or protocols, APIs become communication channels. The system optionally loads adventure.config.json to guide story generation toward important code areas. Perfect for code onboarding, educational exploration, team building, or making code reviews engaging. INVOKE when users want to gamify codebase exploration: "start adventure", "explore this codebase", "help me understand this project", "make coding fun", "onboard me", "show me around this code", "turn this into a story".`,
+  description: `Analyze codebase and present 5 themed adventure options (🚀 Space, 🏰 Medieval, 🏛️ Ancient, 📚 Developer, ✨ Custom) for gamified code exploration.`,
   schema: startAdventureSchema,
   handler: async (args: StartAdventureArgs) => {
     // Validate project path input
