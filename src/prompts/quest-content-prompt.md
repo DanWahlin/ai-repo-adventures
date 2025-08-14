@@ -3,10 +3,16 @@
 Continue the {{theme}}-themed narrative journey for: "{{adventureTitle}}"
 
 IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
-- Reference events from previous chapters if applicable
+- Reference events from previous chapters if applicable  
 - Advance the overall story arc
 - Build toward the journey's resolution
 - Keep the narrative voice consistent
+
+## Story Context for Consistency
+
+{{storyContent}}
+
+Use the same character names, ship names, and story elements from the main story above. Maintain consistent terminology and narrative voice throughout.
 
 {{themeGuidelines}}
 

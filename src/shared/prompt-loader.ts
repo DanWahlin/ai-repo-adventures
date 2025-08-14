@@ -150,6 +150,7 @@ export function loadQuestContentPrompt(variables: {
   theme: AdventureTheme;
   adventureTitle: string;
   codeContent: string;
+  storyContent?: string;
   workshopHighlights?: string;
   customThemeData?: CustomThemeData;
 }): string {
@@ -160,6 +161,7 @@ export function loadQuestContentPrompt(variables: {
     theme: variables.theme,
     adventureTitle: variables.adventureTitle,
     codeContent: variables.codeContent,
+    storyContent: variables.storyContent || 'No story context provided.',
     workshopHighlights: variables.workshopHighlights || '',
     themeGuidelines
   });

@@ -223,6 +223,7 @@ export class StoryGenerator {
   private currentProject?: ProjectInfo;
   private customThemeData?: CustomThemeData;
   private adventureConfigJson?: string | null;
+  private currentStoryContent?: string;
 
   constructor() {
     this.llmClient = new LLMClient();
@@ -296,7 +297,8 @@ ${this.adventureConfigJson}`;
       theme,
       adventureTitle: quest.title,
       codeContent,
-      ...(adventureGuidance && { adventureGuidance }),
+      storyContent: this.currentStoryContent || 'No story context available.',
+      ...(adventureGuidance && { workshopHighlights: adventureGuidance }),
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     });
 
@@ -408,6 +410,9 @@ ${this.adventureConfigJson}
       parsed = parseMarkdownToStoryResponse(cleanContent);
       // Validate with Zod schema for safety
       StoryResponseSchema.parse(parsed);
+      
+      // Store the story content for consistency in quest generation
+      this.currentStoryContent = typeof parsed.story === 'string' ? parsed.story : parsed.story.content;
     } catch (error) {
       console.error('💥 Parsing error:', error instanceof Error ? error.message : 'Unknown error');
       console.error('💥 Full response:', response.content);
