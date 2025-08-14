@@ -167,22 +167,24 @@ async function runHTMLGeneratorTest() {
       // Generate HTML files
       console.log(chalk.dim('🌐 Generating HTML files...'));
       
-      // Generate index.html
-      const indexHTML = (generator as any).generateIndexHTMLContent(storyWithQuests);
-      const indexPath = path.join(testOutputDir, 'index.html');
-      fs.writeFileSync(indexPath, indexHTML);
-      
-      // Generate CSS
-      const themeCSS = (generator as any).getThemeCSS('space');
+      // Create assets directory
       const assetsDir = path.join(testOutputDir, 'assets');
       fs.mkdirSync(assetsDir, { recursive: true });
-      const cssPath = path.join(assetsDir, 'theme.css');
-      fs.writeFileSync(cssPath, themeCSS);
+      
+      // Generate CSS first
+      (generator as any).generateThemeCSS();
+      
+      // Generate index.html
+      (generator as any).generateIndexHTML();
       
       // Generate quest HTML
-      const questHTML = (generator as any).generateQuestHTMLContent(firstQuest, questContent, 0);
+      const questHTML = (generator as any).buildQuestHTML(firstQuest, questContent, 0);
       const questPath = path.join(testOutputDir, firstQuest.filename);
       fs.writeFileSync(questPath, questHTML);
+      
+      // Get paths for logging
+      const indexPath = path.join(testOutputDir, 'index.html');
+      const cssPath = path.join(assetsDir, 'theme.css');
       
       console.log(chalk.green('✅ Generated HTML files:'));
       console.log(chalk.dim(`  • ${indexPath}`));

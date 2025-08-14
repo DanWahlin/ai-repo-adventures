@@ -2,7 +2,7 @@
 
 /**
  * Standalone CLI tool for generating HTML adventure files
- * Creates a complete adventure website with themed styling
+ * Refactored for simplicity and maintainability
  */
 
 import * as readline from 'readline';
@@ -53,13 +53,8 @@ class HTMLAdventureGenerator {
     console.log();
 
     try {
-      // Step 1: Select theme
       await this.selectTheme();
-      
-      // Step 2: Select output directory
       await this.selectOutputDirectory();
-      
-      // Step 3: Generate adventure
       await this.generateAdventure();
       
       console.log();
@@ -73,7 +68,6 @@ class HTMLAdventureGenerator {
       process.exit(1);
     }
     
-    // Clean exit
     this.rl.close();
     process.exit(0);
   }
@@ -174,17 +168,13 @@ class HTMLAdventureGenerator {
         }
         
         console.log(chalk.yellow('🗑️  Clearing existing directory...'));
-        // Remove all files and subdirectories
         fs.rmSync(this.outputDir, { recursive: true, force: true });
       }
     }
     
-    // Create directory
+    // Create directories
     fs.mkdirSync(this.outputDir, { recursive: true });
-
-    // Create assets directory
-    const assetsDir = path.join(this.outputDir, 'assets');
-    fs.mkdirSync(assetsDir, { recursive: true });
+    fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
 
     console.log(chalk.green(`✅ Output directory: ${this.outputDir}`));
     console.log();
@@ -194,12 +184,12 @@ class HTMLAdventureGenerator {
     console.log(chalk.yellow.bold('🚀 Generating Adventure...'));
     console.log();
 
-    // Step 1: Generate repomix content and project info
+    // Step 1: Generate project analysis
     console.log(chalk.dim('📊 Analyzing codebase...'));
     const repomixContent = await repoAnalyzer.generateRepomixContext(this.projectPath);
     const projectInfo = createProjectInfo(repomixContent);
 
-    // Step 2: Initialize adventure and get story with quests
+    // Step 2: Initialize adventure
     console.log(chalk.dim('✨ Generating themed story and quests...'));
     await this.adventureManager.initializeAdventure(
       projectInfo, 
@@ -208,24 +198,21 @@ class HTMLAdventureGenerator {
       this.customThemeData
     );
 
-    // Step 3: Parse quest information from the adventure state
+    // Step 3: Extract quest information
     this.extractQuestInfo();
 
-    // Step 4: Generate CSS file
+    // Step 4: Generate all files
     console.log(chalk.dim('🎨 Creating theme styling...'));
-    await this.generateThemeCSS();
+    this.generateThemeCSS();
 
-    // Step 5: Generate index.html (using clean story content)
     console.log(chalk.dim('📝 Creating main adventure page...'));
-    await this.generateIndexHTML();
+    this.generateIndexHTML();
 
-    // Step 6: Generate all quest pages
     console.log(chalk.dim('📖 Generating quest pages...'));
     await this.generateQuestPages();
   }
 
   private extractQuestInfo(): void {
-    // Get real quest data from adventure manager
     const adventureQuests = this.adventureManager.getAllQuests();
     this.quests = adventureQuests.map((quest, index) => ({
       id: quest.id,
@@ -234,14 +221,59 @@ class HTMLAdventureGenerator {
     }));
   }
 
-  private async generateThemeCSS(): Promise<void> {
-    const cssContent = this.getThemeCSS(this.selectedTheme);
+  private generateThemeCSS(): void {
+    const themeCSS = this.loadThemeCSS(this.selectedTheme);
+    const baseCSS = this.loadBaseCSS();
+    const combinedCSS = themeCSS + '\n\n' + baseCSS;
     const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
-    fs.writeFileSync(cssPath, cssContent);
+    fs.writeFileSync(cssPath, combinedCSS);
   }
 
-  private async generateIndexHTML(): Promise<void> {
-    const html = this.generateIndexHTMLContent();
+  private loadThemeCSS(theme: AdventureTheme): string {
+    const __dirname = path.dirname(new URL(import.meta.url).pathname);
+    const themePath = path.join(__dirname, 'themes', `${theme}.css`);
+    
+    try {
+      return fs.readFileSync(themePath, 'utf-8');
+    } catch (error) {
+      console.warn(chalk.yellow(`⚠️  Theme file not found for ${theme}, using default`));
+      const defaultPath = path.join(__dirname, 'themes', 'default.css');
+      try {
+        return fs.readFileSync(defaultPath, 'utf-8');
+      } catch {
+        console.warn(chalk.yellow(`⚠️  Default theme not found, using fallback`));
+        return this.getFallbackCSS();
+      }
+    }
+  }
+
+  private loadBaseCSS(): string {
+    const __dirname = path.dirname(new URL(import.meta.url).pathname);
+    const basePath = path.join(__dirname, 'themes', 'base.css');
+    
+    try {
+      return fs.readFileSync(basePath, 'utf-8');
+    } catch (error) {
+      console.warn(chalk.yellow(`⚠️  Base CSS not found, using minimal fallback`));
+      return '/* Base CSS not found - using minimal styles */';
+    }
+  }
+
+  private getFallbackCSS(): string {
+    return `/* Fallback CSS */
+    :root {
+      --primary-bg: #f5f5f5;
+      --primary-text: #333;
+      --accent-primary: #1976d2;
+      --accent-secondary: #42a5f5;
+      --font-primary: -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-heading: -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-code: Monaco, 'Courier New', monospace;
+    }`;
+  }
+
+  private generateIndexHTML(): void {
+    const html = this.buildIndexHTML();
     const indexPath = path.join(this.outputDir, 'index.html');
     fs.writeFileSync(indexPath, html);
   }
@@ -254,18 +286,14 @@ class HTMLAdventureGenerator {
       console.log(chalk.dim(`  📖 Generating quest ${i + 1}/${this.quests.length}: ${quest.title}`));
       
       try {
-        // Generate quest content with retry logic
         const questContent = await this.generateQuestContentWithRetry(quest.id);
-        
-        // Create HTML page
-        const html = this.generateQuestHTMLContent(quest, questContent, i);
+        const html = this.buildQuestHTML(quest, questContent, i);
         const questPath = path.join(this.outputDir, quest.filename);
         fs.writeFileSync(questPath, html);
         
       } catch (error) {
         console.log(chalk.red(`    ❌ Failed to generate quest: ${quest.title}`));
-        // Create a placeholder page for failed quests
-        const placeholderHTML = this.generateQuestHTMLContent(quest, 'Quest content could not be generated.', i);
+        const placeholderHTML = this.buildQuestHTML(quest, 'Quest content could not be generated.', i);
         const questPath = path.join(this.outputDir, quest.filename);
         fs.writeFileSync(questPath, placeholderHTML);
       }
@@ -282,866 +310,19 @@ class HTMLAdventureGenerator {
         if (attempt === maxRetries) {
           throw error;
         }
-        // Wait before retry
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
     throw new Error('Max retries exceeded');
   }
 
-  private prompt(question: string): Promise<string> {
-    return new Promise((resolve) => {
-      this.rl.question(chalk.bold(question), resolve);
-    });
-  }
-
-  private getThemeCSS(theme: AdventureTheme): string {
-    // Generate CSS with variables for the selected theme
-    return this.generateVariableBasedCSS(theme);
-  }
-
-  private generateVariableBasedCSS(theme: AdventureTheme): string {
-    return this.generateCompleteThemeCSS(theme);
-  }
-
-  private generateCompleteThemeCSS(theme: AdventureTheme): string {
-    const variables = this.getThemeVariables(theme);
-    
-    return `/* ${this.getThemeEmoji(theme)} ${this.getThemeTitle(theme)} */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
-
-:root {
-${variables}
-}
-
-/* ===== BASE STYLES ===== */
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  background: var(--primary-bg);
-  background-attachment: fixed;
-  color: var(--primary-text);
-  font-family: var(--font-primary);
-  font-weight: 400;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  line-height: 1.6;
-  position: relative;
-  overflow-x: hidden;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--body-overlay);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* ===== NAVBAR ===== */
-.navbar {
-  background: var(--navbar-bg);
-  border-bottom: var(--navbar-border);
-  padding: 1rem 0;
-  box-shadow: var(--navbar-shadow);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.nav-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.navbar h1 {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: var(--heading-weight);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 0;
-}
-
-.navbar a {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-decoration: none;
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: var(--heading-weight);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: all 0.3s ease;
-}
-
-.navbar a:hover {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: brightness(1.2);
-}
-
-/* ===== MAIN CONTAINER ===== */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: var(--content-bg);
-  border-radius: 15px;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--content-shadow);
-  backdrop-filter: blur(10px);
-  border: var(--content-border);
-  position: relative;
-}
-
-/* ===== TYPOGRAPHY ===== */
-h1 {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-  margin-bottom: 2rem;
-  font-family: var(--font-heading);
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 900;
-  text-shadow: var(--glow-shadow);
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  position: relative;
-}
-
-/* ===== QUEST TITLE ===== */
-.quest-title {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-  font-family: var(--font-heading);
-  font-size: clamp(1.4rem, 3.5vw, 2.45rem);
-  font-weight: 900;
-  text-shadow: var(--glow-shadow);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 1rem;
-}
-
-h2 {
-  color: var(--accent-primary);
-  font-family: var(--font-heading);
-  font-weight: var(--heading-weight);
-  border-bottom: var(--section-border);
-  padding-bottom: 0.8rem;
-  margin-top: 3rem;
-  margin-bottom: 1.5rem;
-  text-shadow: var(--text-shadow);
-  font-size: 1.8rem;
-}
-
-h3 {
-  color: var(--accent-secondary);
-  font-family: var(--font-heading);
-  font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
-}
-
-p {
-  color: var(--paragraph-color);
-  margin-bottom: 1.2rem;
-  line-height: 1.7;
-  font-size: 1.1rem;
-}
-
-/* ===== QUEST SECTIONS ===== */
-.story-content {
-  background: var(--quest-content-bg);
-  border-radius: 15px;
-  padding: 1rem;
-  backdrop-filter: blur(5px);
-}
-
-.quests-section {
-  background: var(--quest-section-bg);
-  border-radius: 15px;
-  padding: 1rem;
-  backdrop-filter: blur(5px);
-}
-
-/* ===== QUEST LINKS ===== */
-.quest-link {
-  display: block;
-  background: var(--quest-link-bg);
-  border: var(--quest-link-border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--quest-link-text);
-  text-decoration: none;
-  box-shadow: var(--quest-link-shadow);
-  transition: var(--quest-link-transition);
-  backdrop-filter: blur(5px);
-  position: relative;
-  overflow: hidden;
-}
-
-.quest-link:hover {
-  background: var(--quest-link-hover-overlay);
-  box-shadow: var(--quest-link-hover-shadow);
-  transform: translateY(-2px);
-  color: var(--quest-link-hover-text);
-}
-
-.quest-link h3 {
-  margin: 0;
-  color: inherit;
-  font-size: 1.2rem;
-}
-
-/* ===== QUEST CONTENT ===== */
-.quest-content {
-  background: var(--quest-content-bg);
-  border-radius: 15px;
-  padding: 2rem;
-  backdrop-filter: blur(5px);
-}
-
-/* ===== QUEST NAVIGATION ===== */
-.quest-navigation {
-  margin-top: 4rem;
-  padding-top: 2rem;
-  border-top: var(--section-border);
-  text-align: center;
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.quest-navigation a {
-  display: inline-block;
-  padding: 1.2rem 2.5rem;
-  background: var(--nav-button-bg);
-  color: var(--nav-button-text);
-  border: var(--nav-button-border);
-  border-radius: 30px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  transition: var(--nav-button-transition);
-  box-shadow: var(--nav-button-shadow);
-  backdrop-filter: blur(5px);
-  font-family: var(--font-heading);
-  font-size: 0.9rem;
-  text-decoration: none;
-}
-
-.quest-navigation a:hover {
-  background: var(--nav-button-hover-bg);
-  color: var(--nav-button-hover-text);
-  transform: translateY(-3px);
-  box-shadow: var(--nav-button-hover-shadow);
-  text-shadow: none;
-}
-
-/* ===== BOTTOM QUEST NAVIGATION ===== */
-.quest-navigation-bottom {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.next-quest-btn {
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ===== CODE STYLING ===== */
-.code-block {
-  background: var(--code-block-bg);
-  border: var(--code-block-border);
-  border-radius: 12px;
-  margin: 1.5rem 0;
-  overflow: hidden;
-  box-shadow: var(--code-block-shadow);
-  backdrop-filter: blur(5px);
-}
-
-.code-header {
-  background: var(--code-header-bg);
-  color: var(--code-header-text);
-  padding: 0.8rem 1.2rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: var(--code-header-border);
-  font-family: var(--font-code);
-}
-
-pre {
-  margin: 0;
-  padding: 1.5rem;
-  overflow-x: auto;
-  background: var(--code-pre-bg);
-  font-family: var(--font-code);
-  line-height: var(--code-line-height);
-}
-
-pre::-webkit-scrollbar {
-  height: 8px;
-}
-
-pre::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-pre::-webkit-scrollbar-thumb {
-  background: var(--accent-primary);
-  border-radius: 4px;
-}
-
-code {
-  font-family: var(--font-code);
-  font-size: 1rem;
-  color: var(--code-text);
-}
-
-.inline-code {
-  background: var(--inline-code-bg);
-  color: var(--inline-code-text);
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  font-family: var(--font-code);
-  border: var(--inline-code-border);
-  font-size: 0.95em;
-}
-
-/* ===== LINKS ===== */
-a {
-  color: var(--accent-secondary);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-a:hover {
-  color: var(--accent-primary);
-  text-shadow: var(--text-shadow);
-}
-
-/* ===== LISTS ===== */
-ul, ol {
-  margin: 1.5rem 0;
-  padding-left: 2rem;
-}
-
-li {
-  color: var(--paragraph-color);
-  margin-bottom: 0.8rem;
-  line-height: 1.6;
-}
-
-/* ===== EMPHASIS ===== */
-strong {
-  color: var(--accent-primary);
-  font-weight: 600;
-  text-shadow: var(--text-shadow);
-}
-
-em {
-  color: var(--accent-secondary);
-  font-style: italic;
-}
-
-/* ===== HORIZONTAL RULES ===== */
-hr {
-  border: none;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
-  margin: 3rem 0;
-  border-radius: 1px;
-}
-
-/* ===== SECTION DIVIDERS ===== */
-.section-divider {
-  color: var(--heading-color);
-  font-weight: 600;
-  text-align: center;
-  margin: 2rem 0 1.5rem 0;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  font-family: var(--font-heading);
-}
-
-/* ===== BLOCKQUOTES ===== */
-blockquote {
-  border-left: 4px solid var(--accent-primary);
-  padding: 1rem 1.5rem;
-  margin: 2rem 0;
-  background: rgba(100, 255, 218, 0.05);
-  border-radius: 0 12px 12px 0;
-  backdrop-filter: blur(5px);
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 768px) {
-  .container {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
-  
-  .quest-content {
-    padding: 1.5rem;
-  }
-  
-  .story-content {
-    padding: 1.5rem;
-  }
-  
-  .quests-section {
-    padding: 1.5rem;
-  }
-  
-  h1 {
-    font-size: 2rem;
-    letter-spacing: 2px;
-  }
-  
-  .quest-title {
-    font-size: 1.4rem;
-    letter-spacing: 1.5px;
-  }
-  
-  .quest-navigation {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .quest-navigation a {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .quest-navigation-bottom {
-    align-items: flex-end;
-  }
-  
-  .next-quest-btn {
-    width: auto;
-    min-width: 200px;
-  }
-  
-  p {
-    font-size: 1.05rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .nav-content {
-    padding: 0 1rem;
-  }
-  
-  .navbar a, .navbar h1 {
-    font-size: 1.2rem;
-  }
-  
-  h1 {
-    font-size: 1.8rem;
-  }
-  
-  .quest-title {
-    font-size: 1.26rem;
-  }
-  
-  pre {
-    padding: 1rem;
-    font-size: 0.9rem;
-  }
-  
-  p {
-    font-size: 1rem;
-  }
-}`;
-  }
-
-  private getThemeVariables(theme: AdventureTheme): string {
-    switch (theme) {
-      case 'space':
-        return `  /* ===== COLOR PALETTE ===== */
-  --primary-bg: linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 50%, #0c0c1e 100%);
-  --body-overlay: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(100, 255, 218, 0.05) 0%, transparent 50%);
-  --primary-text: #f3f3f3ff;
-  --heading-color: #ffffff;
-  --paragraph-color: #b8c5ff;
-  --accent-primary: #64ffda;
-  --accent-secondary: #82b1ff;
-  --accent-tertiary: #7c4dff;
-  --title-gradient: linear-gradient(135deg, #64ffda 0%, #82b1ff 50%, #7c4dff 100%);
-
-  /* ===== TYPOGRAPHY ===== */
-  --font-primary: 'Exo 2', sans-serif;
-  --font-heading: 'Orbitron', monospace;
-  --font-code: 'JetBrains Mono', 'Courier New', monospace;
-  --heading-weight: 700;
-
-  /* ===== EFFECTS ===== */
-  --text-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
-  --glow-shadow: 0 0 20px rgba(100, 255, 218, 0.6), 0 0 30px rgba(130, 177, 255, 0.4);
-
-  /* ===== NAVBAR ===== */
-  --navbar-bg: rgba(12, 12, 30, 0.95);
-  --navbar-border: 1px solid rgba(100, 255, 218, 0.2);
-  --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --navbar-text: #ffffff;
-
-  /* ===== CONTENT AREAS ===== */
-  --content-bg: rgba(26, 26, 62, 0.6);
-  --content-border: 1px solid rgba(100, 255, 218, 0.15);
-  --content-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --section-border: 2px solid rgba(130, 177, 255, 0.3);
-
-  /* ===== QUEST SECTIONS ===== */
-  --quest-section-bg: rgba(26, 26, 62, 0.4);
-  --quest-section-border: 1px solid rgba(130, 177, 255, 0.2);
-  --quest-section-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  --quest-content-bg: rgba(26, 26, 62, 0.6);
-  --quest-content-border: 1px solid rgba(100, 255, 218, 0.15);
-  --quest-content-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-
-  /* ===== QUEST LINKS ===== */
-  --quest-link-bg: rgba(30, 30, 70, 0.7);
-  --quest-link-border: 1px solid rgba(100, 255, 218, 0.2);
-  --quest-link-text: #e0e6ff;
-  --quest-link-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --quest-link-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --quest-link-hover-overlay: linear-gradient(135deg, rgba(100, 255, 218, 0.1) 0%, rgba(130, 177, 255, 0.1) 100%);
-  --quest-link-hover-shadow: 0 8px 25px rgba(100, 255, 218, 0.3);
-  --quest-link-hover-text: #64ffda;
-
-  /* ===== NAVIGATION BUTTONS ===== */
-  --nav-button-bg: rgba(100, 255, 218, 0.1);
-  --nav-button-border: 1px solid rgba(100, 255, 218, 0.3);
-  --nav-button-text: #64ffda;
-  --nav-button-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --nav-button-transition: all 0.3s ease;
-  --nav-button-hover-bg: rgba(100, 255, 218, 0.2);
-  --nav-button-hover-text: #ffffff;
-  --nav-button-hover-shadow: 0 6px 20px rgba(100, 255, 218, 0.4);
-
-  /* ===== CODE BLOCKS ===== */
-  --code-block-bg: rgba(15, 15, 35, 0.9);
-  --code-block-border: 1px solid rgba(100, 255, 218, 0.2);
-  --code-block-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-  --code-header-bg: rgba(100, 255, 218, 0.15);
-  --code-header-text: #64ffda;
-  --code-header-border: 1px solid rgba(100, 255, 218, 0.2);
-  --code-pre-bg: rgba(8, 8, 25, 0.95);
-  --code-text: #e0e6ff;
-  --code-line-height: 1.3;
-
-  /* ===== INLINE CODE ===== */
-  --inline-code-bg: rgba(100, 255, 218, 0.1);
-  --inline-code-text: #64ffda;
-  --inline-code-border: 1px solid rgba(100, 255, 218, 0.2);`;
-
-      case 'mythical':
-        return `  /* ===== COLOR PALETTE ===== */
-  --primary-bg: linear-gradient(135deg, #1a0d2e 0%, #2d1b69 50%, #1a0d2e 100%);
-  --body-overlay: radial-gradient(circle at 30% 70%, rgba(186, 85, 211, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
-  --primary-text: #f0e6ff;
-  --heading-color: #ffffff;
-  --paragraph-color: #d1c4e9;
-  --accent-primary: #ba55d3;
-  --accent-secondary: #ffd700;
-  --accent-tertiary: #9c27b0;
-  --title-gradient: linear-gradient(135deg, #ba55d3 0%, #ffd700 50%, #9c27b0 100%);
-
-  /* ===== TYPOGRAPHY ===== */
-  --font-primary: 'Cinzel', serif;
-  --font-heading: 'Cinzel Decorative', cursive;
-  --font-code: 'Source Code Pro', monospace;
-  --heading-weight: 700;
-
-  /* ===== EFFECTS ===== */
-  --text-shadow: 0 0 10px rgba(186, 85, 211, 0.3);
-  --glow-shadow: 0 0 20px rgba(186, 85, 211, 0.6), 0 0 30px rgba(255, 215, 0, 0.4);
-
-  /* ===== NAVBAR ===== */
-  --navbar-bg: rgba(26, 13, 46, 0.95);
-  --navbar-border: 1px solid rgba(186, 85, 211, 0.2);
-  --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --navbar-text: #ffffff;
-
-  /* ===== CONTENT AREAS ===== */
-  --content-bg: rgba(45, 27, 105, 0.6);
-  --content-border: 1px solid rgba(186, 85, 211, 0.15);
-  --content-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --section-border: 2px solid rgba(255, 215, 0, 0.3);
-
-  /* ===== QUEST SECTIONS ===== */
-  --quest-section-bg: rgba(45, 27, 105, 0.4);
-  --quest-section-border: 1px solid rgba(255, 215, 0, 0.2);
-  --quest-section-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  --quest-content-bg: rgba(45, 27, 105, 0.6);
-  --quest-content-border: 1px solid rgba(186, 85, 211, 0.15);
-  --quest-content-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-
-  /* ===== QUEST LINKS ===== */
-  --quest-link-bg: rgba(60, 30, 90, 0.7);
-  --quest-link-border: 1px solid rgba(186, 85, 211, 0.2);
-  --quest-link-text: #f0e6ff;
-  --quest-link-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --quest-link-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --quest-link-hover-overlay: linear-gradient(135deg, rgba(186, 85, 211, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
-  --quest-link-hover-shadow: 0 8px 25px rgba(186, 85, 211, 0.3);
-  --quest-link-hover-text: #ba55d3;
-
-  /* ===== NAVIGATION BUTTONS ===== */
-  --nav-button-bg: rgba(186, 85, 211, 0.1);
-  --nav-button-border: 1px solid rgba(186, 85, 211, 0.3);
-  --nav-button-text: #ba55d3;
-  --nav-button-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --nav-button-transition: all 0.3s ease;
-  --nav-button-hover-bg: rgba(186, 85, 211, 0.2);
-  --nav-button-hover-text: #ffffff;
-  --nav-button-hover-shadow: 0 6px 20px rgba(186, 85, 211, 0.4);
-
-  /* ===== CODE BLOCKS ===== */
-  --code-block-bg: rgba(26, 13, 46, 0.9);
-  --code-block-border: 1px solid rgba(186, 85, 211, 0.2);
-  --code-block-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-  --code-header-bg: rgba(186, 85, 211, 0.15);
-  --code-header-text: #ba55d3;
-  --code-header-border: 1px solid rgba(186, 85, 211, 0.2);
-  --code-pre-bg: rgba(20, 10, 35, 0.95);
-  --code-text: #f0e6ff;
-  --code-line-height: 1.3;
-
-  /* ===== INLINE CODE ===== */
-  --inline-code-bg: rgba(186, 85, 211, 0.1);
-  --inline-code-text: #ba55d3;
-  --inline-code-border: 1px solid rgba(186, 85, 211, 0.2);`;
-
-      case 'ancient':
-        return `  /* ===== COLOR PALETTE ===== */
-  --primary-bg: linear-gradient(135deg, #2c1810 0%, #5d4037 50%, #2c1810 100%);
-  --body-overlay: radial-gradient(circle at 25% 75%, rgba(255, 193, 7, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 25%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
-  --primary-text: #f5f5dc;
-  --heading-color: #ffffff;
-  --paragraph-color: #e8dcc0;
-  --accent-primary: #ffc107;
-  --accent-secondary: #ff8f00;
-  --accent-tertiary: #8b4513;
-  --title-gradient: linear-gradient(135deg, #ffc107 0%, #ff8f00 50%, #8b4513 100%);
-
-  /* ===== TYPOGRAPHY ===== */
-  --font-primary: 'Libre Baskerville', serif;
-  --font-heading: 'Cinzel', serif;
-  --font-code: 'Roboto Mono', monospace;
-  --heading-weight: 700;
-
-  /* ===== EFFECTS ===== */
-  --text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
-  --glow-shadow: 0 0 20px rgba(255, 193, 7, 0.6), 0 0 30px rgba(255, 143, 0, 0.4);
-
-  /* ===== NAVBAR ===== */
-  --navbar-bg: rgba(44, 24, 16, 0.95);
-  --navbar-border: 1px solid rgba(255, 193, 7, 0.2);
-  --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --navbar-text: #ffffff;
-
-  /* ===== CONTENT AREAS ===== */
-  --content-bg: rgba(93, 64, 55, 0.6);
-  --content-border: 1px solid rgba(255, 193, 7, 0.15);
-  --content-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --section-border: 2px solid rgba(255, 143, 0, 0.3);
-
-  /* ===== QUEST SECTIONS ===== */
-  --quest-section-bg: rgba(93, 64, 55, 0.4);
-  --quest-section-border: 1px solid rgba(255, 143, 0, 0.2);
-  --quest-section-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  --quest-content-bg: rgba(93, 64, 55, 0.6);
-  --quest-content-border: 1px solid rgba(255, 193, 7, 0.15);
-  --quest-content-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-
-  /* ===== QUEST LINKS ===== */
-  --quest-link-bg: rgba(80, 50, 30, 0.7);
-  --quest-link-border: 1px solid rgba(255, 193, 7, 0.2);
-  --quest-link-text: #f5f5dc;
-  --quest-link-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --quest-link-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --quest-link-hover-overlay: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 143, 0, 0.1) 100%);
-  --quest-link-hover-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
-  --quest-link-hover-text: #ffc107;
-
-  /* ===== NAVIGATION BUTTONS ===== */
-  --nav-button-bg: rgba(255, 193, 7, 0.1);
-  --nav-button-border: 1px solid rgba(255, 193, 7, 0.3);
-  --nav-button-text: #ffc107;
-  --nav-button-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --nav-button-transition: all 0.3s ease;
-  --nav-button-hover-bg: rgba(255, 193, 7, 0.2);
-  --nav-button-hover-text: #ffffff;
-  --nav-button-hover-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
-
-  /* ===== CODE BLOCKS ===== */
-  --code-block-bg: rgba(44, 24, 16, 0.9);
-  --code-block-border: 1px solid rgba(255, 193, 7, 0.2);
-  --code-block-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-  --code-header-bg: rgba(255, 193, 7, 0.15);
-  --code-header-text: #ffc107;
-  --code-header-border: 1px solid rgba(255, 193, 7, 0.2);
-  --code-pre-bg: rgba(30, 20, 10, 0.95);
-  --code-text: #f5f5dc;
-  --code-line-height: 1.3;
-
-  /* ===== INLINE CODE ===== */
-  --inline-code-bg: rgba(255, 193, 7, 0.1);
-  --inline-code-text: #ffc107;
-  --inline-code-border: 1px solid rgba(255, 193, 7, 0.2);`;
-
-      default:
-        return `  /* ===== COLOR PALETTE ===== */
-  --primary-bg: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #f5f5f5 100%);
-  --body-overlay: none;
-  --primary-text: #333333;
-  --heading-color: #1976d2;
-  --paragraph-color: #555555;
-  --accent-primary: #1976d2;
-  --accent-secondary: #42a5f5;
-  --accent-tertiary: #0d47a1;
-  --title-gradient: linear-gradient(135deg, #1976d2 0%, #42a5f5 50%, #0d47a1 100%);
-
-  /* ===== TYPOGRAPHY ===== */
-  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-code: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  --heading-weight: 600;
-
-  /* ===== EFFECTS ===== */
-  --text-shadow: none;
-  --glow-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  /* ===== NAVBAR ===== */
-  --navbar-bg: rgba(255, 255, 255, 0.95);
-  --navbar-border: 1px solid rgba(0, 0, 0, 0.1);
-  --navbar-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --navbar-text: #1976d2;
-
-  /* ===== CONTENT AREAS ===== */
-  --content-bg: rgba(255, 255, 255, 0.9);
-  --content-border: 1px solid rgba(0, 0, 0, 0.1);
-  --content-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --section-border: 2px solid rgba(25, 118, 210, 0.2);
-
-  /* ===== QUEST SECTIONS ===== */
-  --quest-section-bg: rgba(250, 250, 250, 0.9);
-  --quest-section-border: 1px solid rgba(0, 0, 0, 0.1);
-  --quest-section-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --quest-content-bg: rgba(255, 255, 255, 0.9);
-  --quest-content-border: 1px solid rgba(0, 0, 0, 0.1);
-  --quest-content-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-
-  /* ===== QUEST LINKS ===== */
-  --quest-link-bg: rgba(245, 245, 245, 0.9);
-  --quest-link-border: 1px solid rgba(0, 0, 0, 0.1);
-  --quest-link-text: #333333;
-  --quest-link-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --quest-link-transition: all 0.3s ease;
-  --quest-link-hover-overlay: rgba(25, 118, 210, 0.05);
-  --quest-link-hover-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
-  --quest-link-hover-text: #1976d2;
-
-  /* ===== NAVIGATION BUTTONS ===== */
-  --nav-button-bg: rgba(25, 118, 210, 0.1);
-  --nav-button-border: 1px solid rgba(25, 118, 210, 0.3);
-  --nav-button-text: #1976d2;
-  --nav-button-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --nav-button-transition: all 0.3s ease;
-  --nav-button-hover-bg: rgba(25, 118, 210, 0.2);
-  --nav-button-hover-text: #0d47a1;
-  --nav-button-hover-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-
-  /* ===== CODE BLOCKS ===== */
-  --code-block-bg: rgba(245, 245, 245, 0.9);
-  --code-block-border: 1px solid rgba(0, 0, 0, 0.1);
-  --code-block-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --code-header-bg: rgba(25, 118, 210, 0.1);
-  --code-header-text: #1976d2;
-  --code-header-border: 1px solid rgba(25, 118, 210, 0.2);
-  --code-pre-bg: rgba(250, 250, 250, 0.95);
-  --code-text: #333333;
-  --code-line-height: 1.4;
-
-  /* ===== INLINE CODE ===== */
-  --inline-code-bg: rgba(25, 118, 210, 0.1);
-  --inline-code-text: #1976d2;
-  --inline-code-border: 1px solid rgba(25, 118, 210, 0.2);`;
-    }
-  }
-
-  // Removed getThemeKeyframes - animations are now in the existing theme.css
-
-  private getThemeEmoji(theme: AdventureTheme): string {
-    switch (theme) {
-      case 'space': return '🚀 SPACE EXPLORATION THEME';
-      case 'mythical': return '🏰 ENCHANTED KINGDOM THEME';
-      case 'ancient': return '🏺 ANCIENT CIVILIZATION THEME';
-      case 'developer': return '📖 DEVELOPER DOCUMENTATION THEME';
-      default: return '🎨 CUSTOM THEME';
-    }
-  }
-
-  private getThemeTitle(theme: AdventureTheme): string {
-    switch (theme) {
-      case 'space': return 'SPACE EXPLORATION THEME';
-      case 'mythical': return 'ENCHANTED KINGDOM THEME';
-      case 'ancient': return 'ANCIENT CIVILIZATION THEME';
-      case 'developer': return 'DEVELOPER DOCUMENTATION THEME';
-      default: return 'CUSTOM THEME';
-    }
-  }
-
-  // Removed old hardcoded CSS method - now using variable-based approach above
-
-  private generateIndexHTMLContent(): string {
+  private buildIndexHTML(): string {
     const adventureQuests = this.adventureManager.getAllQuests();
     const questLinks = this.quests.map((quest, index) => {
       const questData = adventureQuests[index];
-      let description = questData ? questData.description : '';
+      let description = questData?.description || '';
       
-      // Clean up the description by removing "Code Files:" and anything after it
+      // Clean up description
       if (description) {
         description = description.replace(/\*\*Code Files:\*\*.*$/s, '').trim();
         description = description.replace(/Code Files:.*$/s, '').trim();
@@ -1149,13 +330,11 @@ blockquote {
       
       return `<a href="${quest.filename}" class="quest-link">
         <h3>${this.formatInlineMarkdown(quest.title)}</h3>
-        ${description ? `<p>${this.formatContentForHTML(description)}</p>` : ''}
+        ${description ? `<p>${this.formatMarkdown(description)}</p>` : ''}
       </a>`;
     }).join('\n');
 
     const adventureTitle = this.adventureManager.getTitle();
-
-    // Get clean story content without quest listings
     const cleanStoryContent = this.adventureManager.getStoryContent();
     
     return `<!DOCTYPE html>
@@ -1176,7 +355,7 @@ blockquote {
     <div class="container">
         <div class="story-content">
             <h2>Your Adventure Awaits</h2>
-            ${this.formatContentForHTML(cleanStoryContent)}
+            ${this.formatMarkdown(cleanStoryContent)}
         </div>
         
         <div class="quests-section">
@@ -1188,16 +367,14 @@ blockquote {
 </html>`;
   }
 
-  private generateQuestHTMLContent(quest: QuestInfo, content: string, questIndex: number): string {
+  private buildQuestHTML(quest: QuestInfo, content: string, questIndex: number): string {
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
     const adventureTitle = this.adventureManager.getTitle();
     
-    // Helper function to truncate text after 40 characters
     const truncateTitle = (title: string, maxLength: number = 40): string => {
       return title.length > maxLength ? title.slice(0, maxLength) + '...' : title;
     };
 
-    // Only show navigation at bottom, only "Next" button, aligned right
     const bottomNavigation = nextQuest ? `
       <div class="quest-navigation quest-navigation-bottom">
         <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${truncateTitle(nextQuest.title)} →</a>
@@ -1223,7 +400,7 @@ blockquote {
         <h1 class="quest-title">${this.formatInlineMarkdown(quest.title)}</h1>
         <hr>
         <div class="quest-content">
-            ${this.formatContentForHTML(content)}
+            ${this.formatMarkdown(content)}
         </div>
         
         ${bottomNavigation}
@@ -1232,137 +409,37 @@ blockquote {
 </html>`;
   }
 
-  private stripHTML(html: string): string {
-    return html.replace(/<[^>]*>/g, '');
-  }
-
   private formatInlineMarkdown(text: string): string {
-    // Handle inline markdown without adding paragraph tags
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold**
-      .replace(/\*(.*?)\*/g, '<em>$1</em>') // *italic*
-      .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>'); // `code`
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>');
   }
 
-  private formatContentForHTML(content: string): string {
-    // Use marked for proper markdown parsing with custom code block handling
-    const codeBlockPlaceholders: string[] = [];
-    let processedContent = content;
+  private formatMarkdown(content: string): string {
+    // Simple markdown processing - let marked handle most of it
+    let htmlContent = marked(content) as string;
     
-    // Step 1: Extract code blocks and replace with placeholders
-    processedContent = processedContent.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (_match, lang, code) => {
-      const language = lang || 'typescript';
-      const formattedCode = this.formatCodeBlock(code, language);
-      const codeBlockHtml = `<div class="code-block"><div class="code-header">${language}</div><pre><code class="language-${language}">${formattedCode}</code></pre></div>`;
-      const placeholder = `CODEBLOCK${codeBlockPlaceholders.length}PLACEHOLDER`;
-      codeBlockPlaceholders.push(codeBlockHtml);
-      return placeholder;
-    });
-    
-    // Step 2: Use marked to parse markdown properly (fixes asterisk issues)
-    let htmlContent = marked(processedContent) as string;
-    
-    // Step 3: Fix inline code styling to match our CSS classes
+    // Fix inline code styling
     htmlContent = htmlContent.replace(/<code>/g, '<code class="inline-code">');
     
-    // Step 4: Style section dividers (lines with dashes and text)
+    // Style section dividers
     htmlContent = htmlContent.replace(/<p>([─-]{3,}.*?[─-]{3,})<\/p>/g, '<p class="section-divider">$1</p>');
     
-    // Step 5: Remove duplicate quest title at the beginning of content
+    // Remove duplicate quest titles
     htmlContent = htmlContent.replace(/^<p><strong>🚀 Quest \d+:.*?<\/strong><\/p>\s*/i, '');
-    
-    // Step 6: Restore code blocks
-    codeBlockPlaceholders.forEach((codeBlock, index) => {
-      const placeholder = `CODEBLOCK${index}PLACEHOLDER`;
-      htmlContent = htmlContent.replace(new RegExp(`<p>${placeholder}</p>`, 'g'), codeBlock);
-      htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), codeBlock);
-    });
     
     return htmlContent;
   }
 
-  private formatCodeBlock(code: string, language: string): string {
-    // Preserve indentation and add syntax highlighting classes
-    return code
-      .split('\n')
-      .map(line => {
-        // Preserve leading whitespace
-        const indent = line.match(/^(\s*)/)?.[1] || '';
-        const content = line.trim();
-        
-        if (!content) return '';
-        
-        // Add basic syntax highlighting for TypeScript/JavaScript
-        if (language === 'typescript' || language === 'javascript') {
-          return indent + this.highlightTypeScript(content);
-        }
-        
-        return line;
-      })
-      .join('\n');
+  private stripHTML(html: string): string {
+    return html.replace(/<[^>]*>/g, '');
   }
 
-  private highlightTypeScript(line: string): string {
-    // Skip if already has HTML tags to prevent double-wrapping
-    if (line.includes('<span') || line.includes('&lt;span')) {
-      return line;
-    }
-    
-    // More robust approach: apply highlighting in sequence and track what's been processed
-    let processedLine = line;
-    
-    // 1. Comments first (to avoid highlighting keywords in comments)
-    processedLine = processedLine.replace(/(\/\/.*$)/g, '<span class="comment">$1</span>');
-    
-    // 2. Strings (to avoid highlighting keywords in strings)
-    processedLine = processedLine.replace(/(["'])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>');
-    
-    // 3. Keywords - more precise pattern to avoid conflicts
-    processedLine = processedLine.replace(/\b(async|await|function|const|let|var|if|else|for|while|return|import|export|class|interface|type|Promise)\b(?![^<]*<\/span>)/g, (match, p1, offset, string) => {
-      // Don't replace if already inside a span
-      const beforeMatch = string.substring(0, offset);
-      const lastOpenSpan = beforeMatch.lastIndexOf('<span');
-      const lastCloseSpan = beforeMatch.lastIndexOf('</span>');
-      if (lastOpenSpan > lastCloseSpan) {
-        return match; // Inside a span, don't replace
-      }
-      return `<span class="keyword">${p1}</span>`;
+  private prompt(question: string): Promise<string> {
+    return new Promise((resolve) => {
+      this.rl.question(chalk.bold(question), resolve);
     });
-    
-    // 4. Types
-    processedLine = processedLine.replace(/\b(string|number|boolean|void|any|unknown|ProjectInfo|AdventureTheme|CustomThemeData)\b(?![^<]*<\/span>)/g, (match, p1, offset, string) => {
-      const beforeMatch = string.substring(0, offset);
-      const lastOpenSpan = beforeMatch.lastIndexOf('<span');
-      const lastCloseSpan = beforeMatch.lastIndexOf('</span>');
-      if (lastOpenSpan > lastCloseSpan) {
-        return match;
-      }
-      return `<span class="type">${p1}</span>`;
-    });
-    
-    // 5. Functions/methods
-    processedLine = processedLine.replace(/(\w+)(\s*\()/g, (match, p1, p2, offset, string) => {
-      const beforeMatch = string.substring(0, offset);
-      const lastOpenSpan = beforeMatch.lastIndexOf('<span');
-      const lastCloseSpan = beforeMatch.lastIndexOf('</span>');
-      if (lastOpenSpan > lastCloseSpan) {
-        return match;
-      }
-      return `<span class="function">${p1}</span>${p2}`;
-    });
-    
-    // 6. Properties
-    processedLine = processedLine.replace(/\.(\w+)(?!\s*\()/g, (match, p1, offset, string) => {
-      const beforeMatch = string.substring(0, offset);
-      const lastOpenSpan = beforeMatch.lastIndexOf('<span');
-      const lastCloseSpan = beforeMatch.lastIndexOf('</span>');
-      if (lastOpenSpan > lastCloseSpan) {
-        return match;
-      }
-      return `.<span class="property">${p1}</span>`;
-    });
-    
-    return processedLine;
   }
 }
 
