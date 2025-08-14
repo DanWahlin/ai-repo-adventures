@@ -171,3 +171,41 @@ You> I want to go on the main quest
 
 You embark on The Main Quest, following the primary data stream from the command center...
 ```
+
+## HTML Generator Test
+
+### Quick HTML Generation Test
+
+The `html-generator-test.ts` creates a minimal HTML adventure output for testing purposes:
+
+```bash
+npm run test:html
+```
+
+This will:
+- Generate a minimal adventure with 1 story + 1 quest (only 2 LLM calls)
+- Output HTML files to `tests/public/`
+- Include all necessary assets (CSS, HTML files)
+
+### Viewing Test Output
+
+After running the test, you can view the generated HTML:
+
+```bash
+cd tests/public
+python -m http.server 8080
+```
+
+Then open http://localhost:8080 in your browser.
+
+### Generated Files
+
+- `index.html` - Main adventure page
+- `quest-1.html` - Single quest page  
+- `assets/theme.css` - Complete themed CSS
+
+This is useful for:
+- Testing HTML generation without full quest generation
+- Quick development iteration  
+- CSS/styling testing
+- Debugging HTML structure issues

@@ -372,23 +372,32 @@ body::before {
 }
 
 .navbar h1 {
-  color: var(--navbar-text);
-  text-decoration: none;
+  background: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: var(--heading-weight);
-  text-shadow: var(--text-shadow);
+  font-size: clamp(1.4rem, 3.5vw, 2.45rem);
+  font-weight: 900;
+  text-shadow: var(--glow-shadow);
+  text-transform: uppercase;
+  letter-spacing: 2px;
   transition: all 0.3s ease;
   margin: 0;
 }
 
 .navbar a {
-  color: var(--navbar-text);
+  background: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-decoration: none;
   font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: var(--heading-weight);
-  text-shadow: var(--text-shadow);
+  font-size: clamp(1.4rem, 3.5vw, 2.45rem);
+  font-weight: 900;
+  text-shadow: var(--glow-shadow);
+  text-transform: uppercase;
+  letter-spacing: 2px;
   transition: all 0.3s ease;
 }
 
@@ -1125,11 +1134,15 @@ blockquote {
   // Removed old hardcoded CSS method - now using variable-based approach above
 
   private generateIndexHTMLContent(storyContent: string): string {
-    const questLinks = this.quests.map(quest => 
-      `<a href="${quest.filename}" class="quest-link">
+    const adventureQuests = this.adventureManager.getAllQuests();
+    const questLinks = this.quests.map((quest, index) => {
+      const questData = adventureQuests[index];
+      const description = questData ? questData.description : '';
+      return `<a href="${quest.filename}" class="quest-link">
         <h3>${quest.title}</h3>
-      </a>`
-    ).join('\n');
+        ${description ? `<p>${this.formatContentForHTML(description)}</p>` : ''}
+      </a>`;
+    }).join('\n');
 
     const adventureTitle = this.adventureManager.getTitle();
 
@@ -1150,11 +1163,12 @@ blockquote {
     
     <div class="container">
         <div class="story-content">
+            <h2>Your Adventure Awaits</h2>
             ${this.formatContentForHTML(storyContent)}
         </div>
         
         <div class="quests-section">
-            <h2>Available Quests</h2>
+            <h2>Adventure Quests</h2>
             ${questLinks}
         </div>
     </div>
@@ -1194,9 +1208,6 @@ blockquote {
     </nav>
     
     <div class="container">
-        <h1 class="quest-title">${quest.title}</h1>
-        <hr>
-        
         <div class="quest-content">
             ${this.formatContentForHTML(content)}
         </div>
