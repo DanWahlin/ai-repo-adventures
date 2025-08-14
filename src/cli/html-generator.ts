@@ -9,6 +9,7 @@ import * as readline from 'readline';
 import * as path from 'path';
 import * as fs from 'fs';
 import chalk from 'chalk';
+import { marked } from 'marked';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 import { AdventureManager } from '../adventure/adventure-manager.js';
 import { getAllThemes, getThemeByKey, AdventureTheme } from '../shared/theme.js';
@@ -1157,7 +1158,7 @@ blockquote {
   }
 
   private formatContentForHTML(content: string): string {
-    // Convert markdown-like content to HTML with enhanced code block support
+    // Use marked for proper markdown parsing with custom code block handling
     const codeBlockPlaceholders: string[] = [];
     let processedContent = content;
     
@@ -1166,38 +1167,25 @@ blockquote {
       const language = lang || 'typescript';
       const formattedCode = this.formatCodeBlock(code, language);
       const codeBlockHtml = `<div class="code-block"><div class="code-header">${language}</div><pre><code class="language-${language}">${formattedCode}</code></pre></div>`;
-      const placeholder = `__CODE_BLOCK_${codeBlockPlaceholders.length}__`;
+      const placeholder = `CODEBLOCK${codeBlockPlaceholders.length}PLACEHOLDER`;
       codeBlockPlaceholders.push(codeBlockHtml);
       return placeholder;
     });
     
-    // Step 2: Process the rest of the content
-    processedContent = processedContent
-      // Handle inline code
-      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-      // Handle headers
-      .replace(/^#{3} (.*)$/gm, '<h3>$1</h3>')
-      .replace(/^#{2} (.*)$/gm, '<h2>$1</h2>')
-      .replace(/^#{1} (.*)$/gm, '<h1>$1</h1>')
-      // Handle emphasis
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Handle paragraphs
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/^(.*)$/gm, '<p>$1</p>')
-      .replace(/<p><\/p>/g, '')
-      .replace(/<p><h([1-6])>/g, '<h$1>')
-      .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
-      // Handle code block placeholders specially
-      .replace(/<p>(__CODE_BLOCK_\d+__)<\/p>/g, '$1');
+    // Step 2: Use marked to parse markdown properly (fixes asterisk issues)
+    let htmlContent = marked(processedContent) as string;
     
-    // Step 3: Restore code blocks
+    // Step 3: Fix inline code styling to match our CSS classes
+    htmlContent = htmlContent.replace(/<code>/g, '<code class="inline-code">');
+    
+    // Step 4: Restore code blocks
     codeBlockPlaceholders.forEach((codeBlock, index) => {
-      const placeholder = `__CODE_BLOCK_${index}__`;
-      processedContent = processedContent.replace(placeholder, codeBlock);
+      const placeholder = `CODEBLOCK${index}PLACEHOLDER`;
+      htmlContent = htmlContent.replace(new RegExp(`<p>${placeholder}</p>`, 'g'), codeBlock);
+      htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), codeBlock);
     });
     
-    return processedContent;
+    return htmlContent;
   }
 
   private formatCodeBlock(code: string, language: string): string {
