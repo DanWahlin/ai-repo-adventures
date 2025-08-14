@@ -11,7 +11,9 @@ IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
 {{themeGuidelines}}
 
 ## Complete Codebase
-{{codeContent}}{{adventureGuidance}}
+{{codeContent}}
+
+{{adventureGuidance}}
 
 ## ⚠️ CRITICAL: Code Authenticity Requirements - ZERO TOLERANCE FOR FAKE CODE
 - **NEVER INVENT FUNCTIONS**: Use ONLY code that exists in the "## Complete Codebase" section above
@@ -38,19 +40,34 @@ Add tasteful visual elements to enhance readability and engagement:
 - Use clean separators: ─────────────────
 - Keep visual elements minimal and professional - enhance, don't overwhelm
 
-## Response Format (JSON)
-{
-  "adventure": "1 paragraph (75-100 words) continuing the themed narrative story only - keep brief",
-  "fileExploration": "2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders, thematic emoticons as headers (⚡🔗🛡️📊), and clean formatting for better readability",
-  "codeSnippets": [
-    {
-      "file": "filename",
-      "snippet": "EXACT code from the files - ZERO INVENTED CODE - Use 'No code found' if none exists",
-      "explanation": "Start with a real-world analogy, then explain ONLY the actual code shown - NEVER explain fake/invented code"
-    }
-  ],
-  "hints": ["Practical tip", "Next steps"]
-}
+## Response Format (Markdown)
+
+Return a well-structured markdown document with this format:
+
+```markdown
+# Adventure
+
+[1 paragraph (75-100 words) continuing the themed narrative story only - keep brief]
+
+# File Exploration
+
+[2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders, thematic emoticons as headers (⚡🔗🛡️📊), and clean formatting for better readability]
+
+# Code Snippets
+
+## filename
+
+```[language]
+EXACT code from the files - ZERO INVENTED CODE - Use 'No code found' if none exists
+```
+
+[Start with a real-world analogy, then explain ONLY the actual code shown - NEVER explain fake/invented code]
+
+# Hints
+
+- Practical tip
+- Next steps
+```
 
 ## ⚠️ FINAL VERIFICATION CHECKLIST
 Before submitting your response, verify:

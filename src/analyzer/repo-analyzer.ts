@@ -156,7 +156,12 @@ export class RepoAnalyzer {
     if (configuredFiles.length > 0) {
       // Use configured files with targeted content generation
       console.log(`Using adventure.config.json: analyzing ${configuredFiles.length} configured files`);
-      return await this.generateTargetedContent(projectPath, configuredFiles);
+      try {
+        return await this.generateTargetedContent(projectPath, configuredFiles);
+      } catch (error) {
+        console.warn(`Failed to generate targeted content, falling back to full repomix content: ${error instanceof Error ? error.message : String(error)}`);
+        // Fall through to full content generation
+      }
     }
     
     // Fallback: use existing behavior with all files (compressed)

@@ -5,6 +5,7 @@ import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { loadAdventureConfig } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
+import { marked } from 'marked';
 import { z } from 'zod';
 
 export interface Quest {
@@ -69,6 +70,146 @@ const QuestContentSchema = z.object({
 });
 
 
+
+/**
+ * Parse markdown response to extract structured data
+ */
+function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
+  const tokens = marked.lexer(markdownContent);
+  let title = '';
+  let story = '';
+  const quests: Quest[] = [];
+  
+  let currentSection = '';
+  let currentQuest: Partial<Quest> = {};
+  
+  for (const token of tokens) {
+    if (token.type === 'heading') {
+      if (token.depth === 1) {
+        title = token.text;
+      } else if (token.depth === 2) {
+        currentSection = token.text.toLowerCase();
+        if (currentSection === 'story' || currentSection === 'adventure') {
+          // Next paragraphs will be story content
+        } else if (currentSection === 'quests' || currentSection === 'adventures') {
+          // Next sections will be quests
+        }
+      } else if (token.depth === 3 && (currentSection === 'quests' || currentSection === 'adventures')) {
+        // Save previous quest if exists
+        if (currentQuest.title && currentQuest.description) {
+          quests.push({
+            id: `quest-${quests.length + 1}`,
+            title: currentQuest.title,
+            description: currentQuest.description,
+            codeFiles: currentQuest.codeFiles || []
+          });
+        }
+        // Start new quest
+        currentQuest = { title: token.text, description: '', codeFiles: [] };
+      }
+    } else if (token.type === 'paragraph') {
+      if (currentSection === 'story' || currentSection === 'adventure') {
+        story += token.text + '\n\n';
+      } else if (currentQuest.title) {
+        currentQuest.description += token.text + '\n\n';
+      }
+    } else if (token.type === 'list' && currentQuest.title) {
+      // Extract code files from list items
+      for (const item of token.items) {
+        if (item.text.includes('.') && (item.text.includes('/') || item.text.match(/\.(ts|js|py|java|cpp|c|rs|go)$/))) {
+          currentQuest.codeFiles = currentQuest.codeFiles || [];
+          currentQuest.codeFiles.push(item.text.trim());
+        }
+      }
+    }
+  }
+  
+  // Add final quest if exists
+  if (currentQuest.title && currentQuest.description) {
+    quests.push({
+      id: `quest-${quests.length + 1}`,
+      title: currentQuest.title,
+      description: currentQuest.description.trim(),
+      codeFiles: currentQuest.codeFiles || []
+    });
+  }
+  
+  return {
+    title: title || 'Adventure',
+    story: story.trim() || 'Welcome to your coding adventure!',
+    quests
+  };
+}
+
+/**
+ * Parse markdown response to extract quest content
+ */
+function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
+  const tokens = marked.lexer(markdownContent);
+  let adventure = '';
+  let fileExploration = '';
+  const codeSnippets: CodeSnippet[] = [];
+  const hints: string[] = [];
+  
+  let currentSection = '';
+  let currentCodeSnippet: Partial<{ file: string; snippet: string; explanation: string }> = {};
+  
+  for (const token of tokens) {
+    if (token.type === 'heading') {
+      if (token.depth === 1) {
+        currentSection = token.text.toLowerCase();
+      } else if (token.depth === 2) {
+        if (currentSection.includes('code') || currentSection.includes('snippet')) {
+          // Start new code snippet - H2 under "Code Snippets" section
+          if (currentCodeSnippet.file && currentCodeSnippet.snippet) {
+            codeSnippets.push({
+              file: currentCodeSnippet.file,
+              snippet: currentCodeSnippet.snippet,
+              explanation: currentCodeSnippet.explanation || ''
+            });
+          }
+          currentCodeSnippet = { file: token.text, snippet: '', explanation: '' };
+        } else {
+          // Regular H2 section
+          currentSection = token.text.toLowerCase();
+        }
+      }
+    } else if (token.type === 'paragraph') {
+      if (currentSection.includes('adventure') || currentSection.includes('story')) {
+        adventure += token.text + '\n\n';
+      } else if (currentSection.includes('exploration') || currentSection.includes('file')) {
+        fileExploration += token.text + '\n\n';
+      } else if (currentCodeSnippet.file && !currentCodeSnippet.explanation) {
+        currentCodeSnippet.explanation = token.text;
+      }
+    } else if (token.type === 'code') {
+      if (currentCodeSnippet.file) {
+        currentCodeSnippet.snippet = token.text;
+      }
+    } else if (token.type === 'list') {
+      // Extract hints from list items
+      for (const item of token.items) {
+        hints.push(item.text.trim());
+      }
+    }
+  }
+  
+  // Add final code snippet if exists
+  if (currentCodeSnippet.file && currentCodeSnippet.snippet) {
+    codeSnippets.push({
+      file: currentCodeSnippet.file,
+      snippet: currentCodeSnippet.snippet,
+      explanation: currentCodeSnippet.explanation || ''
+    });
+  }
+  
+  return {
+    adventure: adventure.trim() || 'Explore this code adventure!',
+    fileExploration: fileExploration.trim(),
+    codeSnippets,
+    hints
+  };
+}
 
 /**
  * Consolidated StoryGenerator - Combines the best of both implementations
@@ -160,7 +301,7 @@ ${this.adventureConfigJson}`;
     });
 
     const response = await this.withTimeout(
-      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object', maxTokens: LLM_MAX_TOKENS_QUEST })
+      this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
     );
     
     if (!response.content || response.content.trim() === '') {
@@ -169,8 +310,15 @@ ${this.adventureConfigJson}`;
     
     let parsed;
     try {
-      const rawParsed = JSON.parse(response.content);
-      parsed = QuestContentSchema.parse(rawParsed) as QuestContent;
+      // Preprocess response to remove markdown code block wrapper if present
+      let cleanContent = response.content.trim();
+      if (cleanContent.startsWith('```markdown')) {
+        cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      parsed = parseMarkdownToQuestContent(cleanContent);
+      // Validate with Zod schema for safety
+      QuestContentSchema.parse(parsed);
     } catch (error) {
       throw new Error(`Invalid LLM response for quest content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
     }
@@ -242,7 +390,7 @@ ${this.adventureConfigJson}
     });
 
     const response = await this.withTimeout(
-      this.llmClient.generateResponse(prompt, { responseFormat: 'json_object', maxTokens: LLM_MAX_TOKENS_STORY })
+      this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
     );
     
     if (!response.content || response.content.trim() === '') {
@@ -251,9 +399,18 @@ ${this.adventureConfigJson}
     
     let parsed;
     try {
-      const rawParsed = JSON.parse(response.content);
-      parsed = StoryResponseSchema.parse(rawParsed) as StoryResponse;
+      // Preprocess response to remove markdown code block wrapper if present
+      let cleanContent = response.content.trim();
+      if (cleanContent.startsWith('```markdown')) {
+        cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      parsed = parseMarkdownToStoryResponse(cleanContent);
+      // Validate with Zod schema for safety
+      StoryResponseSchema.parse(parsed);
     } catch (error) {
+      console.error('💥 Parsing error:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('💥 Full response:', response.content);
       throw new Error(`Invalid LLM response for story: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
     }
     return parsed;

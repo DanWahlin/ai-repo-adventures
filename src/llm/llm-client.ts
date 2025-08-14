@@ -21,7 +21,6 @@ export interface LLMResponse {
 }
 
 export interface LLMRequestOptions {
-  responseFormat?: 'text' | 'json_object';
   maxTokens?: number;
   // GPT-5 specific parameters
   verbosity?: 'low' | 'medium' | 'high';
@@ -34,7 +33,6 @@ interface OpenAIRequestParams {
   temperature?: number;
   max_tokens?: number;
   max_completion_tokens?: number;
-  response_format?: { type: 'text' | 'json_object' };
   // GPT-5 specific parameters
   verbosity?: 'low' | 'medium' | 'high';
   reasoning_effort?: 'minimal' | 'medium' | 'high';
@@ -136,10 +134,6 @@ export class LLMClient {
     }
 
     console.error(`🔄 Starting LLM request to ${this.model} (timeout: ${LLM_REQUEST_TIMEOUT}ms, prompt length: ${prompt.length} chars)`);
-
-    if (options?.responseFormat === 'json_object') {
-      requestParams.response_format = { type: 'json_object' };
-    }
 
     return requestParams;
   }

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 Quest 3: The Spark of Repository Analyzer - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">🚀 Cosmic Voyage: The MCP Nebula Chronicles</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>🌌 Quest 3: The Spark of Repository Analyzer</h1>
+        
+        
+      <div class="quest-navigation">
+        <a href="quest-2.html">← Previous: ⚡ Quest 2: The Stellar Cartography of Tools</a>
+        <a href="quest-4.html">Next: 🛠️ Quest 4: Thematic Harmonization Engine →</a>
+      </div>
+    
+        
+        <div class="quest-content">
+            <p><strong>🌌 Quest 3: The Spark of Repository Analyzer</strong></p><p>As the <em>Starship Code Explorer</em> cruised deeper into the <strong>Repo Nebula</strong>, the crew prepared for their third mission: "🌌 Quest 3: The Spark of Repository Analyzer." The team had successfully navigated the cosmic anomalies of tool listings and dynamic schema validation in the last mission. Now, they had to ignite the core of <em>Repository Analyzer</em>, a brilliant computational engine that promised to reveal the secrets of any codebase it touched. Tensions ran high as Commander Zeta initiated the countdown—this was no ordinary system; this was the heart of their journey, their secret weapon against the chaotic void of unstructured data. </p><p>──────────────────────────────</p><p><strong>📜 Code Discoveries:</strong></p>
+<p><strong>src/server.ts:</strong></p>
+<div class="code-block"><div class="code-header">typescript</div><pre><code class="language-typescript"><span class="keyword">class</span> RepoAdventureServer {
+  private server: Server;
+
+  <span class="function">constructor</span>() {
+    this.<span class="property">server</span> = new <span class="function">Server</span>(
+      {
+        name: <span class="string">'repo-adventure'</span>,
+        version: <span class="string">'1.0.0'</span>,
+        description: <span class="string">'A gamified MCP server for exploring code repositories through interactive storytelling'</span>
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.<span class="function">setupHandlers</span>();
+  }
+
+  private <span class="function">setupHandlers</span>() {
+    this.<span class="property">server</span>.<span class="function">setRequestHandler</span>(ListToolsRequestSchema, <span class="keyword">async</span> () => {
+      <span class="keyword">const</span> toolList = Object.<span class="function">entries</span>(tools).<span class="function">map</span>(([name, tool]) => ({
+        name,
+        description: tool.<span class="property">description</span>,
+        inputSchema: <span class="function">zodToJsonSchema</span>(tool.<span class="property">schema</span>, {
+          target: <span class="string">'jsonSchema7'</span>,
+          $refStrategy: <span class="string">'none'</span>
+        })
+      }));
+
+      <span class="keyword">return</span> { tools: toolList };
+    });
+
+    this.<span class="property">server</span>.<span class="function">setRequestHandler</span>(CallToolRequestSchema, <span class="keyword">async</span> (request) => {
+      try {
+        <span class="keyword">const</span> { name, arguments: args } = request.<span class="property">params</span>;
+
+        <span class="keyword">if</span> (!(name in tools)) {
+          throw new <span class="function">McpError</span>(ErrorCode.<span class="property">MethodNotFound</span>, `Unknown tool: ${name}`);
+        }
+
+        <span class="keyword">const</span> tool = tools[name as keyof typeof tools];
+
+        <span class=<span class="string">"comment"</span>>// Validate arguments using the tool's Zod schema</span>
+        <span class="keyword">const</span> validationResult = tool.<span class="property">schema</span>.<span class="function">safeParse</span>(args);
+        <span class="keyword">if</span> (!validationResult.<span class="property">success</span>) {
+          <span class="keyword">const</span> errorMessages = validationResult.<span class="property">error</span>.<span class="property">issues</span>.<span class="function">map</span>((err) =>
+            `${err.<span class="property">path</span>.<span class="function">join</span>(<span class="string">'.'</span>)}: ${err.<span class="property">message</span>}`
+          ).<span class="function">join</span>(<span class="string">', '</span>);
+          throw new <span class="function">McpError</span>(ErrorCode.<span class="property">InvalidParams</span>, `Invalid parameters: ${errorMessages}`);
+        }
+
+        <span class=<span class="string">"comment"</span>>// Execute the tool handler with validated arguments</span>
+        <span class="keyword">return</span> <span class="keyword">await</span> tool.<span class="function">handler</span>(validationResult.<span class="property">data</span> as <span class="type">any</span>);
+
+      } <span class="function">catch</span> (error) {
+        <span class="keyword">if</span> (error instanceof McpError) {
+          throw error;
+        }
+        throw new <span class="function">McpError</span>(
+          ErrorCode.<span class="property">InternalError</span>,
+          `Tool execution failed: ${error instanceof Error ? error.<span class="property">message</span> : <span class="function">String</span>(error)}`
+        );
+      }
+    });
+  }
+
+  <span class="keyword">async</span> <span class="function">run</span>() {
+    <span class="keyword">const</span> transport = new <span class="function">StdioServerTransport</span>();
+    <span class="keyword">await</span> this.<span class="property">server</span>.<span class="function">connect</span>(transport);
+    console.<span class="function">error</span>(<span class="string">'Repo Adventure MCP server running on stdio'</span>);
+
+    <span class=<span class="string">"comment"</span>>// Pre-generate repomix content for the current working directory to warm up the cache</span>
+    <span class="keyword">const</span> projectPath = process.<span class="function">cwd</span>();
+    console.<span class="function">error</span>(`Pre-generating repomix content <span class="keyword">for</span> project at ${projectPath}...`);
+    repoAnalyzer.<span class="function">preGenerate</span>(projectPath);
+  }
+}</code></pre></div>
+<p><em>🛠️ <strong>Analogy in Action</strong>: Imagine <code class="inline-code">RepoAdventureServer</code> as a <strong>mission control center</strong>. The <code class="inline-code">setupHandlers()</code> function is like the center's operators, each managing a set of specific operations—listing tools or executing them. The <code class="inline-code">run()</code> function sends out scanning probes (<code class="inline-code">repoAnalyzer.preGenerate</code>) to map a repository before any real exploration begins, ensuring the mission isn’t caught off guard. </em></p><p><strong>💡 Helpful Hints:</strong></p>
+<p>• <strong>Dynamic Tool Management</strong>: Using schemas like <code class="inline-code">ListToolsRequestSchema</code> and <code class="inline-code">CallToolRequestSchema</code>, the server dynamically lists and validates tools—analogous to preparing specialized equipment for different space missions.</p>
+<p>• <strong>Repository Analysis Warm-Up</strong>: As soon as the server is initiated, it triggers the <code class="inline-code">repoAnalyzer.preGenerate</code> method, which acts like deploying probes to pre-scan unknown planets (or repositories).</p>
+<p>• <strong>Practical Tip</strong>: Review the <code class="inline-code">repoAnalyzer</code> and <code class="inline-code">tools</code> modules to ensure their configurations align with the dynamic schema validation used in <code class="inline-code">setupHandlers</code>.</p>
+<p>• <strong>Next Steps</strong>: Dive into the <code class="inline-code">repoAnalyzer</code> implementation to understand how pre-generating repository content enhances efficiency during runtime operations.</p><p>---</p><p>🎉🚀 Stellar work, Cadet! By igniting the spark of the Repository Analyzer, you’ve accelerated your mission trajectory—40% complete and hurtling toward the stars of victory with cosmic precision! 🌠✨</p>
+        </div>
+        
+        
+      <div class="quest-navigation">
+        <a href="quest-2.html">← Previous: ⚡ Quest 2: The Stellar Cartography of Tools</a>
+        <a href="quest-4.html">Next: 🛠️ Quest 4: Thematic Harmonization Engine →</a>
+      </div>
+    
+    </div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Quest 1: Navigating the MCP Command Deck - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">🚀 Cosmic Voyage: The MCP Nebula Chronicles</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>🚀 Quest 1: Navigating the MCP Command Deck</h1>
+        
+        
+      <div class="quest-navigation">
+        
+        <a href="quest-2.html">Next: ⚡ Quest 2: The Stellar Cartography of Tools →</a>
+      </div>
+    
+        
+        <div class="quest-content">
+            <p><strong>🚀 Quest 1: Navigating the MCP Command Deck</strong></p><p>The command deck buzzes with activity as the crew of the MCP starship "Repo Adventure" adjusts their trajectory toward an ominously quiet sector of digital nebulae. A previous system diagnosis suggested anomalies in query responses—a potential misaligned protocol within the MCP Command Server. With tools prepped and the starboard navigators monitoring server logs, the crew braces for the intricate dance between exploration and troubleshooting. All eyes are now on Captain Nova as they prepare to navigate the intricate layers of the MCP Command Deck and uncover the mysteries hidden in its repository of cosmic code.</p><p>⚡ <strong>Repository Overview</strong>  </p>
+<p>The MCP Command Deck, represented in <code class="inline-code">src/server.ts</code>, serves as the centralized control hub for the "Repo Adventure" starship. Within this file, the crew set up key mechanisms—such as tool handling and request processing—to ensure smooth operation during the digital code mission. This component reads like the blueprint for efficient starship navigation, charting course corrections (error handling), crew assignments (dynamic configurations), and runtime operations (process management).</p><p>🔗 <strong>Core Features</strong>  </p>
+<p>The code introduces the <strong><code class="inline-code">RepoAdventureServer</code></strong> class, a pivotal construct that acts as the command deck's helmsman. Here, handlers for two critical operations are defined:</p><p>📊 <strong>Runtime Management</strong>  </p>
+<p>Added layers of robustness include:</p><p>This file exemplifies the importance of centralized control in vast digital spaces, echoing the universal need for precision, preparation, and adaptability during cosmic code navigation.</p><p><strong>📜 Code Discoveries:</strong></p>
+<p><strong>src/server.ts:</strong></p>
+<div class="code-block"><div class="code-header">typescript</div><pre><code class="language-typescript"><span class="keyword">class</span> RepoAdventureServer {
+  private server: Server;
+
+  <span class="function">constructor</span>() {
+    this.<span class="property">server</span> = new <span class="function">Server</span>(
+      {
+        name: <span class="string">'repo-adventure'</span>,
+        version: <span class="string">'1.0.0'</span>,
+        description: <span class="string">'A gamified MCP server for exploring code repositories through interactive storytelling'</span>
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.<span class="function">setupHandlers</span>();
+  }
+
+  private <span class="function">setupHandlers</span>() {
+    this.<span class="property">server</span>.<span class="function">setRequestHandler</span>(ListToolsRequestSchema, <span class="keyword">async</span> () => {
+      <span class="keyword">const</span> toolList = Object.<span class="function">entries</span>(tools).<span class="function">map</span>(([name, tool]) => ({
+        name,
+        description: tool.<span class="property">description</span>,
+        inputSchema: <span class="function">zodToJsonSchema</span>(tool.<span class="property">schema</span>, {
+          target: <span class="string">'jsonSchema7'</span>,
+          $refStrategy: <span class="string">'none'</span>
+        })
+      }));
+
+      <span class="keyword">return</span> { tools: toolList };
+    });
+
+    this.<span class="property">server</span>.<span class="function">setRequestHandler</span>(CallToolRequestSchema, <span class="keyword">async</span> (request) => {
+      try {
+        <span class="keyword">const</span> { name, arguments: args } = request.<span class="property">params</span>;
+
+        <span class="keyword">if</span> (!(name in tools)) {
+          throw new <span class="function">McpError</span>(ErrorCode.<span class="property">MethodNotFound</span>, `Unknown tool: ${name}`);
+        }
+
+        <span class="keyword">const</span> tool = tools[name as keyof typeof tools];
+
+        <span class="keyword">const</span> validationResult = tool.<span class="property">schema</span>.<span class="function">safeParse</span>(args);
+        <span class="keyword">if</span> (!validationResult.<span class="property">success</span>) {
+          <span class="keyword">const</span> errorMessages = validationResult.<span class="property">error</span>.<span class="property">issues</span>.<span class="function">map</span>((err) =>
+            `${err.<span class="property">path</span>.<span class="function">join</span>(<span class="string">'.'</span>)}: ${err.<span class="property">message</span>}`
+          ).<span class="function">join</span>(<span class="string">', '</span>);
+          throw new <span class="function">McpError</span>(ErrorCode.<span class="property">InvalidParams</span>, `Invalid parameters: ${errorMessages}`);
+        }
+
+        <span class="keyword">return</span> <span class="keyword">await</span> tool.<span class="function">handler</span>(validationResult.<span class="property">data</span> as <span class="type">any</span>);
+
+      } <span class="function">catch</span> (error) {
+        <span class="keyword">if</span> (error instanceof McpError) {
+          throw error;
+        }
+        throw new <span class="function">McpError</span>(
+          ErrorCode.<span class="property">InternalError</span>,
+          `Tool execution failed: ${error instanceof Error ? error.<span class="property">message</span> : <span class="function">String</span>(error)}`
+        );
+      }
+    });
+  }
+}</code></pre></div>
+<p>*🛡️ <strong>Real-World Analogy</strong>  </p>
+<p>Think of the <code class="inline-code">RepoAdventureServer</code> class as the mission control center for a space-bound ship; it maps out operational capabilities (tools), validates whether the mission tasks align with protocols (input schema validation), and deploys execution commands with precision (tool handler functionality). The process is analogous to a factory floor where requests are validated like raw materials and processed into finished goods—ensuring quality before the final output leaves the facility.*</p><p><strong>💡 Helpful Hints:</strong></p>
+<p>• <strong>Tool Listing</strong>: This feature dynamically maps the available tools using schemas extracted with <code class="inline-code">zod-to-json-schema</code>. It ensures the ecosystem remains systematic and accessible.</p>
+<p>• <strong>Tool Execution</strong>: This functionality validates input parameters then executes operations based on the defined tool handlers—akin to assigning proper coordinates to modules before space maneuvering.</p>
+<p>• Graceful shutdown mechanisms, preventing system shock during unexpected terminations (SIGINT or SIGTERM signals).</p>
+<p>• Background task initiation for pre-generating data, ensuring operational readiness as the ship begins exploration.</p>
+<p>• Use <code class="inline-code">ListToolsRequestSchema</code> and <code class="inline-code">CallToolRequestSchema</code> to improve precision when defining and executing tasks.</p>
+<p>• Experiment with the <code class="inline-code">repoAnalyzer</code> pre-generation feature to optimize runtime exploration efficiency.</p>
+<p>• Focus on extending the MCP system’s capabilities without disrupting protocol adherence.</p><p>---</p><p>"🌌 Stellar work, cadet! You've successfully piloted through the MCP Command Deck and ignited your engines for the cosmic journey ahead—onward to the stars! 🚀✨"</p>
+        </div>
+        
+        
+      <div class="quest-navigation">
+        
+        <a href="quest-2.html">Next: ⚡ Quest 2: The Stellar Cartography of Tools →</a>
+      </div>
+    
+    </div>
+</body>
+</html>
