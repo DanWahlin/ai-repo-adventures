@@ -9,6 +9,9 @@ A fun, Model Context Protocol (MCP) server that transforms code repositories int
 🌟 **Multiple Themes** - Choose from Space, Medieval, or Ancient Civilization themes
 🤖 **Character-Based Learning** - Meet characters that represent different technologies (Database Dragons, API Messengers, etc.)
 🔍 **Choose Your Own Adventure** - Interactive exploration paths through the codebase
+🌐 **HTML Adventure Generation** - Export your adventures as beautiful, standalone HTML websites
+🚀 **Auto-Launch Web Server** - Automatically starts a local server and opens your adventure in the browser
+🎨 **Themed Styling** - Rich CSS themes with gradient titles, code highlighting, and responsive design
 
 ## How It Works
 
@@ -17,6 +20,7 @@ A fun, Model Context Protocol (MCP) server that transforms code repositories int
 3. **Explore Quests** - Follow dynamically generated quest paths through your codebase
 4. **View Progress** - Track your exploration progress and see completed areas
 5. **Learn Through Story** - Understand complex systems through engaging LLM-generated narratives
+6. **Export to HTML** - Generate beautiful web adventures for sharing or offline exploration
 
 ## Architecture Flow
 
@@ -42,9 +46,17 @@ graph TD
     A -->|view_progress| P[Get Progress State]
     P --> Q[Return Completion Stats]
     
+    R[HTML Generator] --> E
+    R --> S[Generate CSS Themes]
+    R --> T[Format Quest Content]
+    R --> U[Auto-Launch Server]
+    R --> V[Open Browser]
+    
     style B fill:#e8f5e8
     style H fill:#e1f5fe
     style L fill:#fff3e0
+    style R fill:#f3e5f5
+    style S fill:#e8f5e8
 ```
 
 ## 🔍 Project Context Gathering & LLM Integration
@@ -65,6 +77,24 @@ graph TD
     
     G --> H[LLM API]
     H --> I[Generated Story & Quests]
+    
+    J[HTML Generator] --> K[AdventureManager]
+    K --> L[StoryGenerator] 
+    L --> H
+    J --> M[Theme CSS Generator]
+    J --> N[Markdown to HTML]
+    J --> O[HTTP Server]
+    J --> P[Auto Browser Launch]
+    
+    Q[Input Validator] --> B
+    Q --> K
+    R[Cache System] --> C
+    R --> H
+    
+    style H fill:#e1f5fe
+    style J fill:#f3e5f5
+    style M fill:#e8f5e8
+    style R fill:#fff3e0
 ```
 
 ### Phase 1: Project Analysis & Context Gathering
@@ -226,6 +256,23 @@ npm install
 npm run build
 ```
 
+## Quick HTML Adventure Test
+
+Generate a beautiful HTML adventure website with just one command:
+
+```bash
+npm run test:html
+```
+
+This will:
+- 🧪 Run a minimal test using only 2 LLM calls (1 story + 1 quest)
+- 🌐 Generate a complete HTML adventure website in `tests/public/`
+- 🚀 Automatically start a local HTTP server on port 8080
+- 🎯 Open your browser to view the adventure immediately
+- 🎨 Include full themed CSS styling and responsive design
+
+**Perfect for:** Testing the system, sharing adventures, or creating standalone exploration websites.
+
 ## Configuration
 
 ### LLM Setup (Optional - Enables Dynamic Story Generation)
@@ -283,8 +330,41 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 ## Testing
 
 ```bash
-npm run test-mcp    # Run TypeScript test suite
-npm run test-mcp-js # Run legacy JavaScript test suite (if needed)
+# Core MCP functionality tests
+npm test                 # Run comprehensive test suite
+npm run test:unit        # Core algorithm and component tests
+npm run test:integration # LLM integration tests
+npm run test:simple      # Basic MCP workflow test
+npm run test:real-world  # Full MCP integration test
+
+# HTML generation tests
+npm run test:html        # Generate HTML adventure with auto-launch
+
+# Interactive testing
+npm run chat             # Interactive terminal test client
+```
+
+### HTML Generator Features
+
+The HTML generator creates beautiful, standalone adventure websites:
+
+- 🎨 **Themed CSS** - Rich gradients, animations, and responsive design
+- 📱 **Mobile-Friendly** - Responsive layouts that work on all devices  
+- 🚀 **Auto-Launch** - Starts HTTP server and opens browser automatically
+- 🧭 **Navigation** - Clean quest navigation with truncated titles
+- 💻 **Code Highlighting** - Syntax-highlighted TypeScript/JavaScript code blocks
+- 🎯 **Progress Tracking** - Visual progress indicators and quest completion
+- 🌐 **Offline-Ready** - Self-contained HTML files with embedded CSS
+
+**Generated Files:**
+- `index.html` - Main adventure page with story and quest links
+- `quest-*.html` - Individual quest pages with full content
+- `assets/theme.css` - Complete themed stylesheet
+
+**Usage:**
+```bash
+npm run test:html        # Quick test with 2 LLM calls
+npm run generate-html    # Full CLI generator with all features
 ```
 
 ## Usage with Claude Desktop
@@ -342,6 +422,33 @@ Displays comprehensive progress tracking for your code exploration adventure. Sh
 **Parameters:**
 - None required - automatically tracks state from previous tool calls
 
+## HTML Adventure Generator
+
+Create beautiful, standalone HTML adventure websites from your code exploration:
+
+### Interactive CLI Generator
+```bash
+npm run generate-html
+```
+
+**Features:**
+- 🎨 Choose from Space, Mythical, or Ancient themes
+- 📁 Customize output directory
+- 🌐 Complete HTML website with CSS and assets
+- 🚀 Auto-launch local server and browser
+- 📱 Responsive design for all devices
+
+### Quick Test Generator
+```bash
+npm run test:html
+```
+
+**Perfect for:**
+- 🧪 Testing HTML generation (only 2 LLM calls)
+- 🎯 Quick development iteration
+- 📋 Creating demo adventures
+- 🚀 Sharing adventures with others
+
 ## Example Adventure Flow
 
 ```
@@ -376,7 +483,10 @@ Displays comprehensive progress tracking for your code exploration adventure. Sh
 - **🔄 Graceful Fallbacks**: Template-based stories when LLM unavailable
 - **🛡️ Security-First**: Comprehensive input validation and path traversal protection
 - **⚡ Performance**: Optimized with singletons, caching, and minimal processing
-- **🧪 Testable**: Modular design with 100% unit test coverage
+- **🧪 Testable**: Modular design with comprehensive test coverage
+- **🌐 Multi-Format Output**: Both MCP tools and standalone HTML generation
+- **🎨 Rich Theming**: Complete CSS theming system with gradient styling
+- **📱 Responsive Design**: Mobile-first approach with flexible layouts
 
 ## Supported Technologies
 
@@ -388,9 +498,43 @@ The server automatically detects and creates characters for:
 - **Testing** (Jest, Cypress, etc.)
 - **DevOps** (Docker, Kubernetes)
 
+## File Structure
+
+```
+src/
+├── server.ts              # Main MCP server entry point
+├── tools/                  # MCP tool definitions
+│   └── tools.ts           # 4 main tools: start_adventure, choose_theme, explore_quest, view_progress
+├── adventure/             # Adventure generation system
+│   ├── adventure-manager.ts  # Orchestrates adventure state and user interactions
+│   └── story-generator.ts    # LLM-powered story and quest generation
+├── analyzer/              # Code analysis and repomix integration
+│   └── repo-analyzer.ts   # Repository analysis and content generation
+├── llm/                   # LLM integration
+│   └── llm-client.ts      # Multi-provider LLM client (OpenAI, Azure, Ollama, etc.)
+├── cli/                   # HTML generation tools
+│   └── html-generator.ts  # Interactive HTML adventure generator
+├── shared/                # Shared utilities and types
+│   ├── types.ts           # Core type definitions
+│   ├── theme.ts           # Theme system and validation
+│   ├── config.ts          # Configuration and environment settings
+│   └── input-validator.ts # Security and input validation
+tests/
+├── html-generator-test.ts # HTML generation test with auto-launch
+├── unit/                  # Unit tests for individual components
+└── integration/           # Integration tests with LLM providers
+```
+
 ## Contributing
 
-Contributions welcome! Feel free to add new themes, characters, or quest paths.
+Contributions welcome! Feel free to add new themes, characters, quest paths, or HTML generation features.
+
+### Areas for Contribution
+- 🎨 New CSS themes and styling
+- 🌍 Additional language support
+- 🔧 New quest generation algorithms  
+- 📱 Enhanced mobile responsiveness
+- 🧪 Additional test coverage
 
 ## License
 
