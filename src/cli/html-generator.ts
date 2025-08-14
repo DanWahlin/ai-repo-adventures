@@ -367,11 +367,14 @@ body::before {
   padding: 0 2rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .navbar h1 {
-  color: var(--navbar-text);
+  background: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: var(--heading-weight);
@@ -381,18 +384,25 @@ body::before {
 }
 
 .navbar a {
-  color: var(--navbar-text);
+  background: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-decoration: none;
   font-family: var(--font-heading);
   font-size: 1.5rem;
-  font-weight: 900;
+  font-weight: var(--heading-weight);
   text-transform: uppercase;
   letter-spacing: 2px;
   transition: all 0.3s ease;
 }
 
 .navbar a:hover {
-  color: var(--accent-primary);
+  background: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: brightness(1.2);
 }
 
 /* ===== MAIN CONTAINER ===== */
@@ -427,19 +437,7 @@ h1 {
   position: relative;
 }
 
-h1::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: var(--title-gradient);
-  border-radius: 2px;
-}
-
-/* ===== QUEST TITLE (30% SMALLER) ===== */
+/* ===== QUEST TITLE ===== */
 .quest-title {
   background: var(--title-gradient);
   background-clip: text;
@@ -453,19 +451,6 @@ h1::after {
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 1rem;
-  position: relative;
-}
-
-.quest-title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
-  background: var(--title-gradient);
-  border-radius: 2px;
 }
 
 h2 {
@@ -499,20 +484,15 @@ p {
 /* ===== QUEST SECTIONS ===== */
 .story-content {
   background: var(--quest-content-bg);
-  border: var(--quest-content-border);
   border-radius: 15px;
-  padding: 2rem;
-  box-shadow: var(--quest-content-shadow);
+  padding: 1rem;
   backdrop-filter: blur(5px);
-  margin-bottom: 2rem;
 }
 
 .quests-section {
   background: var(--quest-section-bg);
-  border: var(--quest-section-border);
   border-radius: 15px;
-  padding: 2rem;
-  box-shadow: var(--quest-section-shadow);
+  padding: 1rem;
   backdrop-filter: blur(5px);
 }
 
@@ -549,10 +529,8 @@ p {
 /* ===== QUEST CONTENT ===== */
 .quest-content {
   background: var(--quest-content-bg);
-  border: var(--quest-content-border);
   border-radius: 15px;
   padding: 2rem;
-  box-shadow: var(--quest-content-shadow);
   backdrop-filter: blur(5px);
 }
 
