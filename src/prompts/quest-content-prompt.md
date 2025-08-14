@@ -12,14 +12,33 @@ IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
 
 {{storyContent}}
 
-Use the same character names, ship names, and story elements from the main story above. Maintain consistent terminology and narrative voice throughout.
+Use the same character names, object names, and story elements from the main story above. Maintain consistent terminology and narrative voice throughout.
+
+## Theme Guidelines
 
 {{themeGuidelines}}
 
 ## Complete Codebase
+
 {{codeContent}}
 
+## Adventure Guidance
+
 {{adventureGuidance}}
+
+## ⚠️ CRITICAL: REQUIRED STRUCTURED SECTIONS
+YOU MUST include dedicated file analysis sections for EVERY file mentioned in the Adventure Guidance above. Use the following to create your plan:
+1. Analyze the Complete Codebase content to understand the key aspects
+2. Focus on the specific functionalities and implementations relevant to the Adventure Guidance. It should be your central focus if available.
+
+Each file section must follow this exact format:
+- Clear section header with ASCII borders: "─── [File Description]: [filepath] ───"
+- Detailed analysis paragraph (200-300 words) explaining what the file does
+- Real code snippets from the actual file content. Code snippets are VERY IMPORTANT and must be included. Focus on the most relevant and important code.
+- Real-world analogies to explain complex concepts in the code. For example, if the code involves data processing, you might compare it to a factory assembly line where raw materials are transformed into finished products. For simple code snippets it's OK to exclude this content.
+- End with practical implementation insights (tips and/or key insights)
+
+**If you don't see specific file requirements in the Adventure Guidance, create logical file analysis sections based on the Complete Codebase content.**
 
 ## ⚠️ CRITICAL: Code Authenticity Requirements - ZERO TOLERANCE FOR FAKE CODE
 - **NEVER INVENT FUNCTIONS**: Use ONLY code that exists in the "## Complete Codebase" section above
@@ -30,7 +49,7 @@ Use the same character names, ship names, and story elements from the main story
 - **FORBIDDEN**: Creating example functions like `calculateTrajectory()`, `processData()`, or any invented code
 
 ## Real-World Analogy Guidelines
-For code snippet explanations, use relatable analogies:
+For code snippet explanations, use relatable analogies such as the following. DO NOT COPY THESE as they're only examples!
 - Functions → Restaurant recipes, factory assembly lines, or instruction manuals
 - Classes → Blueprints, templates, or cookie cutters
 - APIs → Restaurant menus, hotel front desks, or customer service counters
@@ -41,8 +60,7 @@ For code snippet explanations, use relatable analogies:
 ## Professional Visual Enhancement Guidelines
 Add tasteful visual elements to enhance readability and engagement:
 - Use simple ASCII borders for important sections: ─ Section ─ or ─ Title ─
-- Add clean separators: ─────────────────
-- Use occasional thematic icons within content (not as standalone headers)
+- Use occasional thematic icons within content (not as standalone headers) if appropriate
 - Keep visual elements minimal and professional - enhance, don't overwhelm
 - AVOID creating empty sections with just emoji headers
 
@@ -61,6 +79,8 @@ Return a well-structured markdown document with this format:
 
 # Code Snippets
 
+ALWAYS include code snippets for all relevant files.
+
 ## filename
 
 ```[language]
@@ -69,11 +89,10 @@ EXACT code from the files - ZERO INVENTED CODE - Use 'No code found' if none exi
 
 [Start with a real-world analogy, then explain ONLY the actual code shown - NEVER explain fake/invented code]
 
-# Hints
+# Tips or Key Insights
 
-- Practical tip
-- Next steps
-```
+- Practical tips or key insights
+- Recommendations for related code exploration or refactoring
 
 ## ⚠️ FINAL VERIFICATION CHECKLIST
 Before submitting your response, verify:

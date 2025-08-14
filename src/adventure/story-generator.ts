@@ -3,7 +3,7 @@ import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKENS_QUEST } from '../shared/config.js';
 import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
-import { loadAdventureConfig } from '../shared/adventure-config.js';
+import { loadAdventureConfig, formatAdventureConfigForPrompt } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
 import { marked } from 'marked';
 import { z } from 'zod';
@@ -224,6 +224,7 @@ export class StoryGenerator {
   private customThemeData?: CustomThemeData;
   private adventureConfigJson?: string | null;
   private currentStoryContent?: string;
+  private projectPath?: string | undefined;
 
   constructor() {
     this.llmClient = new LLMClient();
@@ -248,6 +249,7 @@ export class StoryGenerator {
    */
   async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
     this.currentProject = projectInfo;
+    this.projectPath = projectPath;
     
     // Load adventure config if projectPath is provided
     if (projectPath) {
@@ -286,11 +288,13 @@ export class StoryGenerator {
     theme: AdventureTheme,
     codeContent: string
   ): Promise<QuestContent> {
-    // Include adventure config as context if available
+    // Include formatted adventure config as context if available
     let adventureGuidance = '';
-    if (this.adventureConfigJson) {
-      adventureGuidance = `\n## Adventure Configuration Context
-${this.adventureConfigJson}`;
+    if (this.projectPath) {
+      const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+      if (formattedConfig) {
+        adventureGuidance = formattedConfig;
+      }
     }
 
     const prompt = loadQuestContentPrompt({

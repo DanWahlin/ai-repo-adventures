@@ -66,3 +66,58 @@ export function extractUniqueFilePaths(projectPath: string): string[] {
 
   return Array.from(unique);
 }
+
+/**
+ * Formats adventure config into a readable format for LLM prompts
+ * This ensures structured sections always appear in quest content
+ */
+export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') {
+    return '';
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return '';
+  }
+
+  let formatted = `## Quest Structure Guidelines\n\n`;
+  formatted += `**CRITICAL: Each quest MUST include dedicated file analysis sections**\n\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    formatted += `${quest.description}\n\n`;
+    formatted += `**Required File Analysis Sections:**\n`;
+
+    for (const file of quest.files) {
+      if (!file.path || !file.description) continue;
+
+      formatted += `\n**File: \`${file.path}\`**\n`;
+      formatted += `- Description: ${file.description}\n`;
+      
+      if (Array.isArray(file.highlights)) {
+        formatted += `- Key Functions/Areas to Highlight:\n`;
+        for (const highlight of file.highlights) {
+          if (highlight.name && highlight.description) {
+            formatted += `  • **${highlight.name}**: ${highlight.description}\n`;
+          }
+        }
+      }
+      
+      formatted += `- **FORMAT REQUIREMENT**: Must include section header like "─── ${file.description}: ${file.path} ───"\n`;
+    }
+    formatted += `\n`;
+  }
+
+  formatted += `\n**FORMATTING INSTRUCTIONS:**\n`;
+  formatted += `- Use clear section dividers with ASCII borders: "─── Section Title ───"\n`;
+  formatted += `- Each file mentioned in the quest structure above MUST have its own dedicated analysis section\n`;
+  formatted += `- Include real code snippets from the actual files (never invent code)\n`;
+  formatted += `- Provide practical explanations using real-world analogies\n`;
+  formatted += `- End with helpful hints and next steps\n`;
+
+  return formatted;
+}

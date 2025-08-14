@@ -162,7 +162,7 @@ export function loadQuestContentPrompt(variables: {
     adventureTitle: variables.adventureTitle,
     codeContent: variables.codeContent,
     storyContent: variables.storyContent || 'No story context provided.',
-    workshopHighlights: variables.workshopHighlights || '',
+    adventureGuidance: variables.workshopHighlights || '',
     themeGuidelines
   });
 }
