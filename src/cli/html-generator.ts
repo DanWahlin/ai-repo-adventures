@@ -472,6 +472,7 @@ p {
   color: var(--paragraph-color);
   margin-bottom: 1.2rem;
   line-height: 1.7;
+  font-size: 1.1rem;
 }
 
 /* ===== QUEST SECTIONS ===== */
@@ -632,7 +633,7 @@ pre::-webkit-scrollbar-thumb {
 
 code {
   font-family: var(--font-code);
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--code-text);
 }
 
@@ -643,7 +644,7 @@ code {
   border-radius: 6px;
   font-family: var(--font-code);
   border: var(--inline-code-border);
-  font-size: 0.85em;
+  font-size: 0.95em;
 }
 
 /* ===== LINKS ===== */
@@ -749,6 +750,10 @@ blockquote {
     width: auto;
     min-width: 200px;
   }
+  
+  p {
+    font-size: 1.05rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -770,7 +775,11 @@ blockquote {
   
   pre {
     padding: 1rem;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  p {
+    font-size: 1rem;
   }
 }`;
   }
