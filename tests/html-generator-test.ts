@@ -11,10 +11,101 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import * as http from 'http';
+import { spawn } from 'child_process';
 import { HTMLAdventureGenerator } from '../src/cli/html-generator.js';
 import { repoAnalyzer } from '../src/analyzer/repo-analyzer.js';
 import { createProjectInfo } from '../src/tools/shared.js';
 import chalk from 'chalk';
+
+/**
+ * Start an HTTP server in the specified directory
+ */
+function startHTTPServer(directory: string, port: number = 8080): Promise<http.Server> {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      let filePath = path.join(directory, req.url === '/' ? 'index.html' : req.url || '');
+      
+      // Security check - ensure we stay within the directory
+      if (!filePath.startsWith(directory)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
+
+      // Set content type based on file extension
+      const extname = path.extname(filePath);
+      let contentType = 'text/html';
+      switch (extname) {
+        case '.js':
+          contentType = 'text/javascript';
+          break;
+        case '.css':
+          contentType = 'text/css';
+          break;
+        case '.json':
+          contentType = 'application/json';
+          break;
+        case '.png':
+          contentType = 'image/png';
+          break;
+        case '.jpg':
+          contentType = 'image/jpg';
+          break;
+      }
+
+      fs.readFile(filePath, (err, content) => {
+        if (err) {
+          if (err.code === 'ENOENT') {
+            res.writeHead(404);
+            res.end('File not found');
+          } else {
+            res.writeHead(500);
+            res.end('Server error');
+          }
+        } else {
+          res.writeHead(200, { 'Content-Type': contentType });
+          res.end(content, 'utf-8');
+        }
+      });
+    });
+
+    server.listen(port, () => {
+      console.log(chalk.green(`🌐 HTTP server started on http://localhost:${port}`));
+      resolve(server);
+    });
+
+    server.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+/**
+ * Open URL in default browser
+ */
+function openBrowser(url: string): void {
+  const platform = process.platform;
+  let command: string;
+  
+  switch (platform) {
+    case 'darwin':
+      command = 'open';
+      break;
+    case 'win32':
+      command = 'start';
+      break;
+    default:
+      command = 'xdg-open';
+  }
+
+  try {
+    spawn(command, [url], { detached: true, stdio: 'ignore' });
+    console.log(chalk.cyan(`🚀 Opening ${url} in default browser`));
+  } catch (error) {
+    console.log(chalk.yellow(`⚠️  Could not automatically open browser. Please visit: ${url}`));
+  }
+}
 
 async function runHTMLGeneratorTest() {
   console.log(chalk.blue('🧪 HTML Generator Test - Minimal LLM Usage\n'));
@@ -106,13 +197,47 @@ async function runHTMLGeneratorTest() {
       console.log(chalk.dim(`  • Output location: ${testOutputDir}`));
       console.log(chalk.dim(`  • Quest generated: "${firstQuest.title}"`));
       
-      // Step 7: Usage instructions
-      console.log(chalk.blue('\n🌐 To view the test output:'));
-      console.log(chalk.cyan(`  1. cd ${testOutputDir}`));
-      console.log(chalk.cyan(`  2. python -m http.server 8080`));
-      console.log(chalk.cyan(`  3. Open http://localhost:8080`));
+      // Step 7: Start HTTP server and open browser
+      console.log(chalk.blue('\n🌐 Starting HTTP server and opening browser...'));
       
-      console.log(chalk.green('\n✨ Test completed successfully!'));
+      try {
+        const port = 8080;
+        const url = `http://localhost:${port}`;
+        
+        // Start HTTP server
+        const server = await startHTTPServer(testOutputDir, port);
+        
+        // Open browser after a brief delay
+        setTimeout(() => {
+          openBrowser(url);
+        }, 1000);
+        
+        console.log(chalk.green('\n✨ Test completed successfully!'));
+        console.log(chalk.cyan(`📖 Adventure is now available at: ${url}`));
+        console.log(chalk.dim('\n💡 Press Ctrl+C to stop the server when you\'re done exploring'));
+        
+        // Keep the server running - user will stop with Ctrl+C
+        process.on('SIGINT', () => {
+          console.log(chalk.yellow('\n👋 Shutting down HTTP server...'));
+          server.close(() => {
+            console.log(chalk.green('✅ Server stopped successfully!'));
+            process.exit(0);
+          });
+        });
+        
+        process.on('SIGTERM', () => {
+          server.close(() => process.exit(0));
+        });
+        
+      } catch (serverError) {
+        console.error(chalk.red('❌ Failed to start HTTP server:'), serverError);
+        console.log(chalk.yellow('\n📁 Files are still available at:'));
+        console.log(chalk.cyan(`  ${testOutputDir}`));
+        console.log(chalk.yellow('\nYou can manually start a server with:'));
+        console.log(chalk.cyan(`  cd ${testOutputDir}`));
+        console.log(chalk.cyan(`  python -m http.server 8080`));
+        process.exit(0);
+      }
       
     } else {
       throw new Error('No quests were generated');

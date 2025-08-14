@@ -217,8 +217,7 @@ class HTMLAdventureGenerator {
 
     // Step 5: Generate index.html (using clean story content)
     console.log(chalk.dim('📝 Creating main adventure page...'));
-    const storyContent = this.adventureManager.getStoryContent();
-    await this.generateIndexHTML(storyContent);
+    await this.generateIndexHTML();
 
     // Step 6: Generate all quest pages
     console.log(chalk.dim('📖 Generating quest pages...'));
@@ -241,8 +240,8 @@ class HTMLAdventureGenerator {
     fs.writeFileSync(cssPath, cssContent);
   }
 
-  private async generateIndexHTML(storyContent: string): Promise<void> {
-    const html = this.generateIndexHTMLContent(storyContent);
+  private async generateIndexHTML(): Promise<void> {
+    const html = this.generateIndexHTMLContent();
     const indexPath = path.join(this.outputDir, 'index.html');
     fs.writeFileSync(indexPath, html);
   }
@@ -1133,11 +1132,18 @@ blockquote {
 
   // Removed old hardcoded CSS method - now using variable-based approach above
 
-  private generateIndexHTMLContent(storyContent: string): string {
+  private generateIndexHTMLContent(): string {
     const adventureQuests = this.adventureManager.getAllQuests();
     const questLinks = this.quests.map((quest, index) => {
       const questData = adventureQuests[index];
-      const description = questData ? questData.description : '';
+      let description = questData ? questData.description : '';
+      
+      // Clean up the description by removing "Code Files:" and anything after it
+      if (description) {
+        description = description.replace(/\*\*Code Files:\*\*.*$/s, '').trim();
+        description = description.replace(/Code Files:.*$/s, '').trim();
+      }
+      
       return `<a href="${quest.filename}" class="quest-link">
         <h3>${quest.title}</h3>
         ${description ? `<p>${this.formatContentForHTML(description)}</p>` : ''}
@@ -1146,6 +1152,9 @@ blockquote {
 
     const adventureTitle = this.adventureManager.getTitle();
 
+    // Get clean story content without quest listings
+    const cleanStoryContent = this.adventureManager.getStoryContent();
+    
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1164,7 +1173,7 @@ blockquote {
     <div class="container">
         <div class="story-content">
             <h2>Your Adventure Awaits</h2>
-            ${this.formatContentForHTML(storyContent)}
+            ${this.formatContentForHTML(cleanStoryContent)}
         </div>
         
         <div class="quests-section">
