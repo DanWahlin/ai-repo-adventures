@@ -79,20 +79,35 @@ Return a well-structured markdown document with this format:
 
 # Code Snippets
 
-ALWAYS include code snippets for all relevant files.
+**MANDATORY: You MUST include at least 2-3 code snippet sections showing actual code from the files mentioned in the Adventure Guidance above.**
 
-## filename
+## src/filename.ext
 
-```[language]
-EXACT code from the files - ZERO INVENTED CODE - Use 'No code found' if none exists
+```typescript
+// EXACT code from the files - ZERO INVENTED CODE
+// Show function signatures, key methods, or important imports
+// Use 'No code found' if none exists, but this should be rare
+function actualFunctionName() {
+  // real implementation here
+}
 ```
 
 [Start with a real-world analogy, then explain ONLY the actual code shown - NEVER explain fake/invented code]
 
-# Tips or Key Insights
+## src/another-file.ext
+
+```javascript
+// Show different aspects of the code
+const realVariableName = actualValue;
+```
+
+[Explain this code snippet with analogies]
+
+# Helpful Hints
 
 - Practical tips or key insights
 - Recommendations for related code exploration or refactoring
+- Next steps for deeper exploration
 
 ## ⚠️ FINAL VERIFICATION CHECKLIST
 Before submitting your response, verify:

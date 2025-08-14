@@ -429,6 +429,25 @@ class HTMLAdventureGenerator {
     // Remove duplicate quest titles
     htmlContent = htmlContent.replace(/^<p><strong>🚀 Quest \d+:.*?<\/strong><\/p>\s*/i, '');
     
+    // Fix bullet points in "Helpful Hints" sections that aren't properly formatted as lists
+    // Look for paragraphs with multiple bullet points and convert to proper lists
+    htmlContent = htmlContent.replace(
+      /<p><strong>💡 Helpful Hints:<\/strong>\s*(?:<br\s*\/>)?\s*([^<]*(?:•[^•]+)+)<\/p>/gi,
+      (match, bulletContent) => {
+        const bullets = bulletContent.split('•').filter(item => item.trim()).map(item => {
+          const trimmed = item.trim();
+          // Remove any trailing punctuation or whitespace, but preserve content formatting
+          return trimmed.replace(/^\s*/, '').replace(/\s*$/, '');
+        });
+        
+        const listItems = bullets.map(bullet => 
+          `<li>${bullet.replace(/^\s*<strong>(.*?)<\/strong>:\s*/, '<strong>$1</strong>: ')}</li>`
+        ).join('\n');
+        
+        return `<p><strong>💡 Helpful Hints:</strong></p>\n<ul>\n${listItems}\n</ul>`;
+      }
+    );
+    
     return htmlContent;
   }
 

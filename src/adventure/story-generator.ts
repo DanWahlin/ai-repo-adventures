@@ -302,7 +302,7 @@ export class StoryGenerator {
       adventureTitle: quest.title,
       codeContent,
       storyContent: this.currentStoryContent || 'No story context available.',
-      ...(adventureGuidance && { workshopHighlights: adventureGuidance }),
+      adventureGuidance: adventureGuidance || '',
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     });
 
@@ -381,12 +381,14 @@ export class StoryGenerator {
   private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise<StoryResponse> {
     const repomixContent = projectInfo.repomixContent || 'No repomix content available';
     
-    // Add adventure config as context if available
-    const adventureGuidance = this.adventureConfigJson 
-      ? `\n## Adventure Configuration Context
-${this.adventureConfigJson}
-`
-      : '';
+    // Use formatted adventure config instead of raw JSON
+    let adventureGuidance = '';
+    if (this.projectPath) {
+      const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+      if (formattedConfig) {
+        adventureGuidance = formattedConfig;
+      }
+    }
 
     const prompt = loadStoryGenerationPrompt({
       theme,

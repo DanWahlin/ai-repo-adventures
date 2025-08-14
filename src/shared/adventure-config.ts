@@ -115,6 +115,8 @@ export function formatAdventureConfigForPrompt(projectPath: string): string {
   formatted += `\n**FORMATTING INSTRUCTIONS:**\n`;
   formatted += `- Use clear section dividers with ASCII borders: "─── Section Title ───"\n`;
   formatted += `- Each file mentioned in the quest structure above MUST have its own dedicated analysis section\n`;
+  formatted += `- **MANDATORY**: Include at least 2-3 separate code snippet sections (## filename) with real code blocks\n`;
+  formatted += `- Show actual function signatures, imports, class definitions, or key methods from the files\n`;
   formatted += `- Include real code snippets from the actual files (never invent code)\n`;
   formatted += `- Provide practical explanations using real-world analogies\n`;
   formatted += `- End with helpful hints and next steps\n`;

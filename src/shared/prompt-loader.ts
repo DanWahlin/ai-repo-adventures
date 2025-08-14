@@ -151,7 +151,7 @@ export function loadQuestContentPrompt(variables: {
   adventureTitle: string;
   codeContent: string;
   storyContent?: string;
-  workshopHighlights?: string;
+  adventureGuidance?: string;
   customThemeData?: CustomThemeData;
 }): string {
   const template = loadPromptFile(PROMPT_PATHS.QUEST_CONTENT);
@@ -162,7 +162,7 @@ export function loadQuestContentPrompt(variables: {
     adventureTitle: variables.adventureTitle,
     codeContent: variables.codeContent,
     storyContent: variables.storyContent || 'No story context provided.',
-    adventureGuidance: variables.workshopHighlights || '',
+    adventureGuidance: variables.adventureGuidance || '',
     themeGuidelines
   });
 }
