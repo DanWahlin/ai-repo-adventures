@@ -1136,7 +1136,7 @@ blockquote {
       }
       
       return `<a href="${quest.filename}" class="quest-link">
-        <h3>${quest.title}</h3>
+        <h3>${this.formatInlineMarkdown(quest.title)}</h3>
         ${description ? `<p>${this.formatContentForHTML(description)}</p>` : ''}
       </a>`;
     }).join('\n');
@@ -1197,7 +1197,7 @@ blockquote {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${quest.title} - Repo Adventure</title>
+    <title>${this.stripHTML(this.formatInlineMarkdown(quest.title))} - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
 </head>
 <body>
@@ -1208,7 +1208,7 @@ blockquote {
     </nav>
     
     <div class="container">
-        <h1 class="quest-title">${quest.title}</h1>
+        <h1 class="quest-title">${this.formatInlineMarkdown(quest.title)}</h1>
         <hr>
         <div class="quest-content">
             ${this.formatContentForHTML(content)}
@@ -1218,6 +1218,18 @@ blockquote {
     </div>
 </body>
 </html>`;
+  }
+
+  private stripHTML(html: string): string {
+    return html.replace(/<[^>]*>/g, '');
+  }
+
+  private formatInlineMarkdown(text: string): string {
+    // Handle inline markdown without adding paragraph tags
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold**
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // *italic*
+      .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>'); // `code`
   }
 
   private formatContentForHTML(content: string): string {
