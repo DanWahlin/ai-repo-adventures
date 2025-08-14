@@ -34,11 +34,11 @@ For code snippet explanations, use relatable analogies:
 
 ## Professional Visual Enhancement Guidelines
 Add tasteful visual elements to enhance readability and engagement:
-- Use thematic emoticons as section headers: ⚡ 🔗 🛡️ 📊 🎯 ⭐
-- Include simple ASCII borders for important sections: ─ Section ─ or ─ Title ─
-- Add progress indicators where relevant: [██████░░░░] 
-- Use clean separators: ─────────────────
+- Use simple ASCII borders for important sections: ─ Section ─ or ─ Title ─
+- Add clean separators: ─────────────────
+- Use occasional thematic icons within content (not as standalone headers)
 - Keep visual elements minimal and professional - enhance, don't overwhelm
+- AVOID creating empty sections with just emoji headers
 
 ## Response Format (Markdown)
 
@@ -51,7 +51,7 @@ Return a well-structured markdown document with this format:
 
 # File Exploration
 
-[2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders, thematic emoticons as headers (⚡🔗🛡️📊), and clean formatting for better readability]
+[2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders and clean formatting for better readability. DO NOT create standalone emoji headers without content.]
 
 # Code Snippets
 

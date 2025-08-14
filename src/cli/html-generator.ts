@@ -440,6 +440,13 @@ h1::after {
   border-radius: 2px;
 }
 
+/* ===== QUEST TITLE (30% SMALLER) ===== */
+.quest-title {
+  font-size: clamp(1.4rem, 3.5vw, 2.45rem);
+  margin-bottom: 1rem;
+  letter-spacing: 2px;
+}
+
 h2 {
   color: var(--accent-primary);
   font-family: var(--font-heading);
@@ -563,6 +570,19 @@ p {
   transform: translateY(-3px);
   box-shadow: var(--nav-button-hover-shadow);
   text-shadow: none;
+}
+
+/* ===== BOTTOM QUEST NAVIGATION ===== */
+.quest-navigation-bottom {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.next-quest-btn {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== CODE STYLING ===== */
@@ -706,6 +726,11 @@ blockquote {
     letter-spacing: 2px;
   }
   
+  .quest-title {
+    font-size: 1.4rem;
+    letter-spacing: 1.5px;
+  }
+  
   .quest-navigation {
     flex-direction: column;
     align-items: center;
@@ -714,6 +739,15 @@ blockquote {
   .quest-navigation a {
     width: 100%;
     max-width: 300px;
+  }
+  
+  .quest-navigation-bottom {
+    align-items: flex-end;
+  }
+  
+  .next-quest-btn {
+    width: auto;
+    min-width: 200px;
   }
 }
 
@@ -728,6 +762,10 @@ blockquote {
   
   h1 {
     font-size: 1.8rem;
+  }
+  
+  .quest-title {
+    font-size: 1.26rem;
   }
   
   pre {
@@ -1116,16 +1154,20 @@ blockquote {
   }
 
   private generateQuestHTMLContent(quest: QuestInfo, content: string, questIndex: number): string {
-    const prevQuest = questIndex > 0 ? this.quests[questIndex - 1] : null;
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
     const adventureTitle = this.adventureManager.getTitle();
+    
+    // Helper function to truncate text after 40 characters
+    const truncateTitle = (title: string, maxLength: number = 40): string => {
+      return title.length > maxLength ? title.slice(0, maxLength) + '...' : title;
+    };
 
-    const navigation = `
-      <div class="quest-navigation">
-        ${prevQuest ? `<a href="${prevQuest.filename}">← Previous: ${prevQuest.title}</a>` : ''}
-        ${nextQuest ? `<a href="${nextQuest.filename}">Next: ${nextQuest.title} →</a>` : ''}
+    // Only show navigation at bottom, only "Next" button, aligned right
+    const bottomNavigation = nextQuest ? `
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${truncateTitle(nextQuest.title)} →</a>
       </div>
-    `;
+    ` : '';
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -1143,15 +1185,14 @@ blockquote {
     </nav>
     
     <div class="container">
-        <h1>${quest.title}</h1>
-        
-        ${navigation}
+        <h1 class="quest-title">${quest.title}</h1>
+        <hr>
         
         <div class="quest-content">
             ${this.formatContentForHTML(content)}
         </div>
         
-        ${navigation}
+        ${bottomNavigation}
     </div>
 </body>
 </html>`;
