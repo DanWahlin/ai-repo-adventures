@@ -371,37 +371,28 @@ body::before {
 }
 
 .navbar h1 {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--navbar-text);
   font-family: var(--font-heading);
-  font-size: clamp(1.4rem, 3.5vw, 2.45rem);
-  font-weight: 900;
-  text-shadow: var(--glow-shadow);
+  font-size: 1.5rem;
+  font-weight: var(--heading-weight);
   text-transform: uppercase;
   letter-spacing: 2px;
-  transition: all 0.3s ease;
   margin: 0;
 }
 
 .navbar a {
-  background: var(--title-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--navbar-text);
   text-decoration: none;
   font-family: var(--font-heading);
-  font-size: clamp(1.4rem, 3.5vw, 2.45rem);
+  font-size: 1.5rem;
   font-weight: 900;
-  text-shadow: var(--glow-shadow);
   text-transform: uppercase;
   letter-spacing: 2px;
   transition: all 0.3s ease;
 }
 
 .navbar a:hover {
-  text-shadow: var(--glow-shadow);
+  color: var(--accent-primary);
 }
 
 /* ===== MAIN CONTAINER ===== */
@@ -450,9 +441,31 @@ h1::after {
 
 /* ===== QUEST TITLE (30% SMALLER) ===== */
 .quest-title {
+  background: var(--title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  font-family: var(--font-heading);
   font-size: clamp(1.4rem, 3.5vw, 2.45rem);
-  margin-bottom: 1rem;
+  font-weight: 900;
+  text-shadow: var(--glow-shadow);
+  text-transform: uppercase;
   letter-spacing: 2px;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.quest-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: var(--title-gradient);
+  border-radius: 2px;
 }
 
 h2 {
@@ -1217,6 +1230,8 @@ blockquote {
     </nav>
     
     <div class="container">
+        <h1 class="quest-title">${quest.title}</h1>
+        <hr>
         <div class="quest-content">
             ${this.formatContentForHTML(content)}
         </div>
