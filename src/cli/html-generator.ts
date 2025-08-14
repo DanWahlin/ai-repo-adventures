@@ -692,6 +692,18 @@ hr {
   border-radius: 1px;
 }
 
+/* ===== SECTION DIVIDERS ===== */
+.section-divider {
+  color: var(--heading-color);
+  font-weight: 600;
+  text-align: center;
+  margin: 2rem 0 1.5rem 0;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-family: var(--font-heading);
+}
+
 /* ===== BLOCKQUOTES ===== */
 blockquote {
   border-left: 4px solid var(--accent-primary);
@@ -789,7 +801,7 @@ blockquote {
         return `  /* ===== COLOR PALETTE ===== */
   --primary-bg: linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 50%, #0c0c1e 100%);
   --body-overlay: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(100, 255, 218, 0.05) 0%, transparent 50%);
-  --primary-text: #e0e6ff;
+  --primary-text: #f3f3f3ff;
   --heading-color: #ffffff;
   --paragraph-color: #b8c5ff;
   --accent-primary: #64ffda;
@@ -1253,7 +1265,13 @@ blockquote {
     // Step 3: Fix inline code styling to match our CSS classes
     htmlContent = htmlContent.replace(/<code>/g, '<code class="inline-code">');
     
-    // Step 4: Restore code blocks
+    // Step 4: Style section dividers (lines with dashes and text)
+    htmlContent = htmlContent.replace(/<p>([─-]{3,}.*?[─-]{3,})<\/p>/g, '<p class="section-divider">$1</p>');
+    
+    // Step 5: Remove duplicate quest title at the beginning of content
+    htmlContent = htmlContent.replace(/^<p><strong>🚀 Quest \d+:.*?<\/strong><\/p>\s*/i, '');
+    
+    // Step 6: Restore code blocks
     codeBlockPlaceholders.forEach((codeBlock, index) => {
       const placeholder = `CODEBLOCK${index}PLACEHOLDER`;
       htmlContent = htmlContent.replace(new RegExp(`<p>${placeholder}</p>`, 'g'), codeBlock);
