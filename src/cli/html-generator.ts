@@ -335,7 +335,7 @@ class HTMLAdventureGenerator {
       
       return `<a href="${quest.filename}" class="quest-link">
         <h3>${this.formatInlineMarkdown(quest.title)}</h3>
-        ${description ? `<p>${this.formatMarkdown(description)}</p>` : ''}
+        ${description ? `<p>${this.formatInlineMarkdown(description)}</p>` : ''}
       </a>`;
     }).join('\n');
 
