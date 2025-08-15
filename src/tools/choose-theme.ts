@@ -165,6 +165,11 @@ export const chooseTheme = {
         projectInfo = generated.projectInfo;
       }
       
+      // Ensure we have valid project info and path
+      if (!projectInfo || !projectPath) {
+        throw new McpError(ErrorCode.InternalError, 'Failed to generate project information');
+      }
+      
       const storyWithQuests = await adventureManager.initializeAdventure(
         projectInfo, 
         selectedTheme, 

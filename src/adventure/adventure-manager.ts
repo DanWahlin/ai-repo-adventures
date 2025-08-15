@@ -241,7 +241,7 @@ export class AdventureManager {
     this.markQuestCompleted(quest);
 
     // Return formatted result
-    return this.createQuestResult(content, summary, quest);
+    return this.createQuestResult(content, summary);
   }
   
 
@@ -367,9 +367,9 @@ export class AdventureManager {
   /**
    * Create the final quest result
    */
-  private createQuestResult(content: QuestContent, summary: string, quest: Quest): AdventureResult {
+  private createQuestResult(content: QuestContent, summary: string): AdventureResult {
     return {
-      narrative: this.formatQuestResult(content, summary, quest.title),
+      narrative: this.formatQuestResult(content, summary),
       choices: this.getAvailableQuestChoices(),
       completed: true,
       progressUpdate: `Progress: ${this.state.progressPercentage}% complete (${this.state.completedQuests.size}/${this.state.quests.length} quests finished)`
@@ -447,7 +447,7 @@ ${questsText}
   /**
    * Format complete quest result
    */
-  private formatQuestResult(content: QuestContent, completionSummary: string, questTitle: string): string {
+  private formatQuestResult(content: QuestContent, completionSummary: string): string {
     // Just return the raw markdown content with completion summary (no separator - handled in markdown)
     return `${content.adventure}\n\n${completionSummary}`;
   }

@@ -60,7 +60,7 @@ BEGIN MARKDOWN TEMPLATE
 Each file covered in "Adventure Code Guidance" should be listed here along with the details below. The order is:
 - Add a header:  `### [filepath]: [File Description]`
 - One detailed analysis paragraph about the file in Adventure Code Guidance. 200–300 words. Explain the code, make it fun and educational.
-- `### Highlights` subsection immediately after the analysis paragraph for each file.
+- `#### Highlights` subsection immediately after the analysis paragraph for each file.
   - Use only `- ` bullets.
   - Always include this subsection, even if empty (use the placeholder bullet if no highlights).
   - Minimum 3 bullets; maximum 5.

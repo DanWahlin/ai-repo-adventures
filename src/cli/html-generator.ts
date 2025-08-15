@@ -15,6 +15,7 @@ import { AdventureManager } from '../adventure/adventure-manager.js';
 import { getAllThemes, getThemeByKey, AdventureTheme } from '../shared/theme.js';
 import { createProjectInfo } from '../tools/shared.js';
 import { parseAdventureConfig } from '../shared/adventure-config.js';
+import { TemplateEngine } from './template-engine.js';
 
 interface CustomThemeData {
   name: string;
@@ -31,6 +32,7 @@ interface QuestInfo {
 class HTMLAdventureGenerator {
   private rl: readline.Interface;
   private adventureManager: AdventureManager;
+  private templateEngine: TemplateEngine;
   private projectPath: string = process.cwd();
   private outputDir: string = '';
   private selectedTheme: AdventureTheme = 'space';
@@ -44,6 +46,7 @@ class HTMLAdventureGenerator {
       output: process.stdout,
     });
     this.adventureManager = new AdventureManager();
+    this.templateEngine = new TemplateEngine();
   }
 
   async start(): Promise<void> {
@@ -231,6 +234,18 @@ class HTMLAdventureGenerator {
     }));
   }
 
+  /**
+   * Get common template variables used across all pages
+   */
+  private getCommonTemplateVariables(): { [key: string]: string } {
+    const adventureTitle = this.adventureManager.getTitle();
+    
+    return {
+      ADVENTURE_TITLE: adventureTitle,
+      INDEX_LINK: 'index.html'
+    };
+  }
+
   private generateThemeCSS(): void {
     const themeCSS = this.loadThemeCSS(this.selectedTheme);
     const baseCSS = this.loadBaseCSS();
@@ -286,6 +301,7 @@ class HTMLAdventureGenerator {
   private async generateQuestPages(): Promise<void> {
     for (let i = 0; i < this.quests.length; i++) {
       const quest = this.quests[i];
+      if (!quest) continue;
       
       console.log(chalk.dim(`  📖 Generating quest ${i + 1}/${this.quests.length}: ${quest.title}`));
       
@@ -337,42 +353,20 @@ class HTMLAdventureGenerator {
       </a>`;
     }).join('\n');
 
-    const adventureTitle = this.adventureManager.getTitle();
     const cleanStoryContent = this.adventureManager.getStoryContent();
     
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${adventureTitle}</title>
-    <link rel="stylesheet" href="assets/theme.css">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <h1>${adventureTitle}</h1>
-        </div>
-    </nav>
+    const variables = {
+      ...this.getCommonTemplateVariables(),
+      PAGE_TITLE: this.adventureManager.getTitle(),
+      STORY_CONTENT: this.formatMarkdown(cleanStoryContent),
+      QUEST_LINKS: questLinks
+    };
     
-    <div class="container">
-        <div class="story-content">
-            <h2>Adventure Awaits!</h2>
-            ${this.formatMarkdown(cleanStoryContent)}
-        </div>
-        
-        <div class="quests-section">
-            <h2>Adventure Quests</h2>
-            ${questLinks}
-        </div>
-    </div>
-</body>
-</html>`;
+    return this.templateEngine.renderPage('index-template.html', variables);
   }
 
   private buildQuestHTML(quest: QuestInfo, content: string, questIndex: number): string {
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
-    const adventureTitle = this.adventureManager.getTitle();
 
     const bottomNavigation = nextQuest ? `
       <div class="quest-navigation quest-navigation-bottom">
@@ -380,30 +374,14 @@ class HTMLAdventureGenerator {
       </div>
     ` : '';
 
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${this.stripHTML(this.formatInlineMarkdown(quest.title))} - Repo Adventure</title>
-    <link rel="stylesheet" href="assets/theme.css">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <a href="index.html">${adventureTitle}</a>
-        </div>
-    </nav>
-    
-    <div class="container">
-        <div class="quest-content">
-            ${this.formatMarkdown(content)}
-        </div>
-        
-        ${bottomNavigation}
-    </div>
-</body>
-</html>`;
+    const variables = {
+      ...this.getCommonTemplateVariables(),
+      PAGE_TITLE: this.stripHTML(this.formatInlineMarkdown(quest.title)),
+      QUEST_CONTENT: this.formatMarkdown(content),
+      BOTTOM_NAVIGATION: bottomNavigation
+    };
+
+    return this.templateEngine.renderPage('quest-template.html', variables);
   }
 
   private formatInlineMarkdown(text: string): string {
@@ -443,7 +421,7 @@ class HTMLAdventureGenerator {
     
     return htmlContent.replace(
       headingColonPattern, 
-      (match, openTag, beforeColon, colon, afterColon, closeTag) => {
+      (_match, openTag, beforeColon, colon, afterColon, closeTag) => {
         return `${openTag}<span class="header-prefix">${beforeColon}${colon}</span>${afterColon}${closeTag}`;
       }
     );
