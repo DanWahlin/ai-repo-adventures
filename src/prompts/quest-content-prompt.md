@@ -41,7 +41,7 @@ Use the same character names, object names, and story elements from the main sto
 
 
 ## Code Authenticity Requirements (Zero Tolerance for Fake Code)
-- NEVER INVENT FUNCTIONS or examples. Use only what exists in {{codeContent}}.
+- NEVER INVENT FUNCTIONS or examples. Use only what exists in the Complete Codebase section.
 - If a requested file has no relevant code, do not discuss it.
 - Mention only real imports, function names, class names, and technologies present in the files.
 
@@ -74,7 +74,7 @@ Each file covered in "Adventure Code Guidance" should be listed here along with 
 **MANDATORY:** Create an individual `## filename` subsection for EVERY file mentioned in Adventure Code Guidance. Place this under the appropriate file section above.
 For each file:
 - Heading: `### src/server.ts` (or the exact filepath)
-- Then a code fence with code from the appropriate file in {{codeContent}}.
+- Then a code fence with code from the appropriate file in the Complete Codebase section.
 - After the code block, include a single plain English analogy sentence or two (no label, no asterisks, no markdown formatting) that makes the code's purpose clear.
 
 **IMPORTANT:** 
@@ -103,7 +103,7 @@ END MARKDOWN TEMPLATE
 ## Final Verification Checklist (authoring-time, do not output this checklist)
 - All four main sections appear with exact headings.
 - Every file from Adventure Code Guidance has a `## filename` subsection and code snippet under ## File Exploration
-- Each snippet is 10–15 consecutive real lines from {{codeContent}}.
+- Each snippet is consecutive real lines from the Complete Codebase section.
 - Every analogy is plain text on its own line, no label or formatting.
-- Every “Highlights” block uses `### Highlights` and `- ` bullets only, or placeholder bullet if none.
+- Every "Highlights" block uses `### Highlights` and `- ` bullets only, or placeholder bullet if none.
 - No emojis in headings; no non-ASCII borders.
