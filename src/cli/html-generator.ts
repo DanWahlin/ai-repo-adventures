@@ -239,11 +239,24 @@ class HTMLAdventureGenerator {
    */
   private getCommonTemplateVariables(): { [key: string]: string } {
     const adventureTitle = this.adventureManager.getTitle();
+    const config = parseAdventureConfig(this.projectPath);
+    let repoName = 'Repository';
+    let repoUrl = '#';
+    
+    if (config && typeof config === 'object' && 'adventure' in config) {
+      const adventure = (config as any).adventure;
+      if (adventure) {
+        repoName = adventure.name || 'Repository';
+        repoUrl = adventure.url || '#';
+      }
+    }
     
     return {
       ADVENTURE_TITLE: adventureTitle,
       INDEX_LINK: 'index.html',
-      CURRENT_THEME: this.selectedTheme
+      CURRENT_THEME: this.selectedTheme,
+      REPO_NAME: repoName,
+      REPO_URL: repoUrl
     };
   }
 
