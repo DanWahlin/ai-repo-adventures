@@ -154,7 +154,16 @@ export const chooseTheme = {
       const selectedTheme = validateAndParseTheme(args.theme);
       validateCustomTheme(selectedTheme, args.customTheme);
       
-      const { projectPath, projectInfo } = await generateProjectInfo();
+      // Check if we already have project info from start-adventure
+      let projectInfo = adventureManager.getProjectInfo();
+      let projectPath = adventureManager.getProjectPath();
+      
+      // Only regenerate if not already initialized (e.g., if choose-theme is called directly)
+      if (!projectInfo || !projectPath) {
+        const generated = await generateProjectInfo();
+        projectPath = generated.projectPath;
+        projectInfo = generated.projectInfo;
+      }
       
       const storyWithQuests = await adventureManager.initializeAdventure(
         projectInfo, 

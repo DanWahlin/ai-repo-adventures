@@ -504,6 +504,20 @@ ${questsText}
   }
 
   /**
+   * Get current project info
+   */
+  getProjectInfo(): ProjectInfo | undefined {
+    return this.state.projectInfo;
+  }
+
+  /**
+   * Get current project path
+   */
+  getProjectPath(): string | undefined {
+    return this.state.projectPath;
+  }
+
+  /**
    * Get current theme
    */
   getCurrentTheme(): AdventureTheme | null {
