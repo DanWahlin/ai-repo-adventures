@@ -93,7 +93,7 @@ class RepoAdventureServer {
   }
 }
 ```
-[Real-world analogy explaining this specific code. Don't prefix with any text, just provide the analogy.]
+[Real-world analogy explaining this specific code. Only provide the analogy text.]
 
 ## src/tools/tools.ts  
 ```typescript
@@ -106,7 +106,8 @@ export const tools = {
   view_progress
 };
 ```
-[Real-world analogy explaining this specific code. Don't prefix with any text, just provide the analogy.]
+
+[Real-world analogy explaining this specific code. Only provide the analogy text.]
 
 **ABSOLUTE REQUIREMENT: If Adventure Guidance mentions src/server.ts AND src/tools/tools.ts, you MUST have BOTH subsections above.**
 

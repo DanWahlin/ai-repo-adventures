@@ -400,7 +400,9 @@ export class StoryGenerator {
     });
 
     const response = await this.llmClient.generateResponse(prompt);
-    return response.content.trim();
+    // Remove surrounding quotes if the LLM added them
+    const content = response.content.trim();
+    return content.replace(/^["']|["']$/g, '');
   }
 
   // ============= Private Methods =============

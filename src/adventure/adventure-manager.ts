@@ -432,7 +432,10 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
       })
       .join('\n');
 
-    return `${storyResponse.story}
+    // Include title for MCP server output (but not for HTML generation)
+    const titleSection = storyResponse.title ? `# ${storyResponse.title}\n\n` : '';
+
+    return `${titleSection}${storyResponse.story}
 
 **🗺️ Available Quests:**
 
