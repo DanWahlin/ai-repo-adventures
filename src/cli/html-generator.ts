@@ -401,8 +401,6 @@ class HTMLAdventureGenerator {
     </nav>
     
     <div class="container">
-        <h1 class="quest-title">${this.formatInlineMarkdown(quest.title)}</h1>
-        <hr>
         <div class="quest-content">
             ${this.formatMarkdown(content)}
         </div>

@@ -448,8 +448,8 @@ ${questsText}
    * Format complete quest result
    */
   private formatQuestResult(content: QuestContent, completionSummary: string, questTitle: string): string {
-    // Just return the raw markdown content with completion summary
-    return `${content.adventure}\n\n---\n\n${completionSummary}`;
+    // Just return the raw markdown content with completion summary (no separator - handled in markdown)
+    return `${content.adventure}\n\n${completionSummary}`;
   }
   
 

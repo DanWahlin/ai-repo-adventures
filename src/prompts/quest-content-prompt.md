@@ -23,6 +23,10 @@ Use the same character names, object names, and story elements from the main sto
 ## CRITICAL FORMAT & STYLE GUARDRAILS
 - Output ONLY markdown.
 - Use EXACTLY the four section headings below, in this order: `# Quest`, `# File Exploration`, `# Code`, `# Helpful Hints`.
+- **HORIZONTAL RULE RESTRICTION**: You MUST use `---` in ONLY these TWO places:
+  1. Immediately after the quest title (one time only)
+  2. Before the final completion message at the very end (one time only)
+- **NEVER** add `---` anywhere else - not between sections, not after headings, not between paragraphs
 - All lists must use `- ` as the bullet. Do not use `•` or other symbols.
 - Every code block must be fenced with:
 
@@ -49,6 +53,7 @@ BEGIN MARKDOWN TEMPLATE
 # [Quest Title]
 
 - Begin with the quest title on the first line: `**Quest 1: [Quest Title]**` - add an appropriate emoticon in front of the title
+- Add a horizontal rule `---` immediately after the title
 - 1 paragraph (75–100 words) continuing the themed narrative only.
 
 ## File Exploration
@@ -78,6 +83,8 @@ Provide three short subsections as a markdown list with `- ` bullets:
 - Practical tips or key insights
 - Recommendations for related code exploration or refactoring
 - Next steps for deeper exploration
+
+---
 
 END MARKDOWN TEMPLATE
 
