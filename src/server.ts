@@ -114,10 +114,11 @@ async function main() {
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
     
-    // Handle unhandled promise rejections
+    // Handle unhandled promise rejections - log but don't shutdown during normal operation
     process.on('unhandledRejection', (reason) => {
       console.error('Unhandled promise rejection:', reason);
-      gracefulShutdown();
+      console.error('MCP server continuing to run. Please report this error.');
+      // Don't call gracefulShutdown() here as it may be a recoverable error
     });
     
     await server.run();
