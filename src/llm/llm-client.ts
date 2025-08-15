@@ -100,6 +100,7 @@ export class LLMClient {
       const requestParams = this.buildRequestParams(prompt, options);
       const completion = await this.executeRequest(requestParams);
       const content = this.validateResponse(completion);
+      // console.log(content);
       this.logTokenUsage(completion);
       
       return { content };

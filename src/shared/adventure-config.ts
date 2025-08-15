@@ -107,13 +107,12 @@ export function formatAdventureConfigForPrompt(projectPath: string): string {
         }
       }
       
-      formatted += `- **FORMAT REQUIREMENT**: Must include section header like "─── ${file.description}: ${file.path} ───"\n`;
+      formatted += `- **FORMAT REQUIREMENT**: Must include section header like "${file.description}: ${file.path}"\n`;
     }
     formatted += `\n`;
   }
 
   formatted += `\n**FORMATTING INSTRUCTIONS:**\n`;
-  formatted += `- Use clear section dividers with ASCII borders: "─── Section Title ───"\n`;
   formatted += `- Each file mentioned in the quest structure above MUST have its own dedicated analysis section\n`;
   formatted += `- **MANDATORY**: Include at least 2-3 separate code snippet sections (## filename) with real code blocks\n`;
   formatted += `- Show actual function signatures, imports, class definitions, or key methods from the files\n`;

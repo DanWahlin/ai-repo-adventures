@@ -448,21 +448,8 @@ ${questsText}
    * Format complete quest result
    */
   private formatQuestResult(content: QuestContent, completionSummary: string, questTitle: string): string {
-    const fileExplorationText = content.fileExploration 
-      ? `\n\n${content.fileExploration}`
-      : '';
-
-    const codeSnippetsText = content.codeSnippets.length > 0 
-      ? `\n\n**📜 Code Discoveries:**\n\n${content.codeSnippets.map(snippet => 
-          `**${snippet.file}:**\n\`\`\`\n${snippet.snippet}\n\`\`\`\n*${snippet.explanation}*`
-        ).join('\n\n')}`
-      : '';
-
-    const hintsText = content.hints.length > 0 
-      ? `\n\n**💡 Helpful Hints:**\n${content.hints.map(hint => `• ${hint}`).join('\n')}`
-      : '';
-
-    return `**${questTitle}**\n\n${content.adventure}${fileExplorationText}${codeSnippetsText}${hintsText}\n\n---\n\n${completionSummary}`;
+    // Just return the raw markdown content with completion summary
+    return `${content.adventure}\n\n---\n\n${completionSummary}`;
   }
   
 

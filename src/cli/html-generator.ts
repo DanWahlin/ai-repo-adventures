@@ -192,12 +192,7 @@ class HTMLAdventureGenerator {
       const adventure = (config as any).adventure;
       if (adventure && typeof adventure.url === 'string') {
         this.repoUrl = adventure.url.replace(/\/$/, ''); // Remove trailing slash
-        console.log(chalk.green(`✅ Loaded repository URL: ${this.repoUrl}`));
-      } else {
-        console.log(chalk.yellow('⚠️  No repository URL found in adventure.config.json'));
       }
-    } else {
-      console.log(chalk.yellow('⚠️  Could not load adventure.config.json'));
     }
 
     // Step 1: Generate project analysis
@@ -246,32 +241,27 @@ class HTMLAdventureGenerator {
   }
 
   private loadThemeCSS(theme: AdventureTheme): string {
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const themePath = path.join(__dirname, 'themes', `${theme}.css`);
-    
-    try {
-      return fs.readFileSync(themePath, 'utf-8');
-    } catch (error) {
-      console.warn(chalk.yellow(`⚠️  Theme file not found for ${theme}, using default`));
-      const defaultPath = path.join(__dirname, 'themes', 'default.css');
-      try {
-        return fs.readFileSync(defaultPath, 'utf-8');
-      } catch {
-        console.warn(chalk.yellow(`⚠️  Default theme not found, using fallback`));
-        return this.getFallbackCSS();
-      }
-    }
+    return this.loadCSSFile(`themes/${theme}.css`, 'themes/default.css');
   }
 
   private loadBaseCSS(): string {
+    return this.loadCSSFile('themes/base.css', null) || '/* Base CSS not found */';
+  }
+
+  private loadCSSFile(relativePath: string, fallbackPath: string | null): string {
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const basePath = path.join(__dirname, 'themes', 'base.css');
     
     try {
-      return fs.readFileSync(basePath, 'utf-8');
-    } catch (error) {
-      console.warn(chalk.yellow(`⚠️  Base CSS not found, using minimal fallback`));
-      return '/* Base CSS not found - using minimal styles */';
+      return fs.readFileSync(path.join(__dirname, relativePath), 'utf-8');
+    } catch {
+      if (fallbackPath) {
+        try {
+          return fs.readFileSync(path.join(__dirname, fallbackPath), 'utf-8');
+        } catch {
+          return this.getFallbackCSS();
+        }
+      }
+      return '';
     }
   }
 
@@ -338,10 +328,9 @@ class HTMLAdventureGenerator {
       const questData = adventureQuests[index];
       let description = questData?.description || '';
       
-      // Clean up description
+      // Remove code files section from description
       if (description) {
-        description = description.replace(/\*\*Code Files:\*\*.*$/s, '').trim();
-        description = description.replace(/Code Files:.*$/s, '').trim();
+        description = description.replace(/\*?\*?Code Files:.*$/si, '').trim();
       }
       
       return `<a href="${quest.filename}" class="quest-link">
@@ -387,9 +376,8 @@ class HTMLAdventureGenerator {
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
     const adventureTitle = this.adventureManager.getTitle();
     
-    const truncateTitle = (title: string, maxLength: number = 40): string => {
-      return title.length > maxLength ? title.slice(0, maxLength) + '...' : title;
-    };
+    const truncateTitle = (title: string) => 
+      title.length > 40 ? title.slice(0, 40) + '...' : title;
 
     const bottomNavigation = nextQuest ? `
       <div class="quest-navigation quest-navigation-bottom">
@@ -426,6 +414,7 @@ class HTMLAdventureGenerator {
   }
 
   private formatInlineMarkdown(text: string): string {
+    // This could use marked.parseInline() but keeping it simple for title formatting
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -433,38 +422,14 @@ class HTMLAdventureGenerator {
   }
 
   private formatMarkdown(content: string): string {
-    // Simple markdown processing - let marked handle most of it
+    // Pure markdown to HTML conversion - no post-processing
     let htmlContent = marked(content) as string;
     
-    // Fix inline code styling
-    htmlContent = htmlContent.replace(/<code>/g, '<code class="inline-code">');
+    // Only add CSS class to inline code and hyperlinks - nothing else
+    htmlContent = htmlContent
+      .replace(/<code>/g, '<code class="inline-code">');  // Add CSS class to inline code
     
-    // Style section dividers
-    htmlContent = htmlContent.replace(/<p>([─-]{3,}.*?[─-]{3,})<\/p>/g, '<p class="section-divider">$1</p>');
-    
-    // Remove duplicate quest titles
-    htmlContent = htmlContent.replace(/^<p><strong>🚀 Quest \d+:.*?<\/strong><\/p>\s*/i, '');
-    
-    // Fix bullet points in "Helpful Hints" sections that aren't properly formatted as lists
-    // Look for paragraphs with multiple bullet points and convert to proper lists
-    htmlContent = htmlContent.replace(
-      /<p><strong>💡 Helpful Hints:<\/strong>\s*(?:<br\s*\/>)?\s*([^<]*(?:•[^•]+)+)<\/p>/gi,
-      (_match, bulletContent: string) => {
-        const bullets = bulletContent.split('•').filter((item: string) => item.trim()).map((item: string) => {
-          const trimmed = item.trim();
-          // Remove any trailing punctuation or whitespace, but preserve content formatting
-          return trimmed.replace(/^\s*/, '').replace(/\s*$/, '');
-        });
-        
-        const listItems = bullets.map((bullet: string) => 
-          `<li>${bullet.replace(/^\s*<strong>(.*?)<\/strong>:\s*/, '<strong>$1</strong>: ')}</li>`
-        ).join('\n');
-        
-        return `<p><strong>💡 Helpful Hints:</strong></p>\n<ul>\n${listItems}\n</ul>`;
-      }
-    );
-    
-    // Add hyperlinks to file references in the HTML if we have a repo URL
+    // Add hyperlinks to file references if we have a repo URL
     if (this.repoUrl) {
       htmlContent = this.addFileHyperlinksToHTML(htmlContent);
     }
@@ -481,42 +446,24 @@ class HTMLAdventureGenerator {
    * Handles file paths within code tags and plain text
    */
   private addFileHyperlinksToHTML(htmlContent: string): string {
-    if (!this.repoUrl) {
-      console.log(chalk.red('⚠️  No repo URL available for hyperlinks'));
-      return htmlContent;
-    }
+    if (!this.repoUrl) return htmlContent;
 
-    console.log(chalk.dim(`Adding hyperlinks with repo URL: ${this.repoUrl}`));
+    // Pattern to match file paths: src/file.ts, ./src/file.ts, /src/file.ts
+    const filePathPattern = /(\.?\/?)?(src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md))/;
 
-    // Pattern to match file paths
-    // Matches src/file.ts, ./src/file.ts, /src/file.ts
-    const filePathPattern = /(\.?\/?)?(src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md))/g;
-
-    // Handle file paths within <code> tags
-    let replacementCount = 0;
+    // Convert file paths in <code> tags to hyperlinks
     htmlContent = htmlContent.replace(
       /<code class="inline-code">([^<]*)<\/code>/g, 
       (match, codeContent) => {
-        // Check if this contains a file path
         const fileMatch = codeContent.match(filePathPattern);
         if (fileMatch) {
-          // Get the full matched path
-          const fullPath = fileMatch[0];
-          // Normalize the file path (remove leading ./ or /)
-          const normalizedPath = fullPath.replace(/^\.?\//, '');
+          const normalizedPath = fileMatch[0].replace(/^\.?\//, '');
           const githubUrl = `${this.repoUrl}/blob/main/${normalizedPath}`;
-          
-          replacementCount++;
-          console.log(chalk.green(`  ✅ Linked: ${normalizedPath}`));
-          
-          // Return as a link with code styling
           return `<a href="${githubUrl}" target="_blank" rel="noopener noreferrer"><code class="inline-code">${normalizedPath}</code></a>`;
         }
         return match;
       }
     );
-
-    console.log(chalk.cyan(`Total hyperlinks added: ${replacementCount}`));
     return htmlContent;
   }
 

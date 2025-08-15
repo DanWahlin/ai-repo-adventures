@@ -170,9 +170,35 @@ function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
           currentSection = 'helpful hints';
         }
       }
+      // Handle H3 format: ### **# File Exploration** (with # prefix in title)
+      else if (token.depth === 3 && token.text.includes('#')) {
+        const sectionText = token.text.replace(/\*+/g, '').replace(/#/g, '').trim().toLowerCase();
+        if (sectionText.includes('file exploration')) {
+          currentSection = 'file exploration';
+        } else if (sectionText.includes('code snippets')) {
+          currentSection = 'code snippets';
+        } else if (sectionText.includes('helpful hints')) {
+          currentSection = 'helpful hints';
+        }
+      }
+      // Handle H3 quest titles: ### **🚀 Quest 1: Title**
+      else if (token.depth === 3 && (token.text.includes('Quest') || token.text.includes('🚀'))) {
+        currentSection = 'adventure';
+      }
       // Handle original format: # Adventure, # File Exploration, etc.
       else if (token.depth === 1) {
-        currentSection = token.text.toLowerCase();
+        const sectionText = token.text.toLowerCase();
+        if (sectionText.includes('adventure') || sectionText.includes('quest')) {
+          currentSection = 'adventure';
+        } else if (sectionText.includes('file exploration') || sectionText.includes('exploration')) {
+          currentSection = 'file exploration';
+        } else if (sectionText.includes('code snippets') || sectionText.includes('snippets')) {
+          currentSection = 'code snippets';
+        } else if (sectionText.includes('helpful hints') || sectionText.includes('hints')) {
+          currentSection = 'helpful hints';
+        } else {
+          currentSection = sectionText;
+        }
       } 
       // Handle H2 sections under File Exploration and code file headers
       else if (token.depth === 2) {
@@ -239,7 +265,7 @@ function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
   }
   
   return {
-    adventure: adventure.trim() || 'Explore this code adventure!',
+    adventure: adventure.trim() || '',
     fileExploration: fileExploration.trim(),
     codeSnippets,
     hints
@@ -343,22 +369,19 @@ export class StoryGenerator {
       throw new Error('LLM returned empty response for quest content');
     }
     
-    let parsed;
-    try {
-      // Preprocess response to remove markdown code block wrapper if present
-      let cleanContent = response.content.trim();
-      if (cleanContent.startsWith('```markdown')) {
-        cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
-      }
-      
-      
-      parsed = parseMarkdownToQuestContent(cleanContent);
-      // Validate with Zod schema for safety
-      QuestContentSchema.parse(parsed);
-    } catch (error) {
-      throw new Error(`Invalid LLM response for quest content: ${error instanceof Error ? error.message : 'Unknown error'}. Response: ${response.content.substring(0, 200)}...`);
+    // Return raw markdown content - no parsing, no processing
+    let cleanContent = response.content.trim();
+    if (cleanContent.startsWith('```markdown')) {
+      cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
     }
-    return parsed;
+    
+    // Return the content as a simple QuestContent structure with everything in adventure field
+    return {
+      adventure: cleanContent,
+      fileExploration: '',
+      codeSnippets: [],
+      hints: []
+    };
   }
 
 
