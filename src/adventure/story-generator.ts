@@ -3,7 +3,7 @@ import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKENS_QUEST } from '../shared/config.js';
 import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
-import { loadAdventureConfig, formatAdventureConfigForPrompt } from '../shared/adventure-config.js';
+import { formatAdventureConfigForPrompt } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
 import { marked } from 'marked';
 import { z } from 'zod';
@@ -126,12 +126,13 @@ function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   
   // Add final quest if exists
   if (currentQuest.title && currentQuest.description) {
-    quests.push({
+    const quest = {
       id: `quest-${quests.length + 1}`,
       title: currentQuest.title,
       description: currentQuest.description.trim(),
       codeFiles: currentQuest.codeFiles || []
-    });
+    };
+    quests.push(quest);
   }
   
   return {
@@ -156,9 +157,25 @@ function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
   
   for (const token of tokens) {
     if (token.type === 'heading') {
-      if (token.depth === 1) {
+      // Handle new format: ### SECTION 1: # Adventure
+      if (token.depth === 3 && token.text.includes('SECTION')) {
+        const sectionText = token.text.toLowerCase();
+        if (sectionText.includes('adventure')) {
+          currentSection = 'adventure';
+        } else if (sectionText.includes('file exploration')) {
+          currentSection = 'file exploration';
+        } else if (sectionText.includes('code snippets')) {
+          currentSection = 'code snippets';
+        } else if (sectionText.includes('helpful hints')) {
+          currentSection = 'helpful hints';
+        }
+      }
+      // Handle original format: # Adventure, # File Exploration, etc.
+      else if (token.depth === 1) {
         currentSection = token.text.toLowerCase();
-      } else if (token.depth === 2) {
+      } 
+      // Handle H2 sections under File Exploration and code file headers
+      else if (token.depth === 2) {
         if (currentSection.includes('code') || currentSection.includes('snippet')) {
           // Start new code snippet - H2 under "Code Snippets" section
           if (currentCodeSnippet.file && currentCodeSnippet.snippet) {
@@ -170,8 +187,23 @@ function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
           }
           currentCodeSnippet = { file: token.text, snippet: '', explanation: '' };
         } else {
-          // Regular H2 section
+          // Regular H2 section (for original format)
           currentSection = token.text.toLowerCase();
+        }
+      }
+      // Handle H4 code file headers: #### ## src/server.ts
+      else if (token.depth === 4 && token.text.startsWith('##')) {
+        if (currentSection.includes('code') || currentSection.includes('snippet')) {
+          // Start new code snippet - extract filename from "## src/server.ts"
+          if (currentCodeSnippet.file && currentCodeSnippet.snippet) {
+            codeSnippets.push({
+              file: currentCodeSnippet.file,
+              snippet: currentCodeSnippet.snippet,
+              explanation: currentCodeSnippet.explanation || ''
+            });
+          }
+          const filename = token.text.replace(/^##\s*/, ''); // Remove "## " prefix
+          currentCodeSnippet = { file: filename, snippet: '', explanation: '' };
         }
       }
     } else if (token.type === 'paragraph') {
@@ -180,6 +212,7 @@ function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
       } else if (currentSection.includes('exploration') || currentSection.includes('file')) {
         fileExploration += token.text + '\n\n';
       } else if (currentCodeSnippet.file && !currentCodeSnippet.explanation) {
+        // Only add explanation if we haven't set one yet
         currentCodeSnippet.explanation = token.text;
       }
     } else if (token.type === 'code') {
@@ -187,9 +220,11 @@ function parseMarkdownToQuestContent(markdownContent: string): QuestContent {
         currentCodeSnippet.snippet = token.text;
       }
     } else if (token.type === 'list') {
-      // Extract hints from list items
-      for (const item of token.items) {
-        hints.push(item.text.trim());
+      // Extract hints from list items (for both helpful hints and list content)
+      if (currentSection.includes('hint') || currentSection.includes('helpful')) {
+        for (const item of token.items) {
+          hints.push(item.text.trim());
+        }
       }
     }
   }
@@ -222,7 +257,6 @@ export class StoryGenerator {
   private llmClient: LLMClient;
   private currentProject?: ProjectInfo;
   private customThemeData?: CustomThemeData;
-  private adventureConfigJson?: string | null;
   private currentStoryContent?: string;
   private projectPath?: string | undefined;
 
@@ -250,11 +284,6 @@ export class StoryGenerator {
   async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
     this.currentProject = projectInfo;
     this.projectPath = projectPath;
-    
-    // Load adventure config if projectPath is provided
-    if (projectPath) {
-      this.adventureConfigJson = loadAdventureConfig(projectPath);
-    }
     
     const validatedTheme = this.validateTheme(theme);
     return await this.generateWithLLM(projectInfo, validatedTheme);
@@ -321,6 +350,7 @@ export class StoryGenerator {
       if (cleanContent.startsWith('```markdown')) {
         cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
       }
+      
       
       parsed = parseMarkdownToQuestContent(cleanContent);
       // Validate with Zod schema for safety

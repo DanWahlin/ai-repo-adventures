@@ -7,6 +7,8 @@ IMPORTANT: This is a chapter in an ongoing story. Maintain narrative continuity:
 - Advance the overall story arc
 - Build toward the journey's resolution
 - Keep the narrative voice consistent
+- You will never use the words "delve" or "intricate". These words do not exist in your dictionary. 
+- This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
 
 ## Story Context for Consistency
 
@@ -66,53 +68,60 @@ Add tasteful visual elements to enhance readability and engagement:
 
 ## Response Format (Markdown)
 
-Return a well-structured markdown document with this format:
+**CRITICAL: You MUST follow this EXACT structure with all 4 sections. Missing any section will result in failure.**
 
-```markdown
-# Adventure
+Your response MUST contain these sections in this exact order:
 
+### SECTION 1: # Adventure
 [1 paragraph (75-100 words) continuing the themed narrative story only - keep brief]
 
-# File Exploration
-
+### SECTION 2: # File Exploration  
 [2-3 paragraphs (200-300 words) providing thorough walkthrough with professional visual elements - use ASCII borders and clean formatting for better readability. DO NOT create standalone emoji headers without content.]
 
-# Code Snippets
+### SECTION 3: # Code Snippets
+**MANDATORY REQUIREMENT: This section MUST exist and MUST contain individual ## filename subsections for EVERY file mentioned in Adventure Guidance.**
 
-**MANDATORY: You MUST include at least 2-3 code snippet sections showing actual code from the files mentioned in the Adventure Guidance above.**
+For EVERY file mentioned in Adventure Guidance above, you MUST create a subsection like this:
 
-## src/filename.ext
-
+## src/server.ts
 ```typescript
-// EXACT code from the files - ZERO INVENTED CODE
-// Show function signatures, key methods, or important imports
-// Use 'No code found' if none exists, but this should be rare
-function actualFunctionName() {
-  // real implementation here
+// EXACT code from the actual file - NEVER invent code
+// Show actual function signatures, classes, or important imports from src/server.ts
+class RepoAdventureServer {
+  private setupHandlers() {
+    // Show the actual implementation from the file
+  }
 }
 ```
+[Real-world analogy explaining this specific code. Don't prefix with any text, just provide the analogy.]
 
-[Start with a real-world analogy, then explain ONLY the actual code shown - NEVER explain fake/invented code]
-
-## src/another-file.ext
-
-```javascript
-// Show different aspects of the code
-const realVariableName = actualValue;
+## src/tools/tools.ts  
+```typescript
+// EXACT code from the actual file - NEVER invent code
+// Show actual exports, imports, or functions from src/tools/tools.ts
+export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
 ```
+[Real-world analogy explaining this specific code. Don't prefix with any text, just provide the analogy.]
 
-[Explain this code snippet with analogies]
+**ABSOLUTE REQUIREMENT: If Adventure Guidance mentions src/server.ts AND src/tools/tools.ts, you MUST have BOTH subsections above.**
 
-# Helpful Hints
-
+### SECTION 4: # Helpful Hints
 - Practical tips or key insights
 - Recommendations for related code exploration or refactoring
 - Next steps for deeper exploration
 
 ## ⚠️ FINAL VERIFICATION CHECKLIST
 Before submitting your response, verify:
+✅ Every file mentioned in Adventure Guidance has its own ## filename code snippet section
 ✅ Every code snippet exists in the "## Complete Codebase" section
 ✅ Every function name mentioned exists in the actual files  
 ✅ No invented/example code was created
-✅ If no relevant code exists, you used "No code found" or similar
+✅ If a file mentions src/server.ts AND src/tools/tools.ts, you have BOTH ## src/server.ts AND ## src/tools/tools.ts sections
+✅ Each code section shows actual imports, classes, functions, or exports from that file
 ❌ NEVER submit responses with fake functions like `calculateTrajectory()`, `processData()`, etc.
+❌ NEVER skip files mentioned in Adventure Guidance

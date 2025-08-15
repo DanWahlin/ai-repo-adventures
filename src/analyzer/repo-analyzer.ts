@@ -81,7 +81,7 @@ export class RepoAnalyzer {
         
         // Reliability: Ensure file exists
         if (!fs.existsSync(fullPath)) {
-          console.warn(`Skipping non-existent file: ${file}`);
+          console.warn(`Skipping non-existent file: \`${file}\``);
           return null;
         }
         

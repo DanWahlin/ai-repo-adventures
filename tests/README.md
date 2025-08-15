@@ -209,3 +209,31 @@ This is useful for:
 - Quick development iteration  
 - CSS/styling testing
 - Debugging HTML structure issues
+
+## Prompt Output Test
+
+### Debug LLM Prompts
+
+The `prompt-output-test.ts` captures and outputs the exact prompts sent to the LLM for analysis:
+
+```bash
+npm run test:prompts
+```
+
+This will:
+- Generate both story and quest prompts using the current configuration
+- Output prompt files to `tests/prompts/`
+- Create analysis report with statistics and verification data
+
+### Generated Files
+
+After running the test, check `tests/prompts/`:
+- `story-prompt.txt` - Exact prompt sent to story generation LLM
+- `quest-prompt.txt` - Exact prompt sent to quest content LLM  
+- `analysis.txt` - Analysis report with prompt statistics and file verification
+
+This is useful for:
+- Debugging LLM prompt structure and content
+- Verifying that required files are included in prompts
+- Understanding why certain content is or isn't being generated
+- Prompt engineering and optimization

@@ -433,14 +433,14 @@ class HTMLAdventureGenerator {
     // Look for paragraphs with multiple bullet points and convert to proper lists
     htmlContent = htmlContent.replace(
       /<p><strong>💡 Helpful Hints:<\/strong>\s*(?:<br\s*\/>)?\s*([^<]*(?:•[^•]+)+)<\/p>/gi,
-      (match, bulletContent) => {
-        const bullets = bulletContent.split('•').filter(item => item.trim()).map(item => {
+      (_match, bulletContent: string) => {
+        const bullets = bulletContent.split('•').filter((item: string) => item.trim()).map((item: string) => {
           const trimmed = item.trim();
           // Remove any trailing punctuation or whitespace, but preserve content formatting
           return trimmed.replace(/^\s*/, '').replace(/\s*$/, '');
         });
         
-        const listItems = bullets.map(bullet => 
+        const listItems = bullets.map((bullet: string) => 
           `<li>${bullet.replace(/^\s*<strong>(.*?)<\/strong>:\s*/, '<strong>$1</strong>: ')}</li>`
         ).join('\n');
         

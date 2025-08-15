@@ -104,13 +104,32 @@ class InteractiveMCPClient {
 
   private formatText(text: string): string {
     // Format markdown-style text for terminal
-    return text
+    let formatted = text;
+    
+    // First, protect template literals by temporarily replacing them
+    const templateLiterals: string[] = [];
+    formatted = formatted.replace(/`[^`]*\$\{[^}]*\}[^`]*`/g, (match) => {
+      const placeholder = `__TEMPLATE_LITERAL_${templateLiterals.length}__`;
+      templateLiterals.push(match);
+      return placeholder;
+    });
+    
+    // Now safely process markdown formatting
+    formatted = formatted
       .replace(/\*\*(.*?)\*\*/g, (_, p1) => chalk.bold(p1)) // Bold
-      .replace(/`(.*?)`/g, (_, p1) => chalk.cyan(p1)) // Code
+      .replace(/```(?:[a-zA-Z]*\n)?([\s\S]*?)\n```/g, (_, p1) => chalk.gray(p1)) // Code blocks
+      .replace(/`([^`\n]+)`/g, (_, p1) => chalk.cyan(p1)) // Inline code (now safe)
       .replace(/^(#{1,3}) (.*)$/gm, (_, p1, p2) => chalk.yellow(p2)) // Headers
       .replace(/^🚀/gm, chalk.blue('🚀')) // Space emoji
       .replace(/^🏰/gm, chalk.magenta('🏰')) // Castle emoji
       .replace(/^🏺/gm, chalk.yellow('🏺')); // Ancient emoji
+    
+    // Restore template literals
+    templateLiterals.forEach((literal, index) => {
+      formatted = formatted.replace(`__TEMPLATE_LITERAL_${index}__`, literal);
+    });
+    
+    return formatted;
   }
 
   private async callTool(toolName: string, args: Record<string, any>): Promise<string> {

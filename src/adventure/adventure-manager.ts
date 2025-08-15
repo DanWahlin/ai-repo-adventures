@@ -3,6 +3,7 @@ import type { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { StoryGenerator, Quest, StoryResponse, QuestContent } from './story-generator.js';
 import { validateAdventureChoice } from '../shared/input-validator.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
+import { parseAdventureConfig } from '../shared/adventure-config.js';
 
 // Re-export interfaces from story-generator
 export type { Quest, StoryResponse, QuestContent, CodeSnippet } from './story-generator.js';
@@ -76,10 +77,15 @@ export class AdventureManager {
     
     this.state.title = storyResponse.title;
     this.state.story = typeof storyResponse.story === 'string' ? storyResponse.story : storyResponse.story.content;
-    this.state.quests = storyResponse.quests;
+    
+    // Merge files from adventure config into the generated quests
+    this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
 
     // Return the story with available quests
-    return this.formatStoryWithQuests(storyResponse);
+    return this.formatStoryWithQuests({
+      ...storyResponse,
+      quests: this.state.quests
+    });
   }
 
   /**
@@ -286,6 +292,59 @@ export class AdventureManager {
   
 
   /**
+   * Merge files from adventure.config.json into the generated quests
+   */
+  private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
+    if (!projectPath) return quests;
+    
+    const config = parseAdventureConfig(projectPath);
+    if (!config || typeof config !== 'object') return quests;
+    
+    const adventure = (config as any).adventure;
+    if (!adventure || !Array.isArray(adventure.quests)) return quests;
+    
+    // Create a map of quest titles to their file paths from the config
+    const configQuestFiles = new Map<string, string[]>();
+    for (const configQuest of adventure.quests) {
+      if (configQuest.title && Array.isArray(configQuest.files)) {
+        const filePaths = configQuest.files
+          .filter((f: any) => f.path)
+          .map((f: any) => f.path);
+        if (filePaths.length > 0) {
+          configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
+        }
+      }
+    }
+    
+    // Merge the files into the generated quests
+    return quests.map((quest, index) => {
+      // Primary matching: by quest order (index)
+      const configQuests = adventure.quests;
+      if (index < configQuests.length && configQuests[index] && configQuests[index].files) {
+        const files = configQuests[index].files
+          .filter((f: any) => f.path)
+          .map((f: any) => f.path);
+        if (files.length > 0) {
+          console.log(`Merging ${files.length} files from config for quest ${index + 1}: ${quest.title}`);
+          return { ...quest, codeFiles: files };
+        }
+      }
+      
+      // Fallback: try to match quest by title (case-insensitive partial match)
+      const questTitleLower = quest.title.toLowerCase();
+      for (const [configTitle, files] of configQuestFiles.entries()) {
+        if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
+          console.log(`Fallback matching ${files.length} files from config for quest: ${quest.title}`);
+          return { ...quest, codeFiles: files };
+        }
+      }
+      
+      console.log(`No files found for quest: ${quest.title}`);
+      return quest;
+    });
+  }
+
+  /**
    * Mark quest as completed
    */
   private markQuestCompleted(quest: Quest): void {
@@ -362,7 +421,15 @@ ${this.state.progressPercentage === 100 ? '🎉 **Congratulations!** You have su
    */
   private formatStoryWithQuests(storyResponse: StoryResponse): string {
     const questsText = storyResponse.quests
-      .map((quest) => `**${quest.title}** - ${quest.description}`)
+      .map((quest) => {
+        // Clean up description - remove "Code Files:" section and extra whitespace
+        let cleanDescription = quest.description
+          .replace(/\*\*Code Files:\*\*.*$/s, '')
+          .replace(/Code Files:.*$/s, '')
+          .trim();
+        
+        return `**${quest.title}** - ${cleanDescription}`;
+      })
       .join('\n');
 
     return `${storyResponse.story}
