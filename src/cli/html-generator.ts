@@ -242,14 +242,16 @@ class HTMLAdventureGenerator {
     
     return {
       ADVENTURE_TITLE: adventureTitle,
-      INDEX_LINK: 'index.html'
+      INDEX_LINK: 'index.html',
+      CURRENT_THEME: this.selectedTheme
     };
   }
 
   private generateThemeCSS(): void {
     const themeCSS = this.loadThemeCSS(this.selectedTheme);
     const baseCSS = this.loadBaseCSS();
-    const combinedCSS = themeCSS + '\n\n' + baseCSS;
+    const animationsCSS = this.loadAnimationsCSS();
+    const combinedCSS = themeCSS + '\n\n' + baseCSS + '\n\n' + animationsCSS;
     const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
     fs.writeFileSync(cssPath, combinedCSS);
   }
@@ -260,6 +262,10 @@ class HTMLAdventureGenerator {
 
   private loadBaseCSS(): string {
     return this.loadCSSFile('themes/base.css', null) || '/* Base CSS not found */';
+  }
+
+  private loadAnimationsCSS(): string {
+    return this.loadCSSFile('themes/animations.css', null) || '/* Animations CSS not found */';
   }
 
   private loadCSSFile(relativePath: string, fallbackPath: string | null): string {

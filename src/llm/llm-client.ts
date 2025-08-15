@@ -105,6 +105,9 @@ export class LLMClient {
       
       return { content };
     } catch (error) {
+      // Enhanced error logging for debugging
+      this.logDetailedError(error, prompt);
+      
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`LLM request failed: ${message}`);
     }
@@ -205,5 +208,85 @@ export class LLMClient {
     const green = '\x1b[32m';
     const reset = '\x1b[0m';
     console.error(`🔢 LLM Usage: ${green}${formatTokenCount(promptTokens)}${reset} prompt + ${green}${formatTokenCount(completionTokens)}${reset} response = ${green}${formatTokenCount(totalTokens)}${reset} total tokens\n`);
+  }
+
+  /**
+   * Log detailed error information for debugging
+   */
+  private logDetailedError(error: any, prompt: string): void {
+    const red = '\x1b[31m';
+    const yellow = '\x1b[33m';
+    const cyan = '\x1b[36m';
+    const reset = '\x1b[0m';
+    
+    console.error(`\n${red}═══════════════════════════════════════════════════════════════${reset}`);
+    console.error(`${red}🚨 LLM Request Failed - Detailed Error Information${reset}`);
+    console.error(`${red}═══════════════════════════════════════════════════════════════${reset}\n`);
+    
+    // Basic error info
+    console.error(`${yellow}Error Type:${reset}`, error?.constructor?.name || 'Unknown');
+    console.error(`${yellow}Error Message:${reset}`, error?.message || 'No message');
+    
+    // Model and endpoint info
+    console.error(`\n${cyan}Configuration:${reset}`);
+    console.error(`  Model: ${this.model}`);
+    console.error(`  Base URL: ${LLM_BASE_URL}`);
+    console.error(`  Is Azure: ${this.isAzureOpenAI()}`);
+    console.error(`  API Version: ${LLM_API_VERSION || 'Not set'}`);
+    
+    // Azure AI Foundry specific error details
+    if (error?.response) {
+      console.error(`\n${cyan}Response Details:${reset}`);
+      console.error(`  Status: ${error.response.status || 'Unknown'}`);
+      console.error(`  Status Text: ${error.response.statusText || 'Unknown'}`);
+      
+      if (error.response.data) {
+        console.error(`  Response Data:`, JSON.stringify(error.response.data, null, 2));
+      }
+      
+      if (error.response.headers) {
+        console.error(`  Headers:`, error.response.headers);
+      }
+    }
+    
+    // OpenAI/Azure specific error details
+    if (error?.error) {
+      console.error(`\n${cyan}API Error Details:${reset}`);
+      console.error(`  Error Type: ${error.error.type || 'Unknown'}`);
+      console.error(`  Error Code: ${error.error.code || 'Unknown'}`);
+      console.error(`  Error Message: ${error.error.message || 'No message'}`);
+      
+      if (error.error.param) {
+        console.error(`  Parameter: ${error.error.param}`);
+      }
+    }
+    
+    // Model router specific errors (Azure AI Foundry)
+    if (this.model === 'model-router' || this.model.includes('router')) {
+      console.error(`\n${yellow}⚠️  Model Router Notes:${reset}`);
+      console.error(`  - Ensure model-router deployment exists in Azure AI Foundry`);
+      console.error(`  - Check if API version ${LLM_API_VERSION} supports model-router`);
+      console.error(`  - Model router may have different timeout requirements`);
+      console.error(`  - Try increasing LLM_REQUEST_TIMEOUT if seeing timeouts`);
+    }
+    
+    // Timeout specific guidance
+    if (error?.message?.includes('timeout')) {
+      console.error(`\n${yellow}⏱️  Timeout Detected:${reset}`);
+      console.error(`  Current timeout: ${LLM_REQUEST_TIMEOUT}ms`);
+      console.error(`  Prompt length: ${prompt.length} characters`);
+      console.error(`  Consider:`);
+      console.error(`    - Increasing LLM_REQUEST_TIMEOUT in .env`);
+      console.error(`    - Reducing prompt size`);
+      console.error(`    - Using a faster model`);
+    }
+    
+    // Stack trace (last, as it's verbose)
+    if (error?.stack) {
+      console.error(`\n${cyan}Stack Trace:${reset}`);
+      console.error(error.stack);
+    }
+    
+    console.error(`${red}═══════════════════════════════════════════════════════════════${reset}\n`);
   }
 }
