@@ -50,7 +50,7 @@ Each file section must follow this exact format:
 - **Show ONLY actual**: imports, function names, class names, and technologies from the files
 - **FORBIDDEN**: Creating example functions like `calculateTrajectory()`, `processData()`, or any invented code
 
-## Real-World Analogy Guidelines
+## Analogy Guidelines
 For code snippet explanations, use relatable analogies such as the following. DO NOT COPY THESE as they're only examples!
 - Functions → Restaurant recipes, factory assembly lines, or instruction manuals
 - Classes → Blueprints, templates, or cookie cutters
@@ -93,7 +93,7 @@ class RepoAdventureServer {
   }
 }
 ```
-[Real-world analogy explaining this specific code. Only provide the analogy text.]
+[Analogy explaining this specific code. Only provide the analogy text.]
 
 ## src/tools/tools.ts  
 ```typescript
@@ -107,7 +107,7 @@ export const tools = {
 };
 ```
 
-[Real-world analogy explaining this specific code. Only provide the analogy text.]
+[Analogy explaining this specific code. Only provide the analogy text.]
 
 **ABSOLUTE REQUIREMENT: If Adventure Guidance mentions src/server.ts AND src/tools/tools.ts, you MUST have BOTH subsections above.**
 

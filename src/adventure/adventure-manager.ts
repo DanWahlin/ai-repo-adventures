@@ -453,7 +453,7 @@ ${questsText}
       : '';
 
     const codeSnippetsText = content.codeSnippets.length > 0 
-      ? `\n\n**📜 Code Discoveries:**\n${content.codeSnippets.map(snippet => 
+      ? `\n\n**📜 Code Discoveries:**\n\n${content.codeSnippets.map(snippet => 
           `**${snippet.file}:**\n\`\`\`\n${snippet.snippet}\n\`\`\`\n*${snippet.explanation}*`
         ).join('\n\n')}`
       : '';

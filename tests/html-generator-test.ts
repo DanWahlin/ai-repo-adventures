@@ -16,6 +16,7 @@ import { spawn } from 'child_process';
 import { HTMLAdventureGenerator } from '../src/cli/html-generator.js';
 import { repoAnalyzer } from '../src/analyzer/repo-analyzer.js';
 import { createProjectInfo } from '../src/tools/shared.js';
+import { parseAdventureConfig } from '../src/shared/adventure-config.js';
 import chalk from 'chalk';
 
 /**
@@ -137,6 +138,18 @@ async function runHTMLGeneratorTest() {
     (generator as any).outputDir = testOutputDir;
     (generator as any).selectedTheme = 'space';
     (generator as any).projectPath = projectPath;
+    
+    // Load repository URL from adventure.config.json
+    const config = parseAdventureConfig(projectPath);
+    if (config && typeof config === 'object' && 'adventure' in config) {
+      const adventure = (config as any).adventure;
+      if (adventure && typeof adventure.url === 'string') {
+        (generator as any).repoUrl = adventure.url.replace(/\/$/, '');
+        console.log(chalk.green(`✅ Loaded repository URL: ${(generator as any).repoUrl}`));
+      } else {
+        console.log(chalk.yellow('⚠️  No repository URL found in adventure.config.json'));
+      }
+    }
     
     console.log(chalk.dim('🎨 Using space theme...'));
     

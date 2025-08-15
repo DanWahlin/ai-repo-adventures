@@ -14,6 +14,7 @@ import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 import { AdventureManager } from '../adventure/adventure-manager.js';
 import { getAllThemes, getThemeByKey, AdventureTheme } from '../shared/theme.js';
 import { createProjectInfo } from '../tools/shared.js';
+import { parseAdventureConfig } from '../shared/adventure-config.js';
 
 interface CustomThemeData {
   name: string;
@@ -35,6 +36,7 @@ class HTMLAdventureGenerator {
   private selectedTheme: AdventureTheme = 'space';
   private customThemeData?: CustomThemeData;
   private quests: QuestInfo[] = [];
+  private repoUrl: string | null = null;
 
   constructor() {
     this.rl = readline.createInterface({
@@ -183,6 +185,20 @@ class HTMLAdventureGenerator {
   private async generateAdventure(): Promise<void> {
     console.log(chalk.yellow.bold('🚀 Generating Adventure...'));
     console.log();
+
+    // Load repository URL from adventure.config.json
+    const config = parseAdventureConfig(this.projectPath);
+    if (config && typeof config === 'object' && 'adventure' in config) {
+      const adventure = (config as any).adventure;
+      if (adventure && typeof adventure.url === 'string') {
+        this.repoUrl = adventure.url.replace(/\/$/, ''); // Remove trailing slash
+        console.log(chalk.green(`✅ Loaded repository URL: ${this.repoUrl}`));
+      } else {
+        console.log(chalk.yellow('⚠️  No repository URL found in adventure.config.json'));
+      }
+    } else {
+      console.log(chalk.yellow('⚠️  Could not load adventure.config.json'));
+    }
 
     // Step 1: Generate project analysis
     console.log(chalk.dim('📊 Analyzing codebase...'));
@@ -354,7 +370,7 @@ class HTMLAdventureGenerator {
     
     <div class="container">
         <div class="story-content">
-            <h2>Your Adventure Awaits</h2>
+            <h2>Adventure Awaits!</h2>
             ${this.formatMarkdown(cleanStoryContent)}
         </div>
         
@@ -448,11 +464,60 @@ class HTMLAdventureGenerator {
       }
     );
     
+    // Add hyperlinks to file references in the HTML if we have a repo URL
+    if (this.repoUrl) {
+      htmlContent = this.addFileHyperlinksToHTML(htmlContent);
+    }
+    
     return htmlContent;
   }
 
   private stripHTML(html: string): string {
     return html.replace(/<[^>]*>/g, '');
+  }
+
+  /**
+   * Converts file paths in HTML content to GitHub URLs
+   * Handles file paths within code tags and plain text
+   */
+  private addFileHyperlinksToHTML(htmlContent: string): string {
+    if (!this.repoUrl) {
+      console.log(chalk.red('⚠️  No repo URL available for hyperlinks'));
+      return htmlContent;
+    }
+
+    console.log(chalk.dim(`Adding hyperlinks with repo URL: ${this.repoUrl}`));
+
+    // Pattern to match file paths
+    // Matches src/file.ts, ./src/file.ts, /src/file.ts
+    const filePathPattern = /(\.?\/?)?(src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md))/g;
+
+    // Handle file paths within <code> tags
+    let replacementCount = 0;
+    htmlContent = htmlContent.replace(
+      /<code class="inline-code">([^<]*)<\/code>/g, 
+      (match, codeContent) => {
+        // Check if this contains a file path
+        const fileMatch = codeContent.match(filePathPattern);
+        if (fileMatch) {
+          // Get the full matched path
+          const fullPath = fileMatch[0];
+          // Normalize the file path (remove leading ./ or /)
+          const normalizedPath = fullPath.replace(/^\.?\//, '');
+          const githubUrl = `${this.repoUrl}/blob/main/${normalizedPath}`;
+          
+          replacementCount++;
+          console.log(chalk.green(`  ✅ Linked: ${normalizedPath}`));
+          
+          // Return as a link with code styling
+          return `<a href="${githubUrl}" target="_blank" rel="noopener noreferrer"><code class="inline-code">${normalizedPath}</code></a>`;
+        }
+        return match;
+      }
+    );
+
+    console.log(chalk.cyan(`Total hyperlinks added: ${replacementCount}`));
+    return htmlContent;
   }
 
   private prompt(question: string): Promise<string> {
