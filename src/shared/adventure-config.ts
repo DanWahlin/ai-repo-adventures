@@ -106,8 +106,6 @@ export function formatAdventureConfigForPrompt(projectPath: string): string {
           }
         }
       }
-      
-      formatted += `- **FORMAT REQUIREMENT**: Must include section header like "${file.description}: ${file.path}"\n`;
     }
     formatted += `\n`;
   }

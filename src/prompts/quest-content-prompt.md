@@ -11,13 +11,12 @@ IMPORTANT:
 
 Use the same character names, object names, and story elements from the main story above. Maintain consistent terminology and narrative voice throughout.
 
-## Theme Guidelines
 {{themeGuidelines}}
 
 ## Complete Codebase
 {{codeContent}}
 
-## Adventure Guidance
+## Adventure Code Guidance
 {{adventureGuidance}}
 
 ## CRITICAL FORMAT & STYLE GUARDRAILS
@@ -58,9 +57,9 @@ BEGIN MARKDOWN TEMPLATE
 
 ## File Exploration
 
-Each file covered in "Adventure Guidance" should be listed here along with the details below. The order is:
+Each file covered in "Adventure Code Guidance" should be listed here along with the details below. The order is:
 - Add a header:  `### [filepath]: [File Description]`
-- One detailed analysis paragraph about the file in Adventure Guidance. 200–300 words. Explain the code, make it fun and educational.
+- One detailed analysis paragraph about the file in Adventure Code Guidance. 200–300 words. Explain the code, make it fun and educational.
 - `### Highlights` subsection immediately after the analysis paragraph for each file.
   - Use only `- ` bullets.
   - Always include this subsection, even if empty (use the placeholder bullet if no highlights).
@@ -72,11 +71,24 @@ Each file covered in "Adventure Guidance" should be listed here along with the d
 
 [Code for [filepath]]
 
-**MANDATORY:** Create an individual `## filename` subsection for EVERY file mentioned in Adventure Guidance. Place this under the appropriate file section above.
+**MANDATORY:** Create an individual `## filename` subsection for EVERY file mentioned in Adventure Code Guidance. Place this under the appropriate file section above.
 For each file:
 - Heading: `### src/server.ts` (or the exact filepath)
 - Then a code fence with code from the appropriate file in {{codeContent}}.
 - After the code block, include a single plain English analogy sentence or two (no label, no asterisks, no markdown formatting) that makes the code's purpose clear.
+
+**IMPORTANT:** 
+The "Adventure Code Guidance" section provides crucial context for generating code snippets. Pay close attention to the specific requirements and constraints outlined there. For example:
+
+**File: `src/server.ts`**
+- Description: MCP server protocol implementation that hosts the adventure tools
+- Key Functions/Areas to Highlight:
+  • **RepoAdventureServer.setupHandlers**: Registers MCP protocol handlers for ListTools and CallTool requests
+  • **RepoAdventureServer.run**: Connects stdio transport and pre-generates repomix content
+  • **main**: Entry point with graceful shutdown handling and error recovery
+
+Ensure that the code snippet includes the code for RepoAdventureServer.setupHandlers, RepoAdventureServer.run, and main in this case. Follow that pattern for all code files and the
+information provided in "Adventure Code Guidance".
 
 ## Helpful Hints
 Provide three short subsections as a markdown list with `- ` bullets:
@@ -90,7 +102,7 @@ END MARKDOWN TEMPLATE
 
 ## Final Verification Checklist (authoring-time, do not output this checklist)
 - All four main sections appear with exact headings.
-- Every file from Adventure Guidance has a `## filename` subsection and code snippet under ## File Exploration
+- Every file from Adventure Code Guidance has a `## filename` subsection and code snippet under ## File Exploration
 - Each snippet is 10–15 consecutive real lines from {{codeContent}}.
 - Every analogy is plain text on its own line, no label or formatting.
 - Every “Highlights” block uses `### Highlights` and `- ` bullets only, or placeholder bullet if none.
