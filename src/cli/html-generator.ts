@@ -427,12 +427,31 @@ class HTMLAdventureGenerator {
     htmlContent = htmlContent
       .replace(/<code>/g, '<code class="inline-code">');  // Add CSS class to inline code
     
+    // Highlight file path prefixes (e.g., "src/tools/tools.ts:")
+    htmlContent = this.highlightFilePathPrefixes(htmlContent);
+    
     // Add hyperlinks to file references if we have a repo URL
     if (this.repoUrl) {
       htmlContent = this.addFileHyperlinksToHTML(htmlContent);
     }
     
     return htmlContent;
+  }
+
+  /**
+   * Highlights prefixes in headings that contain colons
+   * Matches everything up to and including the first colon in a heading
+   */
+  private highlightFilePathPrefixes(htmlContent: string): string {
+    // Pattern to match content before and including the first colon in headings
+    const headingColonPattern = /(<h[1-6][^>]*>)([^<]*?)(:)([^<]*?)(<\/h[1-6]>)/g;
+    
+    return htmlContent.replace(
+      headingColonPattern, 
+      (match, openTag, beforeColon, colon, afterColon, closeTag) => {
+        return `${openTag}<span class="header-prefix">${beforeColon}${colon}</span>${afterColon}${closeTag}`;
+      }
+    );
   }
 
   private stripHTML(html: string): string {
