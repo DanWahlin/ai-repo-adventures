@@ -224,8 +224,7 @@ class HTMLAdventureGenerator {
   }
 
   private extractQuestInfo(): void {
-    const adventureQuests = this.adventureManager.getAllQuests();
-    this.quests = adventureQuests.map((quest, index) => ({
+    this.quests = this.adventureManager.getAllQuests().map((quest, index) => ({
       id: quest.id,
       title: quest.title,
       filename: `quest-${index + 1}.html`
@@ -287,7 +286,6 @@ class HTMLAdventureGenerator {
   private async generateQuestPages(): Promise<void> {
     for (let i = 0; i < this.quests.length; i++) {
       const quest = this.quests[i];
-      if (!quest) continue;
       
       console.log(chalk.dim(`  📖 Generating quest ${i + 1}/${this.quests.length}: ${quest.title}`));
       
@@ -375,13 +373,10 @@ class HTMLAdventureGenerator {
   private buildQuestHTML(quest: QuestInfo, content: string, questIndex: number): string {
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
     const adventureTitle = this.adventureManager.getTitle();
-    
-    const truncateTitle = (title: string) => 
-      title.length > 40 ? title.slice(0, 40) + '...' : title;
 
     const bottomNavigation = nextQuest ? `
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${truncateTitle(nextQuest.title)} →</a>
+        <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${nextQuest.title.length > 40 ? nextQuest.title.slice(0, 40) + '...' : nextQuest.title} →</a>
       </div>
     ` : '';
 
@@ -466,7 +461,7 @@ class HTMLAdventureGenerator {
     if (!this.repoUrl) return htmlContent;
 
     // Pattern to match file paths: src/file.ts, ./src/file.ts, /src/file.ts
-    const filePathPattern = /(\.?\/?)?(src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md))/;
+    const filePathPattern = /\.?\/?src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md)/;
 
     // Convert file paths in <code> tags to hyperlinks
     htmlContent = htmlContent.replace(
