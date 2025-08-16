@@ -261,7 +261,7 @@ class HTMLAdventureGenerator {
       ancient: { theme: '🏺', quest: '⛩️' },
       mythical: { theme: '🧙‍♂️', quest: '🗡️' },
       developer: { theme: '💻', quest: '📋' },
-      custom: { theme: '🎨', quest: '✨' }
+      custom: { theme: '🎨', quest: '⭐' }
     };
 
     const icons = themeIcons[this.selectedTheme] || themeIcons.space;
