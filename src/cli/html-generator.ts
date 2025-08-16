@@ -180,6 +180,7 @@ class HTMLAdventureGenerator {
     // Create directories
     fs.mkdirSync(this.outputDir, { recursive: true });
     fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
+    fs.mkdirSync(path.join(this.outputDir, 'images'), { recursive: true });
 
     console.log(chalk.green(`✅ Output directory: ${this.outputDir}`));
     console.log();
@@ -219,6 +220,9 @@ class HTMLAdventureGenerator {
     console.log(chalk.dim('🎨 Creating theme styling...'));
     this.generateThemeCSS();
 
+    console.log(chalk.dim('🖼️ Copying images...'));
+    this.copyImages();
+
     console.log(chalk.dim('📝 Creating main adventure page...'));
     this.generateIndexHTML();
 
@@ -250,13 +254,26 @@ class HTMLAdventureGenerator {
         repoUrl = adventure.url || '#';
       }
     }
+
+    // Theme-appropriate emoticons
+    const themeIcons = {
+      space: { theme: '🚀', quest: '🌌' },
+      ancient: { theme: '🏺', quest: '⛩️' },
+      mythical: { theme: '🧙‍♂️', quest: '🗡️' },
+      developer: { theme: '💻', quest: '📋' },
+      custom: { theme: '🎨', quest: '✨' }
+    };
+
+    const icons = themeIcons[this.selectedTheme] || themeIcons.space;
     
     return {
       ADVENTURE_TITLE: adventureTitle,
       INDEX_LINK: 'index.html',
       CURRENT_THEME: this.selectedTheme,
       REPO_NAME: repoName,
-      REPO_URL: repoUrl
+      REPO_URL: repoUrl,
+      THEME_ICON: icons.theme,
+      QUEST_ICON: icons.quest
     };
   }
 
@@ -267,6 +284,25 @@ class HTMLAdventureGenerator {
     const combinedCSS = themeCSS + '\n\n' + baseCSS + '\n\n' + animationsCSS;
     const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
     fs.writeFileSync(cssPath, combinedCSS);
+  }
+
+  private copyImages(): void {
+    const __dirname = path.dirname(new URL(import.meta.url).pathname);
+    const sourceImagesDir = path.join(__dirname, 'assets', 'images');
+    const targetImagesDir = path.join(this.outputDir, 'images');
+
+    try {
+      if (fs.existsSync(sourceImagesDir)) {
+        const imageFiles = fs.readdirSync(sourceImagesDir);
+        imageFiles.forEach(file => {
+          const sourcePath = path.join(sourceImagesDir, file);
+          const targetPath = path.join(targetImagesDir, file);
+          fs.copyFileSync(sourcePath, targetPath);
+        });
+      }
+    } catch (error) {
+      console.log(chalk.yellow('⚠️ Warning: Could not copy images from source directory'));
+    }
   }
 
   private loadThemeCSS(theme: AdventureTheme): string {

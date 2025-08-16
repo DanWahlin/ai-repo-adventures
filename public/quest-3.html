@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌠 Quest 3: The Nebula Analyzer - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <script>
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'space' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">🚀 Starship Infinity: The Lost Code Chronicles</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1><span class="header-prefix">🌠 Quest 3:</span> The Nebula Analyzer</h1>
+<hr>
+<p>The crew onboard the <em>Starship Infinity</em> is gathering in the command deck as the ship drifts into the fragmented nebula emitting the legendary Lost Code Pulse. The pulse’s encrypted signals buzz faintly in the ship’s sophisticated software systems—like whispers from a forgotten era of interstellar cartography. Your team, tasked with decoding this anomaly, now sets its sights on the Nebula Analyzer sub-system. The analyzer holds the key to understanding the pulse frequency and extracting vital coordinates buried deep within unreachable repositories. Will you uncover the secrets hiding in the nebula&#39;s heart? Strap in—the cosmic depths demand brilliance.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">src/analyzer/repo-analyzer.ts:</span> Repomix Integration and Targeted Analyzer</h3>
+<p>The <code class="inline-code">repo-analyzer.ts</code> file is the command module for the Infinity’s Repomix integration, crucial for analyzing complex codebases. Its primary purpose is to extract code context efficiently and securely, creating tailored data for missions like decoding the Lost Code Pulse. This class validates project paths, secures target files through robust checks (even defending against path traversal attacks), and interfaces with Repomix to generate metadata-rich output. The analyzer can switch between full context generation and focused content extraction, depending on whether entire repositories or specific files are required for deciphering missions. At its core, the <code class="inline-code">captureRepomixStdout</code> method acts as the neural connection, launching Repomix as a subprocess and managing memory, timeouts, and large-scale outputs. The caching mechanisms guarantee that previously accessed data can be reused without taxing system resources—a vital tool in long-duration cosmic operations.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Validates project paths to ensure safety and reliability for exploration.</li>
+<li>Normalizes target files to prevent exploitation from insecure user inputs.</li>
+<li>Implements subprocess management with robust timeout protections.</li>
+</ul>
+<h3><span class="header-prefix">src/server.ts:</span> MCP Server Protocol Implementation</h3>
+<p>The file <a href="https://github.com/danwahlin/mcp-repo-adventure/blob/main/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">src/server.ts</code></a> houses the control infrastructure for interfacing with the Multi-Command Protocol (MCP)—Infinity’s digital backbone allowing tools and commands to interface seamlessly. This module hosts critical handler registrations like <code class="inline-code">RepoAdventureServer.setupHandlers</code>, linking interactive tools such as &quot;ListTools&quot; and &quot;CallTool&quot; to ensure user input translates into real functionality. Furthermore, <code class="inline-code">RepoAdventureServer.run</code> acts as the main execution pipeline, connecting input/output streams and initializing pre-generated Repomix contexts. The <code class="inline-code">main</code> function, the ship’s entry point, ensures all subsystems are prepared for action while establishing safeguards against abrupt system crashes. Together, these functions maintain the ship&#39;s operational integrity, acting as the glue holding the diverse tools and commands together across missions.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Registers MCP protocol handlers for interfacing tools with real-time commands.</li>
+<li>Manages the initialization and execution pipeline for seamless operations.</li>
+<li>Implements graceful shutdown handling, enabling robust error recovery.</li>
+</ul>
+<h2>Code</h2>
+<h3>src/analyzer/repo-analyzer.ts</h3>
+<pre><code class="language-typescript">/**
+ * Validate and normalize target files for security and reliability
+ * Prevents path traversal, ensures files exist, deduplicates, and limits count
+ */
+private validateAndNormalizeTargetFiles(projectPath: string, targetFiles: string[]): string[] {
+  const MAX_TARGET_FILES = 50; // Reasonable limit to prevent resource exhaustion
+  const projectRoot = path.resolve(projectPath);
+  
+  const safeFiles = [...new Set(targetFiles)]
+    .slice(0, MAX_TARGET_FILES)
+    .map(file =&gt; {
+      if (typeof file !== &#39;string&#39; || !file.trim()) {
+        return null;
+      }
+      
+      const trimmed = file.trim();
+      if (trimmed.includes(&#39;\0&#39;) || trimmed.includes(&#39;..&#39;)) {
+        console.warn(`Rejecting potentially unsafe file path: ${trimmed}`);
+        return null;
+      }
+      
+      const fullPath = path.resolve(projectPath, file);
+      if (!fullPath.startsWith(projectRoot + path.sep) &amp;&amp; fullPath !== projectRoot) {
+        console.warn(`Rejecting file outside project directory: ${file}`);
+        return null;
+      }
+      
+      if (!fs.existsSync(fullPath)) {
+        console.warn(`Skipping non-existent file: \`${file}\``);
+        return null;
+      }
+      
+      return path.relative(projectPath, fullPath);
+    })
+    .filter((file): file is string =&gt; file !== null)
+    .sort();
+  
+  return safeFiles;
+}
+</code></pre>
+<p>This method scans for unsuitable file paths like an interstellar custodian ensuring no rogue asteroid enters the ship&#39;s hangar.</p>
+<h3>src/server.ts</h3>
+<pre><code class="language-typescript">export async function main(): Promise&lt;void&gt; {
+  const repoAdventureServer = new RepoAdventureServer();
+  
+  try {
+    await repoAdventureServer.run();
+    console.log(&#39;Adventure server successfully started!&#39;);
+  } catch (error) {
+    console.error(&#39;Server failed to start:&#39;, error);
+  } finally {
+    process.on(&#39;SIGINT&#39;, () =&gt; {
+      console.log(&#39;Server shutting down gracefully...&#39;);
+      repoAdventureServer.cleanup();
+      process.exit(0);
+    });
+  }
+}
+</code></pre>
+<p>This entry point coordinates server setup like a cosmic captain orchestrating a launch sequence before embarking on exploration.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Building secure tools relies on validation mechanisms that prevent access to unsafe paths—ensure proper input sanitization.</li>
+<li>Consider exploring how caching improves efficiency by consulting RepoAnalyzer’s full implementation for long-term operations.</li>
+<li>Next steps may involve optimizing adventure content generation to extract deeper story fragments from vast repositories.</li>
+</ul>
+<hr>
+<p>Stellar work, Commander! You&#39;ve successfully charted the mysteries of the Nebula Analyzer, propelling your mission through the cosmos at warp speed—onward to the stars!</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="next-quest-btn">Next: 🛡️ Quest 4: The Cosmic Configuration Ch... →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/mcp-repo-adventure" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>
