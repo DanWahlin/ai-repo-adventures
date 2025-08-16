@@ -114,6 +114,16 @@ class HTMLAdventureGenerator {
         }
       }
 
+      // Create directories if they don't exist or if overwrite is enabled
+      if (overwrite && fs.existsSync(this.outputDir)) {
+        fs.rmSync(this.outputDir, { recursive: true, force: true });
+      }
+      
+      // Create output directories
+      fs.mkdirSync(this.outputDir, { recursive: true });
+      fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
+      fs.mkdirSync(path.join(this.outputDir, 'images'), { recursive: true });
+
       await this.generateAdventure();
       
       console.log();
@@ -311,6 +321,24 @@ class HTMLAdventureGenerator {
   }
 
   /**
+   * Determines if a theme is light-colored and requires dark GitHub logo
+   */
+  private isLightTheme(theme: AdventureTheme): boolean {
+    // Light themes that need dark GitHub logo (github-mark.svg)
+    const lightThemes: AdventureTheme[] = ['mythical', 'developer'];
+    return lightThemes.includes(theme);
+  }
+
+  /**
+   * Get appropriate GitHub logo based on theme brightness
+   */
+  private getGitHubLogo(): string {
+    return this.isLightTheme(this.selectedTheme) 
+      ? 'images/github-mark.svg'          // Dark logo for light themes
+      : 'images/github-mark-white.svg';   // White logo for dark themes
+  }
+
+  /**
    * Get common template variables used across all pages
    */
   private getCommonTemplateVariables(): { [key: string]: string } {
@@ -345,7 +373,8 @@ class HTMLAdventureGenerator {
       REPO_NAME: repoName,
       REPO_URL: repoUrl,
       THEME_ICON: icons.theme,
-      QUEST_ICON: icons.quest
+      QUEST_ICON: icons.quest,
+      GITHUB_LOGO: this.getGitHubLogo()
     };
   }
 
