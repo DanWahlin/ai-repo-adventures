@@ -361,9 +361,9 @@ class HTMLAdventureGenerator {
 
     // Theme-appropriate emoticons (using safe emojis)
     const themeIcons = {
-      space: { theme: '🚀', quest: '⭐' },        // Changed 🌌 to ⭐
-      ancient: { theme: '🏺', quest: '🗺️' },     // Changed ⛩️ to 🗺️ 
-      mythical: { theme: '🧙‍♂️', quest: '⚔️' },   // Changed 🗡️ to ⚔️
+      space: { theme: '🚀', quest: '⭐' },
+      ancient: { theme: '🏛️', quest: '📜' },
+      mythical: { theme: '🧙‍♂️', quest: '⚔️' },
       developer: { theme: '💻', quest: '📋' },
       custom: { theme: '🎨', quest: '⭐' }
     };
@@ -576,11 +576,12 @@ class HTMLAdventureGenerator {
 
   /**
    * Highlights prefixes in headings that contain colons
-   * Matches everything up to and including the first colon in a heading
+   * Matches everything up to and including the first colon in h3-h6 headings only
+   * Excludes h1 and h2 tags to avoid affecting quest titles
    */
   private highlightFilePathPrefixes(htmlContent: string): string {
-    // Pattern to match content before and including the first colon in headings
-    const headingColonPattern = /(<h[1-6][^>]*>)([^<]*?)(:)([^<]*?)(<\/h[1-6]>)/g;
+    // Pattern to match content before and including the first colon in h3-h6 headings only
+    const headingColonPattern = /(<h[3-6][^>]*>)([^<]*?)(:)([^<]*?)(<\/h[3-6]>)/g;
     
     return htmlContent.replace(
       headingColonPattern, 

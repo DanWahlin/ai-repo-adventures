@@ -230,3 +230,4 @@ Key implications:
 - Everything scales based on the actual project being explored
 ```
 - When you need to test if HTML is generated correctly, run npm run generate-html -- --theme space --output ./docs --overwrite
+- Don't use npm run generate-html to recreate the HTML pages. Use npm run test:html -- --theme=mythical

@@ -126,16 +126,17 @@ export function getSafeEmoji(theme: keyof typeof SAFE_EMOJIS, purpose: string): 
 }
 
 /**
- * Validates and sanitizes quest titles to use safe emojis
+ * Validates and sanitizes quest titles to remove all emojis
  */
 export function sanitizeQuestTitle(title: string): string {
-  // First sanitize known problematic emojis
-  let sanitized = sanitizeEmojiInText(title);
+  // Remove all emojis from quest titles using regex pattern that matches most emoji ranges
+  // This covers the main emoji unicode blocks
+  const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{1F018}-\u{1F270}]/gu;
   
-  // Additional validation for common quest patterns
-  sanitized = sanitized
-    .replace(/🌌/g, '⭐')  // Galaxy -> Star
-    .replace(/🌠/g, '⭐')  // Shooting star -> Star
+  let sanitized = title.replace(emojiRegex, '').trim();
+  
+  // Clean up any extra spaces that might remain after emoji removal
+  sanitized = sanitized.replace(/\s+/g, ' ');
   
   return sanitized;
 }

@@ -52,7 +52,7 @@ BEGIN MARKDOWN TEMPLATE
 
 # [Quest Title]
 
-- Begin with the quest title on the first line: `**Quest 1: [Quest Title]**` - add an appropriate emoticon in front of the title
+- Begin with the quest title on the first line: `**Quest 1: [Quest Title]**`
 - Add a horizontal rule `---` immediately after the title
 - 1 paragraph (75–100 words) continuing the themed narrative only.
 
