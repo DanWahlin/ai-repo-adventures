@@ -7,6 +7,7 @@ IMPORTANT:
 - This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
 - **EMOJI RESTRICTION**: Never use these emojis as they render as squares on many systems: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
 - **QUEST TITLE RESTRICTION**: Never use ANY emojis in quest titles (the main # heading). Quest titles must be plain text only.
+- Use fun and engaging language to immerse the reader in the adventure. Don't use words like "deeply understand" or similar.
 
 ## Story Context for Consistency
 {{storyContent}}

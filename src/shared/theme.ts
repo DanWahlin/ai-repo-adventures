@@ -52,7 +52,7 @@ export const THEMES = {
     displayName: 'Developer Documentation',
     emoji: '📖',
     description: 'Technical documentation approach with clear explanations, best practices, and code analysis',
-    keywords: ['developer', 'docs', 'technical', 'documentation', 'guide', 'tutorial', 'reference']
+    keywords: ['developer', 'code', 'technical', 'debug', 'guide', 'tutorial', 'binary']
   },
   CUSTOM: {
     id: 5,
