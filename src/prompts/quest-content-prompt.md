@@ -6,6 +6,7 @@ IMPORTANT:
 - This is a chapter in an ongoing story. Maintain narrative continuity:
 - This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
 - **EMOJI RESTRICTION**: Never use these emojis as they render as squares on many systems: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
+- **QUEST TITLE RESTRICTION**: Never use ANY emojis in quest titles (the main # heading). Quest titles must be plain text only.
 
 ## Story Context for Consistency
 {{storyContent}}
@@ -50,9 +51,9 @@ Use the same character names, object names, and story elements from the main sto
 
 BEGIN MARKDOWN TEMPLATE
 
-# [Quest Title]
+# Quest 1: [Quest Title]
 
-- Begin with the quest title on the first line: `**Quest 1: [Quest Title]**`
+- Begin with the quest title on the first line: `# Quest 1: [Quest Title]` (NO EMOJIS in the title)
 - Add a horizontal rule `---` immediately after the title
 - 1 paragraph (75–100 words) continuing the themed narrative only.
 

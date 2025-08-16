@@ -26,8 +26,6 @@ Return a well-structured markdown document with this format:
 ```markdown
 # [Your Themed Title Here]
 
-## Story
-
 [Your narrative paragraph about the mission, journey, or adventure goes here. Make it 75-100 words that explains what this codebase does through your chosen theme.]
 
 **Your Quest Awaits** – Choose your path wisely, brave adventurer!
