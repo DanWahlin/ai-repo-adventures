@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💎 Quest 4: The Mystic Binding of Themes - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <script>
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'mythical' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">🏰 The Enchanted Repository: Chronicles of Codethia</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1><span class="header-prefix">💎 Quest 4:</span> The Mystic Binding of Themes</h1>
+<hr>
+<p>The fabled Repomix Grimoire beckons once more as the shroud of chaos stretches deeper across Codethia. This time, the realm’s destiny hinges upon an even more intricate artifact—the binding of themes must be mastered. These themes, carved from ancient wisdom, each represent a fragment of the repository’s power. The Codewalker must align them perfectly, weaving their essence into the threads of the Grimoire to restore order. Your enchanted tools and the knowledge of past quests will guide you; the Mystic Binding of Themes awaits.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">src/shared/input-validator.ts:</span> Enchanted Gatekeeper of Choices</h3>
+<p>This file serves as a protective spell guarding the integrity of user input. It ensures the Codewalker’s selections and paths are both valid and precise, preventing the kind of missteps that could upset Codethia’s fragile balance. Functions like <code class="inline-code">validateAdventureChoice</code> and <code class="inline-code">validateTheme</code> meticulously scrutinize the adventurer’s inputs, comparing them to lists of acceptable values like a knight testing their sword against forged steel. Moreover, <code class="inline-code">sanitizeForDisplay</code> acts like a cleansing charm, removing dangerous elements from strings to prevent malicious curses (or in technical terms, injection attacks).</p>
+<h4>Highlights</h4>
+<ul>
+<li>Validates adventure choices, ensuring input is not empty or excessively long.  </li>
+<li>Scrutinizes and normalizes theme inputs against predefined options.  </li>
+<li>Sanitizes inputs to neutralize harmful characters before display.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">src/shared/theme.ts:</span> Weaving the Threads of Magic</h3>
+<p>The heart of Codethia’s themes lies within this file, defining the structure and purpose of each mystical path. Here, <code class="inline-code">THEMES</code> acts as a collection of enchanted constellations, each with its own essence—whether the dragon-guarded kingdom of Mythical, the cosmic expanses of Space, or the lost temples of Ancient. Functions such as <code class="inline-code">getThemeById</code> and <code class="inline-code">isValidTheme</code> provide wands to identify and validate themes, while <code class="inline-code">formatThemeOption</code> showcases them like a court bard preparing for the grand festival. This file ensures that adventurers are guided along paths that resonate with the chosen mythical aesthetic.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Stores the essence of all predefined themes, including id, description, emoji, and keywords.  </li>
+<li>Provides utilities to parse, validate, and fetch theme details by id, key, or keyword match.  </li>
+<li>Formats themes consistently with magical flair for user-friendly display.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">src/shared/config.ts:</span> The Codex of Constants</h3>
+<p>Within this codex lie the constants and limitations that act as the laws of Codethia’s enchanted repository. From defining magical time constraints (<code class="inline-code">LLM_REQUEST_TIMEOUT</code>) to governing the size of mystical script scrolls (<code class="inline-code">MAX_FILE_SIZE_MB</code>), this file shapes the boundaries within which all adventures unfold. It contains vital parameters like caching durations and rules for ignored files—the fundamental wards that ensure the Codewalker’s journey does not stray into forbidden or dangerous territories.  </p>
+<h4>Highlights</h4>
+<ul>
+<li>Sets numerical and temporal limits for adventures to safeguard performance and focus.  </li>
+<li>Configures themes and environment settings adaptable to user needs.  </li>
+<li>Manages caching and timeout settings for controlled execution of mystical tasks.</li>
+</ul>
+<hr>
+<h2>Code</h2>
+<h3>src/shared/input-validator.ts</h3>
+<pre><code class="language-typescript">/**
+ * Simplified input validation
+ */
+
+export function validateAdventureChoice(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Choice is required&#39;);
+  }
+  
+  if (input.length &gt; 200) {
+    throw new Error(&#39;Choice too long (max 200 characters)&#39;);
+  }
+  
+  return input.trim();
+}
+</code></pre>
+<p>This spell ensures that the Codewalker makes a proper choice, rejecting all empty or overly lengthy incantations.  </p>
+<hr>
+<pre><code class="language-typescript">export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Theme is required&#39;);
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
+</code></pre>
+<p>This function acts like a sage deciphering inscriptions to ensure the adventurer follows only authentic paths.  </p>
+<hr>
+<h3>src/shared/theme.ts</h3>
+<pre><code class="language-typescript">// Define the structure of a theme
+export interface ThemeDefinition {
+  readonly id: number;
+  readonly key: string;
+  readonly displayName: string;
+  readonly emoji: string;
+  readonly description: string;
+  readonly keywords: readonly string[];  // For matching user input
+}
+</code></pre>
+<p>The <code class="inline-code">ThemeDefinition</code> structure is the enchanted scroll listing each theme’s properties as a guide for adventurers.  </p>
+<hr>
+<pre><code class="language-typescript">export const THEMES = {
+  SPACE: {
+    id: 1,
+    key: &#39;space&#39;,
+    displayName: &#39;Space Exploration&#39;,
+    emoji: &#39;🚀&#39;,
+    description: &#39;Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies&#39;,
+    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;, &#39;starship&#39;, &#39;astronaut&#39;, &#39;sci-fi&#39;, &#39;futuristic&#39;]
+  },
+  MYTHICAL: {
+    id: 2,
+    key: &#39;mythical&#39;,
+    displayName: &#39;Enchanted Kingdom&#39;,
+    emoji: &#39;🏰&#39;,
+    description: &#39;Explore magical and mythical realms where databases are dragon hoards and functions are powerful spells&#39;,
+    keywords: [&#39;mythical&#39;, &#39;magic&#39;, &#39;enchanted&#39;, &#39;castle&#39;, &#39;dragon&#39;, &#39;fantasy&#39;, &#39;medieval&#39;, &#39;kingdom&#39;]
+  }
+};
+</code></pre>
+<p>The <code class="inline-code">THEMES</code> constant is like a star map, revealing the realms that the adventurer may traverse within Codethia.  </p>
+<hr>
+<h3>src/shared/config.ts</h3>
+<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 30000; // 30 seconds for complex story generation with large prompts
+export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
+export const IGNORE_PATTERNS = [
+  &#39;node_modules&#39;,
+  &#39;.git&#39;,
+  &#39;.next&#39;,
+  &#39;.nuxt&#39;,
+  &#39;dist&#39;,
+  &#39;build&#39;,
+  &#39;coverage&#39;
+];
+</code></pre>
+<p>These constants work as the laws of the realm, shaping the boundaries within which adventures may unfold and thrive.  </p>
+<hr>
+<pre><code class="language-typescript">export const DEFAULT_THEME = &#39;space&#39; as const;
+export const MAX_FILES_PER_QUEST = 3; // Limit files per quest to maintain focus and readability
+export const LLM_MAX_TOKENS_STORY = 8000; // Maximum tokens for story generation (includes story + all quest descriptions)
+</code></pre>
+<p>Here lies the adventurer’s compass, guiding the scale and focus of the mystic tales generated by Codethia’s system.  </p>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Ensure all inputs are validated to maintain the repository’s harmony and prevent accidental chaos.  </li>
+<li>When customizing or extending themes, build on the <code class="inline-code">ThemeDefinition</code> structure to ensure consistency.  </li>
+<li>Explore timeout configurations and limits to optimize story generation for large repositories.</li>
+</ul>
+<hr>
+<p>🎉 Hark, valiant seeker of wisdom, for you have harnessed the arcane threads of knowledge within 💎 Quest 4, binding the themes with the precision of a phoenix-forged quill—forge onward, bold hero, for the stars themselves herald your destiny at 60% complete! 🚀⚡⭐</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-5.html" class="next-quest-btn">Next: ⚔️ Quest 5: The Eternal Sentinel of the ... →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/mcp-repo-adventure" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

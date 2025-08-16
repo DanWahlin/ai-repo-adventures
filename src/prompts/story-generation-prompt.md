@@ -1,11 +1,12 @@
 # Story-Based Quest Generator for GitHub Repos
 
-## 🎯 OBJECTIVE
+## OBJECTIVE
 
 Turn the provided codebase into an immersive, theme-driven story that helps developers understand what the code does through narrative. Then, break that story into **interconnected quests** that each contribute to the main storyline while exploring specific technical components or files from the codebase.
 
 - You will never use the words "delve" or "intricate". These words do not exist in your dictionary. 
 - This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
+- **EMOJI RESTRICTION**: Never use these emojis as they render as squares on many systems: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
 
 **CRITICAL: These quests are parts of a single overarching story, NOT standalone tasks. Users can explore them in any order.**
 
@@ -18,7 +19,7 @@ Each quest should:
 - Use a fun, creative theme (e.g., space, mythical, ancient, cyberpunk)
 - **Be self-contained yet part of the larger adventure**
 
-## 📝 OUTPUT FORMAT
+## OUTPUT FORMAT
 
 Return a well-structured markdown document with this format:
 
@@ -29,9 +30,9 @@ Return a well-structured markdown document with this format:
 
 [Your narrative paragraph about the mission, journey, or adventure goes here. Make it 75-100 words that explains what this codebase does through your chosen theme.]
 
-🗺️ **Your Quest Awaits** – Choose your path wisely, brave adventurer!
+**Your Quest Awaits** – Choose your path wisely, brave adventurer!
 
-## Quests
+## Choose a Quest
 
 ### 🚀 Quest 1: [Theme-appropriate title related to this part of the system]
 
@@ -65,7 +66,7 @@ Return a well-structured markdown document with this format:
 - **NO standalone tasks** — every quest connects to the main story theme and goal
 - **Quests should be self-contained** but part of the larger narrative universe
 
-## 🧙‍♂️ STORY CREATION INSTRUCTIONS
+## STORY CREATION INSTRUCTIONS
 
 1. **ANALYZE** the \`## Project Codebase\` section to understand the project codebase and its purpose  
 2. Create a \`{{theme}}\`-themed narrative that uses metaphor to reflect the purpose of the code  
@@ -74,7 +75,7 @@ Return a well-structured markdown document with this format:
 5. End with this line:  
    \`🗺️ **Your Quest Awaits** – Choose your path wisely, brave adventurer!\`
 
-## 📜 MANDATORY STORY FORMAT
+## MANDATORY STORY FORMAT
 
 Your markdown response MUST include:
 
@@ -92,13 +93,13 @@ Your narrative paragraph about the mission, journey, or adventure goes here. Mak
 **EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
 
 ```markdown
-# 🚀 Mission MCP: Refactor-1 and the Codebase Constellation
+# Mission MCP: Refactor-1 and the Codebase Constellation
 
 ## Story
 
 Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an interstellar mission to decode and optimize the galactic repository known as MCP. Guided by the cutting-edge *Repomix Navigator* and powered by *TypeScript Reactors*, the crew must traverse cosmic data streams, align architectural constellations, and unveil the mysteries of adventure-driven exploration. Their ultimate goal: to transform the sprawling complexity of the MCP system into a harmonious and navigable stellar map. The fate of the intergalactic coding alliance rests on their success.
 
-🗺️ **Your Quest Awaits** – Choose your path wisely, brave adventurer!
+**Your Quest Awaits** – Choose your path wisely, brave adventurer!
 ```
 
 ⚠️ **CRITICAL: This is ONLY a structural template showing excellent integration. DO NOT copy any phrases, words, or concepts. Create completely original content that follows the same integration approach but uses entirely different vocabulary, metaphors, and narrative elements. Notice how it weaves real technologies (MCP, Repomix, TypeScript) into creative metaphors (Starship Refactor-1, codonauts, TypeScript Reactors, cosmic data streams).**
@@ -110,7 +111,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 4. **Named Vessel**: "*Starship Refactor-1*" (creative name suggesting code improvement)
 5. **Mission Focus**: Clear goal that matches the actual codebase purpose with engaging call-to-action
 
-## 🧭 QUEST WRITING GUIDANCE
+## QUEST WRITING GUIDANCE
 
 - Use **second-person** writing that immerses the reader: "You venture into the depths of...", "You discover the secrets of...", "You explore the ancient chambers of..."  
 - **Each quest should connect to the main story theme** while focusing on its own exploration area  
@@ -118,7 +119,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 - Include **only relevant, existing file names**  
 - **Make each quest compelling on its own** while contributing to the overall narrative
 
-## 💡 THEME MAPPING GUIDE
+## THEME MAPPING GUIDE
 
 | Theme     | Setting / Vessel       | Mission Type             | Vocabulary Ideas                            |
 |-----------|------------------------|--------------------------|----------------------------------------------|
@@ -127,7 +128,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 | Ancient   | Tomb, Civilization     | Discovery, unlocking     | glyphs, ruins, stone tablets, spirit gates   |
 | Cyberpunk | Grid, Mainframe        | Intrusion, reclamation   | proxies, daemons, firewall sentries          |
 
-## 🧠 ORIGINALITY MANDATE
+## ORIGINALITY MANDATE
 
 🚫 DO NOT:
 
@@ -141,7 +142,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 - Integrate real technologies and concepts into new, imaginative metaphors
 - Name your vessel, realm, or system creatively and originally based on the code's purpose
 
-## 🧱 TECH-TO-THEME MAPPING TIPS
+## TECH-TO-THEME MAPPING TIPS
 
 | Real Concept           | Mythical Metaphor             | Space Metaphor                |
 |------------------------|-------------------------------|-------------------------------|
@@ -150,7 +151,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 | TypeScript interfaces  | Scrolls of binding             | Navigation schematics         |
 | Server entry point     | Crystal core of the temple     | Command deck of the ship      |
 
-## ✅ SUCCESS CHECKLIST
+## SUCCESS CHECKLIST
 
 ✅ The H1 heading contains just the themed title and the story section contains narrative + quest invitation  
 ✅ The story clearly explains what the codebase does  
@@ -163,7 +164,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 ✅ Each code files list is accurate and clean  
 ✅ **Quests are self-contained but thematically connected** to the main story  
 
-## 🧱 FILE SELECTION STRATEGY
+## FILE SELECTION STRATEGY
 
 **✅ Prefer:**
 
@@ -179,7 +180,7 @@ Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an inter
 - Error handling or config
 - Files in \`/shared/\`, \`/utils/\`, or \`/constants/\`
 
-## 📦 INPUT SECTIONS
+## INPUT SECTIONS
 
 These are provided dynamically in each run of the prompt:
 
@@ -192,6 +193,17 @@ These are provided dynamically in each run of the prompt:
 ## Theme Guidelines
 {{themeGuidelines}}
 
-## ✅ FINAL INSTRUCTION
+## FINAL INSTRUCTION
 
-Create a single overarching story based on the '## Adventure Guidance' and '## Project Codebase' content, and interconnected quests (dynamically sized based on project complexity) that explore different aspects of that story through real technical files. **Each quest should contribute to the main narrative while being explorable independently** — users can choose their own adventure path. Each quest should feel like exploring a different area of the same thematic world, connected by the overall story but self-contained enough to be meaningful on its own.
+**CRITICAL: Quest Generation Rules**
+
+If the '## Adventure Guidance' section contains specific quest definitions:
+- **ONLY create the exact quests listed in the Adventure Guidance section**
+- **DO NOT generate additional quests beyond what's specified**
+- Use the titles and descriptions from the Adventure Guidance as your foundation
+- Apply your chosen theme to the existing quest structure
+
+If no Adventure Guidance is provided or it contains no specific quests:
+- Create interconnected quests (dynamically sized based on project complexity) but no more than 6
+
+Create a single overarching story based on the '## Adventure Guidance' and '## Project Codebase' content, and the specified quests that explore different aspects of that story through real technical files. **Each quest should contribute to the main narrative while being explorable independently** — users can choose their own adventure path. Each quest should feel like exploring a different area of the same thematic world, connected by the overall story but self-contained enough to be meaningful on its own.

@@ -80,6 +80,9 @@ export class AdventureManager {
     
     // Merge files from adventure config into the generated quests
     this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+    
+    // Enforce quest count from adventure.config.json if it exists
+    this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
     // Return the story with available quests
     return this.formatStoryWithQuests({
@@ -292,6 +295,28 @@ export class AdventureManager {
   
 
   /**
+   * Enforce quest count from adventure.config.json if it exists
+   */
+  private enforceConfigQuestCount(quests: Quest[], projectPath: string | undefined): Quest[] {
+    if (!projectPath) return quests;
+    
+    const config = parseAdventureConfig(projectPath);
+    if (!config || typeof config !== 'object') return quests;
+    
+    const adventure = (config as any).adventure;
+    if (!adventure || !Array.isArray(adventure.quests)) return quests;
+    
+    const configQuestCount = adventure.quests.length;
+    
+    // If we have more quests than the config defines, truncate to match config
+    if (quests.length > configQuestCount) {
+      return quests.slice(0, configQuestCount);
+    }
+    
+    return quests;
+  }
+
+  /**
    * Merge files from adventure.config.json into the generated quests
    */
   private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
@@ -325,7 +350,7 @@ export class AdventureManager {
           .filter((f: any) => f.path)
           .map((f: any) => f.path);
         if (files.length > 0) {
-          console.log(`Merging ${files.length} files from config for quest ${index + 1}: ${quest.title}`);
+          // Successfully matched files from config
           return { ...quest, codeFiles: files };
         }
       }
@@ -334,12 +359,12 @@ export class AdventureManager {
       const questTitleLower = quest.title.toLowerCase();
       for (const [configTitle, files] of configQuestFiles.entries()) {
         if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
-          console.log(`Fallback matching ${files.length} files from config for quest: ${quest.title}`);
+          // Successfully matched files via fallback
           return { ...quest, codeFiles: files };
         }
       }
       
-      console.log(`No files found for quest: ${quest.title}`);
+      // No specific files found - quest will use general context
       return quest;
     });
   }

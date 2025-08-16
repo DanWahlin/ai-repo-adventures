@@ -229,3 +229,4 @@ Key implications:
 - No fixed story templates
 - Everything scales based on the actual project being explored
 ```
+- When you need to test if HTML is generated correctly, run npm run generate-html -- --theme space --output ./docs --overwrite

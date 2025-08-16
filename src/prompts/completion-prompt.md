@@ -11,6 +11,7 @@ Generate a {{themeDescription}}-themed completion celebration for: "{{adventureT
 - Write 1 sentence using {{themeDescription}} terminology. Only return the sentence and do not wrap it with anything.
 - Celebrate the specific learning achievement
 - Use encouraging, triumphant tone
+- **EMOJI RESTRICTION**: Never use these emojis as they render as squares: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
 - {{vocabularyHint}}
 
 Generate ONLY the celebration message, no extra text.

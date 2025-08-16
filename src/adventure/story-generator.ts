@@ -61,6 +61,7 @@ const StoryResponseSchema = z.object({
  */
 function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   const tokens = marked.lexer(markdownContent);
+  
   let title = '';
   let story = '';
   const quests: Quest[] = [];
@@ -76,10 +77,10 @@ function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
         currentSection = token.text.toLowerCase();
         if (currentSection === 'story' || currentSection === 'adventure') {
           // Next paragraphs will be story content
-        } else if (currentSection === 'quests' || currentSection === 'adventures') {
+        } else if (currentSection === 'quests' || currentSection === 'adventures' || currentSection === 'choose a quest') {
           // Next sections will be quests
         }
-      } else if (token.depth === 3 && (currentSection === 'quests' || currentSection === 'adventures')) {
+      } else if (token.depth === 3 && (currentSection === 'quests' || currentSection === 'adventures' || currentSection === 'choose a quest')) {
         // Save previous quest if exists
         if (currentQuest.title && currentQuest.description) {
           quests.push({

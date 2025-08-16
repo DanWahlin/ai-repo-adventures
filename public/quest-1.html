@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Quest 1: The Arcane Codex of Adventure - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <script>
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'mythical' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">🏰 The Enchanted Repository: Chronicles of Codethia</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1><strong>Quest 1: The Arcane Codex of Adventure</strong> ⚡</h1>
+<hr>
+<p>The enchanted breeze of Codethia carried the whispers of ages past as you stepped into the mystic repository of spells. Shelves towered to the heavens, brimming with scrolls imbued with dormant power. Here lies your first challenge: to awaken the fabled Repomix Grimoire and restore harmony to the fragmented magic. As the destined Codewalker, your tools are spells forged from code, and your path is littered with the echoes of forgotten configurations. Prepare to traverse the Repository—where every scroll deciphers secrets, and every rune lights the way.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">src/server.ts:</span> MCP Server Protocol Implementation</h3>
+<p>This file is the central pillar of the adventure, orchestrating the flow of users engaging with the mystic system. The <code class="inline-code">RepoAdventureServer</code> class is akin to the steward of a magical court, taking commands from adventurers and ensuring their will is executed seamlessly. The <code class="inline-code">setupHandlers</code> method formalizes how requests—like summoning tools or invoking adventures—are processed. Meanwhile, the <code class="inline-code">run</code> method establishes a link between the adventurer and the enchanted repository, warming it up with pre-generated representations of the Repomix Grimoire. Finally, the <code class="inline-code">main</code> method serves as the grand entrance to this magical realm, setting up protections and safeguards in case the untrained inadvertently mishandle the volatile magic within.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Registers handlers for tools like ListTools and CallTool requests.</li>
+<li>Connects stdio transport while generating cached content for adventures.</li>
+<li>Implements graceful shutdown and error recovery to ensure stability.</li>
+</ul>
+<h3><span class="header-prefix">src/tools/tools.ts:</span> MCP Adventure Tools</h3>
+<p>This file is the enchanted toolbox of Codethia, housing spells that allow adventurers to shape their journeys. It contains the logic for fundamental tools: <code class="inline-code">start_adventure</code> for revealing the repository&#39;s mysteries, <code class="inline-code">choose_theme</code> for customizing the tale&#39;s form, <code class="inline-code">explore_quest</code> for interacting with individual challenges, and <code class="inline-code">view_progress</code> for tracking achievements. Each tool is carefully crafted and re-exported for consistent use. By organizing the tools, this file ensures that every piece of magic is immediately available whenever the quest demands it.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Provides tools for starting adventures, exploring quests, and tracking progress.</li>
+<li>Organizes and re-exports functions for ease of use.</li>
+<li>Enhances maintainability by splitting logic into separate files.</li>
+</ul>
+<h2>Code</h2>
+<h3>src/server.ts</h3>
+<pre><code class="language-typescript">private setupHandlers() {
+  // Dynamic tool listing
+  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: &#39;jsonSchema7&#39;,
+        $refStrategy: &#39;none&#39;
+      })
+    }));
+
+    return { tools: toolList };
+  });
+
+  // Dynamic tool execution
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+    try {
+      const { name, arguments: args } = request.params;
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+      const tool = tools[name as keyof typeof tools];
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) =&gt; 
+          `${err.path.join(&#39;.&#39;)}: ${err.message}`
+        ).join(&#39;, &#39;);
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
+      return await tool.handler(validationResult.data as any);
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  });
+}
+</code></pre>
+<p>This function acts as the royal scribe, translating the calls of adventurers into actionable commands for the enchanted server.</p>
+<pre><code class="language-typescript">async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
+}
+</code></pre>
+<p>This method is like the castle gatekeeper, initializing the system and preparing the repository for action.</p>
+<pre><code class="language-typescript">async function main() {
+  try {
+    const server = new RepoAdventureServer();
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+      console.error(&#39;Unhandled promise rejection:&#39;, reason);
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+    });
+    await server.run();
+  } catch (error) {
+    console.error(&#39;Fatal error starting MCP server:&#39;, error);
+    process.exit(1);
+  }
+}
+</code></pre>
+<p>The <code class="inline-code">main</code> method acts as the kingdom&#39;s architect, ensuring that the adventure realm runs smoothly while protecting it from chaos.</p>
+<h3>src/tools/tools.ts</h3>
+<pre><code class="language-typescript">export const start_adventure = startAdventure;
+export const choose_theme = chooseTheme;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
+
+export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<p>This section operates as the spell library, organizing and labeling each incantation for easy retrieval by adept adventurers.</p>
+<pre><code class="language-typescript">import { adventureManager } from &#39;../adventure/state.js&#39;;
+import { startAdventure } from &#39;./start-adventure.js&#39;;
+import { chooseTheme } from &#39;./choose-theme.js&#39;;
+import { exploreQuest } from &#39;./explore-quest.js&#39;;
+import { viewProgress } from &#39;./view-progress.js&#39;;
+
+// Export the shared adventure manager for tools that need it
+export { adventureManager };
+</code></pre>
+<p>These imports bring together magical components from across the realm, uniting them into a cohesive system.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Regularly use the <code class="inline-code">view_progress</code> tool to ensure you are on track with your quests. </li>
+<li>Consider refactoring <code class="inline-code">start_adventure</code> to include error messages for invalid themes.</li>
+<li>Explore the <code class="inline-code">adventure-config.ts</code> file next to understand how adventures dynamically adjust to different repositories.</li>
+</ul>
+<hr>
+<p>By the flames of a thousand phoenixes and the wisdom of starlit oracles, thou hast claimed the Arcane Codex of Adventure, igniting thy heroic journey and heralding the dawn of even grander quests ahead—onward, brave soul! ⚡💎</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-2.html" class="next-quest-btn">Next: 💎 Quest 2: Forge of Magical Implements →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/mcp-repo-adventure" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

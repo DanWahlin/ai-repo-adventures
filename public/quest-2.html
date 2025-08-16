@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💎 Quest 2: Forge of Magical Implements - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <script>
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'mythical' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">🏰 The Enchanted Repository: Chronicles of Codethia</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1><span class="header-prefix">⭐ Quest 2:</span> Forge of Magical Implements</h1>
+<hr>
+<p>The Codewalker approached the glowing antechamber where the Forge of Magical Implements lay dormant. This ancient forge, a creation of arcane ingenuity, was said to hold the secrets to crafting tools capable of channeling the repository’s chaotic energies. To waken the forge’s ember, you must decipher its dormant instructions and rekindle its power using fragments of the enchanted code scattered in its vicinity. Beware, for only the sharpest minds can comprehend the runic symbols etched into its framework, and only the worthy will wield the tools of restoration.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">src/adventure/adventure-manager.ts:</span> Adventure orchestration managing state, themes, and user interactions</h3>
+<p>The <code class="inline-code">adventure-manager.ts</code> file serves as the beating heart of the adventure orchestration system, tirelessly coordinating themes, quest progress, and user decisions. It holds the <code class="inline-code">AdventureManager</code> class, which provides a robust framework for initializing adventures, managing state, and executing individual quests. The <code class="inline-code">AdventureManager.initializeAdventure</code> function configures the entire adventure journey, including project context, theme selection, and generating story content with the help of the Story Generator. Meanwhile, the <code class="inline-code">exploreQuest</code> function ensures a seamless quest execution experience, validating choices and retrieving or generating content dynamically for each challenge. Additionally, <code class="inline-code">generateQuestContent</code> taps into the repository&#39;s repomix content to provide focused or exploratory code context, enriching the quest narratives. </p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Orchestrates the setup of the adventure’s story and quests.</li>
+<li><code class="inline-code">AdventureManager.exploreQuest</code>: Drives the flow of quests, integrating choice validation with progress tracking.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code>: Dynamically calculates quest completion rates to track progress.</li>
+</ul>
+<h3><span class="header-prefix">src/adventure/story-generator.ts:</span> LLM-powered story creation with theme-based narratives</h3>
+<p>Within the <code class="inline-code">story-generator.ts</code> file lies the creative powerhouse responsible for crafting the mythical allure of each quest—this is where the adventure’s tales are spun. The <code class="inline-code">StoryGenerator.generateStoryAndAdventures</code> method draws deeply from the pool of project-specific details and theme-rich prompts to weave an overarching narrative. Complementing this, <code class="inline-code">generateQuestContent</code> sets the stage for each individual quest, detailing the tasks and insights players encounter along their journey. The file also highlights <code class="inline-code">buildStoryGenerationPrompt</code>, a function tasked with constructing intricate prompts while ensuring the themes and coding contexts remain integral to the narrative. Altogether, this file is as much a storyteller as a technical guide, blending logic with imagination.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">StoryGenerator.generateStoryAndAdventures</code>: Transforms repository details into captivating storytelling adventures.</li>
+<li><code class="inline-code">generateQuestContent</code>: Enriches quests with targeted narratives and code snippets.</li>
+<li><code class="inline-code">buildStoryGenerationPrompt</code>: Ensures theme consistency through meticulously tailored prompts.</li>
+</ul>
+<h3><span class="header-prefix">src/shared/adventure-config.ts:</span> Configuration system for guided adventures and enriched storytelling</h3>
+<p>The <code class="inline-code">adventure-config.ts</code> file is a masterful guidebook for configuring adventures, acting as a bridge between raw project data and compelling story prompts. Through its <code class="inline-code">formatAdventureConfigForPrompt</code> function, the file extracts and formats quest-specific configurations into structured guidance for large language models. The <code class="inline-code">parseAdventureConfig</code> function reads and interprets JSON-based configurations from <code class="inline-code">adventure.config.json</code>, ensuring every quest follows a defined structure. Lastly, <code class="inline-code">extractUniqueFilePaths</code> dives deep into these configurations, mapping out all file paths that are essential for shaping the story. Together, these utilities equip the Codewalker with the tools to wade into the depths of the repository while maintaining narrative coherence.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Constructs structured prompts to guide quests seamlessly.</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Loads and validates the JSON configuration for adventure setups.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Compiles file references for enhanced code exploration.</li>
+</ul>
+<h2>Code</h2>
+<h3>src/adventure/adventure-manager.ts</h3>
+<pre><code class="language-typescript">export class AdventureManager {
+  private state: AdventureState = new AdventureState();
+  private storyGenerator: StoryGenerator;
+
+  constructor() {
+    this.storyGenerator = new StoryGenerator();
+  }
+
+  async initializeAdventure(
+    projectInfo: ProjectInfo, 
+    theme: AdventureTheme, 
+    projectPath?: string,
+    customThemeData?: CustomThemeData
+  ): Promise&lt;string&gt; {
+    this.state.reset();
+    this.state.projectInfo = projectInfo;
+    this.state.currentTheme = theme;
+    this.state.projectPath = projectPath || process.cwd();
+    if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+      this.storyGenerator.setCustomTheme(customThemeData);
+    }
+    const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+    this.state.title = storyResponse.title;
+    this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+    return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
+  }
+}
+</code></pre>
+<p>This is the part of the orchestration machinery, like the first spark that ignites the forge to set the adventurer’s path.</p>
+<h3>src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">export class StoryGenerator {
+  async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+    const validatedTheme = this.validateTheme(theme);
+    return await this.generateWithLLM(projectInfo, validatedTheme);
+  }
+
+  private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise&lt;StoryResponse&gt; {
+    const repomixContent = projectInfo.repomixContent || &#39;No repomix content available&#39;;
+    const adventureGuidance = projectPath ? formatAdventureConfigForPrompt(projectPath) : &#39;&#39;;
+    const prompt = loadStoryGenerationPrompt({ theme, repomixContent, adventureGuidance });
+    const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY });
+    const parsed = parseMarkdownToStoryResponse(response.content || &#39;&#39;);
+    return parsed;
+  }
+}
+</code></pre>
+<p>This is the storyteller’s quill, crafting arcs and bringing characters to life from the repository’s depths.</p>
+<h3>src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure Guidelines\n\n`;
+  for (const quest of adventure.quests) {
+    if (quest.title &amp;&amp; Array.isArray(quest.files)) {
+      formatted += `### ${quest.title}\n${quest.description || &#39;&#39;}\n\n`;
+    }
+  }
+
+  return formatted;
+}
+</code></pre>
+<p>This section is akin to a cartographer charting the map of quests and files to illuminate the path ahead.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Pay close attention to the <code class="inline-code">generateQuestContent</code> function to understand how quests gain their context and coding focus.</li>
+<li>If customizing the configuration, ensure the <code class="inline-code">adventure.config.json</code> aligns with the desired quest structure.</li>
+<li>Explore the <code class="inline-code">initializeAdventure</code> method to trace how story integration ties directly to adventure execution.</li>
+</ul>
+<hr>
+<p>Huzzah, brave seeker of wisdom! By mastering the arcane art within the Forge of Magical Implements, you have illuminated the path of enchantment with the brilliance of a newborn star—onward to greater triumphs, hero! ⭐⚡💎</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-3.html" class="next-quest-btn">Next: ⭐ Quest 3: The Crystal Obelisk of Repomi... →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/mcp-repo-adventure" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

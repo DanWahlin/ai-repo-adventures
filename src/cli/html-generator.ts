@@ -16,6 +16,7 @@ import { getAllThemes, getThemeByKey, AdventureTheme } from '../shared/theme.js'
 import { createProjectInfo } from '../tools/shared.js';
 import { parseAdventureConfig } from '../shared/adventure-config.js';
 import { TemplateEngine } from './template-engine.js';
+import { sanitizeEmojiInText, sanitizeQuestTitle } from '../shared/emoji-validator.js';
 
 interface CustomThemeData {
   name: string;
@@ -75,6 +76,77 @@ class HTMLAdventureGenerator {
     
     this.rl.close();
     process.exit(0);
+  }
+
+  async startWithArgs(args: Map<string, string>): Promise<void> {
+    console.log(chalk.bgBlue.white.bold(' 🌟 Repo Adventure HTML Generator 🌟 '));
+    console.log(chalk.dim('─'.repeat(50)));
+    console.log();
+
+    try {
+      // Set theme from args
+      const themeArg = args.get('theme');
+      if (themeArg) {
+        const theme = this.parseThemeArg(themeArg);
+        if (!theme) {
+          throw new Error(`Invalid theme: ${themeArg}. Valid themes: space, mythical, ancient, developer, custom`);
+        }
+        this.selectedTheme = theme;
+        console.log(chalk.green(`✅ Theme: ${themeArg}`));
+      }
+
+      // Set output directory from args
+      const outputArg = args.get('output');
+      this.outputDir = outputArg || './public';
+      console.log(chalk.green(`✅ Output: ${this.outputDir}`));
+
+      // Handle overwrite setting
+      const overwrite = args.has('overwrite');
+      if (overwrite) {
+        console.log(chalk.green('✅ Overwrite: enabled'));
+      }
+
+      // Check if output directory exists and handle overwrite
+      if (fs.existsSync(this.outputDir) && !overwrite) {
+        const files = fs.readdirSync(this.outputDir).filter(f => f.endsWith('.html'));
+        if (files.length > 0) {
+          throw new Error(`Output directory ${this.outputDir} contains HTML files. Use --overwrite to replace them.`);
+        }
+      }
+
+      await this.generateAdventure();
+      
+      console.log();
+      console.log(chalk.green.bold('🎉 Adventure website generated successfully!'));
+      console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
+      console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
+    } catch (error) {
+      console.error(chalk.red('❌ Error generating adventure:'), error);
+      process.exit(1);
+    }
+  }
+
+  private parseThemeArg(themeArg: string): AdventureTheme | null {
+    const lowerTheme = themeArg.toLowerCase();
+    switch (lowerTheme) {
+      case 'space':
+      case '1':
+        return 'space';
+      case 'mythical':
+      case '2':
+        return 'mythical';
+      case 'ancient':
+      case '3':
+        return 'ancient';
+      case 'developer':
+      case '4':
+        return 'developer';
+      case 'custom':
+      case '5':
+        return 'custom';
+      default:
+        return null;
+    }
   }
 
   private async selectTheme(): Promise<void> {
@@ -233,7 +305,7 @@ class HTMLAdventureGenerator {
   private extractQuestInfo(): void {
     this.quests = this.adventureManager.getAllQuests().map((quest, index) => ({
       id: quest.id,
-      title: quest.title,
+      title: sanitizeQuestTitle(quest.title),
       filename: `quest-${index + 1}.html`
     }));
   }
@@ -255,11 +327,11 @@ class HTMLAdventureGenerator {
       }
     }
 
-    // Theme-appropriate emoticons
+    // Theme-appropriate emoticons (using safe emojis)
     const themeIcons = {
-      space: { theme: '🚀', quest: '🌌' },
-      ancient: { theme: '🏺', quest: '⛩️' },
-      mythical: { theme: '🧙‍♂️', quest: '🗡️' },
+      space: { theme: '🚀', quest: '⭐' },        // Changed 🌌 to ⭐
+      ancient: { theme: '🏺', quest: '🗺️' },     // Changed ⛩️ to 🗺️ 
+      mythical: { theme: '🧙‍♂️', quest: '⚔️' },   // Changed 🗡️ to ⚔️
       developer: { theme: '💻', quest: '📋' },
       custom: { theme: '🎨', quest: '⭐' }
     };
@@ -408,11 +480,11 @@ class HTMLAdventureGenerator {
       </a>`;
     }).join('\n');
 
-    const cleanStoryContent = this.adventureManager.getStoryContent();
+    const cleanStoryContent = sanitizeEmojiInText(this.adventureManager.getStoryContent());
     
     const variables = {
       ...this.getCommonTemplateVariables(),
-      PAGE_TITLE: this.adventureManager.getTitle(),
+      PAGE_TITLE: sanitizeEmojiInText(this.adventureManager.getTitle()),
       STORY_CONTENT: this.formatMarkdown(cleanStoryContent),
       QUEST_LINKS: questLinks
     };
@@ -522,7 +594,52 @@ class HTMLAdventureGenerator {
 // Main execution
 async function main() {
   const generator = new HTMLAdventureGenerator();
-  await generator.start();
+  
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  const argMap = new Map<string, string>();
+  
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg && arg.startsWith('--')) {
+      const key = arg.substring(2);
+      const nextArg = args[i + 1];
+      const value = nextArg && !nextArg.startsWith('--') ? nextArg : 'true';
+      argMap.set(key, value);
+      if (value !== 'true') i++; // Skip next arg if it was used as value
+    }
+  }
+  
+  // Check for help flag
+  if (argMap.has('help') || argMap.has('h')) {
+    console.log(`
+${chalk.bgBlue.white.bold(' Repo Adventure HTML Generator ')}
+
+Generate a complete HTML adventure website from your codebase!
+
+Usage:
+  npm run generate-html [options]
+
+Options:
+  --theme <theme>        Theme: space, mythical, ancient, developer, or custom
+  --output <dir>         Output directory (default: ./public)
+  --overwrite           Overwrite existing files without prompting
+  --help, -h            Show this help message
+
+Examples:
+  npm run generate-html --theme space --output ./docs --overwrite
+  npm run generate-html --theme mythical
+  npm run generate-html (interactive mode)
+`);
+    return;
+  }
+  
+  // Run with CLI args if provided, otherwise interactive
+  if (argMap.has('theme')) {
+    await generator.startWithArgs(argMap);
+  } else {
+    await generator.start();
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

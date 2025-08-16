@@ -5,6 +5,7 @@ Continue the {{theme}}-themed narrative journey for: "{{adventureTitle}}".
 IMPORTANT: 
 - This is a chapter in an ongoing story. Maintain narrative continuity:
 - This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
+- **EMOJI RESTRICTION**: Never use these emojis as they render as squares on many systems: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
 
 ## Story Context for Consistency
 {{storyContent}}
