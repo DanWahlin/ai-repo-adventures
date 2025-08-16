@@ -386,7 +386,10 @@ class HTMLAdventureGenerator {
     const themeCSS = this.loadThemeCSS(this.selectedTheme);
     const baseCSS = this.loadBaseCSS();
     const animationsCSS = this.loadAnimationsCSS();
+    
+    // Combine CSS in the correct order: theme variables, base styles, animations
     const combinedCSS = themeCSS + '\n\n' + baseCSS + '\n\n' + animationsCSS;
+    
     const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
     fs.writeFileSync(cssPath, combinedCSS);
   }
