@@ -111,6 +111,17 @@ function openBrowser(url: string): void {
 async function runHTMLGeneratorTest() {
   console.log(chalk.blue('🧪 HTML Generator Test - Minimal LLM Usage\n'));
   
+  // Parse command line arguments for theme selection
+  const args = process.argv.slice(2);
+  let selectedTheme = 'mythical'; // Default to mythical
+  
+  const themeArg = args.find(arg => arg.startsWith('--theme='));
+  if (themeArg) {
+    selectedTheme = themeArg.split('=')[1];
+  }
+  
+  console.log(chalk.cyan(`🎨 Using ${selectedTheme} theme`));
+  
   try {
     // Step 1: Setup test output directory
     const testOutputDir = path.join(process.cwd(), 'tests', 'public');
@@ -136,7 +147,7 @@ async function runHTMLGeneratorTest() {
     
     // Override internal properties for testing
     (generator as any).outputDir = testOutputDir;
-    (generator as any).selectedTheme = 'space';
+    (generator as any).selectedTheme = selectedTheme;
     (generator as any).projectPath = projectPath;
     
     // Load repository URL from adventure.config.json
@@ -151,11 +162,9 @@ async function runHTMLGeneratorTest() {
       }
     }
     
-    console.log(chalk.dim('🎨 Using space theme...'));
-    
     // Step 4: Generate story and quests using the adventure manager directly
     console.log(chalk.yellow('🚀 Generating story (1 LLM call)...'));
-    const storyWithQuests = await (generator as any).adventureManager.initializeAdventure(projectInfo, 'space', projectPath);
+    const storyWithQuests = await (generator as any).adventureManager.initializeAdventure(projectInfo, selectedTheme, projectPath);
     
     // Get the generated quests from the adventure manager
     const quests = (generator as any).adventureManager.getAllQuests().map((quest: any, index: number) => ({
@@ -180,9 +189,12 @@ async function runHTMLGeneratorTest() {
       // Generate HTML files
       console.log(chalk.dim('🌐 Generating HTML files...'));
       
-      // Create assets directory
+      // Create assets directory (images directory will be created by copyImages)
       const assetsDir = path.join(testOutputDir, 'assets');
       fs.mkdirSync(assetsDir, { recursive: true });
+      
+      // Copy images
+      (generator as any).copyImages();
       
       // Generate CSS first
       (generator as any).generateThemeCSS();

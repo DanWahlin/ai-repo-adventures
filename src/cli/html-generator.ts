@@ -122,7 +122,7 @@ class HTMLAdventureGenerator {
       // Create output directories
       fs.mkdirSync(this.outputDir, { recursive: true });
       fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
-      fs.mkdirSync(path.join(this.outputDir, 'images'), { recursive: true });
+      fs.mkdirSync(path.join(this.outputDir, 'assets','images'), { recursive: true });
 
       await this.generateAdventure();
       
@@ -266,7 +266,7 @@ class HTMLAdventureGenerator {
     // Create directories
     fs.mkdirSync(this.outputDir, { recursive: true });
     fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
-    fs.mkdirSync(path.join(this.outputDir, 'images'), { recursive: true });
+    fs.mkdirSync(path.join(this.outputDir, 'assets', 'images'), { recursive: true });
 
     console.log(chalk.green(`✅ Output directory: ${this.outputDir}`));
     console.log();
@@ -338,8 +338,8 @@ class HTMLAdventureGenerator {
    */
   private getGitHubLogo(): string {
     return this.isLightTheme(this.selectedTheme) 
-      ? 'images/github-mark.svg'          // Dark logo for light themes
-      : 'images/github-mark-white.svg';   // White logo for dark themes
+      ? 'assets/images/github-mark.svg'          // Dark logo for light themes
+      : 'assets/images/github-mark-white.svg';   // White logo for dark themes
   }
 
   /**
@@ -394,10 +394,13 @@ class HTMLAdventureGenerator {
   private copyImages(): void {
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
     const sourceImagesDir = path.join(__dirname, 'assets', 'images');
-    const targetImagesDir = path.join(this.outputDir, 'images');
+    const targetImagesDir = path.join(this.outputDir, 'assets','images');
 
     try {
       if (fs.existsSync(sourceImagesDir)) {
+        // Ensure target directory exists
+        fs.mkdirSync(targetImagesDir, { recursive: true });
+        
         const imageFiles = fs.readdirSync(sourceImagesDir);
         imageFiles.forEach(file => {
           const sourcePath = path.join(sourceImagesDir, file);
