@@ -66,28 +66,12 @@ export const SAFE_EMOJIS = {
 export const PROBLEMATIC_EMOJIS = [
   '🌌', // Milky Way - often renders as square
   '🌠', // Shooting star - problematic on many systems  
-  '🔮', // Crystal ball - inconsistent support
-  '🛰️', // Satellite - complex composite emoji
-  '🧭', // Compass - newer emoji with poor support
-  '🔭', // Telescope - can be problematic
-  '🪐', // Saturn - newer emoji
-  '🚁', // Helicopter - can be inconsistent
-  '🛸', // UFO - newer emoji
-  '⚗️', // Alchemical symbol - poor support
 ];
 
 // Safe replacements for problematic emojis
 export const EMOJI_REPLACEMENTS: Record<string, string> = {
   '🌌': '⭐',  // Milky Way -> Star
-  '🌠': '⭐',  // Shooting star -> Star  
-  '🔮': '💎',  // Crystal ball -> Gem
-  '🛰️': '📡', // Satellite -> Satellite dish (better support)
-  '🧭': '🗺️', // Compass -> Map
-  '🔭': '👁️', // Telescope -> Eye (observation)
-  '🪐': '⭐',  // Saturn -> Star
-  '🚁': '🚀',  // Helicopter -> Rocket
-  '🛸': '🚀',  // UFO -> Rocket
-  '⚗️': '🧪',  // Alchemical symbol -> Test tube
+  '🌠': '⭐',  // Shooting star -> Star 
 };
 
 /**
@@ -152,9 +136,6 @@ export function sanitizeQuestTitle(title: string): string {
   sanitized = sanitized
     .replace(/🌌/g, '⭐')  // Galaxy -> Star
     .replace(/🌠/g, '⭐')  // Shooting star -> Star
-    .replace(/🔮/g, '💎')  // Crystal ball -> Gem
-    .replace(/🛰️/g, '📡') // Satellite -> Satellite dish
-    .replace(/🧭/g, '🗺️'); // Compass -> Map
   
   return sanitized;
 }

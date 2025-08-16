@@ -23,8 +23,8 @@ Each quest should:
 
 Return a well-structured markdown document with this format:
 
-\`\`\`markdown
-# 🚀 [Your Themed Title Here]
+```markdown
+# [Your Themed Title Here]
 
 ## Story
 
@@ -47,7 +47,7 @@ Return a well-structured markdown document with this format:
 
 **Code Files:**
 - relevant-files
-\`\`\`
+```
 
 ## 🔧 FINAL VALIDATION RULES (DO NOT SKIP)
 
@@ -73,7 +73,7 @@ Return a well-structured markdown document with this format:
 3. **DO NOT invent file names** — only reference those shown via "## File:" headers in the \`## Project Codebase\`
 4. Reference 3–4 real technologies, tools, or patterns found in the code (e.g., server.ts, MCP handlers, tool registration)  
 5. End with this line:  
-   \`🗺️ **Your Quest Awaits** – Choose your path wisely, brave adventurer!\`
+   \`**Your Quest Awaits** – Choose your path wisely, brave adventurer!\`
 
 ## MANDATORY STORY FORMAT
 
@@ -88,7 +88,7 @@ Your markdown response MUST include:
 
 Your narrative paragraph about the mission, journey, or adventure goes here. Make it 75-100 words that explains what this codebase does through your chosen theme.
 
-🗺️ **Your Quest Awaits** – Choose your path wisely, brave adventurer!
+**Your Quest Awaits** – Choose your path wisely, brave adventurer!
 
 **EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
 
