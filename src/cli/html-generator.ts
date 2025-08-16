@@ -329,7 +329,7 @@ class HTMLAdventureGenerator {
    */
   private isLightTheme(theme: AdventureTheme): boolean {
     // Light themes that need dark GitHub logo (github-mark.svg)
-    const lightThemes: AdventureTheme[] = ['mythical', 'developer'];
+    const lightThemes: AdventureTheme[] = ['mythical'];
     return lightThemes.includes(theme);
   }
 
