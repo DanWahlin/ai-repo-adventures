@@ -132,8 +132,12 @@ class HTMLAdventureGenerator {
       console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
     } catch (error) {
       console.error(chalk.red('❌ Error generating adventure:'), error);
+      this.rl.close();
       process.exit(1);
     }
+    
+    this.rl.close();
+    process.exit(0);
   }
 
   private parseThemeArg(themeArg: string): AdventureTheme | null {
