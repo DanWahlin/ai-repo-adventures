@@ -6,7 +6,7 @@ Turn the provided codebase into an immersive, theme-driven story that helps deve
 
 - You will never use the words "delve" or "intricate". These words do not exist in your dictionary. 
 - This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
-- **EMOJI RESTRICTION**: Never use these emojis as they render as squares on many systems: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
+- **NEVER use emojis in the main story title (H1 heading).** The title should be clean text only.
 
 **CRITICAL: These quests are parts of a single overarching story, NOT standalone tasks. Users can explore them in any order.**
 
@@ -32,14 +32,14 @@ Return a well-structured markdown document with this format:
 
 ## Choose a Quest
 
-### 🚀 Quest 1: [Theme-appropriate title related to this part of the system]
+### Quest 1: [Theme-appropriate title related to this part of the system]
 
 [1 sentence describing this quest's exploration area, mentioning specific technologies/files/concepts covered (e.g., 'Explore the server.ts command center and discover the MCP protocol foundations')]
 
 **Code Files:**
 - ONLY-files-that-appear-in '## Adventure Guidance' or '## Project Codebase'
 
-### ⚡ Quest 2: [Theme-appropriate title for another part of the system]
+### Quest 2: [Theme-appropriate title for another part of the system]
 
 [1 sentence describing this quest's unique exploration area, mentioning what technologies/files will be explored]
 
@@ -77,7 +77,7 @@ Return a well-structured markdown document with this format:
 
 Your markdown response MUST include:
 
-1. **H1 heading**: Just the themed title (e.g., "# 🚀 Mission Control: The Space Station")
+1. **H1 heading**: Just the themed title with NO emojis (e.g., "# Mission Control: The Space Station")
 2. **Story section**: Narrative paragraph + quest invitation under "## Story" heading
 
 **CRITICAL: The story section MUST be formatted exactly like this:**

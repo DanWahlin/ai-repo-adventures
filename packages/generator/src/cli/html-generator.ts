@@ -789,8 +789,8 @@ class HTMLAdventureGenerator {
   private addFileHyperlinksToHTML(htmlContent: string): string {
     if (!this.repoUrl) return htmlContent;
 
-    // Pattern to match file paths: src/file.ts, ./src/file.ts, /src/file.ts
-    const filePathPattern = /\.?\/?src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md)/;
+    // Pattern to match file paths: packages/core/src/file.ts, src/file.ts, ./packages/mcp/src/file.ts, etc.
+    const filePathPattern = /\.?\/?(?:packages\/[\w\-]+\/)?src\/[\w\-/]+\.(ts|js|tsx|jsx|css|json|md)/;
 
     // Convert file paths in <code> tags to hyperlinks
     htmlContent = htmlContent.replace(

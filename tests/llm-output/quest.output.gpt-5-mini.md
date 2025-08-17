@@ -1,31 +1,32 @@
-# Quest 1: Command Deck — MCP Protocol & Tool Registry
+# Quest 1: MCP Beacon — The Protocol Interface
 ---
-
-You step onto the `Starpath` command deck where consoles blink like distant stars, and the crew briefs you on the mission to map how code becomes quests. The `Quest Orchestrator` points to the `MCP` console while the `Story Engine` hums in the background; together with the `Analyzer` and the `Mission Protocol` you will inspect how `server.ts` wires the `MCP` protocol and how `tools.ts` exposes the four primary instruments that explorers invoke. Your task is to chart the data flow from `stdio` transport through `ListTools` and `CallTool` handlers, and to trace how `repoAnalyzer.preGenerate()` warms the cache so repomix content is ready when callers launch adventures.
+You stand on the bridge of the `Starfield`, eyes on the holo-display that maps how the `MCP` server registers and runs the adventure tools that keep the crew exploring repositories across the galaxy. The beacon pulse from the `repoAnalyzer` warms the aft core as `RepoAdventureServer` spins up `stdio` communications and pre-generates `repomix` context for the current `projectPath`. Your task is to chart `server.ts` and `tools.ts`, trace the command loop from `ListToolsRequestSchema` to `CallToolRequestSchema`, and log the safe-path validations and `Zod` schema checks that keep the voyage secure. Ready the navigation console and follow the protocol signals to map the interface that will guide future explorers.
 
 ## File Exploration
 
 ### packages/mcp/src/server.ts: MCP server protocol implementation that hosts the adventure tools
-The `packages/mcp/src/server.ts` file is the command deck's main control program; it boots a `RepoAdventureServer` that registers `MCP` protocol handlers and manages lifecycle events for the `repo-adventure` service. Inside the `RepoAdventureServer` constructor the `Server` is instantiated with metadata such as `name`, `version`, and `description`, and an initial capabilities map that will be populated dynamically. The critical `setupHandlers()` method registers two `MCP` handlers: one for `ListToolsRequestSchema` which enumerates `tools` and converts `Zod` schemas to `JSON` with `zodToJsonSchema`, and one for `CallToolRequestSchema` which validates incoming `request.params` against each tool's `Zod` schema before invoking its `handler`. Error handling converts validation and runtime errors into `McpError` instances with `ErrorCode` values so the `MCP` client receives structured failures. The `run()` method binds the server to a `StdioServerTransport` with `server.connect(transport)` and then warms the repomix cache by calling `repoAnalyzer.preGenerate(projectPath)` while allowing explorers to issue tool calls. The module-level `main()` wires graceful shutdown for `SIGINT` and `SIGTERM`, logs `unhandledRejection` without stopping the ship, and ensures `repoAnalyzer.cleanup()` runs on shutdown. Reading this file is like standing at mission control: you can see how communication channels, validation gates, and background caching prepare the system to serve interactive adventures.
+`packages/mcp/src/server.ts` implements the `RepoAdventureServer` that stands sentry as the `MCP` protocol endpoint for the repo-adventure system. The file imports `Server` and `StdioServerTransport` from the `@modelcontextprotocol/sdk` to create a `server` that advertises name, version, and description; it wires two critical request handlers via `server.setRequestHandler()` for `ListToolsRequestSchema` and `CallToolRequestSchema`. The `ListTools` handler dynamically enumerates the `tools` object exported from `packages/mcp/src/tools.ts`, converting each tool's `Zod` `schema` to `JSON` via `zodToJsonSchema` so MCP clients can introspect available commands. The `CallTool` handler performs runtime validation by calling `tool.schema.safeParse(request.params.arguments)` and either executes `tool.handler()` with the validated `data` or raises an `McpError` using the `ErrorCode` enum. The `run()` method connects the server to `stdio` using `StdioServerTransport`, logs startup to `stderr`, and warms the cache by calling `repoAnalyzer.preGenerate(projectPath)`. The file also defines `gracefulShutdown()` which invokes `repoAnalyzer.cleanup()`, and `main()` which constructs the server, binds signal handlers for `SIGINT` and `SIGTERM`, monitors `unhandledRejection`, and starts the server. This file is the mission control that ensures tools are discoverable, safely invoked, and that repomix analysis is pre-warmed for swift exploration.
 
 #### Highlights
-- `RepoAdventureServer.setupHandlers()` registers `ListToolsRequestSchema` and `CallToolRequestSchema` handlers and performs `Zod` validation.
-- `RepoAdventureServer.run()` connects `StdioServerTransport` and calls `repoAnalyzer.preGenerate()` to warm cache.
-- `main()` sets up `SIGINT` and `SIGTERM` handlers, logs `unhandledRejection`, and handles startup errors.
-- Error flows map to `McpError` and `ErrorCode` for consistent MCP responses.
+- `RepoAdventureServer.setupHandlers` registers `ListToolsRequestSchema` and `CallToolRequestSchema` handlers.
+- `RepoAdventureServer.run` connects `StdioServerTransport`, logs startup, and calls `repoAnalyzer.preGenerate(projectPath)`.
+- `main` sets up graceful shutdown for `SIGINT` and `SIGTERM`, and logs `unhandledRejection` without halting.
+- Error handling converts validation failures into `McpError` using `ErrorCode`.
+- Uses `zodToJsonSchema` to expose `Zod` schemas as `JSON` schemas for clients.
 
 ### packages/mcp/src/tools.ts: The 4 main MCP tools that provide the user interface to the adventure system
-The `packages/mcp/src/tools.ts` file functions like the ship's instrument panel, exporting the adventure tools that `MCP` clients list and invoke. It imports `adventureManager` from `@ai-repo-adventures/core/adventure` and re-exports four tool modules: `startAdventure`, `chooseTheme`, `exploreQuest`, and `viewProgress` from their respective `./tools/*.js` paths. Each exported constant is mapped to an MCP-friendly name: `start_adventure`, `choose_theme`, `explore_quest`, and `view_progress`, and the `tools` object aggregates them for registration by `server.ts`. Reading this file reveals how the `Story Engine` and `Analyzer` are surfaced to remote explorers through a simple registry, ensuring that `start_adventure.handler` will analyze repositories and present themes, `choose_theme.handler` will generate themed stories and quests, `explore_quest.handler` will run quest exploration and progress tracking, and `view_progress.handler` will report completion stats. The file is concise yet pivotal: it binds adventure logic to `MCP` entry points so requests validated and dispatched in `server.ts` can reach the story generation and quest execution code in the `core` package.
+`packages/mcp/src/tools.ts` is the tool registry and the public entrypoint that binds the interactive tools used by MCP clients. It re-exports the shared `adventureManager` from `@ai-repo-adventures/core/adventure` and imports the concrete handlers from the local `tools` folder: `start-adventure.js`, `choose-theme.js`, `explore-quest.js`, and `view-progress.js`. The file documents the intended user flow: `start_adventure` analyzes the codebase and offers theme choices; `choose_theme` instructs the `StoryGenerator` to craft theme-driven narratives and quests; `explore_quest` runs a quest execution cycle while tracking progress; and `view_progress` reports completion metrics. It then maps these handlers to MCP-friendly export names and aggregates them in the `tools` object so that the `server.ts` `ListTools` handler can enumerate them. This file is the manifest that lets the `MCP` beacon advertise its available missions to passing clients, and the single source of truth for the tool names that the command loop will accept.
 
 #### Highlights
-- Exports `adventureManager` for tool implementations to share state.
-- Maps domain functions to MCP-friendly names: `start_adventure`, `choose_theme`, `explore_quest`, `view_progress`.
-- Aggregates `tools` object used by `server.ts` for `ListTools` output.
-- Clearly documents typical tool flow sequence in comments.
+- Exports `adventureManager` for shared state across tools.
+- Re-exports `start_adventure`, `choose_theme`, `explore_quest`, and `view_progress`.
+- Constructs the `tools` object used by `server.ts` to list and call tools.
+- Documents the typical flow of starting an adventure through exploring quests.
+- Keeps MCP naming convention in `start_adventure`, `choose_theme`, `explore_quest`, `view_progress`.
 
 ## Code
 
-### src/server.ts
+### packages/mcp/src/server.ts
 ```typescript
 #!/usr/bin/env node
 
@@ -162,9 +163,9 @@ main().catch((error) => {
   process.exit(1);
 });
 ```
-This module is the ship's bridge wiring: it registers `MCP` handlers, connects `stdio`, and kicks off background `repoAnalyzer` caching so tools are ready when called.
+This file is the mission control console that registers handlers, validates inputs, and warms the repomix cache so explorers can launch quests without delay.
 
-### src/tools.ts
+### packages/mcp/src/tools.ts
 ```typescript
 /**
  * MCP Repo Adventure Tools - Main Entry Point
@@ -206,13 +207,13 @@ export const tools = {
   view_progress
 };
 ```
-This registry is like the command deck map, labeling each instrument so `server.ts` can list and dispatch them to crew and visiting explorers.
+This file is the ship's mission manifest that maps human-friendly commands to the adventure handlers so the `MCP` beacon can list and invoke missions.
 
 ## Helpful Hints
-- Read `packages/mcp/src/server.ts` first to see how `ListToolsRequestSchema` and `CallToolRequestSchema` are handled before exploring individual tool handlers in `./tools`.
-- Consider adding structured logging around `repoAnalyzer.preGenerate(projectPath)` to measure cache warm-up timings and surface repomix issues during startup.
-- Next, inspect `packages/core/src/adventure/adventure-manager.ts` and `packages/core/src/analyzer/repo-analyzer.ts` to trace how `start_adventure.handler` and `explore_quest.handler` use generated repomix content for story creation and quest execution.
+- Keep an eye on `repoAnalyzer.preGenerate(projectPath)` in `packages/mcp/src/server.ts` to ensure warm caches during cold starts, and consider instrumenting logs for large projects.
+- Consider adding stricter schema descriptions in each tool module so `zodToJsonSchema(tool.schema)` produces richer `inputSchema` for clients; this improves discoverability in the `ListToolsRequestSchema` response.
+- Next steps: trace `adventureManager` through `@ai-repo-adventures/core/adventure` to inspect how `start_adventure`, `choose_theme`, `explore_quest`, and `view_progress` manipulate state and generate `repomix` targets for quests.
 
 ---
 
-Mission control reports a triumphant liftoff: you’ve charted the Command Deck — MCP Protocol & Tool Registry, earning a stellar log entry as your starship advances on its cosmic mission!
+Mission accomplished: your starship just completed Quest 1 — the MCP Beacon Protocol Interface, proving your crew can dock with the protocol core and chart a triumphant course through cosmic systems!

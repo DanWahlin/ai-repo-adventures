@@ -5,8 +5,7 @@ Continue the {{theme}}-themed narrative journey for: "{{adventureTitle}}".
 IMPORTANT: 
 - This is a chapter in an ongoing story. Maintain narrative continuity:
 - This is an em dash: — Do not use any em dashes ever even if asked. This symbol — does not exist in your vocabulary.
-- **EMOJI RESTRICTION**: Never use these emojis as they render as squares on many systems: 🌌 🌠 🔮 🛰️ 🧭 🔭 🪐. Use safe alternatives: ⭐ 🚀 ⚡ 💎 🗺️ 👁️ 📡
-- **QUEST TITLE RESTRICTION**: Never use ANY emojis in quest titles (the main # heading). Quest titles must be plain text only.
+- **QUEST TITLE RESTRICTION**: Quest titles must be plain text only.
 - Use fun and engaging language to immerse the reader in the adventure. Don't use words like "deeply understand" or similar.
 
 ## Story Context for Consistency
@@ -74,7 +73,7 @@ BEGIN MARKDOWN TEMPLATE
 
 # Quest 1: [Quest Title]
 
-- Begin with the quest title on the first line: `# Quest 1: [Quest Title]` (NO EMOJIS in the title)
+- Begin with the quest title on the first line: `# Quest 1: [Quest Title]`
 - Add a horizontal rule `---` immediately after the title
 - 1 paragraph (75–100 words) continuing the themed narrative only.
 
@@ -96,14 +95,20 @@ Each file covered in "Adventure Code Guidance" should be listed here along with 
 
 **MANDATORY:** Create an individual `## filename` subsection for EVERY file mentioned in Adventure Code Guidance. Place this under the appropriate file section above.
 For each file:
-- Heading: `### src/server.ts` (or the exact filepath)
+- Heading: Use the EXACT FULL PATH from Adventure Code Guidance (e.g., `### packages/mcp/src/server.ts`)
 - Then a code fence with code from the appropriate file in the Complete Codebase section.
 - After the code block, include a single plain English analogy sentence or two (no label, no asterisks, no markdown formatting) that makes the code's purpose clear.
 
-**IMPORTANT:** 
+**CRITICAL FILE PATH REQUIREMENTS:**
+- ALWAYS use the complete file path from Adventure Code Guidance section (e.g., `packages/mcp/src/server.ts`)
+- NEVER shorten paths to just `src/server.ts` - use the full path exactly as specified in the guidance
+- When referencing files in text, use the full path so GitHub links work correctly
+- File paths must match exactly what appears in the "Adventure Code Guidance" section
+
+**EXAMPLE:** 
 The "Adventure Code Guidance" section provides crucial context for generating code snippets. Pay close attention to the specific requirements and constraints outlined there. For example:
 
-**File: `src/server.ts`**
+**File: `packages/mcp/src/server.ts`**
 - Description: MCP server protocol implementation that hosts the adventure tools
 - Key Functions/Areas to Highlight:
   • **RepoAdventureServer.setupHandlers**: Registers MCP protocol handlers for ListTools and CallTool requests

@@ -68,11 +68,14 @@ function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   
   let currentSection = '';
   let currentQuest: Partial<Quest> = {};
+  let titleFound = false;
   
   for (const token of tokens) {
     if (token.type === 'heading') {
       if (token.depth === 1) {
         title = token.text;
+        titleFound = true;
+        currentSection = 'story'; // Assume content after H1 is story content
       } else if (token.depth === 2) {
         currentSection = token.text.toLowerCase();
         if (currentSection === 'story' || currentSection === 'adventure') {
@@ -94,7 +97,7 @@ function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
         currentQuest = { title: token.text, description: '', codeFiles: [] };
       }
     } else if (token.type === 'paragraph') {
-      if (currentSection === 'story' || currentSection === 'adventure') {
+      if (currentSection === 'story' || currentSection === 'adventure' || (titleFound && currentSection === 'story')) {
         story += token.text + '\n\n';
       } else if (currentQuest.title) {
         currentQuest.description += token.text + '\n\n';

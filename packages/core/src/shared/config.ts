@@ -35,8 +35,8 @@ export const TOP_CLASSES = 5; // Maximum classes to include in analysis to keep 
 export const LLM_CACHE_SIZE = parseInt(process.env.LLM_CACHE_SIZE || '100');
 export const LLM_TEMPERATURE = parseFloat(process.env.LLM_TEMPERATURE || '0.7');
 export const LLM_MAX_TOKENS = parseInt(process.env.LLM_MAX_TOKENS || '4000');
-export const LLM_MAX_TOKENS_STORY = 8000; // Maximum tokens for story generation (includes story + all quest descriptions)
-export const LLM_MAX_TOKENS_QUEST = 6000; // Maximum tokens for individual quest exploration content
+export const LLM_MAX_TOKENS_STORY = Math.max(LLM_MAX_TOKENS, 8000); // Maximum tokens for story generation (use env var if higher)
+export const LLM_MAX_TOKENS_QUEST = Math.max(LLM_MAX_TOKENS, 6000); // Maximum tokens for individual quest exploration content (use env var if higher)
 export const LLM_MAX_TOKENS_DEFAULT = LLM_MAX_TOKENS; // Use env var or default to 4000
 
 // GPT-5 specific settings
