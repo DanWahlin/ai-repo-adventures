@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 5: Tuning the Stellar Theme Spectrum - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'space' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">Galactic Odyssey: The Codebase Chronicles</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 5: Tuning the Stellar Theme Spectrum</h1>
+<hr>
+<p>The <em>Codex Voyager</em> glided silently through the cosmic lattice of the Theme Filament Nebula. Illuminated by the shimmering hues of idea particles, the crew&#39;s mission was clear: recalibrate the ship&#39;s Stellar Theme Spectrum module. With the repository’s <em>adventure.config.json</em> acting as their star chart, and the theme validation systems running unstable, they needed to restore balance to the adventure themes, re-aligning their creative energy flow. Your mission, navigator, is to dive into the adventure engine&#39;s files and decode the secrets of the cosmic spectrum before narrative entropy consumes the galaxy. The possibilities of untold stories await!</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Centralized Adventure Configuration Management</h3>
+<p>The <code class="inline-code">adventure-config.ts</code> file is the ship’s decisive navigational manual for structuring quests and themes. This vital system imports <code class="inline-code">fs</code> and <code class="inline-code">path</code> modules to dynamically load and parse the <em>adventure.config.json</em> file. Each method operates with the precision of a starship engineer, focusing on retrieving, validating, and formatting the configuration data that serves as the backbone for the entire Galactic Adventure Engine. The file governs three essential systems: loading raw adventure data via <code class="inline-code">loadAdventureConfig()</code>, parsing configuration objects with <code class="inline-code">parseAdventureConfig()</code>, and extracting targeted highlights with <code class="inline-code">extractUniqueFilePaths()</code>. </p>
+<p>As you explore, notice how <code class="inline-code">extractUniqueFilePaths()</code> digs deep into the config’s structure, identifying legitimate file paths to ensure every reference is real. Meanwhile, <code class="inline-code">formatAdventureConfigForPrompt()</code> meticulously assembles structured data for downstream LLMs, ensuring quest integrity. The shared file acts as a cosmic compass—guiding adventurers by distilling complexity into structured simplicity while rigorously validating paths to prevent cosmic mishaps. </p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">loadAdventureConfig()</code> loads adventure configuration details from <em>adventure.config.json</em> and handles missing files gracefully.</li>
+<li><code class="inline-code">extractUniqueFilePaths()</code> scopes out valid paths by traversing the parsed config with recursive precision.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt()</code> transforms the data into neatly formatted prompts for use with LLMs.</li>
+</ul>
+<hr>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">function readFileIfExists(filePath: string): string | null {
+  try {
+    return fs.readFileSync(filePath, &#39;utf-8&#39;);
+  } catch {
+    // Missing or unreadable file is non-fatal
+    return null;
+  }
+}
+
+/**
+ * Loads the raw adventure config text if present.
+ * Pure file read - no parsing here.
+ */
+export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
+}
+
+/**
+ * Extracts all unique, existing file paths referenced by &quot;path&quot; fields anywhere in the config.
+ */
+export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    // Extract and validate path
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    // Add children to stack
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<p>This code is like a data cartographer, mapping out the paths hidden within your adventure configuration and ensuring their authenticity while steering clear of dead stars (invalid files).</p>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Always triple-check your configuration file (<em>adventure.config.json</em>) for syntax errors, as it can throw off your entire quest pipeline.</li>
+<li>Extend <code class="inline-code">extractUniqueFilePaths()</code> to provide detailed debugging information when invalid file paths are detected.</li>
+<li>As a next step, explore the <code class="inline-code">theme.ts</code> file to see how themes themselves are structured and validated for quests.</li>
+</ul>
+<hr>
+<p>Mission accomplished, Star Voyager—Quest 5 is complete, and your cosmic calibration of the Stellar Theme Spectrum sparkles brighter than a supernova; you&#39;re only one warp jump away from absolute galactic mastery! ⭐🚀⚡</p>
+
+</div>
+
+
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>
