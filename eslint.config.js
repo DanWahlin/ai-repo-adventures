@@ -46,16 +46,19 @@ export default [
       ecmaVersion: 2022,
       sourceType: 'module',
       parserOptions: {
-        project: './tsconfig.json',
+        // Disable project-level TS config for now to avoid monorepo issues
+        // project: './tsconfig.json',
       },
     },
   },
   {
     ignores: [
       'node_modules/**',
-      'dist/**',
+      '**/dist/**',
+      '**/*.d.ts',
       '*.config.js',
       'tests/**', // Ignore test files from complexity checks
+      'src/**', // Ignore old src directory remnants
     ],
   },
 ];

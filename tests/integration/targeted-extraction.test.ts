@@ -5,9 +5,9 @@
  * Tests the complete flow: adventure generation → codeFiles → targeted repomix → LLM
  */
 
-import { AdventureManager } from '../../src/adventure/adventure-manager.js';
-import { repoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
-import { StoryGenerator } from '../../src/adventure/story-generator.js';
+import { AdventureManager } from '../../packages/core/dist/adventure/adventure-manager.js';
+import { repoAnalyzer } from '../../packages/core/dist/analyzer/repo-analyzer.js';
+import { StoryGenerator } from '../../packages/core/dist/adventure/story-generator.js';
 import { 
   createTestRunner, 
   realProjectInfo, 

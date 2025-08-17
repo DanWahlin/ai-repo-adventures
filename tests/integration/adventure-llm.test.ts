@@ -5,7 +5,7 @@
  * Focused on testing our business logic, not library internals
  */
 
-import { AdventureManager } from '../../src/adventure/adventure-manager.js';
+import { AdventureManager } from '../../packages/core/dist/adventure/adventure-manager.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 
 async function runTests() {

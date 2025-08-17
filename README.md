@@ -28,40 +28,40 @@ A fun, Model Context Protocol (MCP) server and/or HTML generator that transforms
 
 ```mermaid
 graph TD
-    A[MCP Server] -->|start_adventure| B[RepoAnalyzer]
+    A[MCP Server Package] -->|start_adventure| B[Core: RepoAnalyzer]
     B --> C[Generate Repomix Content]
     C --> D[Return Theme Options]
     
-    A -->|choose_theme| E[AdventureManager]
-    E --> F[StoryGenerator]
+    A -->|choose_theme| E[Core: AdventureManager]
+    E --> F[Core: StoryGenerator]
     F --> G[Load adventure.config.json]
-    G --> H[LLM Client]
+    G --> H[Core: LLM Client]
     H --> I[Generate Story + Quests]
     I --> J[Return Themed Story]
     
-    A -->|explore_quest| K[Find Quest]
-    K --> L[Generate Targeted Content]
-    L --> M[LLM Quest Content]
-    M --> N[Update Progress]
+    A -->|explore_quest| K[Core: Find Quest]
+    K --> L[Core: Generate Targeted Content]
+    L --> M[Core: LLM Quest Content]
+    M --> N[Core: Update Progress]
     N --> O[Return Quest Details]
     
-    A -->|view_progress| P[Get Progress State]
+    A -->|view_progress| P[Core: Get Progress State]
     P --> Q[Return Completion Stats]
     
-    R[HTML Generator CLI] --> E
-    R --> S[TemplateEngine]
-    S --> T[Generate Themed CSS]
-    S --> U[Format Markdown Content]
-    R --> V[Copy GitHub Logos]
-    R --> W[Build Quest Pages]
-    R --> X[Auto-Launch Server]
-    R --> Y[Open Browser]
+    R[Generator Package] --> E
+    R --> S[Generator: TemplateEngine]
+    S --> T[Generator: Generate Themed CSS]
+    S --> U[Generator: Format Markdown Content]
+    R --> V[Generator: Copy GitHub Logos]
+    R --> W[Generator: Build Quest Pages]
+    R --> X[Generator: Auto-Launch Server]
+    R --> Y[Generator: Open Browser]
     
     style B fill:#e8f5e8
+    style E fill:#fff3e0
     style H fill:#e1f5fe
-    style L fill:#fff3e0
     style R fill:#f3e5f5
-    style T fill:#e8f5e8
+    style S fill:#e8f5e8
 ```
 
 ## 🔍 Project Context Gathering & LLM Integration
@@ -70,36 +70,36 @@ graph TD
 
 ```mermaid
 graph TD
-    A[User: start_adventure] --> B[RepoAnalyzer]
+    A[User: start_adventure] --> B[Core: RepoAnalyzer]
     B --> C[Repomix CLI]
     C --> D[Complete Codebase Content]
     
     B --> E[adventure.config.json]
     E --> F[Adventure Guidance]
     
-    D --> G[LLM Prompt Builder]
+    D --> G[Core: LLM Prompt Builder]
     F --> G
     
-    G --> H[LLM API]
+    G --> H[Core: LLM API]
     H --> I[Generated Story & Quests]
     
-    J[HTML Generator CLI] --> K[AdventureManager]
-    K --> L[StoryGenerator] 
+    J[Generator: HTML CLI] --> K[Core: AdventureManager]
+    K --> L[Core: StoryGenerator] 
     L --> H
-    J --> M[TemplateEngine]
-    M --> N[Theme CSS Files]
-    M --> O[HTML Templates]
-    J --> P[Markdown Formatter]
-    P --> Q[Code Highlighting]
-    P --> R[File Path Links]
-    J --> S[HTTP Server]
-    J --> T[Auto Browser Launch]
+    J --> M[Generator: TemplateEngine]
+    M --> N[Generator: Theme CSS Files]
+    M --> O[Generator: HTML Templates]
+    J --> P[Generator: Markdown Formatter]
+    P --> Q[Generator: Code Highlighting]
+    P --> R[Generator: File Path Links]
+    J --> S[Generator: HTTP Server]
+    J --> T[Generator: Auto Browser Launch]
     
-    U[Input Validator] --> B
+    U[Core: Input Validator] --> B
     U --> K
-    V[Cache System] --> C
+    V[Core: Cache System] --> C
     V --> H
-    W[Emoji Sanitizer] --> J
+    W[Core: Emoji Sanitizer] --> J
     
     style H fill:#e1f5fe
     style J fill:#f3e5f5
@@ -110,7 +110,7 @@ graph TD
 ### Phase 1: Project Analysis & Context Gathering
 
 #### Step 1: Initial Project Scan
-**Location:** `src/analyzer/repo-analyzer.ts`
+**Location:** `packages/core/src/analyzer/repo-analyzer.ts`
 
 When `start_adventure` is called, the system:
 1. **Executes Repomix CLI** as a subprocess (`npx repomix`)
@@ -134,7 +134,7 @@ class RepoAdventureServer {
 ```
 
 #### Step 2: Quest Config Loading
-**Location:** `src/shared/adventure-config.ts`
+**Location:** `packages/core/src/shared/adventure-config.ts`
 
 Optionally loads `adventure.config.json` from the project root, which provides:
 - Predefined quest titles and descriptions
@@ -264,6 +264,41 @@ This configuration:
 npm install
 npm run build
 ```
+
+## 🚀 Automated Releases
+
+This project uses **Lerna** with **conventional commits** for automated versioning and publishing to npm.
+
+### **📦 Available Packages**
+
+- **`@codewithdan/ai-repo-adventure-generator`** - CLI tool for generating HTML adventure websites
+- **`@codewithdan/ai-repo-adventure-mcp`** - Model Context Protocol server for interactive code exploration
+
+### **🔄 Release Process**
+
+Releases are automatically triggered when you push to `main` with conventional commit messages:
+
+```bash
+# Examples of commits that trigger releases:
+git commit -m "feat(generator): add new theme support"     # Minor version bump
+git commit -m "fix(mcp): resolve connection issue"         # Patch version bump  
+git commit -m "feat(core)!: breaking API change"          # Major version bump
+
+# Non-releasing commits:
+git commit -m "docs: update README"                        # No version bump
+git commit -m "test: add unit tests"                       # No version bump
+```
+
+### **🏷️ Manual Release Commands**
+
+```bash
+npm run release:check        # See what packages have changed
+npm run version:patch        # Manual patch version bump
+npm run version:minor        # Manual minor version bump  
+npm run version:major        # Manual major version bump
+```
+
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for complete conventional commit guidelines.
 
 ## Quick HTML Adventure Test
 
@@ -425,7 +460,7 @@ npm run test:html
 
 ### HTML Generator Features
 
-The HTML generator (`src/cli/html-generator.ts`) creates fully-featured adventure websites:
+The HTML generator (`packages/generator/src/cli/html-generator.ts`) creates fully-featured adventure websites:
 
 **Core Capabilities:**
 - **Theme System**: 5 built-in themes with custom theme support
@@ -475,54 +510,103 @@ output-directory/
    → "✅ Completed: Navigation Protocols"
    → "🗺️ Remaining: Communication Hub, System Diagnostics"
 ```
-## File Structure
+## Monorepo Structure
 
 ```
-src/
-├── server.ts              # Main MCP server entry point
-├── tools/                 # MCP tool definitions
-│   └── tools.ts           # 4 main tools: start_adventure, choose_theme, explore_quest, view_progress
-├── adventure/             # Adventure generation system
-│   ├── adventure-manager.ts  # Orchestrates adventure state and user interactions
-│   └── story-generator.ts    # LLM-powered story and quest generation
-├── analyzer/              # Code analysis and repomix integration
-│   └── repo-analyzer.ts   # Repository analysis and content generation
-├── llm/                   # LLM integration
-│   └── llm-client.ts      # Multi-provider LLM client (OpenAI, Azure, Ollama, etc.)
-├── cli/                   # HTML generation tools
-│   ├── html-generator.ts  # Interactive HTML adventure generator with CLI options
-│   ├── template-engine.ts # HTML template processor with variable substitution
-│   ├── assets/            # Static assets for HTML generation
-│   │   └── images/        # GitHub logos and theme images
-│   └── themes/            # CSS theme files
-│       ├── space.css      # Space theme styling
-│       ├── mythical.css   # Mythical theme styling
-│       ├── ancient.css    # Ancient theme styling
-│       ├── developer.css  # Developer theme styling
-│       ├── custom.css     # Custom theme base
-│       ├── base.css       # Base styling for all themes
-│       └── animations.css # CSS animations and transitions
-├── shared/                # Shared utilities and types
-│   ├── types.ts           # Core type definitions
-│   ├── theme.ts           # Theme system and validation
-│   ├── config.ts          # Configuration and environment settings
-│   ├── input-validator.ts # Security and input validation
-│   ├── emoji-validator.ts # Emoji sanitization for HTML output
-│   └── adventure-config.ts # Adventure configuration parser
-tests/
-├── html-generator-test.ts # HTML generation test with auto-launch
-├── unit/                  # Unit tests for individual components
-└── integration/           # Integration tests with LLM providers
+packages/
+├── core/                           # @ai-repo-adventures/core (shared business logic)
+│   └── src/
+│       ├── adventure/              # Adventure generation system
+│       │   ├── adventure-manager.ts   # Orchestrates adventure state and user interactions
+│       │   └── story-generator.ts     # LLM-powered story and quest generation
+│       ├── analyzer/               # Code analysis and repomix integration
+│       │   └── repo-analyzer.ts    # Repository analysis and content generation
+│       ├── llm/                    # LLM integration
+│       │   └── llm-client.ts       # Multi-provider LLM client (OpenAI, Azure, Ollama, etc.)
+│       └── shared/                 # Shared utilities and types
+│           ├── types.ts            # Core type definitions
+│           ├── theme.ts            # Theme system and validation
+│           ├── config.ts           # Configuration and environment settings
+│           ├── input-validator.ts  # Security and input validation
+│           ├── emoji-validator.ts  # Emoji sanitization for HTML output
+│           └── adventure-config.ts # Adventure configuration parser
+├── generator/                      # @codewithdan/ai-repo-adventure-generator (HTML CLI)
+│   └── src/cli/
+│       ├── html-generator.ts       # Interactive HTML adventure generator with CLI options
+│       ├── template-engine.ts      # HTML template processor with variable substitution
+│       ├── assets/                 # Static assets for HTML generation
+│       │   └── images/             # GitHub logos and theme images
+│       ├── templates/              # HTML templates for generation
+│       └── themes/                 # CSS theme files
+│           ├── space.css           # Space theme styling
+│           ├── mythical.css        # Mythical theme styling
+│           ├── ancient.css         # Ancient theme styling
+│           ├── developer.css       # Developer theme styling
+│           ├── custom.css          # Custom theme base
+│           ├── base.css            # Base styling for all themes
+│           └── animations.css      # CSS animations and transitions
+└── mcp/                           # @codewithdan/ai-repo-adventure-mcp (MCP server)
+    └── src/
+        ├── server.ts              # Main MCP server entry point
+        └── tools/                 # MCP tool definitions
+            └── tools.ts           # 4 main tools: start_adventure, choose_theme, explore_quest, view_progress
+
+tests/                             # Shared test suite
+├── unit/                          # Unit tests for individual components
+└── integration/                   # Integration tests with LLM providers
+
+.github/workflows/                 # Automated release pipeline
+└── release.yml                    # Lerna + conventional commits automation
 ```
 
 ## Contributing
 
-Contributions welcome! Feel free to add new themes or HTML generation features.
+Contributions welcome! This project uses **conventional commits** and **automated releases**.
 
-### Areas for Contribution
-- 🎨 New CSS themes and styling
-- 🌍 Additional language support
-- 🔧 New quest generation algorithms  
+### 🚀 **Getting Started**
+```bash
+git clone https://github.com/danwahlin/ai-repo-adventures.git
+cd ai-repo-adventures
+npm install
+npm run build
+npm run test:unit
+```
+
+### 📝 **Commit Message Format**
+Use [conventional commits](https://www.conventionalcommits.org/) for automatic versioning:
+```bash
+feat(generator): add new theme support      # Minor version bump
+fix(mcp): resolve connection issue          # Patch version bump  
+feat(core)!: breaking API change           # Major version bump
+docs: update README                         # No version bump
+```
+
+### 🏗️ **Development Workflow**
+```bash
+# Work on features
+npm run build                    # Build all packages
+npm run test:unit               # Run unit tests
+npm run lint                    # Check code quality
+
+# Test specific components
+npm run test:simple             # Test MCP server
+npm run test:html               # Test HTML generation
+npm run chat                    # Interactive MCP client
+```
+
+### 📦 **Package Development**
+- **Core Package** (`packages/core/`): Shared business logic and utilities
+- **Generator Package** (`packages/generator/`): HTML generation CLI tool  
+- **MCP Package** (`packages/mcp/`): Model Context Protocol server
+
+### 🎯 **Areas for Contribution**
+- 🎨 New CSS themes and styling (`packages/generator/src/cli/themes/`)
+- 🌍 Additional language support in analysis
+- 🔧 New quest generation algorithms
+- 🧪 Additional test coverage
+- 📖 Documentation improvements
+
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for detailed contribution guidelines.  
 
 ## License
 
@@ -534,16 +618,16 @@ Run this in GitHub Copilot, Claude Code, or your favorite AI editor to generate 
 
 ---
 
-Analyze the overall project and determine key "adventure quest" paths to help people understand the repo (main functionality, configuration, tooling, any other major aspects of the project, etc.). Your results will go into the root of the project into a file named adventure.config.json. Once you've identified key quest paths, identify the key files and members within the files. If members are in a class, use the "ClassName.membername" format as shown in the following JSON:
+Analyze the overall project and determine key "adventure quest" paths to help people understand the monorepo structure and main functionality. Your results will go into the root of the project into a file named adventure.config.json. Focus on the packages/ structure and key integration points. Use the updated file paths as shown in the following JSON:
 
 {
     "quests": [
         {
-            "title": "MCP Tool Interface",
+            "title": "MCP Server Interface",
             "description": "Understanding how users interact with the system through the 4 main MCP tools",
             "files": [
                 {
-                    "path": "src/tools/tools.ts",
+                    "path": "packages/mcp/src/tools/tools.ts",
                     "description": "The 4 main MCP tools that provide the user interface to the adventure system",
                     "highlights": [
                         {
@@ -551,7 +635,7 @@ Analyze the overall project and determine key "adventure quest" paths to help pe
                             "description": "Analyzes repositories and presents theme options to users"
                         },
                         {
-                            "name": "choose_theme.handler",
+                            "name": "choose_theme.handler", 
                             "description": "Generates themed stories and adventures based on user selection"
                         },
                         {
@@ -561,6 +645,56 @@ Analyze the overall project and determine key "adventure quest" paths to help pe
                         {
                             "name": "view_progress.handler",
                             "description": "Shows completion stats and remaining quests"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Core Adventure Engine",
+            "description": "The heart of the adventure generation system with LLM integration",
+            "files": [
+                {
+                    "path": "packages/core/src/adventure/adventure-manager.ts",
+                    "description": "Orchestrates adventure state and manages user interactions",
+                    "highlights": [
+                        {
+                            "name": "AdventureManager.initializeAdventure",
+                            "description": "Creates themed stories and quests using LLM"
+                        },
+                        {
+                            "name": "AdventureManager.exploreQuest",
+                            "description": "Executes quest exploration with targeted content generation"
+                        }
+                    ]
+                },
+                {
+                    "path": "packages/core/src/adventure/story-generator.ts",
+                    "description": "LLM-powered story and quest content generation",
+                    "highlights": [
+                        {
+                            "name": "StoryGenerator.generateWithLLM",
+                            "description": "Generates themed narratives using multiple LLM providers"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "HTML Adventure Generation",
+            "description": "CLI tool for creating beautiful standalone HTML adventure websites",
+            "files": [
+                {
+                    "path": "packages/generator/src/cli/html-generator.ts",
+                    "description": "Interactive HTML adventure generator with theme support and auto-launch",
+                    "highlights": [
+                        {
+                            "name": "HTMLAdventureGenerator.generateAdventure",
+                            "description": "Main orchestrator for HTML website generation"
+                        },
+                        {
+                            "name": "HTMLAdventureGenerator.generateThemeCSS",
+                            "description": "Creates themed CSS files with responsive design"
                         }
                     ]
                 }

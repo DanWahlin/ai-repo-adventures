@@ -7,7 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { loadAdventureConfig, parseAdventureConfig, extractUniqueFilePaths } from '../../src/shared/adventure-config.js';
+import { loadAdventureConfig, parseAdventureConfig, extractUniqueFilePaths } from '../../packages/core/dist/shared/adventure-config.js';
 import { createTestRunner, assert } from '../shared/test-utils.js';
 
 export async function runAdventureConfigTests() {

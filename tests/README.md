@@ -176,10 +176,16 @@ You embark on The Main Quest, following the primary data stream from the command
 
 ### Quick HTML Generation Test
 
-The `html-generator-test.ts` creates a minimal HTML adventure output for testing purposes:
+The `test:html` command creates a minimal HTML adventure output for testing purposes:
 
 ```bash
 npm run test:html
+```
+
+This command uses the CLI generator with minimal settings (1 quest, space theme) and includes LLM output logging. Add `--serve` to automatically start an HTTP server and open the browser:
+
+```bash
+node packages/generator/bin/cli.js --theme space --output ./public --max-quests 1 --serve
 ```
 
 This will:

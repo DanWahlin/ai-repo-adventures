@@ -1,49 +1,76 @@
 {
   "name": "ai-repo-adventures",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/server.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "tsx src/server.ts",
-    "dev": "tsx watch src/server.ts",
-    "test": "tsx tests/comprehensive-test-runner.ts",
-    "test:unit": "tsx tests/unit-test-runner.ts",
-    "test:llm": "tsx tests/integration/llm-integration.test.ts",
-    "test:integration": "tsx tests/integration-test-runner.ts",
-    "test:simple": "tsx tests/simple-test.ts",
-    "test:real-world": "tsx tests/real-world-test.ts",
-    "test:all": "npm run test:unit && npm run test:integration",
-    "chat": "tsx tests/interactive-test.ts",
-    "generate-html": "tsx src/cli/html-generator.ts",
-    "test:html": "tsx tests/html-generator-test.ts",
-    "test:prompts": "tsx tests/prompt-output-test.ts",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
-    "lint:complexity": "eslint src/ --no-eslintrc --config eslint.config.js"
+  "description": "An AI-powered adventure generator used to explore and learn about repositories.",
+  "private": true,
+  "author": {
+    "name": "Dan Wahlin",
+    "url": "https://github.com/danwahlin"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.2",
-    "chalk": "^5.5.0",
-    "dotenv": "^17.2.1",
-    "marked": "^16.1.2",
-    "openai": "^5.12.2",
-    "repomix": "^1.3.0",
-    "zod": "^3.24.1",
-    "zod-to-json-schema": "^3.24.6"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danwahlin/ai-repo-adventures"
+  },
+  "homepage": "https://github.com/danwahlin/ai-repo-adventures",
+  "bugs": {
+    "url": "https://github.com/danwahlin/ai-repo-adventures/issues"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:generator": "npm run build -w @codewithdan/ai-repo-adventure-generator",
+    "build:mcp": "npm run build -w @codewithdan/ai-repo-adventure-mcp",
+    "build:core": "npm run build -w @ai-repo-adventures/core",
+    "start": "npm run build:mcp && node packages/mcp/dist/server.js",
+    "dev": "npm run build:mcp && node packages/mcp/dist/server.js",
+    "test": "npm run build && npx tsx tests/comprehensive-test-runner.ts",
+    "test:unit": "npm run build && npx tsx tests/unit-test-runner.ts",
+    "test:integration": "npm run build && npx tsx tests/integration-test-runner.ts",
+    "test:simple": "npm run build && npx tsx tests/simple-test.ts",
+    "test:real-world": "npm run build && npx tsx tests/real-world-test.ts",
+    "test:html": "npm run build && node packages/generator/bin/cli.js --theme space --output tests/public --overwrite --max-quests 1 --log-llm-output --serve",
+    "test:html:full": "npm run build && node packages/generator/bin/cli.js --theme mythical --output tests/public --overwrite",
+    "test:llm": "npm run build && npx tsx tests/integration/llm-integration.test.ts",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:prompts": "npm run build && npx tsx tests/prompt-output-test.ts",
+    "lint": "eslint packages/*/src/",
+    "lint:fix": "eslint packages/*/src/ --fix",
+    "lint:complexity": "eslint packages/*/src/ --no-eslintrc --config eslint.config.js",
+    "chat": "npm run build && npx tsx tests/interactive-test.ts",
+    "clean": "npm run clean --workspaces --if-present",
+    "generate-html": "npm run build && node packages/generator/bin/cli.js",
+    "publish:generator": "npm publish -w @codewithdan/ai-repo-adventure-generator",
+    "publish:mcp": "npm publish -w @codewithdan/ai-repo-adventure-mcp",
+    "publish:all": "npm run build && npm run publish:generator && npm run publish:mcp",
+    "version:patch": "lerna version patch --conventional-commits",
+    "version:minor": "lerna version minor --conventional-commits", 
+    "version:major": "lerna version major --conventional-commits",
+    "release:check": "lerna changed",
+    "release:version": "lerna version --conventional-commits",
+    "release:publish": "lerna publish from-git"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
-    "@types/marked": "^5.0.2",
-    "@types/node": "^24.1.0",
-    "@typescript-eslint/parser": "^8.38.0",
+    "@eslint/js": "^9.33.0",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/parser": "^8.39.1",
     "eslint": "^8.57.1",
     "eslint-plugin-cyclomatic-complexity": "^2.0.11",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.2"
-  }
+    "lerna": "^8.2.3",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "generator",
+    "ai",
+    "adventure",
+    "quest"
+  ]
 }

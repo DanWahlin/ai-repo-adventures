@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Skip if commit message contains chore(release) to avoid infinite loops
+    if: ${{ !contains(github.event.head_commit.message, 'chore(release)') }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for conventional commits
+          fetch-depth: 0
+          # Use GITHUB_TOKEN with enhanced permissions
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Configure Git for automated commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for changes in publishable packages
+        id: changed-packages
+        run: |
+          # Check if there are changes in generator or mcp packages since last release
+          if npx lerna changed --loglevel silent; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "📦 Changes detected in publishable packages"
+          else
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No changes detected in publishable packages"
+          fi
+
+      - name: Version packages
+        if: steps.changed-packages.outputs.has-changes == 'true'
+        run: |
+          echo "🏷️ Creating new versions for changed packages..."
+          npx lerna version --conventional-commits --yes --create-release github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        if: steps.changed-packages.outputs.has-changes == 'true'
+        run: |
+          echo "🚀 Publishing packages to npm..."
+          npx lerna publish from-git --yes
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        if: steps.changed-packages.outputs.has-changes == 'true'
+        run: |
+          echo "✅ Release completed successfully!"
+          echo "📋 Published packages:"
+          npx lerna list --json | jq -r '.[].name + "@" + .[].version'

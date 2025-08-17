@@ -7,7 +7,7 @@
 import { 
   validateAdventureChoice, 
   validateTheme 
-} from '../../src/shared/input-validator.js';
+} from '../../packages/core/dist/shared/input-validator.js';
 import { createTestRunner, assert } from '../shared/test-utils.js';
 
 export async function runInputValidatorTests() {

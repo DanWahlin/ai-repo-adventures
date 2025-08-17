@@ -27,7 +27,7 @@ class NonInteractiveMCPClient {
     
     this.transport = new StdioClientTransport({
       command: 'node',
-      args: [path.join(process.cwd(), 'dist/server.js')],
+      args: [path.join(process.cwd(), 'packages/mcp/dist/server.js')],
       env: process.env as Record<string, string>,
     });
 

@@ -11,7 +11,7 @@ import {
   getThemeByKey, 
   getAllThemes,
   THEMES 
-} from '../../src/shared/theme.js';
+} from '../../packages/core/dist/shared/theme.js';
 import { createTestRunner, assert } from '../shared/test-utils.js';
 
 export async function runThemeTests() {

@@ -5,10 +5,10 @@
  * Tests focus on the core functionality that remains after removing redundant LLM analysis
  */
 
-import { AdventureManager } from '../../src/adventure/adventure-manager.js';
-import { DynamicStoryGenerator } from '../../src/adventure/story-generator.js';
-import { THEMES } from '../../src/shared/theme.js';
-import { RepoAnalyzer } from '../../src/analyzer/repo-analyzer.js';
+import { AdventureManager } from '../../packages/core/dist/adventure/adventure-manager.js';
+import { DynamicStoryGenerator } from '../../packages/core/dist/adventure/story-generator.js';
+import { THEMES } from '../../packages/core/dist/shared/theme.js';
+import { RepoAnalyzer } from '../../packages/core/dist/analyzer/repo-analyzer.js';
 import { createTestRunner, mockProjectInfo, assert } from '../shared/test-utils.js';
 
 async function runTests() {

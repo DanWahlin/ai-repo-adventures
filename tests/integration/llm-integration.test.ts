@@ -4,8 +4,8 @@
  * Integration tests that actually call the LLM and validate responses
  */
 
-import { AdventureManager } from '../../src/adventure/adventure-manager.js';
-import { LLMClient } from '../../src/llm/llm-client.js';
+import { AdventureManager } from '../../packages/core/dist/adventure/adventure-manager.js';
+import { LLMClient } from '../../packages/core/dist/llm/llm-client.js';
 import { 
   createTestRunner, 
   realProjectInfo, 
@@ -196,32 +196,37 @@ async function runTests() {
     
     // Get the actual adventures that were created
     assert(progress.choices && progress.choices.length > 0, 'Should have created adventures');
-    const adventures = progress.choices;
+    const quests = progress.choices;
     
     // Use LLM to validate the story structure
-    const validationPrompt = `Please analyze this story and adventures for quality. Return JSON with:
+    const validationPrompt = `Please analyze this story and quests for quality. This is a "gamified" type of concept for 
+    learning about code repos as opposed to an actual book concept. The "chapters" concept is more about ensuring that the individual quest stories
+    align with the overall story.
+    Return JSON with:
     {
       "storyQuality": "good/poor",
       "hasOverallNarrative": true/false,
-      "adventuresAreChapters": true/false,
+      "questsAreChapters": true/false,
       "themeConsistency": "good/poor",
       "reasoning": "explanation"
     }
 
     STORY: ${storyResult}
     
-    ADVENTURES: ${JSON.stringify(adventures)}`;
+    QUESTS: ${JSON.stringify(quests)}`;
 
     const validation = await llmClient.generateResponse(validationPrompt, { responseFormat: 'json_object' });
     const validationResult = JSON.parse(validation.content);
+
+    console.log(validationResult);
     
     // Assert the LLM validation results
-    assert(validationResult.storyQuality === 'good', `Story quality should be good: ${validationResult.reasoning}`);
-    assert(validationResult.hasOverallNarrative === true, `Should have overall narrative: ${validationResult.reasoning}`);
-    assert(validationResult.adventuresAreChapters === true, `Adventures should be chapters: ${validationResult.reasoning}`);
-    assert(validationResult.themeConsistency === 'good', `Theme should be consistent: ${validationResult.reasoning}`);
-    
-  }, { timeout: 60000 });
+    assert(validationResult.storyQuality === 'good', `Story quality should be good: ${validationResult.storyQuality}`);
+    assert(validationResult.hasOverallNarrative === true, `Should have overall narrative: ${validationResult.hasOverallNarrative}`);
+    assert(validationResult.questsAreChapters === true, `Quests should be chapters: ${validationResult.questsAreChapters}`);
+    assert(validationResult.themeConsistency === 'good', `Theme should be consistent: ${validationResult.themeConsistency}`);
+
+  }, { timeout: 30000 });
 
   await test('Adventure chapters validation with LLM analysis', async () => {
     const manager = new AdventureManager();

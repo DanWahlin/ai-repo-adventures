@@ -5,7 +5,7 @@
  * Focused on testing our business logic and error handling, not library internals
  */
 
-import { LLMClient } from '../../src/llm/llm-client.js';
+import { LLMClient } from '../../packages/core/dist/llm/llm-client.js';
 import { createTestRunner, assert } from '../shared/test-utils.js';
 
 async function runLLMClientTests() {
