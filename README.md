@@ -382,7 +382,7 @@ Add this server to your Claude Desktop configuration at `~/Library/Application S
   "mcpServers": {
     "repo-adventure": {
       "command": "node",
-      "args": ["/absolute/path/to/mcp-repo-adventure/dist/server.js"],
+      "args": ["/absolute/path/to/ai-repo-adventures/dist/server.js"],
       "cwd": "/path/to/project/you/want/to/explore"
     }
   }

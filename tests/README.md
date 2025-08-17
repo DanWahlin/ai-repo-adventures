@@ -33,7 +33,7 @@ When you start the client, you'll see:
 
 ```
 📁 Project Setup
-Current directory: /path/to/mcp-repo-adventure
+Current directory: /path/to/ai-repo-adventures
 
 Would you like to:
   1. Analyze this MCP Repo Adventure project (recommended for testing)

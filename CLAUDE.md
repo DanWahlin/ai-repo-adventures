@@ -205,7 +205,7 @@ The typical user interaction flow:
   "mcpServers": {
     "repo-adventure": {
       "command": "node",
-      "args": ["/path/to/mcp-repo-adventure/dist/server.js"],
+      "args": ["/path/to/ai-repo-adventures/dist/server.js"],
       "cwd": "/path/to/target/project"
     }
   }
