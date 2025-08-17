@@ -28,7 +28,7 @@ Return a well-structured markdown document with this format:
 
 [Your narrative paragraph about the mission, journey, or adventure goes here. Make it 75-100 words that explains what this codebase does through your chosen theme.]
 
-**Your Quest Awaits** – Choose your path wisely, brave adventurer!
+**Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 ## Choose a Quest
 
@@ -71,7 +71,7 @@ Return a well-structured markdown document with this format:
 3. **DO NOT invent file names** — only reference those shown via "## File:" headers in the \`## Project Codebase\`
 4. Reference 3–4 real technologies, tools, or patterns found in the code (e.g., server.ts, MCP handlers, tool registration)  
 5. End with this line:  
-   \`**Your Quest Awaits** – Choose your path wisely, brave adventurer!\`
+   \`**Adventure Awaits** – Choose your quest wisely, brave adventurer!\`
 
 ## MANDATORY STORY FORMAT
 
@@ -86,7 +86,7 @@ Your markdown response MUST include:
 
 Your narrative paragraph about the mission, journey, or adventure goes here. Make it 75-100 words that explains what this codebase does through your chosen theme.
 
-**Your Quest Awaits** – Choose your path wisely, brave adventurer!
+**Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **EXCELLENT EXAMPLE - USE AS STRUCTURAL TEMPLATE ONLY:**
 
@@ -97,7 +97,7 @@ Your narrative paragraph about the mission, journey, or adventure goes here. Mak
 
 Aboard the *Starship Refactor-1*, an elite crew of codonauts embarks on an interstellar mission to decode and optimize the galactic repository known as MCP. Guided by the cutting-edge *Repomix Navigator* and powered by *TypeScript Reactors*, the crew must traverse cosmic data streams, align architectural constellations, and unveil the mysteries of adventure-driven exploration. Their ultimate goal: to transform the sprawling complexity of the MCP system into a harmonious and navigable stellar map. The fate of the intergalactic coding alliance rests on their success.
 
-**Your Quest Awaits** – Choose your path wisely, brave adventurer!
+**Adventure Awaits** – Choose your quest wisely, brave adventurer!
 ```
 
 ⚠️ **CRITICAL: This is ONLY a structural template showing excellent integration. DO NOT copy any phrases, words, or concepts. Create completely original content that follows the same integration approach but uses entirely different vocabulary, metaphors, and narrative elements. Notice how it weaves real technologies (MCP, Repomix, TypeScript) into creative metaphors (Starship Refactor-1, codonauts, TypeScript Reactors, cosmic data streams).**
