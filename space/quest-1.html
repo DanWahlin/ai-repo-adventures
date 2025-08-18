@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 1: The Bridge of Protocols - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'space' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">Starship Lumina: Expedition of Code Horizons</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 1: The Bridge of Protocols</h1>
+<hr>
+<p>The Starship Lumina hovered in the enigmatic pathways between data clusters, its crew deep in pursuit of understanding the mechanics of the ancient repository. Today’s mission brought them to a critical juncture: the Bridge of Protocols, where the ship’s MCP module orchestrated communication between tools and crew. All systems buzzed with energy, as Captain Seraphis prepared to unlock the true potential of the bridge and establish seamless dialogue with the digital galaxy. A wrong move could disconnect the crew from their mission, but a right one would illuminate the uncharted realms ahead.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Protocol Implementation</h3>
+<p>This file serves as the backbone of the &quot;Bridge of Protocols,&quot; orchestrating the interaction between the Starship Lumina&#39;s MCP command core and the tools in its arsenal. The <code class="inline-code">RepoAdventureServer</code> class is at the helm, managing the server’s initialization, handling incoming requests, and connecting the <code class="inline-code">stdio</code> transport. Its <code class="inline-code">setupHandlers()</code> method registers handlers to dynamically list tools and execute them, ensuring adaptability and purpose-driven action. The <code class="inline-code">run()</code> method plays the role of ignition, establishing the connection and even pre-generating the repomix content as if warming up the ship&#39;s engines for efficient travel.</p>
+<p>The <code class="inline-code">main()</code> function acts like the crew chief, ensuring a smooth start and preparing for unforeseen system failures with clear guidelines for graceful shutdowns. The interplay of these methods ensures that every tool communicates seamlessly with the command core, making them indispensable for navigating the cosmic repository.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Efficiently registers dynamic handlers with <code class="inline-code">setupHandlers()</code> to manage tools and their execution.</li>
+<li>Prepares systems for exploration in <code class="inline-code">run()</code> by pre-generating repomix content.</li>
+<li>Handles graceful shutdowns via signal interception and cleanup processes.</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Tool Management and Exploration Interface</h3>
+<p>This file provides the tools that empower the crew to interact with the mysteries of the repository. The <code class="inline-code">explore_quest</code> handler acts as their main interface for mission-specific tasks, while <code class="inline-code">view_progress</code> offers clear data on completed objectives and pending explorations. Each of the tools—<code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, and more—are like instruments in a symphony, orchestrating user workflows with precision and clarity. This system isn’t just functional; it provides an immersive context for users, gamifying complex code analysis.</p>
+<p>The integration of all tools into a cohesive export object ensures that each tool can be accessed like a well-organized compartment of the ship. This modular design aligns perfectly with the scalability and flexibility of space exploration systems.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Modular design enables ease of management and future tool expansion.</li>
+<li>Gamified approach keeps user engagement high with workflows tied to the adventure narrative.</li>
+<li>Exports <code class="inline-code">adventureManager</code> to ensure tools remain synchronized with the system&#39;s core.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/mcp/src/server.ts</h3>
+<pre><code class="language-typescript">class RepoAdventureServer {
+  private server: Server;
+
+  constructor() {
+    this.server = new Server(
+      {
+        name: &#39;repo-adventure&#39;,
+        version: &#39;1.0.0&#39;,
+        description: &#39;A gamified MCP server for exploring code repositories through interactive storytelling&#39;
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.setupHandlers();
+  }
+
+  private setupHandlers() {
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+        name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema, {
+          target: &#39;jsonSchema7&#39;,
+          $refStrategy: &#39;none&#39;
+        })
+      }));
+
+      return { tools: toolList };
+    });
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+      try {
+        const { name, arguments: args } = request.params;
+
+        if (!(name in tools)) {
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+
+        const tool = tools[name as keyof typeof tools];
+        
+        const validationResult = tool.schema.safeParse(args);
+        if (!validationResult.success) {
+          const errorMessages = validationResult.error.issues.map((err) =&gt; 
+            `${err.path.join(&#39;.&#39;)}: ${err.message}`
+          ).join(&#39;, &#39;);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+        }
+
+        return await tool.handler(validationResult.data as any);
+
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  }
+}
+</code></pre>
+<p>The <code class="inline-code">RepoAdventureServer</code> acts like a dispatcher at an intergalactic spaceport, directing incoming and outgoing commands to the right destination.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<p>The <code class="inline-code">tools</code> object is like a set of universal tools stored in a starship’s utility belt, allowing the crew to adapt to any mission.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Dive deeper into the <code class="inline-code">setupHandlers()</code> method to understand how tools plug into the system dynamically.</li>
+<li>Explore how <code class="inline-code">tools.ts</code> promotes modular design, enabling future extensibility with minimal disruption.</li>
+<li>Consider simulating tool additions to see the full effect of the <code class="inline-code">RepoAdventureServer</code> handlers.</li>
+</ul>
+<hr>
+<p>Congratulations, star voyager—Quest 1: The Bridge of Protocols is expertly navigated, your cosmic journey has launched at warp speed 🚀, and the galaxy awaits your brilliance! ⭐</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: Forge of Quests →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3: Galaxy Mapper - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'space' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">Starship Lumina: Expedition of Code Horizons</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 3: Galaxy Mapper</h1>
+<hr>
+<p>The crew of the Starship Lumina ventures deeper into the sprawling digital repository, with the mysterious MCP Command Core guiding their every move. This time, the mission focuses on charting the uncharted systems of fragmented clusters known as &quot;analyzers&quot; and &quot;clients.&quot; These digital waypoints hold the secrets to efficient navigation and communication within the galaxy of information. Every mapped discovery brings the crew closer to their ultimate goal—organizing chaos into a user-friendly stellar roadmap for future explorers. The galaxy waits to be mapped; the adventure continues!</p>
+<h2>File Exploration</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Repomix Integration for Code Analysis</h3>
+<p>This file is the linchpin of the crew’s mission, acting as the analyzer that turns raw data fragments into structured constellations of context using the Repomix CLI tool. The primary objective of the code within this file is extracting meaningful information from a repository while preventing resource overload or compromising security. For example, <code class="inline-code">RepoAnalyzer.generateRepomixContext()</code> validates the repository path and applies robust caching logic to ensure efficient mapping of the systems. It ensures targeted content synthesis by focusing on specific quest objectives using the <code class="inline-code">generateTargetedContent()</code> function, which filters files with precision comparable to piloting through a dense asteroid field. Additionally, the file uses subprocesses like <code class="inline-code">captureRepomixStdout()</code> to execute Repomix commands, collecting valuable data stored within the depths of the repositories. Think of it as a translator, turning incomprehensible digital fragments into readable star charts.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">RepoAnalyzer.generateRepomixContext()</code>: Generates full repository context and caches results for efficiency.</li>
+<li><code class="inline-code">RepoAnalyzer.generateTargetedContent()</code>: Creates precise data maps for specific files using include patterns.</li>
+<li><code class="inline-code">RepoAnalyzer.validateProjectPath()</code>: Prevents access beyond system directories, ensuring safe exploration.</li>
+</ul>
+<hr>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: Multi-Provider LLM Integration</h3>
+<p>This file serves as the communicator enabling interstellar communication with advanced LLM technology. Here, the <code class="inline-code">LLMClient.generateResponse()</code> method is the heart of the galaxy-mapping endeavor, as it processes AI-driven responses while managing various configurations like token limits and timeouts. The file supports integrations with multiple providers like OpenAI and Azure’s AI services, each tailored for different types of lunar landscapes via the <code class="inline-code">getApiKey()</code> and <code class="inline-code">isAzureOpenAI()</code> functions. For example, <code class="inline-code">buildRequestParams()</code> constructs a detailed request with context designed to synthesize coherent responses. In the galactic context, think of the client as an intergalactic envoy—interpreting complex signals from both familiar and alien intelligence. LLM configurations, including GPT-5 behavior, further add rich depth to the mapping challenges, ensuring stellar clarity for every mission.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">LLMClient.generateResponse()</code>: Handles generation of tailored responses with timeout protection.</li>
+<li><code class="inline-code">LLMClient.getApiKey()</code>: Determines correct authentication keys for providers.</li>
+<li><code class="inline-code">LLMClient.isAzureOpenAI()</code>: Identifies provider-specific configurations for smooth operation.</li>
+</ul>
+<hr>
+<h2>Code</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
+<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
+    if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+        throw new Error(&#39;Project path must be a non-empty string&#39;);
+    }
+
+    const trimmedPath = projectPath.trim();
+    if (!trimmedPath) {
+        throw new Error(&#39;Project path must be a non-empty string&#39;);
+    }
+
+    // Basic safety check for null bytes (can break file system operations)
+    if (trimmedPath.includes(&#39;\0&#39;)) {
+        throw new Error(&#39;Project path contains invalid null bytes&#39;);
+    }
+}
+</code></pre>
+<p>Just like a safety inspector evaluates spacecraft docking ports for vulnerabilities, this function ensures paths are free of security risks like null bytes or invalid input.</p>
+<hr>
+<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+    this.validateProjectPath(projectPath);
+    if (!targetFiles || targetFiles.length === 0) {
+        throw new Error(&#39;Target files array cannot be empty&#39;);
+    }
+    
+    const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+    if (safeFiles.length === 0) {
+        throw new Error(&#39;No valid target files found after validation&#39;);
+    }
+    
+    try {
+        const cliOptions: CliOptions = {
+            style: &#39;markdown&#39;,
+            stdout: true,
+            compress: compress,
+            include: safeFiles.join(&#39;,&#39;),
+            removeComments: compress,
+            removeEmptyLines: compress,
+            noDirectoryStructure: true
+        };
+
+        const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+        return context;
+    } catch (error) {
+        throw new Error(`Targeted repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+</code></pre>
+<p>This function is like setting course coordinates for a spacecraft, ensuring targeted analysis focuses on specific files and extracts the necessary data.</p>
+<hr>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
+<pre><code class="language-typescript">private getApiKey(): string {
+    if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+        if (!GITHUB_TOKEN) {
+            throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN.&#39;);
+        }
+        return GITHUB_TOKEN;
+    }
+    if (!LLM_API_KEY) {
+        throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY.&#39;);
+    }
+    return LLM_API_KEY;
+}
+</code></pre>
+<p>This function is like identifying the correct frequency to tune into for interstellar communication, ensuring the right credentials are used for the chosen provider.</p>
+<hr>
+<pre><code class="language-typescript">private buildRequestParams(prompt: string, options?: LLMRequestOptions): OpenAIRequestParams {
+    const requestParams: OpenAIRequestParams = {
+        model: this.model,
+        messages: [{ role: &#39;user&#39;, content: prompt }]
+    };
+
+    if (options?.responseFormat) {
+        requestParams.response_format = { type: options.responseFormat };
+    }
+
+    if (this.isGPT5Model()) {
+        requestParams.temperature = 1;
+        requestParams.max_completion_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+        requestParams.verbosity = options?.verbosity || GPT5_VERBOSITY;
+        requestParams.reasoning_effort = options?.reasoningEffort || GPT5_REASONING_EFFORT;
+    } else {
+        requestParams.temperature = LLM_TEMPERATURE;
+        requestParams.max_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+    }
+
+    return requestParams;
+}
+</code></pre>
+<p>Just like crafting a diplomatic message to a distant civilization, this function fine-tunes the parameters for generating the desired response from the AI systems.</p>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Use <code class="inline-code">validateProjectPath()</code> to proactively avoid path traversal attacks when handling repository paths.</li>
+<li>Build lighter requests for quick responses by reducing <code class="inline-code">maxTokens</code> and simplifying prompts in <code class="inline-code">generateResponse()</code>.</li>
+<li>Dive deeper into the <code class="inline-code">captureRepomixStdout()</code> method to explore how subprocess output is efficiently handled.</li>
+</ul>
+<hr>
+<p>Mission accomplished, Galaxy Mapper! You&#39;ve charted new cosmic territories and reached 40% of your stellar journey—keep navigating the stars like the bold interstellar explorer you are! 🚀 ⭐ 📡</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: Theme Workshop →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>
