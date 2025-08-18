@@ -229,11 +229,16 @@ export class StoryGenerator {
       throw new Error('LLM returned empty response for quest content');
     }
     
-    // Return raw markdown content - no parsing, no processing
+    // Clean and process the LLM response
     let cleanContent = response.content.trim();
+    
+    // Remove markdown code fences if present
     if (cleanContent.startsWith('```markdown')) {
       cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
     }
+    
+    // Remove common LLM meta-commentary patterns that shouldn't appear in the final content
+    cleanContent = this.removeLLMMetaCommentary(cleanContent);
     
     // Return the content as a simple QuestContent structure with everything in adventure field
     return {
@@ -362,6 +367,49 @@ export class StoryGenerator {
       return DEFAULT_THEME;
     }
     return theme;
+  }
+
+  /**
+   * Remove LLM meta-commentary that shouldn't appear in the final content
+   */
+  private removeLLMMetaCommentary(content: string): string {
+    // Split content into lines for processing
+    const lines = content.split('\n');
+    
+    // Common patterns that indicate LLM meta-commentary
+    const metaCommentaryPatterns = [
+      /^Here is the continuation of/i,
+      /^Based on the provided.*narrative/i,
+      /^The markdown output.*constraints/i,
+      /^Following the.*template/i,
+      /^As requested.*format/i,
+      /^I'll continue the.*themed/i,
+      /^Let me generate/i,
+      /^I understand you want/i,
+      /^See http:\/\/localhost/i  // Remove localhost references
+    ];
+    
+    // Find the first line that doesn't match meta-commentary patterns
+    let startIndex = 0;
+    for (let i = 0; i < Math.min(lines.length, 10); i++) { // Check first 10 lines max
+      const line = lines[i].trim();
+      
+      // Skip empty lines at the beginning
+      if (line === '') continue;
+      
+      // Check if this line matches any meta-commentary pattern
+      const isMetaCommentary = metaCommentaryPatterns.some(pattern => pattern.test(line));
+      
+      if (isMetaCommentary) {
+        startIndex = i + 1;
+      } else {
+        // Found actual content, stop looking
+        break;
+      }
+    }
+    
+    // Remove the meta-commentary lines and return clean content
+    return lines.slice(startIndex).join('\n').trim();
   }
 
 }
