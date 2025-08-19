@@ -69,13 +69,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug npm configuration
+        if: steps.changed-packages.outputs.has-changes == 'true'
+        run: |
+          echo "🔍 Debugging npm configuration..."
+          npm whoami || echo "❌ npm authentication failed"
+          npm config get registry
+          echo "📋 Node.js version: $(node --version)"
+          echo "📋 npm version: $(npm --version)"
+
       - name: Publish to npm
         if: steps.changed-packages.outputs.has-changes == 'true'
         run: |
           echo "🚀 Publishing packages to npm..."
           # For first-time publishing, we need to use publish from-package
           # which handles both new and existing packages
-          npx lerna publish from-package --yes --dist-tag latest
+          npx lerna publish from-package --yes --dist-tag latest --loglevel verbose
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
