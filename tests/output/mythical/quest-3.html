@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 3: The Scribe’s Insightful Lens - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'mythical' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">Chronicles of the Mystic Codebase: The Enchanted Repository</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 3: The Scribe’s Insightful Lens</h1>
+<hr>
+<p>The ancient halls of the Great Repository hum with dormant power as you receive the next stage of your heroic journey. The legendary &quot;Scribe’s Insightful Lens&quot; is rumored to reside deep within the Vault of Echoing Syntax, a chamber where thought and magic intertwine. This enchanted device grants clarity to muddled spellbound scrolls—much like untangling a cryptic riddle. Armed with the guidance of the Order of Engineers, you must delve into the techniques and artifacts that sustain Codoria’s arcane harmony. Steady your resolve, for the trials ahead demand both cunning and courage.</p>
+<h2>File Exploration</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Repomix Integration for Code Analysis</h3>
+<p>This file constructs the bridge between enchanted logic and clarity. Think of it as a magical scribe, extracting meaningful incantations from tangled scrolls (the repository). The <code class="inline-code">RepoAnalyzer</code> class, akin to a seasoned librarian, deciphers complexities, validates the paths to critical texts, and invokes <code class="inline-code">repomix</code>—a spell-like subprocess—to gather structured insights. The key functions, like <code class="inline-code">generateRepomixContext()</code>, orchestrate the entire operation, ensuring files are validated, secured, and efficiently analyzed before weaving the results into coherent magical tales. It even caches these “tales” for future use, preventing unnecessary strain on Codoria’s delicate magic reserves.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateRepomixContext()</code>: Orchestrates the creation of a full project analysis from files, ensuring safety and cache efficiency.</li>
+<li><code class="inline-code">generateTargetedContent()</code>: Focused retrieval of repomix insights from specific files to conserve resources.</li>
+<li><code class="inline-code">captureRepomixStdout()</code>: Handles interactions with the <code class="inline-code">repomix</code> spell subprocess, managing time and memory constraints.</li>
+</ul>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: Multi-Provider LLM Integration</h3>
+<p>This file acts as the veil between master sorcerers (LLMs like OpenAI) and Codoria&#39;s burgeoning scribes. The <code class="inline-code">LLMClient</code> class empowers your quest with thoughtfully crafted texts, leveraging models such as GPT-4 and GPT-5. Its key function, <code class="inline-code">generateResponse()</code>, shapes and processes prompts for LLMs, deftly managing timeouts and formatting responses—think of it as a translator of ancient symbols into actionable guidance. Whether parsing wisdom from Azure or OpenAI, its adaptable configurations ensure harmony across all realms, including those protected by GitHub’s formidable guardians.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateResponse()</code>: Crafts and sends precise prompts to the LLM, interpreting responses and managing formats like <code class="inline-code">JSON</code>.</li>
+<li><code class="inline-code">constructor</code>: Automatically detects and configures the LLM provider, enabling seamless flow across multiple sources.</li>
+<li><code class="inline-code">getApiKey()</code>: Fetches the appropriate key for secure invocation of the specific provider.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
+<pre><code class="language-typescript">import * as path from &#39;path&#39;;
+import * as fs from &#39;fs&#39;;
+
+private validateAndNormalizeTargetFiles(projectPath: string, targetFiles: string[]): string[] {
+  const MAX_TARGET_FILES = 50;
+  const projectRoot = path.resolve(projectPath);
+
+  const safeFiles = [...new Set(targetFiles)]
+    .slice(0, MAX_TARGET_FILES)
+    .map(file =&gt; {
+      if (typeof file !== &#39;string&#39; || !file.trim()) {
+        return null;
+      }
+      const trimmed = file.trim();
+      if (trimmed.includes(&#39;\0&#39;) || trimmed.includes(&#39;..&#39;)) {
+        console.warn(`Rejecting potentially unsafe file path: ${trimmed}`);
+        return null;
+      }
+      return trimmed;
+    })
+    .filter((file): file is string =&gt; file !== null)
+    .map(file =&gt; {
+      const fullPath = path.resolve(projectPath, file);
+
+      if (!fullPath.startsWith(projectRoot + path.sep) &amp;&amp; fullPath !== projectRoot) {
+        console.warn(`Rejecting file outside project directory: ${file}`);
+        return null;
+      }
+      if (!fs.existsSync(fullPath)) {
+        console.warn(`Skipping non-existent file: \`${file}\``);
+        return null;
+      }
+
+      return path.relative(projectPath, fullPath);
+    })
+    .filter((file): file is string =&gt; file !== null)
+    .sort();
+
+  return safeFiles;
+}
+</code></pre>
+<p>This function safeguards the repository by ensuring all files analyzed are valid and securely contained within the realm (project directory). </p>
+<hr>
+<h3>packages/core/src/llm/llm-client.ts</h3>
+<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+  try {
+    const requestParams = this.buildRequestParams(prompt, options);
+    const completion = await this.executeRequest(requestParams);
+    let content = this.validateResponse(completion);
+
+    if (options?.responseFormat === &#39;json_object&#39;) {
+      content = this.cleanJsonResponse(content);
+    }
+
+    this.logTokenUsage(completion);
+
+    return { content };
+  } catch (error) {
+    this.logDetailedError(error, prompt);
+    const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
+    throw new Error(`LLM request failed: ${message}`);
+  }
+}
+
+private buildRequestParams(prompt: string, options?: LLMRequestOptions): OpenAIRequestParams {
+  const requestParams: OpenAIRequestParams = {
+    model: this.model,
+    messages: [{ role: &#39;user&#39;, content: prompt }]
+  };
+
+  // Use model-specific parameters
+  if (this.isGPT5Model()) {
+    requestParams.temperature = 1;
+    requestParams.max_completion_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+    requestParams.verbosity = options?.verbosity || GPT5_VERBOSITY;
+    requestParams.reasoning_effort = options?.reasoningEffort || GPT5_REASONING_EFFORT;
+  } else {
+    requestParams.temperature = LLM_TEMPERATURE;
+    requestParams.max_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+  }
+
+  return requestParams;
+}
+</code></pre>
+<p>This sequence of spells ensures that the sorcerer (LLM) is equipped with the correct recipe (parameters) to provide the most insightful response tailored to the apprentice&#39;s needs.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Double-check the <code class="inline-code">validateAndNormalizeTargetFiles()</code> function for edge cases like symbolic links that could bypass security.</li>
+<li>Experiment with <code class="inline-code">generateResponse()</code> to better understand how the <code class="inline-code">verbosity</code> and <code class="inline-code">reasoningEffort</code> parameters influence LLM outputs.</li>
+<li>As your next quest, explore how <code class="inline-code">adventure-config.ts</code> formats guidance into structured prompts, forming the bridge between code and narrative.</li>
+</ul>
+<hr>
+<p>Hail, brave seeker of wisdom, for with the completion of &#39;The Scribe’s Insightful Lens,&#39; you have unlocked the sacred quill of illumination, charting a luminous path to glory—take heart, for you are halfway to eternal renown! ⭐⚡📜</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: The Tome of Themes and Configur... →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 1: Guardians of the Protocol - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'ancient' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">The Lost Codex of the Repository</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 1: Guardians of the Protocol</h1>
+<hr>
+<p>Through the dense labyrinth of glyphs pulsed an eerie golden light—the Repository’s digital heartbeat. Buried within the vaults of this ancient technological sanctuary were the Guardians of the Protocol, encoded entities charged with enforcing the Codemasters&#39; laws. The glyphs on the walls whispered riddles to those brave enough to enter, describing ancient scripts whose purpose was to protect the sacred Codex. As you step further into the Repository, bound by vines of forgotten code, the echo of a riddle emerges: &quot;Will the handlers answer the call?&quot; Tools crafted by ancient hands await your touch.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Protocol Implementation</h3>
+<p>This file is the cornerstone of the &quot;Guardians of the Protocol&quot; chapter, as it defines the <code class="inline-code">RepoAdventureServer</code> class, which brings the adventures to life. The server hosts the tools, handles requests from explorers, and ensures every narrative flows smoothly by bridging interactive adventures with real repository insights. It achieves this by implementing the <code class="inline-code">setupHandlers()</code> method, which dynamically maps tool requests to the appropriate Zod-validated handlers. This modular design ensures only correctly structured data enters the sacred process.</p>
+<p>Additionally, the <code class="inline-code">run()</code> method establishes the connection via <code class="inline-code">stdio</code>, the gateway for communication. It also kicks off <code class="inline-code">repoAnalyzer.preGenerate()</code>, an essential ritual that prepares the Repository’s pathways for seamless traversal. The file&#39;s centerpiece, the <code class="inline-code">main()</code> function, ensures graceful shutdowns and fortifies the server against unhandled promise rejections, offering a stronghold against chaos. The encapsulation in this file allows the adventurous explorer to focus on solving riddles without confronting abrupt errors or interruptions.</p>
+<h4>Highlights</h4>
+<ul>
+<li>The <code class="inline-code">setupHandlers()</code> method maps ancient tools and validates their input with Zod schemas.</li>
+<li>The <code class="inline-code">run()</code> method connects the server via <code class="inline-code">stdio</code> and pre-generates repository insights.</li>
+<li>The <code class="inline-code">main()</code> function ensures a graceful shutdown, maintaining the stability of the codified temple.</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> MCP Tool Module</h3>
+<p>This file defines the tools—keys to unlocking the Repository’s secrets. These functions power the explorers’ ability to start a journey, shape a theme, and delve into individual quests. Tools like <code class="inline-code">start_adventure.handler()</code> analyze a repository’s structure and suggest paths for exploration. Then, <code class="inline-code">choose_theme.handler()</code> empowers explorers to align with the repository&#39;s unique narrative style, such as unlocking digital pyramids or decoding contemporary jungles of algorithms.</p>
+<p>The fun continues with <code class="inline-code">explore_quest.handler()</code>, allowing adventurers to step into previously uncharted territory, while <code class="inline-code">view_progress.handler()</code> keeps a meticulous ledger of completed and future quests. The tools encapsulated in this file provide transformative user experiences—turning dull system exploration into a gamified discovery steeped in story. Encoded with purpose, this file ensures that each tool operates seamlessly with the overarching architecture.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler()</code> kickstarts the journey, analyzing codebases and suggesting pathways.</li>
+<li><code class="inline-code">choose_theme.handler()</code> frames thematic narratives based on the explorer’s choice.</li>
+<li><code class="inline-code">explore_quest.handler()</code> facilitates progressive discovery through quests and challenges.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/mcp/src/server.ts</h3>
+<pre><code class="language-typescript">private setupHandlers() {
+  // Dynamic tool listing
+  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: &#39;jsonSchema7&#39;,
+        $refStrategy: &#39;none&#39;
+      })
+    }));
+
+    return { tools: toolList };
+  });
+
+  // Dynamic tool execution
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+    try {
+      const { name, arguments: args } = request.params;
+
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+
+      const tool = tools[name as keyof typeof tools];
+      
+      // Validate arguments using the tool&#39;s Zod schema
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) =&gt; 
+          `${err.path.join(&#39;.&#39;)}: ${err.message}`
+        ).join(&#39;, &#39;);
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
+
+      // Execute the tool handler with validated arguments
+      return await tool.handler(validationResult.data as any);
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  });
+}
+</code></pre>
+<p>This function is like a guild master assigning each adventurer (tool) their specific role after ensuring they’re equipped (validated) for the task.</p>
+<pre><code class="language-typescript">async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  
+  // Pre-generate repomix content for the current working directory to warm up the cache
+  // This happens in the background while waiting for user commands
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
+}
+</code></pre>
+<p>This is like establishing a central marketplace where adventurers gather supplies before embarking on their quests.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<p>This export is like displaying the map’s four corners, each representing a distinct journey to explore, conquer, and learn.</p>
+<pre><code class="language-typescript">// Export the shared adventure manager for tools that need it
+export { adventureManager };
+</code></pre>
+<p>This line ensures all explorers (tools) share the same guide, ensuring consistency as they traverse the Repository.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>If debugging, start with the <code class="inline-code">setupHandlers()</code> method to check tool assignment and inputs.</li>
+<li>To expand adventures, analyze <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a> and add new handlers in the server.</li>
+<li>Continue exploring <code class="inline-code">adventure-manager.ts</code> for insights into project-wide orchestration.</li>
+</ul>
+<hr>
+<p>Hark, noble seeker, thou hast triumphed in the sacred Rite of Protocol, unlocking the first star upon thy celestial map—onward, for the temple’s wisdom yet beckons! ⭐🗺️📡</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: The Forge of Stories →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>
