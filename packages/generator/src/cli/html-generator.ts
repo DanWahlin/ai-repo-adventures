@@ -977,11 +977,15 @@ class HTMLAdventureGenerator {
     // Get repo URL from adventure.config.json
     const config = parseAdventureConfig(this.projectPath);
     let repoUrl = 'https://github.com/danwahlin/ai-repo-adventures';
+    let repoName = 'AI Repo Adventures';
     
     if (config && typeof config === 'object' && 'adventure' in config) {
       const adventure = (config as any).adventure;
       if (adventure && typeof adventure.url === 'string') {
         repoUrl = adventure.url.replace(/\/$/, ''); // Remove trailing slash
+      }
+      if (adventure && typeof adventure.name === 'string') {
+        repoName = adventure.name;
       }
     }
 
@@ -997,7 +1001,7 @@ class HTMLAdventureGenerator {
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">AI Repo Adventures</a>
+                <a href="index.html">${repoName}</a>
             </div>
             <div class="nav-right">
                 <a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -1561,7 +1565,7 @@ p {
 
 .theme-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
   margin-top: 2rem;
   margin-left: auto;
@@ -1709,7 +1713,6 @@ p {
 @media (min-width: 769px) and (max-width: 1200px) {
   .theme-grid {
     grid-template-columns: repeat(2, 1fr);
-    max-width: 700px;
   }
 }
 
