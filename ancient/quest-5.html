@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: The Codex of Timekeepers - Repo Adventure</title>
+    <title>Quest 5: The Sacred Configuration Vault - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -38,31 +38,49 @@
 
     <nav class="navbar">
         <div class="nav-content">
-            <a href="index.html">The Lost Scrolls of Repoa: Unearthing the Codebound Mysteries</a>
+            <div class="nav-left">
+                <a href="index.html">The Pyramid of Lost Code</a>
+            </div>
+            <div class="nav-right">
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <img src="assets/images/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                </a>
+            </div>
         </div>
     </nav>
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: The Codex of Timekeepers</h1>
+    <h1>Quest 5: The Sacred Configuration Vault</h1>
 <hr>
-<p>As the jungle&#39;s shadows stretched long and golden under the weight of the setting sun, you arrived at the long-forgotten Temple of Chronology. Its glyphs whispered of the Timekeepers, ancient architects who interwove logic and chaos to calculate secrets locked within eternity&#39;s grasp. Their Codex, known only in legend, is said to reveal the patterns of time itself, a vital artifact hidden within the tangled mysteries of the temple. But beware—this sacred place bends the threads of logic like the jungle&#39;s twisting vines. With your map, tools, and courage in hand, it’s time to decipher the intricate puzzles and recover this relic of unparalleled wisdom.</p>
+<p>The sun struggles to pierce through the tangled canopy of the overgrown jungle as you approach the fabled Pyramid of Lost Code. The air feels heavy with the weight of secrets long buried. Deep inside, the Sacred Configuration Vault awaits—a chamber whispered about in the myths of ancient codemasters. This vault was said to hold the blueprint for harmony between user choice and system architecture, a delicate balance that guided civilizations of tech-savvy engineers long before your time. With the hallowed sands crunching underfoot, you ready yourself to face puzzles as intricate as the labyrinth itself. The adventure begins anew.</p>
+<hr>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration system for guided adventures that enhance story generation</h3>
-<p>The <code class="inline-code">adventure-config.ts</code> file acts as both the map and compass for constructing carefully guided and themed adventures. Serving as the architectural foundation of the adventure generation pipeline, this file&#39;s functions load, parse, and structure information stored within the vital <code class="inline-code">adventure.config.json</code>. By reading this file, adventures are aligned with specific themes, ensuring that quests deliver rich educational content while respecting the narrative&#39;s constraints. Functions like <code class="inline-code">loadAdventureConfig()</code> extract raw configuration data, while <code class="inline-code">parseAdventureConfig()</code> ensures that the information follows the correct structure. Furthermore, the <code class="inline-code">formatAdventureConfigForPrompt()</code> function intricately organizes quest details, which allows narrative prompts to consistently focus on relevant code exploration.</p>
-<p>Embedded within the file is the <code class="inline-code">extractUniqueFilePaths()</code> function, which functions like an ancient scribe cataloging each scroll—systematically identifying and validating all files referenced in the configuration. While many parts of this file operate in the background, their importance cannot be overstated. Without these mechanisms, the themed narrative structure and educational focus of the adventures would falter entirely.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Central configuration for guided adventures</h3>
+<p>The <code class="inline-code">adventure-config.ts</code> file is the keystone to understanding how the Pyramid of Lost Code adapts to each brave adventurer. Like the sacred writings on the walls of the ancient temples, this file deciphers the <code class="inline-code">adventure.config.json</code>, transforming raw hieroglyphs into legible instructions. The codemasters of old must have designed the functions here with foresight beyond their era, creating methods that streamline the retrieval, parsing, and highlighting of critical data. <code class="inline-code">loadAdventureConfig()</code> is akin to opening a scroll, carefully unveiling the raw directives. Meanwhile, <code class="inline-code">parseAdventureConfig()</code> parses this knowledge into tangible wisdom, validating its structure and ensuring accuracy. Finally, <code class="inline-code">extractUniqueFilePaths()</code> maps every corner of the adventure’s labyrinth by distilling distinct paths, helping explorers focus their attention where it’s most needed. This makes it clear that no line of code is left to chance, and every relic has its place.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">loadAdventureConfig()</code> retrieves configuration details from <code class="inline-code">adventure.config.json</code> like rediscovering a map tucked away in a dusty tome.</li>
-<li><code class="inline-code">parseAdventureConfig()</code> ensures the retrieved map is both authentic and intact, protecting the flow of the adventure.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt()</code> meticulously crafts prompts, ensuring a perfect symbiosis between narrative and analysis.</li>
+<li><code class="inline-code">loadAdventureConfig()</code>: Fetches raw wisdom from the ancient <code class="inline-code">adventure.config.json</code> directly.</li>
+<li><code class="inline-code">parseAdventureConfig()</code>: Understands and validates the configuration structure, ensuring no sacred detail is lost.</li>
+<li><code class="inline-code">extractUniqueFilePaths()</code>: Compiles a list of the unique paths mentioned in the configuration—like mapping the temple’s internal corridors.</li>
 </ul>
+<hr>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">/**
- * Parses the adventure config into an object (or null on error/missing).
- * Single point of JSON parsing and validation.
- */
+<pre><code class="language-typescript">function readFileIfExists(filePath: string): string | null {
+  try {
+    return fs.readFileSync(filePath, &#39;utf-8&#39;);
+  } catch {
+    // Missing or unreadable file is non-fatal
+    return null;
+  }
+}
+
+export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
+}
+
 export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
@@ -72,11 +90,10 @@ export function parseAdventureConfig(projectPath: string): unknown | null {
     return null;
   }
 }
-
-/**
- * Extracts all unique, existing file paths referenced by &quot;path&quot; fields anywhere in the config.
- */
-export function extractUniqueFilePaths(projectPath: string): string[] {
+</code></pre>
+<p>This is like wiping away layers of dust to reveal an ancient inscription and figuring out which ones are readable and true.</p>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) return [];
 
@@ -105,15 +122,17 @@ export function extractUniqueFilePaths(projectPath: string): string[] {
   return Array.from(unique);
 }
 </code></pre>
-<p>Just as astronomers use telescopes to discover stars in complex constellations, these functions scan and interpret the vast network of paths in <code class="inline-code">adventure.config.json</code> to bring focus to the adventure.</p>
+<p>This is similar to navigating a maze with markers, ensuring you only follow the paths that lead toward your goal while ignoring dead ends.</p>
+<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>When designing your own <code class="inline-code">adventure.config.json</code>, ensure that <code class="inline-code">path</code> values reference valid files to avoid breaking the analysis pipeline.</li>
-<li>Consider enhancing <code class="inline-code">formatAdventureConfigForPrompt()</code> by introducing more contextual data for theme-specific flexibility in generated prompts.</li>
-<li>Explore debugging your configurations by adding logging to <code class="inline-code">extractUniqueFilePaths()</code>—it simplifies the process of tracing missing or problematic file references.</li>
+<li>Consider customizing the <code class="inline-code">adventure.config.json</code> file to suit the themes of your quests—this enables smoother exploration experiences.</li>
+<li>For deeper understanding, follow the logical flow from <code class="inline-code">loadAdventureConfig()</code> to <code class="inline-code">extractUniqueFilePaths()</code> to see how configuration evolves into actionable paths.</li>
+<li>Experiment with testing incomplete or invalid JSON configurations to see how the system handles errors gracefully.</li>
 </ul>
 <hr>
-<p>Hail, seeker of sacred truths, for with the Codex of Timekeepers claimed, thou art 80% nearer to the hallowed apotheosis, etched in the vaults of eternal wisdom—press onward, for destiny calls! ⚡💎🗺️</p>
+<p>And so, the Sacred Configuration Vault gifts you insights—not just about ancient code but about modern structure. You’ve deciphered yet another layer of the Pyramid&#39;s enigmatic wisdom. With this treasure in hand, will you uncover even greater secrets hidden further within? Onward to the next challenge!</p>
+<p>Hail, seeker of wisdom! By unveiling the mysteries of the Sacred Configuration Vault, thou hast arisen as an enlightened architect of ancient lore; onward to glory, for the stars yet whisper of thy destined triumph! ⚡💎✨</p>
 
 </div>
 
@@ -122,10 +141,7 @@ export function extractUniqueFilePaths(projectPath: string): string[] {
     
     <footer class="footer">
         <div class="footer-content">
-            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
-                <img src="assets/images/github-mark-white.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
-                MCP Repo Adventure
-            </a>
+            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
 </body>
