@@ -305,8 +305,9 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for complete conventional commit 
 Generate a beautiful HTML adventure website with just one command:
 
 ```bash
-npm run test:html                     # Default: mythical theme
+npm run test:html                      # Default: mythical theme
 npm run test:html -- --theme=space    # Specify theme (space, mythical, ancient, developer)
+npm run test:html -- --theme=all      # Generate all themes at once
 ```
 
 This will:
@@ -315,6 +316,7 @@ This will:
 - 🚀 Automatically start a local HTTP server on port 8080
 - 🎯 Open your browser to view the adventure immediately
 - 🎨 Include full themed CSS styling and responsive design
+- 🌈 With `--theme=all`, generates complete websites for all 4 themes
 
 **Perfect for:** Testing the system, sharing adventures, or creating standalone exploration websites.
 
@@ -436,27 +438,33 @@ npm run generate-html
 npm run generate-html [options]
 
 Options:
-  --theme              Theme: space, mythical, ancient, developer, or custom
+  --theme              Theme: space, mythical, ancient, developer, custom, or all
   --output             Output directory (default: ./public)
   --overwrite          Overwrite existing files without prompting
+  --serve              Start HTTP server and open browser after generation
+  --port               HTTP server port (default: 8080)
+  --max-quests         Limit number of quests for testing (default: unlimited)
+  --log-llm-output     Save LLM outputs to files for debugging
   --help, -h           Show help message
 
 Examples:
-  npm run generate-html  # Interactive mode
-  npm run generate-html --theme space --output ./public --overwrite
-  npm run generate-html --theme mythical --output ./adventure-site
+  npm run generate-html                              # Interactive mode
+  npm run generate-html --theme space --output ./public --overwrite --serve
+  npm run generate-html --theme all --output ./docs  # Generate all themes
+  npm run generate-html --theme mythical --max-quests 2 --log-llm-output
 ```
 
 ### Quick Test Generator
 ```bash
-npm run test:html
+npm run test:html                    # Generate single theme (mythical)
+npm run test:html -- --theme=all    # Generate all themes
 ```
 
 **Perfect for:**
-- 🧪 Testing HTML generation (only 2 LLM calls)
+- 🧪 Testing HTML generation (only 2 LLM calls per theme)
 - 🎯 Quick development iteration
-- 📋 Creating demo adventures
-- 🚀 Sharing adventures with others
+- 📋 Creating demo adventures for all themes at once
+- 🚀 Sharing complete adventure collections
 
 ### HTML Generator Features
 
@@ -473,16 +481,28 @@ The HTML generator (`packages/generator/src/cli/html-generator.ts`) creates full
 **Generated Structure:**
 ```
 output-directory/
-├── index.html              # Main adventure page with story
-├── quest-1.html            # Individual quest pages
-├── quest-2.html
-├── quest-3.html
-└── assets/
-    ├── theme.css          # Combined theme + base + animations CSS
-    └── images/
-        ├── github-mark.svg       # Dark GitHub logo for light themes
-        └── github-mark-white.svg # White GitHub logo for dark themes
+├── index.html              # Main adventure homepage with theme selection
+├── [theme]/                # Individual theme directories (space, mythical, ancient, developer)
+│   ├── index.html          # Theme-specific adventure page with story
+│   ├── quest-1.html        # Individual quest pages
+│   ├── quest-2.html
+│   ├── quest-3.html
+│   └── assets/
+│       ├── theme.css       # Combined theme + base + animations CSS
+│       └── images/
+│           ├── github-mark.svg       # Dark GitHub logo for light themes
+│           ├── github-mark-white.svg # White GitHub logo for dark themes
+│           └── [theme-specific-images] # Theme backgrounds and assets
+└── assets/                 # Global assets shared across themes
+    ├── theme.css          # Homepage styling
+    └── images/            # Shared images and GitHub logos
 ```
+
+**Theme-Specific Features:**
+- **Dynamic Navbar**: Shows repo name from `adventure.config.json` with GitHub logo
+- **Responsive Design**: GitHub logo positioned right, title aligned left
+- **Theme-Aware Logos**: Dark logos for light themes, white logos for dark themes  
+- **Consistent Footer**: "Created using AI Repo Adventures" across all pages
 
 ## Example Adventure Flow
 
