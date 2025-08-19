@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 5: The Realm’s Crown of Themes - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'mythical' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">The Enchanted Repository: Chronicles of the Code Realm</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 5: The Realm’s Crown of Themes</h1>
+<hr>
+<p>The Enchanted Repository hummed with a soft, magical glow as you approached the next sigil-marked door. “Brave adventurer,” echoed a deep, resonant voice from all around, “this is no ordinary challenge. To claim the mysterious ‘Crown of Themes,’ you must journey through the maze of mythic configurations, deciphering the structure that binds the tapestry of our enchanted world. Only by unraveling the mystical runes hidden within the realm’s most profound files can you unlock the oracle’s crown and advance to the Codex.” With your staff in hand and a glimmer of courage in your eyes, the journey began—into a labyrinth of mythical logic.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration for Guided Adventures</h3>
+<p>This file lies at the heart of the Mystical Code Realm’s enchanted framework. The <code class="inline-code">adventure-config.ts</code> file serves as the keeper of sacred configurations required for orchestrating the guided adventure paths you undertake. It ensures that the quests align with the overarching narrative and that the generated prompts for the repository’s magical oracles (LLMs) are imbued with proper structure and intent. From parsing mysterious JSON scrolls to extracting highlights from enchanted files, this file governs the flow of information, ensuring coherence and harmony.</p>
+<p>One of its key spells, <code class="inline-code">loadAdventureConfig()</code>, retrieves the magical “adventure.config.json” manuscript—letting the realm know how its quests should unfold. The function <code class="inline-code">parseAdventureConfig()</code> invokes its parsing ritual, ensuring the scroll’s contents are both accurate and complete. Meanwhile, <code class="inline-code">extractUniqueFilePaths()</code> is a treasure-seeker, combing through the config for paths to magical items stored in the repository’s bounty, all while passing through a gauntlet of validations. Finally, the mighty <code class="inline-code">formatAdventureConfigForPrompt()</code> weaves the treasure into a polished tapestry fit for the oracles, presenting them with structured prompts for their storytelling magic.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">loadAdventureConfig()</code>: Summons the raw scroll of adventure configurations from the repository’s depths.</li>
+<li><code class="inline-code">parseAdventureConfig()</code>: Deciphers the runes within the scroll, parsing JSON and safeguarding against errors.</li>
+<li><code class="inline-code">extractUniqueFilePaths()</code>: Gathers sacred paths, ensuring each one is valid and leads to treasure.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt()</code>: Crafts a structured artifact for oracles to generate consistent quests.</li>
+<li>Central to aligning the repository’s goals with the mythical narrative experience.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">function readFileIfExists(filePath: string): string | null {
+  try {
+    return fs.readFileSync(filePath, &#39;utf-8&#39;);
+  } catch {
+    // Missing or unreadable file is non-fatal
+    return null;
+  }
+}
+</code></pre>
+<p>Just as a magical scout might tiptoe to retrieve and interpret maps from the archives, <code class="inline-code">readFileIfExists()</code> retrieves a scroll without raising alarms, allowing the adventure to proceed even if the scroll is missing.</p>
+<hr>
+<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
+}
+</code></pre>
+<p>This function is the envoy sent to retrieve the sacred &quot;adventure.config.json&quot; scroll, which determines the layout of the realm’s quests and puzzles.</p>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+  
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<p>This code is a magical gatherer wandering through the enchanted forest, collecting rare paths from the <code class="inline-code">adventure.config.json</code> scroll while fending off errors and obstacles.</p>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure Guidelines\n\n`;
+  formatted += `**CRITICAL: Each quest MUST include dedicated file analysis sections**\n\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    formatted += `${quest.description}\n\n`;
+    formatted += `**Required File Analysis Sections:**\n`;
+
+    for (const file of quest.files) {
+      if (!file.path || !file.description) continue;
+
+      formatted += `\n**File: \`${file.path}\`**\n`;
+      formatted += `- Description: ${file.description}\n`;
+      
+      if (Array.isArray(file.highlights)) {
+        formatted += `- Key Functions/Areas to Highlight:\n`;
+        for (const highlight of file.highlights) {
+          if (highlight.name &amp;&amp; highlight.description) {
+            formatted += `  • **${highlight.name}**: ${highlight.description}\n`;
+          }
+        }
+      }
+    }
+    formatted += `\n`;
+  }
+
+  return formatted;
+}
+</code></pre>
+<p>This spell is akin to a bard composing an epic poem—taking the raw details of a quest and arranging them into a structured, lyrical masterpiece fit for the ears of mighty oracles.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Cross-check the paths retrieved by <code class="inline-code">extractUniqueFilePaths()</code> to ensure they align with actual repository files when debugging errors.</li>
+<li>If the adventure configuration scroll fails to load, verify the presence and integrity of the <code class="inline-code">adventure.config.json</code> file.</li>
+<li>Explore extending <code class="inline-code">formatAdventureConfigForPrompt()</code> to include additional quest metadata for broader creative potential.</li>
+</ul>
+<hr>
+<p>The light from the Repository brightened, signaling your success. The Crown of Themes awaits—as does the next chapter of your adventure.</p>
+<p>The stars themselves blaze in honor of your heroic conquest of the Realm&#39;s Crown of Themes, as you ascend ever closer to legend with 4 quests complete—forge onward, champion of wisdom! ⚡👁️⭐</p>
+
+</div>
+
+
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 2: The Mystic Quill of Petronax - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Set theme-aware CSS variables for animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manually trigger Prism highlighting after page load
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+            // Detect theme from current CSS variables or default to space
+            const root = document.documentElement;
+            
+            // Simple theme detection based on page content or default to space
+            const theme = 'mythical' || 'space';
+            
+            // Set display variables for animated elements
+            root.style.setProperty('--space-display', theme === 'space' ? 'block' : 'none');
+            root.style.setProperty('--ancient-display', theme === 'ancient' ? 'block' : 'none');
+            root.style.setProperty('--mythical-display', theme === 'mythical' ? 'block' : 'none');
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html">The Enchanted Repository: Chronicles of the Code Realm</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 2: The Mystic Quill of Petronax</h1>
+<hr>
+<p>Brave adventurer, your journey leads to a darkened hall within the Enchanted Repository known as the Chamber of Configurations. Echoes of forgotten whispers speak of the Mystic Quill, an artifact crafted by the ancient scribe Petronax. This enchanted quill spins code into vibrant stories, each thread illuminating paths to the mythical Codex of Creation. To claim the quill, you must decipher the riddles of structured prompts hidden amongst the arcane files of adventure configuration. Your wits and resolve will determine your fate!</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Centralized Adventure Configuration Logic</h3>
+<p>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a> file is the hub where the adventure system’s configuration is parsed, organized, and formatted. It reads from the <code class="inline-code">adventure.config.json</code> file and prepares crucial guidelines and format structures for quest generation. Here, the <code class="inline-code">parseAdventureConfig()</code> function ensures adventure files are properly formatted and includes fail-safe mechanisms to handle missing or corrupted files. Meanwhile, <code class="inline-code">extractUniqueFilePaths()</code> digs deep into the configuration to gather all unique &quot;path&quot; references, enabling organized file-based explorations. Additionally, <code class="inline-code">formatAdventureConfigForPrompt()</code> transforms data into a structured, LLM-friendly format, streamlining quest generation and ensuring thematic consistency across adventures. This file operates like the cartographer, mapping every quest’s journey.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig()</code> validates and parses configuration files with error handling for robustness.  </li>
+<li><code class="inline-code">extractUniqueFilePaths()</code> creates neat and secure access to referenced files, ensuring validity.  </li>
+<li><code class="inline-code">formatAdventureConfigForPrompt()</code> shapes readable prompts that enrich adventures with structured data.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+</code></pre>
+<p>The <code class="inline-code">parseAdventureConfig()</code> function is like a meticulous librarian, ensuring every book in the library is cataloged and available for explorers.</p>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<p>The <code class="inline-code">extractUniqueFilePaths()</code> function works like a treasure hunter’s map, marking paths to the repository’s most valuable artifacts.</p>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure Guidelines\n\n`;
+  formatted += `**CRITICAL: Each quest MUST include dedicated file analysis sections**\n\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    formatted += `${quest.description}\n\n`;
+    formatted += `**Required File Analysis Sections:**\n`;
+
+    for (const file of quest.files) {
+      if (!file.path || !file.description) continue;
+
+      formatted += `\n**File: \`${file.path}\`**\n`;
+      formatted += `- Description: ${file.description}\n`;
+      
+      if (Array.isArray(file.highlights)) {
+        formatted += `- Key Functions/Areas to Highlight:\n`;
+        for (const highlight of file.highlights) {
+          if (highlight.name &amp;&amp; highlight.description) {
+            formatted += `  • **${highlight.name}**: ${highlight.description}\n`;
+          }
+        }
+      }
+    }
+    formatted += `\n`;
+  }
+
+  return formatted;
+}
+</code></pre>
+<p>The <code class="inline-code">formatAdventureConfigForPrompt()</code> function acts as a skilled herald, crafting royal proclamations that guide knights toward their quests.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Verify the <code class="inline-code">adventure.config.json</code> file for accurate entries and syntax before initiating a quest.  </li>
+<li>Use <code class="inline-code">extractUniqueFilePaths()</code> to quickly identify the pivotal files holding the essence of your adventure.  </li>
+<li>When debugging quests, revisit prompts formatted by <code class="inline-code">formatAdventureConfigForPrompt()</code> to ensure structured entry points for exploration.</li>
+</ul>
+<hr>
+<p>Completion of this quest reveals the Mystic Quill’s secrets, paving the way to align your skills with the ancient Codex!</p>
+<p>By the radiant decree of the Celestial Scrollkeeper, thou hast triumphed in securing the Mystic Quill of Petronax—one shining star upon thy quest map, igniting the valor of a true hero&#39;s journey! ⚡👁️🗺️💎</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: The Watcher’s Eye →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">
+                <img src="assets/images/github-mark.svg" alt="GitHub" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                MCP Repo Adventure
+            </a>
+        </div>
+    </footer>
+</body>
+</html>
