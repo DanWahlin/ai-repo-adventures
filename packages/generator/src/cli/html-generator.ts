@@ -1021,7 +1021,7 @@ class HTMLAdventureGenerator {
         
         <div class="story-content">
             <div class="welcome-section">
-                <p>Welcome to AI Repo Adventures! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the repo's code, transforming technical exploration into fun and engaging storytelling.</p>
+                <p>Welcome to AI Repo Adventures! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the <a href="${repoUrl}" target="_blank" rel="noopener noreferrer">${repoName}</a> repo's code, transforming technical exploration into fun and engaging storytelling.</p>
             </div>
             
             <div class="theme-selector">
