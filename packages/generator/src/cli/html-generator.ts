@@ -1007,15 +1007,15 @@ class HTMLAdventureGenerator {
         </div>
     </nav>
     
-    <div class="main-content">
-        <div class="container">
-            <div class="hero-section">
-                <div class="hero-background"></div>
-                <div class="hero-content">
-                    <h1>MCP Repo Adventure<br><span class="subtitle">AI Repo Adventures</span></h1>
-                </div>
+    <div class="container">
+        <div class="hero-section">
+            <div class="hero-background"></div>
+            <div class="hero-content">
+                <h1>MCP Repo Adventure<br><span class="subtitle">AI Repo Adventures</span></h1>
             </div>
-            
+        </div>
+        
+        <div class="story-content">
             <div class="welcome-section">
                 <p>Welcome to AI Repo Adventures! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the repo's code, transforming technical exploration into fun and engaging storytelling.</p>
             </div>
@@ -1024,46 +1024,46 @@ class HTMLAdventureGenerator {
                 <h2>Choose Your Adventure Theme</h2>
                 <div class="theme-grid">
 
-                <div class="theme-card" onclick="window.location.href='space/index.html'">
-                    <div class="theme-preview">
-                        <img src="space/assets/images/space.png" alt="Space Explorer Preview" loading="lazy">
-                    </div>
-                    <div class="theme-info">
-                        <h3>Space Explorer</h3>
-                        <p>Embark on cosmic adventures through code galaxies and starship protocols.</p>
-                    </div>
+            <div class="theme-card" onclick="window.location.href='space/index.html'">
+                <div class="theme-preview">
+                    <img src="space/assets/images/space.png" alt="Space Explorer Preview" loading="lazy">
                 </div>
+                <div class="theme-info">
+                    <h3>Space Explorer</h3>
+                    <p>Embark on cosmic adventures through code galaxies and starship protocols.</p>
+                </div>
+            </div>
 
-                <div class="theme-card" onclick="window.location.href='mythical/index.html'">
-                    <div class="theme-preview">
-                        <img src="mythical/assets/images/mythical.png" alt="Enchanted Kingdom Preview" loading="lazy">
-                    </div>
-                    <div class="theme-info">
-                        <h3>Enchanted Kingdom</h3>
-                        <p>Journey through ancient codebases in a realm of parchment and magic.</p>
-                    </div>
+            <div class="theme-card" onclick="window.location.href='mythical/index.html'">
+                <div class="theme-preview">
+                    <img src="mythical/assets/images/mythical.png" alt="Enchanted Kingdom Preview" loading="lazy">
                 </div>
+                <div class="theme-info">
+                    <h3>Enchanted Kingdom</h3>
+                    <p>Journey through ancient codebases in a realm of parchment and magic.</p>
+                </div>
+            </div>
 
-                <div class="theme-card" onclick="window.location.href='ancient/index.html'">
-                    <div class="theme-preview">
-                        <img src="ancient/assets/images/ancient.png" alt="Ancient Explorer Preview" loading="lazy">
-                    </div>
-                    <div class="theme-info">
-                        <h3>Ancient Explorer</h3>
-                        <p>Discover sacred coding wisdom in mystical temples and ancient halls.</p>
-                    </div>
+            <div class="theme-card" onclick="window.location.href='ancient/index.html'">
+                <div class="theme-preview">
+                    <img src="ancient/assets/images/ancient.png" alt="Ancient Explorer Preview" loading="lazy">
                 </div>
+                <div class="theme-info">
+                    <h3>Ancient Explorer</h3>
+                    <p>Discover sacred coding wisdom in mystical temples and ancient halls.</p>
+                </div>
+            </div>
 
-                <div class="theme-card" onclick="window.location.href='developer/index.html'">
-                    <div class="theme-preview">
-                        <img src="developer/assets/images/developer.png" alt="Developer Preview" loading="lazy">
-                    </div>
-                    <div class="theme-info">
-                        <h3>Developer</h3>
-                        <p>Navigate modern development workflows with professional precision.</p>
-                    </div>
+            <div class="theme-card" onclick="window.location.href='developer/index.html'">
+                <div class="theme-preview">
+                    <img src="developer/assets/images/developer.png" alt="Developer Preview" loading="lazy">
                 </div>
+                <div class="theme-info">
+                    <h3>Developer</h3>
+                    <p>Navigate modern development workflows with professional precision.</p>
                 </div>
+            </div>
+            </div>
             </div>
         </div>
     </div>
@@ -1275,18 +1275,11 @@ body::before {
   z-index: -1;
 }
 
-/* Main content wrapper */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  flex: 1;
+  min-height: calc(100vh - 160px); /* Subtract navbar and footer height */
 }
 
 /* ===== NAVBAR ===== */
@@ -1464,7 +1457,6 @@ p {
 .welcome-section p {
   font-size: 1.2rem;
   line-height: 1.7;
-  max-width: 800px;
   margin: 0 auto;
   color: var(--paragraph-color);
   font-weight: 400;
@@ -1572,7 +1564,6 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
-  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
