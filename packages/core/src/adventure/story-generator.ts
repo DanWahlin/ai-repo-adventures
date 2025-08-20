@@ -219,7 +219,7 @@ export class StoryGenerator {
       storyContent: this.currentStoryContent || 'No story context available.',
       adventureGuidance: adventureGuidance || '',
       ...(this.customThemeData && { customThemeData: this.customThemeData })
-    });
+    }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.';
 
     const response = await this.withTimeout(
       this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
@@ -232,13 +232,27 @@ export class StoryGenerator {
     // Clean and process the LLM response
     let cleanContent = response.content.trim();
     
-    // Remove markdown code fences if present
-    if (cleanContent.startsWith('```markdown')) {
-      cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
-    }
+    // First, try to extract content between delimiters
+    const beginMarker = '---BEGIN MARKDOWN---';
+    const endMarker = '---END MARKDOWN---';
+    const beginIndex = cleanContent.indexOf(beginMarker);
+    const endIndex = cleanContent.indexOf(endMarker);
     
-    // Remove common LLM meta-commentary patterns that shouldn't appear in the final content
-    cleanContent = this.removeLLMMetaCommentary(cleanContent);
+    if (beginIndex !== -1 && endIndex !== -1 && endIndex > beginIndex) {
+      // Extract content between markers
+      cleanContent = cleanContent.substring(
+        beginIndex + beginMarker.length,
+        endIndex
+      ).trim();
+    } else {
+      // Fallback: Remove markdown code fences if present
+      if (cleanContent.startsWith('```markdown')) {
+        cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Remove common LLM meta-commentary patterns that shouldn't appear in the final content
+      cleanContent = this.removeLLMMetaCommentary(cleanContent);
+    }
     
     // Return the content as a simple QuestContent structure with everything in adventure field
     return {
@@ -386,7 +400,13 @@ export class StoryGenerator {
       /^I'll continue the.*themed/i,
       /^Let me generate/i,
       /^I understand you want/i,
-      /^See http:\/\/localhost/i  // Remove localhost references
+      /^See http:\/\/localhost/i,  // Remove localhost references
+      /^Sure! Below is the content/i,
+      /^Below is the content generated/i,
+      /^Here's the generated content/i,
+      /^Here is.*content.*for.*Quest/i,
+      /^I'll create.*content.*for/i,
+      /^Certainly! Here.*is/i
     ];
     
     // Find the first line that doesn't match meta-commentary patterns
