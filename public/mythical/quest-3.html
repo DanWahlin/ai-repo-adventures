@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Seer’s Crystal of Analysis - Repo Adventure</title>
+    <title>Quest 3: The Oracle of Analysis - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -28,7 +28,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Enchanted Repository: The Chronicles of Code</a>
+                <a href="index.html">The Realm of Enchanted Repositories</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,146 +40,141 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Seer’s Crystal of Analysis</h1>
+    <h1>Quest 3: The Oracle of Analysis</h1>
 <hr>
-<p>To reclaim a shard of the Codex Regalium, you must journey to the enchanted Caverns of Algorithmia. A mystical Seer guards the Crystal of Analysis, an artifact capable of unraveling the truth hidden within tangled lines of corrupted magic. Only with its power can you decipher the ancient incantations used to restore balance to the Codex. Beware, for the Seer does not give her wisdom lightly. Prove your worth by mastering the arcane art of code interpretation.</p>
+<p>In Codemia&#39;s enchanted kingdom, myths whisper of the Oracle of Analysis, a mystical being whose insights hold the key to unlocking the Repository of Knowledge&#39;s deepest secrets. Guarded by labyrinthine complexity and arcane algorithms, the Oracle only reveals its truth to those who prove their worth by mastering the magic of code analysis. Brave adventurer, you must face the challenge and wield the powers of <code class="inline-code">RepoAnalyzer</code> and the <code class="inline-code">LLMClient</code> to summon clarity from the depths of Codemia’s enchanted lines.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Repository Analysis Module</h3>
-<p>This file functions as the repository&#39;s crystal ball, constructing the framework for refining and analyzing enchanted paths of data. The <code class="inline-code">RepoAnalyzer</code> class contains vital methods to validate, normalize, and process intricate file structures. By leveraging the <code class="inline-code">generateRepomixContext</code> and <code class="inline-code">generateTargetedContent</code> functions, the Seer&#39;s magic can be focused, enabling precise extraction of knowledge. These methods work with additional safeguards, such as <code class="inline-code">validateProjectPath</code> and <code class="inline-code">captureRepomixStdout</code>, to ensure paths are pure and subprocesses return data safely under strict constraints.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Code Analysis Engine</h3>
+<p>This file serves as the cornerstone of Codemia&#39;s code analysis system, embracing the power of Repomix to transform chaotic repositories into structured understanding. The <code class="inline-code">RepoAnalyzer</code> class acts as the wielder of magical spells, harnessing functions to validate project paths, secure target files, and create content optimized for token-based adventures. With its ability to invoke Repomix’s subprocesses, this class summons the “Repomix Context” and channels specific functions via secure caching. It is equipped with enhanced validations and optimizations, ensuring the summoning does not falter. Highlights include <code class="inline-code">generateRepomixContext</code>, <code class="inline-code">generateTargetedContent</code>, <code class="inline-code">captureRepomixStdout</code>, and <code class="inline-code">validateProjectPath</code>, each serving as a key spell in the toolkit of the Oracle.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAnalyzer.generateRepomixContext</code>: Summons the knowledge of the entire repository or a targeted subset.</li>
-<li><code class="inline-code">RepoAnalyzer.generateTargetedContent</code>: Directs analysis only to specified enchanted files, ensuring efficiency.</li>
-<li><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code>: Engages a subprocess spell to conjure output for repository examination.</li>
-<li><code class="inline-code">RepoAnalyzer.validateProjectPath</code>: Ensures paths are pure, cleansing them of null bytes and traversal attempts.</li>
+<li><code class="inline-code">generateRepomixContext</code>: Constructs magical insights into the code universe for targeted transformation.</li>
+<li><code class="inline-code">captureRepomixStdout</code>: Summons subprocess outputs with guarded memory bounds.</li>
+<li><code class="inline-code">validateProjectPath</code>: Shields Codemia from improper path traversal and null byte schemes.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
 <pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-  const configuredFiles = extractUniqueFilePaths(projectPath);
-  if (configuredFiles.length &gt; 0) {
-    try {
-      return await this.generateTargetedContent(projectPath, configuredFiles);
-    } catch (error) {
-      console.warn(`Failed to generate targeted content, falling back: ${error.message}`);
+    this.validateProjectPath(projectPath);
+    const configuredFiles = extractUniqueFilePaths(projectPath);
+
+    if (configuredFiles.length &gt; 0) {
+        return await this.generateOptimizedContent(projectPath, configuredFiles);
     }
-  }
-  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-  try {
-    const ignorePatterns = [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;];
+
+    const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+        return cached.content;
+    }
+
+    const ignorePatterns = [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;, &#39;.nyc_output&#39;];
     const cliOptions: CliOptions = {
-      style: options.style || &#39;markdown&#39;,
-      compress: options.compress !== false,
-      ignore: ignorePatterns.join(&#39;,&#39;),
-      removeComments: true,
-      removeEmptyLines: true,
+        style: options.style || &#39;markdown&#39;,
+        stdout: true,
+        compress: options.compress !== false,
+        ignore: ignorePatterns.join(&#39;,&#39;),
+        removeComments: true,
+        removeEmptyLines: true,
+        noDirectoryStructure: true
     };
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Repomix execution failed: ${error.message}`);
-  }
+
+    return await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
 }
 </code></pre>
-<p>Generating the repository’s context is akin to invoking a cavern-sized orb, filtering through layers of mist to reveal clarity.</p>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-  if (!targetFiles.length) {
-    throw new Error(&#39;Target files array cannot be empty&#39;);
-  }
-  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  if (!safeFiles.length) {
-    throw new Error(&#39;No valid target files found after validation&#39;);
-  }
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-  try {
-    const cliOptions: CliOptions = {
-      style: &#39;markdown&#39;,
-      compress,
-      include: safeFiles.join(&#39;,&#39;),
-      removeComments: compress,
-      removeEmptyLines: compress,
-    };
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Targeted repomix execution failed: ${error.message}`);
-  }
-}
-</code></pre>
-<p>Targeting specific files mirrors focusing the Crystal of Analysis, directing its power to discern the truth within selected scrolls.</p>
+<p>As the Oracle conjures its context, this function traverses the Repository to summon structured insights.</p>
 <pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [
-      ...directories,
-      &#39;--stdout&#39;,
-      &#39;--style&#39;, options.style || &#39;markdown&#39;
-    ];
-    if (options.compress) args.push(&#39;--compress&#39;);
-    if (options.removeComments) args.push(&#39;--remove-comments&#39;);
-    if (options.removeEmptyLines) args.push(&#39;--remove-empty-lines&#39;);
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
-    let stdout = &#39;&#39;;
-    let stderr = &#39;&#39;;
-    const timeout = setTimeout(() =&gt; {
-      repomix.kill(&#39;SIGTERM&#39;);
-      setTimeout(() =&gt; repomix.kill(&#39;SIGKILL&#39;));
-      reject(new Error(`Timed out after ${REPOMIX_SUBPROCESS_TIMEOUT}ms`));
-    }, REPOMIX_SUBPROCESS_TIMEOUT);
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      stdout += data.toString();
+    return new Promise((resolve, reject) =&gt; {
+        const args = [...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
+        if (options.compress) args.push(&#39;--compress&#39;);
+        const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
+
+        let stdout = &#39;&#39;;
+        repomix.stdout.on(&#39;data&#39;, (data) =&gt; stdout += data.toString());
+        repomix.on(&#39;close&#39;, (code) =&gt; {
+            if (code === 0) resolve(stdout);
+            else reject(`Repomix failed with code ${code}`);
+        });
     });
-    repomix.stderr.on(&#39;data&#39;, (data) =&gt; {
-      stderr += data.toString();
-    });
-    repomix.on(&#39;close&#39;, (code) =&gt; {
-      clearTimeout(timeout);
-      if (code === 0 &amp;&amp; stdout.trim()) {
-        resolve(stdout);
-      } else {
-        reject(new Error(`Repomix failed (exit ${code}): ${stderr}`));
-      }
-    });
-  });
 }
 </code></pre>
-<p>Harnessing the subprocess spell is akin to summoning an elemental; it demands precision and vigilance to avoid catastrophic outcomes.</p>
+<p>Imagine summoning a scribe to transcribe a spell—this function encapsulates the Repomix subprocess invocation gracefully.</p>
 <pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-  if (projectPath.trim().includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid null bytes&#39;);
-  }
+    if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+        throw new Error(&#39;Project path must be a non-empty string&#39;);
+    }
+    if (projectPath.trim().includes(&#39;\0&#39;)) {
+        throw new Error(&#39;Project path contains invalid null bytes&#39;);
+    }
 }
 </code></pre>
-<p>Before the Seer&#39;s enchantments can be cast, the foundation must be pure and untainted by harmful magics.</p>
+<p>This validation spell ensures only pure inputs pass through, protecting the Oracle from corrupted paths.</p>
+<hr>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Language Model Interface</h3>
+<p>Serving as Codemia&#39;s mystical scroll writer, the <code class="inline-code">LLMClient</code> bridges the gap between raw code analysis and generative storytelling. It uses APIs such as OpenAI and AzureOpenAI to channel prompts into advanced models, conjuring polished responses. With functions for comprehensive validation, dynamic API configurations, and token optimization, <code class="inline-code">LLMClient</code> empowers the Oracle by ensuring all interactions are seamless and constructive. Three notable spells, <code class="inline-code">generateResponse</code>, <code class="inline-code">constructor</code>, and <code class="inline-code">getApiKey</code>, summon the essence of Codemia&#39;s magical narrative.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateResponse</code>: Channels prompts into refined, LLM-driven insights.</li>
+<li>Constructor method: Caters to diverse AI models through dynamic initialization.</li>
+<li><code class="inline-code">getApiKey</code>: Ensures secure access to magical APIs.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/llm/llm-client.ts</h3>
+<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+    try {
+        const requestParams = this.buildRequestParams(prompt, options);
+        const completion = await this.executeRequest(requestParams);
+        let content = this.validateResponse(completion);
+
+        if (options?.responseFormat === &#39;json_object&#39;) {
+            content = this.cleanJsonResponse(content);
+        }
+
+        return { content };
+    } catch (error) {
+        throw new Error(`LLM request failed: ${error.message}`);
+    }
+}
+</code></pre>
+<p>With the flourish of a wand, this spell transforms raw input into creative wisdom from the enchanted LLM.</p>
+<pre><code class="language-typescript">constructor() {
+    this.model = LLM_MODEL;
+    const apiKey = this.getApiKey();
+    if (!apiKey || !LLM_BASE_URL) {
+        throw new Error(&#39;LLM configuration required.&#39;);
+    }
+
+    this.client = LLM_BASE_URL.includes(&#39;openai.azure.com&#39;)
+        ? new AzureOpenAI({ endpoint: LLM_BASE_URL, apiKey, deployment: this.model })
+        : new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+}
+</code></pre>
+<p>Like an architect constructing a castle, this method ensures dynamic adaptation to Codemia&#39;s magical infrastructure.</p>
+<pre><code class="language-typescript">private getApiKey(): string {
+    if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+        if (!GITHUB_TOKEN) throw new Error(&#39;GITHUB_TOKEN required for GitHub Models&#39;);
+        return GITHUB_TOKEN;
+    }
+    if (!LLM_API_KEY) throw new Error(&#39;LLM_API_KEY required.&#39;);
+    return LLM_API_KEY;
+}
+</code></pre>
+<p>A key to Codemia’s treasure vault, this function grants access to infinite possibilities through its API links.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">generateRepomixContext</code> for full repository insights and <code class="inline-code">generateTargetedContent</code> for specific areas.</li>
-<li>Be wary of timeout constraints in long subprocess invocations.</li>
-<li>Validate all inputs to guard against malicious interference.</li>
+<li>Before invoking <code class="inline-code">generateRepomixContext</code>, ensure project paths are valid and target files correctly normalized to avoid runtime errors.</li>
+<li>Use <code class="inline-code">generateResponse</code> to refine raw code contexts into enriched, user-facing insights.</li>
+<li>Explore how caching mechanisms in both classes reduce redundant processes to optimize resource usage.</li>
 </ul>
 <hr>
-<p>The Seer&#39;s Crystal glimmers with newfound power, its brilliance illuminating your path. Another piece of the Codex Regalium restored. Press onward, adventurer!</p>
-<p>With the Seer’s Crystal of Analysis now shimmering in your grasp, valiant hero, you have unlocked the wisdom of realms unknown and illuminated the path to glory—40% of your epic journey conquered, onward to destiny! ⭐💎⚡</p>
+<p>With wisdom granted by the Oracle of Analysis, you have revealed hidden truths and gained the knowledge to shape Codemia’s magical codebase. Adventure onward, hero!</p>
+<p>With the wisdom of the Oracle now woven into your heroic tapestry, you ascend as the star-forged champion of analysis, forging boldly through the realms—onto greater conquests and eternal glory! ⭐⚡💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: The Arcane Tome of Themes →</a>
+        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: The Codex of Themes →</a>
       </div>
     
     </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: The Cosmic Utility Vault - Repo Adventure</title>
+    <title>Quest 5: Command Utility Core - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -28,7 +28,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Adventures: The Codex of the Stellar Repository</a>
+                <a href="index.html">Galactic Codex: The Adventures of RepoQuest</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,20 +40,26 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: The Cosmic Utility Vault</h1>
+    <h1>Quest 5: Command Utility Core</h1>
 <hr>
-<p>A mysterious blackout in the Stellar Repository&#39;s Cosmic Utility Vault threatens galactic harmony. As the navigation officer aboard <em>The Quantum Voyager</em>, you’ve been tasked to decode corrupted archive signatures and restore stable interstellar data links. With errant AIs lurking in the utility interfaces, your starship&#39;s mission requires bravery, calibration of configurations, and cosmic ingenuity to unravel encrypted paths buried within the repository&#39;s adventure matrix.</p>
+<p>Through the swirling maelstrom of the nebula, the <em>RepoQuest</em> encounters an anomaly—a fragment of the Galactic Codex whose paths are hidden within layers of encrypted stellar data. The ship&#39;s Command Utility Core must be configured to decode these layers, transform raw cosmic inputs into actionable exploration routes, and extract critical mission files. Captain, prepare your crew to delink the barrier and leverage advanced parsing algorithms to ensure the Codex reveals the secrets of this realm.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Config file parsing and formatting</h3>
-<p>This file orchestrates critical logic for reading, parsing, and extracting necessary details from adventure configuration files. These stored files outline interstellar quest structures within Stellar Repository framework systems and include high-level utilities like <code class="inline-code">parseAdventureConfig</code> and <code class="inline-code">extractUniqueFilePaths</code>. It acts as the informational bridge between repository content and actionable quests. Its functions describe paths, validate data integrity, and transform config input into condensed formats that align with galaxy exploration protocols. By ensuring minimal redundancy and coherent translation, it safeguards cosmic harmony at its core. The file&#39;s methods play a pivotal role in loading, interpreting, and preparing configurations for mission scripting and AI understanding.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Core configuration mechanics for quest objectives</h3>
+<p>This file contains the structural foundation to read, parse, and analyze adventure configurations stored as JSON. It outlines the core functionality required to load configuration files from the filesystem, validate their contents, and extract mission-critical file paths for stellar navigation. Three key highlights include reading raw config files via <code class="inline-code">loadAdventureConfig</code>, parsing them into structured objects using <code class="inline-code">parseAdventureConfig</code>, and extracting unique file paths referenced across the decoded configuration objects via <code class="inline-code">extractUniqueFilePaths</code>. These methods form the backbone of the Command Utility Core, enabling seamless exploration of the Codex’s encrypted layers.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Parses JSON adventure config to validate quest foundations.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Extracts all referenced paths from config objects with existence checks.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes configuration details for reduced redundancy and seamless mission integration.</li>
+<li><code class="inline-code">loadAdventureConfig</code>: Handles raw input retrieval with fail-safes.</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Decodes adventure configurations into actionable objects.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Extracts file paths essential for navigation.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
+}
+</code></pre>
+<p>Like a scanner probing distant star charts, this function retrieves raw data from the filesystem, ensuring missing or unreadable files don’t obstruct critical missions.</p>
 <pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
@@ -64,7 +70,7 @@
   }
 }
 </code></pre>
-<p>This function acts like a galaxy translator, taking cryptic cosmic data and turning it into navigable maps for exploration.</p>
+<p>This function acts as a decoder, translating cosmic data into structured objects, much like transforming static star signals into galactic map coordinates.</p>
 <pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) return [];
@@ -92,56 +98,16 @@
   return Array.from(unique);
 }
 </code></pre>
-<p>Like scrutinizing nebula formations, this function searches for constellations of paths within a tangled cosmic archive.</p>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) {
-    return &#39;&#39;;
-  }
-
-  const adventure = (parsed as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) {
-    return &#39;&#39;;
-  }
-
-  let formatted = `## Quest Structure\n\n`;
-
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    
-    const filePaths = quest.files
-      .filter((f: any) =&gt; f.path)
-      .map((f: any) =&gt; f.path);
-    if (filePaths.length &gt; 0) {
-      formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
-    }
-    
-    const functions = quest.files
-      .flatMap((f: any) =&gt; f.highlights || [])
-      .filter((h: any) =&gt; h.name)
-      .map((h: any) =&gt; h.name);
-    if (functions.length &gt; 0) {
-      formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;
-    }
-    
-    formatted += `\n`;
-  }
-
-  return formatted;
-}
-</code></pre>
-<p>Similar to compressing star charts to fit on a holographic map, this function minimizes details while preserving mission clarity.</p>
+<p>This extraction function behaves like a stellar sieve, filtering through cosmic detritus to identify valid paths leading to hidden mission files.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">parseAdventureConfig</code> to validate cosmic directives in Stellar Repository operations.</li>
-<li>Leverage <code class="inline-code">extractUniqueFilePaths</code> to keep repository navigation efficient and clean.</li>
-<li>Format prompts creatively using <code class="inline-code">formatAdventureConfigForPrompt</code> for seamless galaxy-class integrations.</li>
+<li><strong>Practical Tip:</strong> Always validate your Codex configuration files for unknown errors before integration into larger missions.</li>
+<li><strong>Exploration Recommendation:</strong> Test edge cases (e.g., empty objects or nested structures) to ensure extracted paths match mission requirements.</li>
+<li><strong>Next Steps:</strong> Extend path validation logic to include remote destinations and alien nodes for future Codex entries.</li>
 </ul>
 <hr>
-<p>The Cosmic Utility Vault&#39;s starships hum with renewed energy thanks to your bravery, explorer! The galaxy-wide data streams are once again singing in harmony. Onward to the next stellar mission!</p>
-<p>Stellar work navigating the Cosmic Utility Vault—you&#39;re 80% through this intergalactic quest, blazing like a supernova toward your final mission; keep your thrusters steady and your trajectory locked in for glory ahead! 🚀⭐⚡</p>
+<p>Your Command Utility Core is primed, Captain. The secrets of this stellar realm await your decoding!</p>
+<p>Mission Control confirms an astronomical success as Quest 5: Command Utility Core is powered up—you&#39;re 80% through the cosmic journey, a true starship captain blazing through the galactic frontier! ⭐🚀⚡</p>
 
 </div>
 
