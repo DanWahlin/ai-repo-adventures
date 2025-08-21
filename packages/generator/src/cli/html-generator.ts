@@ -345,6 +345,12 @@ class HTMLAdventureGenerator {
     // Step 3: Extract quest information
     this.extractQuestInfo();
 
+    // Step 3.5: Trim quests array if max-quests is specified (before homepage generation)
+    const questsToGenerate = this.maxQuests !== undefined ? Math.min(this.maxQuests, this.quests.length) : this.quests.length;
+    if (questsToGenerate < this.quests.length) {
+      this.quests = this.quests.slice(0, questsToGenerate);
+    }
+
     // Step 4: Generate all files
     console.log(chalk.dim('🎨 Creating theme styling...'));
     this.generateThemeCSS();
@@ -691,12 +697,7 @@ class HTMLAdventureGenerator {
   }
 
   private async generateQuestPages(): Promise<void> {
-    const questsToGenerate = this.maxQuests !== undefined ? Math.min(this.maxQuests, this.quests.length) : this.quests.length;
-    
-    // Trim the quests array to match the actual number being generated
-    if (questsToGenerate < this.quests.length) {
-      this.quests = this.quests.slice(0, questsToGenerate);
-    }
+    const questsToGenerate = this.quests.length;
     
     for (let i = 0; i < questsToGenerate; i++) {
       const quest = this.quests[i];

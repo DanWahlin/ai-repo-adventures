@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Cosmic Analyzers - Repo Adventure</title>
+    <title>Quest 3: Cosmic Analyzers - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Adventures: The Codebase Chronicles</a>
+                <a href="index.html">Cosmic Codex: Adventures Across the Codebase Nebula</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,121 +41,119 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Cosmic Analyzers</h1>
+    <h1>Quest 3: Cosmic Analyzers</h1>
 <hr>
-<p>The Codebreaker’s navigation systems hum with anticipation as your crew prepares to enter the <strong>Celestial Rift</strong>, a dazzling cosmic anomaly shrouded in charged stellar filaments. This region is thought to house vital coordinates to unlock the <strong>Repository Core</strong>’s true potential. However, only by analyzing encrypted nebula star maps, stabilizing energy flows, and invoking intelligent processing can the crew decipher these cosmic riddles. Your team’s expertise in activating analytical tools will determine whether you can illuminate the hidden pathways—or be lost to the galactic unknown.</p>
-<p><strong>Your next mission is clear: synchronize the ship’s analyzers, communicate with advanced AI systems, and pave the way to the Repository Core!</strong></p>
+<p>Drifting through the enigmatic currents of the Codebase Nebula, <em>The Refactored Voyager</em> approaches its next stellar waypoint—the Cosmic Repository of Knowledge. This installation, known as the &#39;Analyzer Core,&#39; harbors the ability to refine raw code archives and channel them into optimized intelligence streams. Your mission involves activating two precision tools, the <code class="inline-code">RepoAnalyzer</code> and the <code class="inline-code">LLMClient</code>, to generate pathways through the repository&#39;s obfuscated framework. Beware: cosmic turbulence threatens the clarity of your mission data. Proceed with acute vigilance, brave explorers!</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Analyzer logic for file-based context generation</h3>
-<p>In this file, we delve into the <strong>RepoAnalyzer</strong> class, which is critical to extracting, validating, and optimizing project data. Methods like <code class="inline-code">generateRepomixContext</code> work as the backbone, gathering necessary codebase context by interfacing with the Repomix CLI. Another such essential feature is <code class="inline-code">captureRepomixStdout</code>, which integrates subprocess calls to retrieve the project’s metadata securely. Finally, <code class="inline-code">validateProjectPath</code> sets constraints to confirm safe file interactions, ensuring that the operations avoid unsafe or unexpected file paths. Together, these tools serve as a map, not for stars, but for structured project data!</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Repository Analysis Engine</h3>
+<p>This file governs the refinement and transformation of code data into usable contexts. The <code class="inline-code">RepoAnalyzer</code> class functions as the vessel&#39;s onboard data miner, regulating access to critical repository paths, applying optimization strategies, and caching results to conserve computational energy. The class is fortified with validation processes to ensure the security and relevance of project paths. Through its strategic methods—such as <code class="inline-code">generateRepomixContext</code> and <code class="inline-code">generateTargetedContent</code>—it distills dense repositories into actionable tokens for interstellar analytics. It employs subprocess execution (<code class="inline-code">captureRepomixStdout</code>) to harvest repository outputs while defending against memory overloads and runtime errors.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAnalyzer.generateRepomixContext</code> gathers the context of the given repository through intelligent CLI invocations.</li>
-<li><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code> ensures safe and resource-controlled communication with external processes.</li>
-<li><code class="inline-code">RepoAnalyzer.validateProjectPath</code> verifies the integrity and safety of project paths to prevent harmful operations.</li>
+<li>Validate file paths using <code class="inline-code">validateProjectPath</code> to enforce integrity and security.</li>
+<li>Optimize file content extraction with <code class="inline-code">generateTargetedContent</code>.</li>
+<li>Execute subprocess operations safely via <code class="inline-code">captureRepomixStdout</code>.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
+<pre><code class="language-typescript">/**
+ * Basic validation for project path - minimal checks for actual use case
+ */
+private validateProjectPath(projectPath: string): void {
+  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
+  }
+
+  const trimmedPath = projectPath.trim();
+  if (!trimmedPath) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
+  }
+
+  if (trimmedPath.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid null bytes&#39;);
+  }
+}
+</code></pre>
+<p>[Just as starship navigators vet their stellar maps for accuracy, this method validates project trajectories, enforcing safe exploration boundaries.]</p>
+<pre><code class="language-typescript">/**
+ * Generate targeted repomix content for specific files
+ */
+async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
   
-  // Check if adventure.config.json has specific files to include
-  const configuredFiles = extractUniqueFilePaths(projectPath);
+  if (!targetFiles || targetFiles.length === 0) {
+    throw new Error(&#39;Target files array cannot be empty&#39;);
+  }
+
+  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+  if (safeFiles.length === 0) {
+    throw new Error(&#39;No valid target files found after validation&#39;);
+  }
+
+  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
+  const cached = this.cache.get(cacheKey);
   
-  if (configuredFiles.length &gt; 0) {
-    console.log(`Using adventure.config.json: analyzing ${configuredFiles.length} configured files with optimization`);
-    return await this.generateOptimizedContent(projectPath, configuredFiles)
-               .catch(() =&gt; this.generateTargetedContent(projectPath, configuredFiles));
+  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+    return cached.content;
   }
   
-  console.log(&#39;No adventure.config.json found: analyzing full codebase (compressed)&#39;);
-  return await this.captureRepomixStdout([&#39;.&#39;], projectPath, {
-    style: options.style || &#39;markdown&#39;,
-    compress: options.compress !== false,
-  });
+  const cliOptions: CliOptions = {
+    style: &#39;markdown&#39;,
+    stdout: true,
+    compress: compress,
+    include: safeFiles.join(&#39;,&#39;)
+  };
+  
+  const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+  
+  this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+  return context;
 }
 </code></pre>
-<p>Identifies required files and generates contextual data, much like scanning stars to locate a vital waypoint.</p>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
+<p>[Much like a cosmic refinery extracting key elements from asteroid debris, this function filters and processes only trusted files for precise analytics.]</p>
+<pre><code class="language-typescript">/**
+ * Use repomix CLI as subprocess to capture stdout with timeout and memory protection
+ */
+private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
   return new Promise((resolve, reject) =&gt; {
-    const args = [...directories, &#39;--style&#39;, options.style || &#39;markdown&#39;];
+    const args = [&#39;repomix&#39;, ...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style];
     if (options.compress) args.push(&#39;--compress&#39;);
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
+    const repomix = spawn(&#39;npx&#39;, args, { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
 
     let stdout = &#39;&#39;;
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; stdout += data.toString());
-    repomix.on(&#39;close&#39;, (code) =&gt; code === 0 ? resolve(stdout) : reject(new Error(&#39;Repomix failed&#39;)));
+    let stdoutSize = 0;
+    const timeout = setTimeout(() =&gt; {
+      repomix.kill();
+      reject(new Error(`Repomix subprocess timed out`));
+    }, REPOMIX_SUBPROCESS_TIMEOUT);
+
+    repomix.stdout.on(&quot;data&quot;, data =&gt; {
+      const chunk = data.toString();
+      stdoutSize += chunk.length;
+      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
+        repomix.kill();
+        reject(new Error(&quot;Output buffer exceeded maximum limit.&quot;));
+      }
+      stdout += chunk;
+    });
+
+    repomix.on(&quot;close&quot;, code =&gt; {
+      clearTimeout(timeout);
+      if (code === 0) resolve(stdout);
+      else reject(new Error(&quot;Repomix failed.&quot;));
+    });
   });
 }
 </code></pre>
-<p>Launches a subprocess to interact with Repomix—similar to deploying a probe to collect stellar phenomena.</p>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  const trimmedPath = projectPath.trim();
-  if (trimmedPath.includes(&#39;\0&#39;) || !fs.existsSync(trimmedPath)) {
-    throw new Error(&#39;Invalid project path&#39;);
-  }
-}
-</code></pre>
-<p>Confirms that the path is safe and fits within the operational boundaries—akin to verifying celestial charts for anomalies before exploration!</p>
-<hr>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Interface for large language models</h3>
-<p>The <strong>LLMClient</strong> class powers communication between Codebreaker’s systems and external AI models, acting as the ship’s <strong>cosmic translator</strong> for its analytical journeys. The <code class="inline-code">generateResponse</code> method is a cornerstone, allowing prompts (parsed sensor data) to be converted into actionable insights. Essential configurations, such as API key management in <code class="inline-code">getApiKey</code> or determining the model’s type via <code class="inline-code">isAzureOpenAI</code>, establish secure and precise communication with external infrastructures. This AI processing infrastructure ensures mission success as the Codebreaker navigates complex stellar data.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">LLMClient.generateResponse</code> synthesizes prompts into actionable results using advanced AI systems.</li>
-<li><code class="inline-code">LLMClient.constructor</code> manages essential setup, including client selection and error handling.</li>
-<li><code class="inline-code">LLMClient.getApiKey</code> determines secure API key assignments for various systems.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/core/src/llm/llm-client.ts</h3>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  try {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
-    let content = this.validateResponse(completion);
-    
-    if (options?.responseFormat === &#39;json_object&#39;) {
-      content = this.cleanJsonResponse(content);
-    }
-    
-    this.logTokenUsage(completion);
-    return { content };
-  } catch (error) {
-    throw new Error(`LLM request failed: ${error.message}`);
-  }
-}
-</code></pre>
-<p>Processes prompts like gathering cosmic signals, generating clear insights to guide the journey.</p>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  const apiKey = this.getApiKey();
-  this.client = LLM_BASE_URL.includes(&#39;.azure.com&#39;) ? 
-                new AzureOpenAI({...}) : new OpenAI({...});
-}
-</code></pre>
-<p>Establishes the ship’s connection to AI-driven analyzers, ensuring secure computational navigation.</p>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-    if (!GITHUB_TOKEN) {
-      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models&#39;);
-    }
-    return GITHUB_TOKEN;
-  }
-  if (!LLM_API_KEY) throw new Error(&#39;LLM_API_KEY required&#39;);
-  return LLM_API_KEY;
-}
-</code></pre>
-<p>Secures an API endpoint, like opening a secure channel to communicate with intergalactic allies.</p>
-<hr>
+<p>[Similar to sending probes to collect space radiations with proper safeguards, this subprocess elegantly handles repository data extraction while shielding against overloads.]</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical Tip</strong>: For <code class="inline-code">RepoAnalyzer</code>, ensure project directories are well-organized to improve output clarity.</li>
-<li><strong>Exploration Recommendation</strong>: Optimize prompts sent to <code class="inline-code">LLMClient</code> for reduced token usage, much like fine-tuning starship resource allocation.</li>
-<li><strong>Next Steps</strong>: Verify the AI outputs via <code class="inline-code">validateResponse</code> to avoid errors interrupting the mission’s flow.</li>
+<li>Adjust <code class="inline-code">REPOMIX_CACHE_TTL</code> for iterative testing in dense codebases.</li>
+<li>Use <code class="inline-code">generateTargetedContent</code> for focused analysis on mission-critical directories.</li>
+<li>Ensure subprocess parameters are calibrated to prevent timeout issues when capturing large repositories.</li>
 </ul>
 <hr>
-<p>The Repository Core awaits—venture onward, brave explorer, and connect cosmic dots for the galaxy!</p>
-<p>Congratulations, Cosmic Commander—Quest 3 is a stellar success, propelling your knowledge through the learning galaxy at warp speed—2 quests down, and your mission to mastery is shining brighter than a supernova! 🚀⭐⚡</p>
+<p>The repository’s stellar essence lies within your grasp—<em>The Refactored Voyager</em> awaits your next command.</p>
+<p>Stellar work completing Quest 3: Cosmic Analyzers—your trajectory is locked, your engines are firing, and you&#39;re rocketing through this learning galaxy at warp speed! 🚀⭐📡</p>
 
 </div>
 

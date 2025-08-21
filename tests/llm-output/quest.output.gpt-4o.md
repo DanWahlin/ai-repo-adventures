@@ -1,15 +1,15 @@
-# Quest 1: Command Interface Systems
+# Quest 1: Galactic Interface Protocols
 ---
-As the **Code Explorer** glides through the cosmic expanse toward a derelict station floating near a volatile nebula, the crew readies its systems. Your mission: establish communication with the ship’s command interface to enable tool operations for analyzing the ancient station's dormant databases. The success of this expedition hinges on your ability to configure handlers within the server’s core and ensure the tools activate seamlessly. The galaxy’s scattered knowledge awaits — it’s your time to bridge the stellar past with the crew’s capable exploration tools.
+In the vast digital cosmos, the crew of the **SS Code Voyager** prepares to engage with protocols buried within the **Galactic Interface Nebula**. This luminous cluster holds the mechanisms to launch interactive storytelling servers across interstellar code repositories. Beyond its glowing data fields lie essential tools awaiting activation, their architectures bearing the outlines of latent purpose. Your mission is to decode these interface protocols, ensure smooth tool alignments, and prepare the ship's systems for seamless communication through the neural starstreams.
 
 ## File Exploration
-### packages/mcp/src/server.ts: Core server for interactive command systems
-This file structures the **RepoAdventureServer**, which serves as the command interface for managing dynamic connections and tool execution. By setting up handlers in the `RepoAdventureServer` class, the crew can list tools dynamically and execute them through specific schema validations. Critical methods like `setupHandlers` and `run` ensure the seamless processing of requests and maintain the overall stability of cosmic operations. The `main` function orchestrates the server's lifecycle, monitoring processes and preparing for unexpected conditions with proactive error management.
+### packages/mcp/src/server.ts: MCP Server Setup and Execution
+This file houses the core operations to establish and execute the **MCP (Model Context Protocol)** server, the heart of interactive storytelling. The **SS Code Voyager** here relies on methods like `setupHandlers` and `run` for interstellar communications via advanced command channels. Within `setupHandlers`, the server's ability to list and execute galaxy-spanning tools is orchestrated. The `run` function pilots the server through stellar navigation connectivities, while the `main` function ensures that operations launch under safe conditions. Together, these constructs serve as the navigational AI for the crew.
 
 #### Highlights
-- `setupHandlers`: Configures the server to manage tool listing and execution capabilities.
-- `run`: Activates the server’s communication protocols and pre-generates repository data for smoother analyses.
-- `main`: Initializes and sustains the server lifecycle while implementing error handling and shutdown procedures.
+- `setupHandlers`: How the system dynamically maps and validates tool protocols.
+- `run`: The standard operating procedure for server engagement.
+- `main`: The system's startup sequence, loaded with safety redundancies.
 
 ## Code
 ### packages/mcp/src/server.ts
@@ -30,18 +30,22 @@ private setupHandlers() {
   this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
       const { name, arguments: args } = request.params;
-      if (!(name in tools)) throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) => 
+        const errorMessages = validationResult.error.issues.map((err) =>
           `${err.path.join('.')}: ${err.message}`
         ).join(', ');
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
       return await tool.handler(validationResult.data as any);
     } catch (error) {
-      if (error instanceof McpError) throw error;
+      if (error instanceof McpError) {
+        throw error;
+      }
       throw new McpError(
         ErrorCode.InternalError,
         `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
@@ -50,7 +54,7 @@ private setupHandlers() {
   });
 }
 ```
-The `setupHandlers` function is the central navigator, ensuring all tool requests are precisely routed and validated before execution.
+This section acts as the **communication hub**, ensuring proper protocols for each tool, akin to generating a galactic route map.
 
 ```typescript
 async run() {
@@ -62,66 +66,65 @@ async run() {
   repoAnalyzer.preGenerate(projectPath);
 }
 ```
-The `run` function acts as a launch protocol, preparing communication systems while initializing background resource generation.
+Here, the **run** function initializes the cosmic channels between client and server, akin to revving engines for intergalactic travel.
 
 ```typescript
 async function main() {
   try {
     const server = new RepoAdventureServer();
-    
-    ["SIGINT", "SIGTERM"].forEach(sig => 
+    ['SIGINT', 'SIGTERM'].forEach(sig =>
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
-    process.on("unhandledRejection", (reason) => {
-      console.error("Unhandled promise rejection:", reason);
-      console.error("MCP server continuing to run. Please report this error.");
+    process.on('unhandledRejection', (reason) => {
+      console.error('Unhandled promise rejection:', reason);
+      console.error('MCP server continuing to run. Please report this error.');
     });
     await server.run();
   } catch (error) {
-    console.error("Fatal error starting MCP server:", error);
+    console.error('Fatal error starting MCP server:', error);
     process.exit(1);
   }
 }
 ```
-The `main` function oversees starship liftoff, stabilizing the system against signals and unforeseen turbulence.
+The **main** sequence integrates safety nets into the system launch, securing the journey before warp drive activation.
 
-### packages/mcp/src/tools.ts: Repository navigation tools
-This file registers the interactive tools designed for the MCP system. Each tool is encapsulated in a handler exported under MCP-compatible names, allowing for structured engagement. The tools support storytelling and progress monitoring, utilizing the central `adventureManager` to synchronize their state. Among the functions, handlers like `start_adventure` and `explore_quest` define how the crew interacts with quests and explores the station-specific content.
+### packages/mcp/src/tools.ts: MCP Tool Registry
+This file encapsulates an array of tools that transform static repositories into exploratory adventures. With modules like `start_adventure`, `choose_theme`, and `view_progress`, each function represents a cardinal direction within the galaxy of storytelling. This registry's architecture maximizes modularity and maintainability while mapping tools to MCP specifications.
 
 #### Highlights
-- `start_adventure.handler`: Initiates the exploration by analyzing the repository and preparing quests.
-- `choose_theme.handler`: Generates quests tailored to the chosen theme.
-- `explore_quest.handler`: Allows crews to navigate through individual quest content.
-- `view_progress.handler`: Summarizes exploration progress and tracks remaining quests.
+- `start_adventure.handler`: Initial enterprise into adventure generation.
+- `choose_theme.handler`: Generates narratives and quests based on selected cosmic themes.
+- `explore_quest.handler`: Enables in-depth exploration of galactic quests.
+- `view_progress.handler`: A progress-tracking system for galactic storytelling missions.
 
 ## Code
 ### packages/mcp/src/tools.ts
 ```typescript
-import { startAdventure } from './tools/start-adventure.js';
+export const start_adventure = startAdventure;
 ```
-The `start_adventure.handler` activates the cosmic analyzer, initiating exploration preparations.
+The first command of the voyage, **`start_adventure`**, initiates the great odyssey across the digital cosmos.
 
 ```typescript
-import { chooseTheme } from './tools/choose-theme.js';
+export const choose_theme = chooseTheme;
 ```
-The `choose_theme.handler` selects the narrative lens through which repositories are decoded.
+Through **`choose_theme`**, the navigator tailors the narrative matrix according to uncharted stars in the repository nebula.
 
 ```typescript
-import { exploreQuest } from './tools/explore-quest.js';
+export const explore_quest = exploreQuest;
 ```
-The `explore_quest.handler` dives into the depths of data-rich quests within repositories.
+By activating **`explore_quest`**, the crew dives into individual stellar systems, turning mysteries into mapped brilliance.
 
 ```typescript
-import { viewProgress } from './tools/view-progress.js';
+export const view_progress = viewProgress;
 ```
-The `view_progress.handler` offers a galactic map summarizing the mission's progress and remaining roads.
+The **`view_progress`** tool functions as the ship's dashboard, detailing completed and ongoing adventures in a single cosmic view.
 
 ## Helpful Hints
-- Explore handler chaining within `setupHandlers` for better tool modularity.
-- Pre-generate repository data using `run` to speed up future analyses.
-- Experiment with theme customization in `choose_theme.handler` to enhance quest uniqueness.
+- **Navigation Tip**: Test `setupHandlers` with various tools to ensure proper interstellar validation and execution.
+- **Exploration Tip**: Expand `start_adventure` and `choose_theme` for future narrative galaxies.
+- **Next Steps**: Establish cross-galactic compatibility by enhancing theme-specific handlers with broader configurations.
 
 ---
-The command interface is ready and the tools are at your disposal. Proceed swiftly to establish contact with the next data archive, adventurer!
+Mission complete! The **SS Code Voyager** is ready to propel its neural starstreams to the next galactic code adventure.
 
-Mission accomplished, cadet! Quest 1: Command Interface Systems is now secure in your cosmic arsenal—stellar work propelling the starship of knowledge forward! 🚀⭐⚡
+Stellar work on completing Quest 1: Galactic Interface Protocols—your cosmic trajectory is igniting warp-speed brilliance, Commander! 🚀⭐💎

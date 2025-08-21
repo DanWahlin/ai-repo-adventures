@@ -40,6 +40,7 @@
       this.currentQuest = this.detectCurrentQuest();
       this.totalQuests = this.detectTotalQuests();
       this.isMultiTheme = this.detectMultiTheme();
+      this.loadStoredQuestTitles();
       this.init();
     }
 
@@ -69,23 +70,126 @@
     }
 
     detectTotalQuests() {
+      // First, try to get the total quest count from localStorage
+      const storedTotal = this.getStoredTotalQuests();
+      if (storedTotal && storedTotal > 0) {
+        // If we have a valid stored total and we're not on the index page where we could get fresher data
+        const isIndexPage = window.location.pathname.endsWith('/') || window.location.pathname.endsWith('index.html');
+        if (!isIndexPage) {
+          return storedTotal;
+        }
+      }
+      
       // Try to detect from existing quest links
       const questLinks = document.querySelectorAll('a[href*="quest-"]');
-      let maxQuest = 5; // Default
+      let maxQuest = 0; // Start with 0, only count actual quests
       
+      // Initialize questTitles if not already done
+      this.questTitles = this.questTitles || {};
+      
+      // Store quest titles while we're detecting
       questLinks.forEach(link => {
         const match = link.href.match(/quest-(\d+)\.html/);
         if (match) {
-          maxQuest = Math.max(maxQuest, parseInt(match[1], 10));
+          const questNum = parseInt(match[1], 10);
+          maxQuest = Math.max(maxQuest, questNum);
+          
+          // Store the quest title for later use
+          const titleElement = link.querySelector('h3');
+          if (titleElement) {
+            this.questTitles[questNum] = titleElement.textContent;
+          }
         }
       });
       
+      // If we're on a quest page, also store the current page title and ensure we count at least this quest
+      if (this.currentQuest) {
+        maxQuest = Math.max(maxQuest, this.currentQuest);
+        const pageTitle = document.querySelector('h1')?.textContent;
+        if (pageTitle && !this.questTitles[this.currentQuest]) {
+          this.questTitles[this.currentQuest] = pageTitle;
+        }
+      }
+      
+      // Default to 5 quests only if no quest links were found (fallback)
+      if (maxQuest === 0) {
+        maxQuest = 5;
+      }
+      
+      // Save the total quest count for future page loads
+      this.saveStoredTotalQuests(maxQuest);
+      
+      // Save titles to localStorage for persistence across pages
+      this.saveQuestTitles();
+      
       return maxQuest;
+    }
+    
+    loadStoredQuestTitles() {
+      try {
+        const stored = localStorage.getItem('questTitles');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Only load if the parsed data is an object with valid entries
+          if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+            this.questTitles = parsed;
+            return;
+          }
+        }
+      } catch (error) {
+        // Ignore localStorage errors and continue with empty object
+      }
+      
+      // Initialize empty questTitles if no valid stored data
+      this.questTitles = {};
+    }
+    
+    saveQuestTitles() {
+      if (this.questTitles && Object.keys(this.questTitles).length > 0) {
+        try {
+          localStorage.setItem('questTitles', JSON.stringify(this.questTitles));
+        } catch (error) {
+          // Ignore localStorage errors
+        }
+      }
+    }
+    
+    getStoredTotalQuests() {
+      try {
+        const stored = localStorage.getItem('totalQuests');
+        if (stored) {
+          const total = parseInt(stored, 10);
+          if (!isNaN(total) && total > 0) {
+            return total;
+          }
+        }
+      } catch (error) {
+        // Ignore localStorage errors
+      }
+      return null;
+    }
+    
+    saveStoredTotalQuests(total) {
+      try {
+        localStorage.setItem('totalQuests', total.toString());
+      } catch (error) {
+        // Ignore localStorage errors
+      }
     }
 
     detectMultiTheme() {
       // Check if we're in a subdirectory (multi-theme setup)
       const pathSegments = window.location.pathname.split('/').filter(s => s);
+      // If we're in a theme subdirectory (e.g., /space/, /mythical/), it's multi-theme
+      const inThemeSubdirectory = pathSegments.length > 1 && THEMES[pathSegments[pathSegments.length - 2]];
+      
+      // Additional check: if the "Change Adventure Theme" link would go to a valid parent directory
+      // This handles cases where we might be nested deeper but still in a multi-theme setup
+      if (inThemeSubdirectory) {
+        return true;
+      }
+      
+      // Fallback: check if we can determine from the URL structure
       return pathSegments.length > 1 && pathSegments[0] !== 'index.html';
     }
 
@@ -104,7 +208,7 @@
       button.setAttribute('aria-label', 'Open quest navigator');
       button.innerHTML = `
         <span class="nav-icon">
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="compass-icon">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="compass-icon">
             <g class="compass-spikes">
               <path d="M100 5 L105 25 L100 20 L95 25 Z" fill="currentColor"/>
               <path d="M195 100 L175 95 L180 100 L175 105 Z" fill="currentColor"/>
@@ -170,27 +274,8 @@
             </a>
           </div>
           
-          <div class="quest-nav-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${this.calculateProgress()}%"></div>
-            </div>
-            <span class="progress-text">${this.getProgressText()}</span>
-          </div>
-          
           <div class="quest-nav-grid">
             ${this.generateQuestGrid()}
-          </div>
-          
-          <div class="quest-nav-legend">
-            <span class="legend-item">
-              <span class="quest-status completed"></span> Completed
-            </span>
-            <span class="legend-item">
-              <span class="quest-status current"></span> Current
-            </span>
-            <span class="legend-item">
-              <span class="quest-status available"></span> Available
-            </span>
           </div>
         </div>
       `;
@@ -201,14 +286,12 @@
       let gridHTML = '';
       
       for (let i = 1; i <= this.totalQuests; i++) {
-        const status = this.getQuestStatus(i);
         const questTitle = this.getQuestTitle(i);
         
         gridHTML += `
-          <a href="quest-${i}.html" class="quest-nav-item ${status}" data-quest="${i}">
+          <a href="quest-${i}.html" class="quest-nav-item" data-quest="${i}">
             <div class="quest-number">${THEMES[this.currentTheme].questPrefix} ${i}</div>
             <div class="quest-title">${questTitle}</div>
-            <div class="quest-star">★</div>
           </a>
         `;
       }
@@ -216,36 +299,50 @@
       return gridHTML;
     }
 
-    getQuestStatus(questNum) {
-      if (questNum === this.currentQuest) return 'current';
-      if (questNum < this.currentQuest) return 'completed';
-      return 'available';
-    }
 
     getQuestTitle(questNum) {
-      // Try to get actual quest titles from the page if available
+      // First, try to use stored quest titles
+      if (this.questTitles && this.questTitles[questNum]) {
+        const title = this.questTitles[questNum];
+        // Clean up common quest number prefixes
+        const cleanTitle = title.replace(/^Quest \d+:\s*/, '').replace(/^Mission \d+:\s*/, '').replace(/^Journey \d+:\s*/, '').replace(/^Module \d+:\s*/, '');
+        return cleanTitle || title; // Return original if cleaning resulted in empty string
+      }
+      
+      // If we're currently on this quest, get title from page header and store it
+      if (questNum === this.currentQuest) {
+        const pageTitle = document.querySelector('h1')?.textContent;
+        if (pageTitle) {
+          // Store this title for future use
+          this.questTitles = this.questTitles || {};
+          this.questTitles[questNum] = pageTitle;
+          this.saveQuestTitles();
+          
+          const cleanTitle = pageTitle.replace(/^Quest \d+:\s*/, '').replace(/^Mission \d+:\s*/, '').replace(/^Journey \d+:\s*/, '').replace(/^Module \d+:\s*/, '');
+          return cleanTitle || pageTitle;
+        }
+      }
+      
+      // Try to get from quest links on current page
       const questLink = document.querySelector(`a[href="quest-${questNum}.html"]`);
       if (questLink) {
-        const title = questLink.querySelector('h3')?.textContent || 
-                     questLink.textContent || 
-                     `${THEMES[this.currentTheme].questPrefix} ${questNum}`;
-        return title.replace(/Quest \d+:\s*/, '');
+        const titleElement = questLink.querySelector('h3');
+        if (titleElement) {
+          const title = titleElement.textContent;
+          // Store this title for future use
+          this.questTitles = this.questTitles || {};
+          this.questTitles[questNum] = title;
+          this.saveQuestTitles();
+          
+          const cleanTitle = title.replace(/^Quest \d+:\s*/, '').replace(/^Mission \d+:\s*/, '').replace(/^Journey \d+:\s*/, '').replace(/^Module \d+:\s*/, '');
+          return cleanTitle || title;
+        }
       }
-      return `Unknown ${THEMES[this.currentTheme].questPrefix}`;
+      
+      // Final fallback - just use the quest number
+      return `${THEMES[this.currentTheme].questPrefix} ${questNum}`;
     }
 
-    calculateProgress() {
-      if (!this.currentQuest) return 0;
-      return Math.round(((this.currentQuest - 1) / this.totalQuests) * 100);
-    }
-
-    getProgressText() {
-      if (!this.currentQuest) {
-        return 'Ready to begin your adventure';
-      }
-      const completed = this.currentQuest - 1;
-      return `${completed} of ${this.totalQuests} quests completed`;
-    }
 
     enhanceQuestNavigation() {
       const navContainer = document.querySelector('.quest-navigation-bottom');
