@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Mystic Tools of the Codemaster Protocol - Repo Adventure</title>
+    <title>Quest 1: The Tools of Codemia - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -28,7 +28,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Enchanted Repository of Code and Quests</a>
+                <a href="index.html">The Realm of Enchanted Repositories</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,20 +40,21 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Mystic Tools of the Codemaster Protocol</h1>
+    <h1>Quest 1: The Tools of Codemia</h1>
 <hr>
-<p>In the mythical realm of Codoria, the Repository of Quests hums with the energy of a thousand dormant tales. Today’s quest beckons you, brave coder, to delve into the enchanted manuscripts that govern the Mystic Tools of the Codemaster Protocol. Within these parchments, enchanted by the Codemasters, lie the spells needed to summon a server that hosts the quests and tools that weave the land&#39;s stories. However, wielding these tools requires a keen mind, for they are bound to the protocols of structured magic. Let the journey into the heart of MCP begin!</p>
+<p>In the illuminated halls of the Repository of Knowledge, the adventurer&#39;s first challenge lies in mastering the arcane instruments known as the Tools of Codemia. These mystical tools possess the magic to traverse and explore the Enchanted Repository. Hidden behind spells and riddles, they await your grasp, but to wield them, you must comprehend their essence. Begin your journey, brave one, for only through understanding these tools shall you unlock the path to illuminate Codemia’s shadowed codebases.</p>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a>: The Protocol Enchanter&#39;s Blueprint</h3>
-<p>This file houses the magical rituals and protocols of the <code class="inline-code">RepoAdventureServer</code>, a fortress of code that serves as the beating heart of MCP adventures. It sets the rules and mechanisms by which enchanted tools communicate with users. Among the critical mechanisms are <code class="inline-code">setupHandlers</code>, where the foundational handlers for MCP protocols like ListTools and CallTool are registered, and the <code class="inline-code">run</code> method, which awakens the enchanted server, preparing it to connect and pre-generate content. The <code class="inline-code">main</code> function binds it all together, ensuring order and stability, like a knight commanding their battalion before the battle begins.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Heart of the Repository Gateway</h3>
+<p>This file serves as the mystical gateway into Codemia, bringing life to the &quot;Repo Adventure MCP server.&quot; Its spells (methods) define how to summon tools (<code class="inline-code">setupHandlers</code>), breathe life into the entire magical construct (<code class="inline-code">run</code>), and gracefully dispel the server should dark forces (errors) arise (<code class="inline-code">gracefulShutdown</code>). </p>
+<p>Through <code class="inline-code">setupHandlers</code>, the enchanted server dynamically registers all the tools defined in <code class="inline-code">tools.js</code>, making them accessible for quests. <code class="inline-code">run</code> initiates the process by establishing a communication bridge, ensuring adventurers can explore the repository via magical inputs and outputs. Finally, the <code class="inline-code">main</code> function orchestrates the entire performance, acting as the incantation that ignites the server into action.</p>
 <h4>Highlights</h4>
 <ul>
-<li><strong>setupHandlers</strong>: Registers enchanted tool handlers for responding to user requests.</li>
-<li><strong>run</strong>: Prepares and strengthens the server&#39;s magical connection to the MCP transport layer.</li>
-<li><strong>main</strong>: The entry point balancing initialization magic and graceful shutdowns.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Links available tools with the server&#39;s request handling system.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code>: Starts the enchanted server transport and prepares repository analysis in the background.</li>
+<li><code class="inline-code">main</code>: The grand incantation to invoke the Repo Adventure Server.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
+<h3>packages/mcp/src/server.ts</h3>
 <pre><code class="language-typescript">private setupHandlers() {
   this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
     const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
@@ -64,18 +65,15 @@
         $refStrategy: &#39;none&#39;
       })
     }));
-
     return { tools: toolList };
   });
 
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
-
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
@@ -84,7 +82,6 @@
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
-
       return await tool.handler(validationResult.data as any);
     } catch (error) {
       if (error instanceof McpError) {
@@ -98,31 +95,27 @@
   });
 }
 </code></pre>
-<p>The <code class="inline-code">setupHandlers</code> method crafts the rules for tool interaction, defining how the server lists and uses enchanted tools, much like setting the bounds of a wizard’s duel.</p>
+<p>Serving as a mystical librarian, this function binds the tools to their respective summoning spells, ensuring their correct invocation.</p>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
-<p>The <code class="inline-code">run</code> method awakens the server, preparing it to connect its mystical energies with the Stdio transport, akin to harnessing a magical leyline for endless adventures.</p>
+<p>This is where the magical bridge is constructed—a conduit through which adventurers interact with Codemia’s depths.</p>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
-
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt;
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
-
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
-
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
@@ -130,19 +123,24 @@
   }
 }
 </code></pre>
-<p>The <code class="inline-code">main</code> function is the gatekeeper, calling forth the enchanted server and ensuring its smooth retreat when the time comes, like a mage orchestrating a flawless battle plan.</p>
+<p>Acting as the invocation seal, <code class="inline-code">main</code> weaves the spells of startup, error handling, and graceful shutdown into one cohesive incantation.</p>
 <hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a>: The Wizard&#39;s Toolkit</h3>
-<p>This file serves as the arcane compendium of MCP tools. It contains the signatures of four primary spells: <code class="inline-code">start_adventure</code> for analyzing and initializing an enchanted journey, <code class="inline-code">choose_theme</code> for shaping the narrative’s form, <code class="inline-code">explore_quest</code> for diving into specific tasks, and <code class="inline-code">view_progress</code> for checking heroic milestones. Together, these tools are a coder’s spellbook, allowing exploration and storytelling within the Repository of Quests.</p>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The Repository Arsenal</h3>
+<p>In this file lie the enchanted tools of Codemia, each a key to deciphering the mysteries within. Tools such as <code class="inline-code">start_adventure</code> and <code class="inline-code">choose_theme</code> lay the foundation for themed journeys, while <code class="inline-code">explore_quest</code> and <code class="inline-code">view_progress</code> enable adventurers to delve deeper into their quests and measure their progress. By organizing and exporting these tools, the file ensures the seamless integration of adventure magic into the MCP server.</p>
 <h4>Highlights</h4>
 <ul>
-<li><strong>start_adventure.handler</strong>: Analyzes repositories and offers thematic paths.</li>
-<li><strong>choose_theme.handler</strong>: Crafts a storyline tailored to the user’s choice.</li>
-<li><strong>explore_quest.handler</strong>: Embarks on an individual quest with heroic vigor.</li>
-<li><strong>view_progress.handler</strong>: Reveals the current standing and remaining goals.</li>
+<li><code class="inline-code">start_adventure.handler</code>: Initiates the magical analysis of the codebase and presents storytelling themes.</li>
+<li><code class="inline-code">choose_theme.handler</code>: Selects a narrative theme to enchant the repository exploration journey.</li>
+<li><code class="inline-code">explore_quest.handler</code> and <code class="inline-code">view_progress.handler</code>: Explore individual quests and monitor achievements.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a></h3>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+</code></pre>
+<p>This is where the journey begins, as the first tool is summoned to life with codebase insights and options for magical tales.</p>
+<pre><code class="language-typescript">import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
+</code></pre>
+<p>The power of choice materializes here, where adventurers select their narrative destiny.</p>
 <pre><code class="language-typescript">export const tools = {
   start_adventure,
   choose_theme,
@@ -150,35 +148,22 @@
   view_progress
 };
 </code></pre>
-<p>This central export gathers the tools under a single enchanted binding, akin to placing all magical staves within one wizard’s vault for easy access.</p>
-<pre><code class="language-typescript">import { adventureManager } from &#39;@ai-repo-adventures/core/adventure&#39;;
-import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
-import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
-import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
-import { viewProgress } from &#39;./tools/view-progress.js&#39;;
-
-export const start_adventure = startAdventure;
-export const choose_theme = chooseTheme;
-export const explore_quest = exploreQuest;
-export const view_progress = viewProgress;
-</code></pre>
-<p>Here, the <code class="inline-code">import</code> statements summon the necessary spells from their hidden enclaves, weaving them into the tapestry of MCP tools—creating a unified magical arsenal.</p>
-<hr>
+<p>The arsenal of tools is gathered into one enchanted catalog, ready to assist adventurers in their heroic journeys.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Utilize <code class="inline-code">setupHandlers</code> to extend protocols with new tools, ensuring requests are understood.</li>
-<li>Explore <code class="inline-code">start_adventure</code> to understand how themes shape enchanted tales before diving into quests.</li>
-<li>Next steps: Investigate the <code class="inline-code">adventure-manager</code> for insights into story orchestration.</li>
+<li>Ensure a smooth journey by testing the server’s interface through simulated requests.</li>
+<li>Dive deeper into specific tool implementations to comprehend their individual workings.</li>
+<li>Progress next to analyze the quest-generation system, expanding Codemia&#39;s storytelling magic.</li>
 </ul>
 <hr>
-<p>Your quest to master the Mystic Tools has only begun, adventurer. Forge ahead with courage and curiosity!</p>
-<p>By the light of the celestial forge and the wisdom of ancient codemasters, you have vanquished the first trial and seized the Mystic Tools, charting a bold course toward legendary triumph—onward, noble seeker of the protocol! 💎⚡🚀</p>
+<p>Congratulations, adventurer! You have unearthed the Tools of Codemia. Wield them wisely, for your next quest delves into the lore of crafting mythical journeys. Equip yourself, and press bravely onward!</p>
+<p>Hail, valiant seeker of Codemia, for you have wielded the enchanted tools of wisdom and risen as a star-forged hero in this kingdom&#39;s grand odyssey—onward to your next glorious triumph! 💎⚡🚀</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: The Arcane Engine of Legendary ... →</a>
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: The Forge of Stories →</a>
       </div>
     
     </div>
