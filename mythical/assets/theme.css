@@ -341,60 +341,11 @@ p {
 }
 
 /* ===== BACKGROUND IMAGE STYLES ===== */
-/* Adventure Awaits heading with background image */
-.story-content h1 {
-  position: relative;
-  background-image: var(--story-bg-image);
-  background-size: cover;
-  background-position: center var(--story-background-position-percentage);
-  background-repeat: no-repeat;
-  min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  border-radius: 15px;
-  overflow: hidden;
-  margin-top: 0;
-  margin-bottom: 2rem;
-  
-  /* Enhanced text styling for better contrast over background */
-  color: #fff !important;
-  font-weight: 900;
-  text-align: center;
-  font-size: 4rem;
-  
-  /* Override base h1 gradient styles to show white text */
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: initial !important;
-}
-
-/* Semi-transparent overlay to improve text readability on the heading */
-.story-content h1::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
-  z-index: -1;
-}
-
-/* Ensure heading text appears above the overlay */
-.story-content h1 * {
-  position: relative;
-  z-index: 2;
-}
-
-/* Quest page title with background image - ONLY the first h1 (quest title) */
+/* Shared hero heading style for both story and quest pages */
+.story-content h1,
 .quest-content h1:first-child {
   position: relative;
-  background-image: var(--quest-bg-image);
   background-size: cover;
-  background-position: center var(--quest-background-position-percentage);
   background-repeat: no-repeat;
   min-height: 400px;
   display: flex;
@@ -418,7 +369,20 @@ p {
   -webkit-text-fill-color: initial !important;
 }
 
-/* Semi-transparent overlay to improve text readability on quest title - ONLY first h1 */
+/* Story-specific background */
+.story-content h1 {
+  background-image: var(--story-bg-image);
+  background-position: center var(--story-background-position-percentage);
+}
+
+/* Quest-specific background */
+.quest-content h1:first-child {
+  background-image: var(--quest-bg-image);
+  background-position: center var(--quest-background-position-percentage);
+}
+
+/* Semi-transparent overlay for both */
+.story-content h1::before,
 .quest-content h1:first-child::before {
   content: '';
   position: absolute;
@@ -431,7 +395,8 @@ p {
   z-index: -1;
 }
 
-/* Ensure quest title text appears above the overlay - ONLY first h1 */
+/* Ensure text appears above the overlay */
+.story-content h1 *,
 .quest-content h1:first-child * {
   position: relative;
   z-index: 2;
@@ -856,45 +821,6 @@ pre[class*="language-"] > code[class*="language-"] {
 
 /* ===== ANIMATED ENHANCEMENTS ===== */
 
-/* Theme display variables - set by JavaScript based on current theme */
-:root {
-  --space-display: block;
-  --ancient-display: none;
-  --mythical-display: none;
-}
-
-/* Subtle floating animation for quest links */
-.quest-link {
-  animation: subtle-float 6s ease-in-out infinite;
-}
-
-.quest-link:nth-child(2n) {
-  animation-delay: -2s;
-}
-
-.quest-link:nth-child(3n) {
-  animation-delay: -4s;
-}
-
-@keyframes subtle-float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-3px); }
-}
-
-/* Enhanced glow effect for titles */
-h1, .quest-title {
-  animation: title-glow 4s ease-in-out infinite alternate;
-}
-
-@keyframes title-glow {
-  from { 
-    text-shadow: var(--glow-shadow);
-  }
-  to { 
-    text-shadow: var(--glow-shadow), 0 0 20px rgba(100, 255, 218, 0.2);
-  }
-}
-
 /* Pulsing effect for navigation buttons */
 .quest-navigation a {
   position: relative;
@@ -916,41 +842,6 @@ h1, .quest-title {
   left: 100%;
 }
 
-/* Animated border for content containers */
-.container {
-  position: relative;
-  overflow: hidden;
-}
-
-.container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 15px;
-  padding: 1px;
-  background: linear-gradient(45deg, 
-    var(--accent-primary), 
-    transparent, 
-    var(--accent-secondary), 
-    transparent, 
-    var(--accent-primary)
-  );
-  background-size: 400% 400%;
-  animation: border-animation 8s ease infinite;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: exclude;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  opacity: 0.3;
-}
-
-@keyframes border-animation {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
 
 /* ===== FAST STORYTELLING ANIMATIONS ===== */
 
@@ -987,12 +878,7 @@ h1, .quest-title {
   }
 }
 
-/* 3. Quest cards - rapid sequence with typing effects */
-.quest-link {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
+/* 3. Quest cards - simple fade in sequence */
 .quest-link:nth-child(1) { animation: quest-reveal 0.5s ease-out 1.6s both; }
 .quest-link:nth-child(2) { animation: quest-reveal 0.5s ease-out 1.8s both; }
 .quest-link:nth-child(3) { animation: quest-reveal 0.5s ease-out 2.0s both; }
@@ -1001,33 +887,14 @@ h1, .quest-title {
 .quest-link:nth-child(6) { animation: quest-reveal 0.5s ease-out 2.6s both; }
 
 @keyframes quest-reveal {
-  0% {
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* 4. Quest title typing effect - starts immediately with card */
-.quest-link h3 {
-  overflow: hidden;
-  white-space: nowrap;
-  width: 0;
-}
-
-.quest-link:nth-child(1) h3 { animation: typing-reveal 0.8s steps(25) 1.6s both; }
-.quest-link:nth-child(2) h3 { animation: typing-reveal 0.8s steps(25) 1.8s both; }
-.quest-link:nth-child(3) h3 { animation: typing-reveal 0.8s steps(25) 2.0s both; }
-.quest-link:nth-child(4) h3 { animation: typing-reveal 0.8s steps(25) 2.2s both; }
-.quest-link:nth-child(5) h3 { animation: typing-reveal 0.8s steps(25) 2.4s both; }
-.quest-link:nth-child(6) h3 { animation: typing-reveal 0.8s steps(25) 2.6s both; }
-
-@keyframes typing-reveal {
-  from { width: 0; }
-  to { width: 100%; }
 }
 
 /* Enhanced hover effects for completed animations */
@@ -1068,27 +935,6 @@ h1, .quest-title {
   }
 }
 
-/* Particle trail effect on hover */
-.quest-link::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: all 0.6s ease;
-  opacity: 0;
-  z-index: -1;
-}
-
-.quest-link:hover::after {
-  width: 100px;
-  height: 100px;
-  opacity: 0.1;
-}
 
 /* Responsive: Reduce animations on mobile for performance */
 @media (max-width: 768px) {
@@ -1113,43 +959,23 @@ h1, .quest-title {
   .quest-link:nth-child(5) { animation-delay: 1.4s; }
   .quest-link:nth-child(6) { animation-delay: 1.5s; }
   
-  .quest-link h3 {
-    animation: none;
-    width: auto;
-    white-space: normal;
-  }
-  
   @keyframes simple-fade-in {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .container::before {
-    animation: none;
   }
 }
 
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   .quest-link,
-  h1,
-  .story-content h1,
-  .story-content p,
+  .story-content,
+  .quest-content,
   .quests-section h2,
-  .container::before,
   .quest-navigation a::before,
-  .story-content, .quest-content, .quests-section,
-  .code-block,
-  .quest-link h3,
-  .quest-link::after {
+  .code-block {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
-    width: auto !important;
-  }
-  
-  .quest-link h3 {
-    white-space: normal !important;
   }
 }
