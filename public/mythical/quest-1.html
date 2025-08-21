@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: Tools of the Mystic Kingdom - Repo Adventure</title>
+    <title>Quest 1: The Castle of the Mystic Interface - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Mystic Codex of the Enchanted Repository</a>
+                <a href="index.html">The Enchanted Codex of Mystic Quests</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,133 +41,121 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: Tools of the Mystic Kingdom</h1>
+    <h1>Quest 1: The Castle of the Mystic Interface</h1>
 <hr>
-<p>In the heart of the Mystic Kingdom, where spells weave the fabric of existence, the Codex of the Enchanted Repository’s tools shimmer with untapped potential. These tools, guarded by ancient sorcerers, allow heroes to embark on quests, shape magical narratives, and reveal the truths hidden in code. The workings of these tools are intricate, their magic bound by long-forgotten schemas and runes. Only those who dare to explore will unlock their secrets and guide the kingdom to prosperity. Will you answer the call?</p>
+<p>In the mystical Kingdom of Computarion, a towering castle looms—the Castle of the Mystic Interface. Its enchanted halls contain the sacred <code class="inline-code">setupHandlers</code> scroll, whose spells bind tools to their magical purposes. Guarded by the <code class="inline-code">run</code> spell, which empowers the castle’s mystical machinery, and the cryptic <code class="inline-code">main</code> incantation that gives life to the adventure, these artifacts are key to reclaiming the Enchanted Codex. But beware, brave adventurer, for dark tests—encoded in riddles—await those unworthy of wielding such power.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP server logic and tool invocation</h3>
-<p>This file serves as the enchanted chamber where the Codex’s magic comes alive, housing the <code class="inline-code">RepoAdventureServer</code> class that bridges the mystical tools and their users. Here, handlers are inscribed to dynamically list and invoke tools through gracefully validated interactions. Key spells such as <code class="inline-code">setupHandlers</code>, <code class="inline-code">run</code>, and <code class="inline-code">main</code> orchestrate the server’s lifecycle, encapsulating its startup and shutdown routines. The mystical incantations ensure safe execution by warding off errors and pre-generating content needed for quests.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Repository Server Core</h3>
+<p>This file holds the enchanting scripts needed to bind the magic of Computarion’s MCP tools into a functional server. The <code class="inline-code">RepoAdventureServer</code> class is the heart of this castle, defining the <code class="inline-code">setupHandlers</code> function to summon available tools and ensure their correct behavior. The <code class="inline-code">run</code> method weaves the castle&#39;s operational spells, connecting to the mystical <code class="inline-code">StdioServerTransport</code>. Finally, the <code class="inline-code">main</code> function acts as the lifeblood, orchestrating the harmonious awakening of the server while watching for disruptive elemental signals like <code class="inline-code">SIGINT</code>.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Configures the kingdom to list and invoke tools dynamically.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code>: Calls forth the server, preparing realms for brave adventurers.</li>
-<li><code class="inline-code">main</code>: The grand summoning spell to initiate the entire magical server.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Implements dynamic listing and invocation for MCP tools.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code>: Configures the spellwork necessary to operate the server.</li>
+<li><code class="inline-code">main</code>: Governs the overall initialization flow and prepares for external disruptions.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
 <pre><code class="language-typescript">private setupHandlers() {
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
-    return { tools: toolList };
-  });
+    // Dynamic tool listing
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+        const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+            name,
+            description: tool.description,
+            inputSchema: zodToJsonSchema(tool.schema, { 
+              target: &#39;jsonSchema7&#39;,
+              $refStrategy: &#39;none&#39;
+            })
+        }));
 
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-      const tool = tools[name as keyof typeof tools];
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-      return await tool.handler(validationResult.data as any);
-    } catch (error) {
-      if (error instanceof McpError) { throw error; }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
-</code></pre>
-<p>This is the magic circle where adventurers summon available tools and invoke their boundless abilities securely.</p>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
-</code></pre>
-<p>Here, the Codex&#39;s power ignites, connecting its runes to the realm and preparing content for all bold enough to journey.</p>
-<pre><code class="language-typescript">async function main() {
-  try {
-    const server = new RepoAdventureServer();
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+        return { tools: toolList };
     });
-    await server.run();
-  } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
-  }
+
+    // Dynamic tool execution
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+        try {
+            const { name, arguments: args } = request.params;
+
+            if (!(name in tools)) {
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+            }
+
+            const tool = tools[name as keyof typeof tools];
+            
+            // Validate arguments using the tool&#39;s Zod schema
+            const validationResult = tool.schema.safeParse(args);
+            if (!validationResult.success) {
+                const errorMessages = validationResult.error.issues.map((err) =&gt; 
+                    `${err.path.join(&#39;.&#39;)}: ${err.message}`
+                ).join(&#39;, &#39;);
+                throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+            }
+
+            // Execute the tool handler with validated arguments
+            return await tool.handler(validationResult.data as any);
+
+        } catch (error) {
+            if (error instanceof McpError) {
+                throw error;
+            }
+            throw new McpError(
+                ErrorCode.InternalError,
+                `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+            );
+        }
+    });
 }
 </code></pre>
-<p>The grand invocation ritual binds all pieces together, calling forth the Codex’s full power for command execution.</p>
-<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Tool definitions in the Codex</h3>
-<p>This file is akin to the kingdom&#39;s royal arsenal. It exports a collection of tools such as <code class="inline-code">start_adventure</code> and <code class="inline-code">choose_theme</code>, each designed to unravel the mysteries of the Enchanted Repository. With proper names and descriptions, these tools allow quests to unfold one spell at a time. The <code class="inline-code">tools</code> object is a key registry binding names, schemas, and handlers.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">start_adventure.handler</code>: Begins an epic journey into the realm of source code.</li>
-<li><code class="inline-code">choose_theme.handler</code>: Offers adventurers choices to shape their narratives.</li>
-<li><code class="inline-code">explore_quest.handler</code> &amp; <code class="inline-code">view_progress.handler</code>: Enables specific exploration and progress reporting.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/mcp/src/tools.ts</h3>
-<pre><code class="language-typescript">import { adventureManager } from &#39;@ai-repo-adventures/core/adventure&#39;;
-import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
-import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
-import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
-import { viewProgress } from &#39;./tools/view-progress.js&#39;;
-
-export const start_adventure = startAdventure;
-export const choose_theme = chooseTheme;
-export const explore_quest = exploreQuest;
-export const view_progress = viewProgress;
-
-export const tools = {
-  start_adventure,
-  choose_theme,
-  explore_quest,
-  view_progress
-};
+<p>This is like writing the castle’s rulebook—tools are cataloged and their behaviors validated before activating.</p>
+<pre><code class="language-typescript">async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+    
+    // Pre-generate repomix content for the current working directory to warm up the cache
+    const projectPath = process.cwd();
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repoAnalyzer.preGenerate(projectPath);
+}
 </code></pre>
-<p>This is the royal decree that organizes each magical artifact (tool) and makes them accessible for adventurers to wield.</p>
+<p>This spell ignites the castle’s inner mechanisms, calling forth the server’s operational energy flow.</p>
+<pre><code class="language-typescript">async function main() {
+    try {
+        const server = new RepoAdventureServer();
+        
+        // Handle graceful shutdown for both signals
+        [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+            process.on(sig as NodeJS.Signals, gracefulShutdown)
+        );
+        
+        // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
+        process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+            console.error(&#39;Unhandled promise rejection:&#39;, reason);
+            console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+        });
+        
+        await server.run();
+    } catch (error) {
+        console.error(&#39;Fatal error starting MCP server:&#39;, error);
+        process.exit(1);
+    }
+}
+</code></pre>
+<p>The wizard-like summoning of <code class="inline-code">main</code> ensures the castle’s awakening amidst unpredicted disruptions.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>While <code class="inline-code">setupHandlers</code> bridges the Codex and tools, ensure the schemas are properly validated to avoid mystical misfires.</li>
-<li>Begin any heroic coding journey by invoking <code class="inline-code">start_adventure</code> for an initial overview of the magic within your repositories.</li>
-<li>Explore subsequent quests (tools) based on each hero’s progress and vision for shaping the kingdom’s narratives.</li>
+<li>Plan your quest&#39;s order of study: start with <code class="inline-code">setupHandlers</code> to grasp the tool registration framework.</li>
+<li>Test the server locally by observing its connection message in the console during <code class="inline-code">run</code>.</li>
+<li>Focus on how errors are managed—immensely useful for debugging your future adventures.</li>
 </ul>
 <hr>
-<p>The Codex of the Enchanted Repository unveils its secrets patiently, and your journey has only begun. Adventure forth wisely!</p>
-<p>Hail, valiant seeker of wisdom! With the enchanted tools of the Mystic Kingdom now within your grasp, the path to legendary glory begins—let the stars guide you to your next triumph! ⭐⚡💎</p>
+<p>Congratulations, you have deciphered the magic of the Castle of the Mystic Interface. The next fragment of the codex awaits!</p>
+<p>With valor unmatched, you have conquered the Castle of the Mystic Interface, unlocking the first jewel of wisdom on your legendary quest toward mastery—onward, noble traveler, destiny awaits! ⭐💎⚡</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom nav-next-only">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: The Enchanter’s Chron... →</a>
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
       </div>
     
     </div>

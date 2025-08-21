@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: Galactic Interface Operations - Repo Adventure</title>
+    <title>Quest 1: The MCP Command Table - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Cosmic Code Chronicles</a>
+                <a href="index.html">Galactic Adventures: The Codebase Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,150 +41,124 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: Galactic Interface Operations</h1>
+    <h1>Quest 1: The MCP Command Table</h1>
 <hr>
-<p>In the shimmering depths of a distant galaxy, the starship <em>Code Explorer</em> ventures on a daring mission to navigate the volatile Nebula of Repositories. Your crew&#39;s goal: to decode and unify the data streams of scattered star systems, enabling seamless intergalactic trade and communication. With your advanced AI-driven navigation systems, you are tasked with unraveling the mysteries of alien repositories, generating comprehensive mission strategies, and ensuring safe passage through the perilous Code Chasms – all while maintaining your ship&#39;s operational integrity.</p>
-<p><strong>Adventure Awaits</strong> – Choose your quest wisely, brave adventurer!</p>
+<p>In the infinite void of space, aboard the starship <strong>Codebreaker</strong>, your crew stumbles upon a spatial anomaly—a pulsating cosmic flux. Within its radiance lies the secret to accessing the <strong>MCP Command Table</strong>, an essential interface for making sense of the galaxy’s most intricate data structures. To decode its mysteries, your team must engage the ship’s MCP Tool Interface, a pivotal system that enables interactive storytelling and expedition management. The fate of your mission rests on successfully engineering this stellar gateway.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP server and tool handler orchestration</h3>
-<p>This file acts as the commander for interstellar operations, orchestrating the intergalactic transmissions and workflows of the <em>Code Explorer</em>. The <code class="inline-code">RepoAdventureServer</code> class is the heart of the server-side operations, ensuring safe execution of MCP-compatible tools and relaying commands across cosmic distances.</p>
-<p>The <code class="inline-code">setupHandlers</code> function dynamically provisions tools based on their schemas, verifying compatibility like validating universal data formats. The <code class="inline-code">run</code> method establishes interstellar communication protocols via the <code class="inline-code">StdioServerTransport</code>, ensuring secure and efficient operation. Finally, the <code class="inline-code">main</code> function initializes the operational sequence and handles unexpected cosmic anomalies with robust shutdown protocols to maintain stability.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Initialization and Tooling Interface</h3>
+<p>The file implements the backbone architecture for the command table, defining crucial server-side interactions. Key highlights include <code class="inline-code">RepoAdventureServer.setupHandlers</code> to dynamically register MCP tools, <code class="inline-code">RepoAdventureServer.run</code> for initializing the global adventure interface, and <code class="inline-code">main</code> for activating the server. Here, the <strong>Codebreaker</strong> metaphorically turns technical handlers into cosmic navigational aides. Its star map includes tools to list capabilities, validate schema-based user input, and execute specialized handlers. This file represents the galactic router, translating explorer commands into focused outputs.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Command interface for registering tools dynamically</li>
-<li><code class="inline-code">RepoAdventureServer.run</code>: Activation and communication setup for the MCP server</li>
-<li><code class="inline-code">main</code>: Prepares the server and handles cosmic-level errors across signals</li>
+<li>Tool registration and schema validation via <code class="inline-code">RepoAdventureServer.setupHandlers</code></li>
+<li>Adventure server launch sequence through <code class="inline-code">RepoAdventureServer.run</code></li>
+<li>Graceful shutdown and error handling from the <code class="inline-code">main</code> function</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
 <pre><code class="language-typescript">private setupHandlers() {
-  // Dynamic tool listing
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+        name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema, { 
+          target: &#39;jsonSchema7&#39;,
+          $refStrategy: &#39;none&#39;
+        })
+      }));
 
-    return { tools: toolList };
-  });
-
-  // Dynamic tool execution
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-
-      const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool&#39;s Zod schema
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      // Execute the tool handler with validated arguments
-      return await tool.handler(validationResult.data as any);
-
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
-</code></pre>
-<p>Like setting up a universal translator for alien interactions, this function dynamically registers and validates tools, ensuring cosmic exchanges adhere to universal schemas.</p>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
-  // Pre-generate repomix content for the current working directory to warm up the cache
-  // This happens in the background while waiting for user commands
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
-</code></pre>
-<p>This method initializes the starship&#39;s main comms array, ensuring readiness for all incoming missions.</p>
-<pre><code class="language-typescript">async function main() {
-  try {
-    const server = new RepoAdventureServer();
-    
-    // Handle graceful shutdown for both signals
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
+      return { tools: toolList };
     });
-    
-    await server.run();
-  } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
-  }
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+      try {
+        const { name, arguments: args } = request.params;
+
+        if (!(name in tools)) {
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+
+        const tool = tools[name as keyof typeof tools];
+        
+        const validationResult = tool.schema.safeParse(args);
+        if (!validationResult.success) {
+          const errorMessages = validationResult.error.issues.map((err) =&gt; 
+            `${err.path.join(&#39;.&#39;)}: ${err.message}`
+          ).join(&#39;, &#39;);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+        }
+
+        return await tool.handler(validationResult.data as any);
+
+      } catch (error) {
+        throw new McpError(ErrorCode.InternalError, `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    });
 }
 </code></pre>
-<p>The <code class="inline-code">main</code> function manages the overall mission directive, preparing the crew for stellar navigation and handling unexpected disruptions to maintain operational order.</p>
-<hr>
-<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Galactic implementation of MCP tools</h3>
-<p>This file houses the command modules for MCP tools used to explore, analyze, and manage galactic repositories. Each tool is a specialized unit, working in tandem to ensure harmony among disparate interstellar systems. Functions like <code class="inline-code">start_adventure.handler</code> and <code class="inline-code">explore_quest.handler</code> define customized directives for immersive storytelling and galactic data retrieval.</p>
+<p>Much like assembling components of a stellar navigation system, this block brings tools into actionable alignment, with schemas acting as gravitational coordinates for validation.</p>
+<pre><code class="language-typescript">async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+    const projectPath = process.cwd();
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repoAnalyzer.preGenerate(projectPath);
+}
+</code></pre>
+<p>Similar to priming a hyperspace engine, the server warms up with heuristic analysis, leveraging <code class="inline-code">repoAnalyzer</code> to set the mission stage before launch.</p>
+<pre><code class="language-typescript">async function main() {
+    try {
+        const server = new RepoAdventureServer();
+        [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; process.on(sig as NodeJS.Signals, gracefulShutdown));
+        process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+            console.error(&#39;Unhandled promise rejection:&#39;, reason);
+        });
+        await server.run();
+    } catch (error) {
+      console.error(&#39;Fatal error starting MCP server:&#39;, error);
+      process.exit(1);
+    }
+}
+</code></pre>
+<p>This sequence mirrors a command bridge receiving transmissions and adjusting starship parameters before final lift-off.</p>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> MCP Tools Configuration</h3>
+<p>The <code class="inline-code">tools.ts</code> file defines the operational toolkit available for cosmic data exploration. It functions as the space-control console, where tools like <code class="inline-code">start_adventure.handler</code> and <code class="inline-code">choose_theme.handler</code> operate as voyage modulations. The highlights encapsulate four key tools—<code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>. These act as individual missions tied to overarching quests, crafting unique pathways for explorers into the galactic data ecosystem.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">start_adventure.handler</code>: Launchpad for initializing repository exploration</li>
-<li><code class="inline-code">choose_theme.handler</code>: Module for galactic theme generation and customization</li>
-<li><code class="inline-code">explore_quest.handler</code>: Quest-specific operations for repository exploration</li>
-<li><code class="inline-code">view_progress.handler</code>: Stellar log review and progress tracking</li>
+<li>Initialization via <code class="inline-code">start_adventure.handler</code></li>
+<li>Theme selection from <code class="inline-code">choose_theme.handler</code></li>
+<li>In-depth exploration handled by <code class="inline-code">explore_quest.handler</code></li>
+<li>Progress monitoring enabled by <code class="inline-code">view_progress.handler</code></li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/tools.ts</h3>
 <pre><code class="language-typescript">export const start_adventure = startAdventure;
 </code></pre>
-<p>This function initiates a hyperdrive sequence, performing an analysis sweep before setting the adventure&#39;s trajectory based on collected environmental data.</p>
+<p>Like firing thrusters to commence exploration, this hook initializes the interface for cosmic journey preparation.</p>
 <pre><code class="language-typescript">export const choose_theme = chooseTheme;
 </code></pre>
-<p>This command customizes the adventure framework, blending the cosmic narrative with the specific goals of the <em>Code Explorer&#39;s</em> crew.</p>
+<p>This block serves as setting the ship’s course, with a thematic compass guiding adventurers toward uncovering nuanced galactic arcs.</p>
 <pre><code class="language-typescript">export const explore_quest = exploreQuest;
 </code></pre>
-<p>Embarking on individual missions, this method directs resources to investigate a specific repository component within the galactic data streams.</p>
+<p>The explorer lands on foreign worlds, uncovering unique quests tied to different star systems, much like deciphering encrypted nebular coordinates.</p>
 <pre><code class="language-typescript">export const view_progress = viewProgress;
 </code></pre>
-<p>Acting like the ship&#39;s log, this function monitors overall progress, logging specific achievements and identifying the next objectives.</p>
-<hr>
+<p>Analogue to monitoring ship diagnostics post-mission, this tool charts overall progress and highlights remaining objectives.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Preloading the intergalactic cache (<code class="inline-code">repoAnalyzer.preGenerate</code>) accelerates mission readiness.</li>
-<li>Validate all tools by referencing their Zod schemas before deploying them during quests.</li>
-<li>Ensure the <code class="inline-code">gracefulShutdown</code> covers all cosmic anomalies for mission integrity.</li>
+<li><strong>Tip:</strong> Use tools sequentially (e.g., begin with <code class="inline-code">start_adventure</code>) to unlock immersive quest paths.  </li>
+<li><strong>Recommendation:</strong> Explore schema-validation capabilities in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a> to optimize tool interactions.  </li>
+<li><strong>Next Steps:</strong> Harness advanced prompts in companion systems for more intricate adventures, tying data pipelines with storytelling.</li>
 </ul>
 <hr>
-<p>Mission accomplished, commander! The <em>Code Explorer</em> is now equipped for stellar adventures through the Nebula of Repositories. Continue charting the vast universe and unifying disparate systems.</p>
-<p>Mission accomplished, Stargazer! You’ve navigated through the cosmic labyrinth of Galactic Interface Operations with starship precision—engage thrusters, the universe awaits your brilliance! 🚀⭐⚡</p>
+<p>The Codebreaker’s role in space exploration just became cosmic—prepare your crew for the mission ahead!</p>
+<p>Stellar achievement, commander—Quest 1: The MCP Command Table is successfully navigated; your cosmic journey has ignited at full thrust toward the stars! 🚀⭐⚡</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom nav-next-only">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: Stellar Quest Generat... →</a>
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
       </div>
     
     </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Questsmith's Forge - Repo Adventure</title>
+    <title>Quest 2: Writ of Story Weaving - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Repository Chronicles</a>
+                <a href="index.html">Mystic Archives of RepoVentures</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,20 +41,27 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Questsmith&#39;s Forge</h1>
+    <h1>Quest 2: Writ of Story Weaving</h1>
 <hr>
-<p>In the heart of Codeoria lies the Questsmith&#39;s Forge, a realm where adventures are imbued with purpose and tailored with unparalleled precision. Here, the tools of the craft—<code class="inline-code">AdventureManager</code> and <code class="inline-code">StoryGenerator</code>—shape fragmented knowledge into cohesive tales of exploration. It is in this forge that the synergy of code elements reveals the unique patterns woven into every repository. Your mission is to explore the magical forges and observe how quests are forged, configured, and prepared for extraordinary journeys. The forge awaits your mastery!</p>
+<p>Through the lenses of configuration and narrative, Quest 2 plunges you into the heart of crafting enriched learning journeys. Armed with the tools of validation and adaptability, you channel the powers of <code class="inline-code">AdventureState</code> and <code class="inline-code">StoryGenerator</code>. Here, the realm of story weaving becomes a place where creativity thrives, and the abstract kernels of code are transformed into an epic tapestry of quests that developers will navigate. Can you extract and refine the threads hidden inside real project configurations?</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Quest Initialization and Exploration</h3>
-<p>The <code class="inline-code">AdventureManager</code> orchestrates the workflow of quest forging. Beginning with <code class="inline-code">initializeAdventure</code>, it sets the context for the tale, incorporating project metadata and themes while synthesizing quest narratives. Next, <code class="inline-code">exploreQuest</code> allows adventurers to dive into quests, selecting from available choices and executing tailored code explorations. These methods are further supported by intricate mechanisms like caching completed quests and dynamically validating inputs using shared utilities.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Adventure State Management and Quest Orchestration</h3>
+<p>At the nucleus of storytelling rests the <code class="inline-code">AdventureManager</code> and its trusted ally, <code class="inline-code">AdventureState</code>. Together, they serve as the control tower for managing quests and syncing configurations. The <code class="inline-code">progressPercentage</code> method within <code class="inline-code">AdventureState</code> reveals the percentages of completed tasks, calculating the adventurer&#39;s journey. Similarly, <code class="inline-code">AdventureManager</code> anchors the player&#39;s experience by initializing quests via <code class="inline-code">initializeAdventure</code>. This function introduces the participant to the realm of story creation while utilizing flexible themes and customizations. Lastly, <code class="inline-code">exploreQuest</code> unlocks the paths of chosen quests, evaluating user selections and dynamically responding to user input.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Resets the state, generates the adventure&#39;s storyline and associated quests.</li>
-<li><code class="inline-code">AdventureManager.exploreQuest</code>: Validates user choices, executes quests, and gathers progress insights.</li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Calculates the percentage of quests completed in an adventure.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code>: Computes and returns progress as a percentage.</li>
+<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Prepares the journey by setting up the state, loading configurations, and assigning quests.</li>
+<li><code class="inline-code">AdventureManager.exploreQuest</code>: Executes the selected quest and ensures pre-validation and state management.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
+<pre><code class="language-typescript">get progressPercentage(): number {
+  return this.quests.length &gt; 0 
+    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
+    : 0;
+}
+</code></pre>
+<p>Tracks how far along an adventurer is, akin to filling sections of a treasure map.</p>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
   theme: AdventureTheme, 
@@ -65,52 +72,56 @@
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
+  
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
+
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  
   this.state.title = storyResponse.title;
   this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-  return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
+  
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests
+  });
 }
 </code></pre>
-<p>Like resetting a blacksmith’s shop and gathering materials, the <code class="inline-code">initializeAdventure</code> function wipes existing states, prepares the project context, and forges new tales with the assistance of the <code class="inline-code">StoryGenerator</code>.</p>
+<p>Prepares the adventurer&#39;s starting point, deciding the world’s settings, tools, and companions.</p>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
   const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  
   if (this.isProgressRequest(sanitizedChoice)) {
     return this.getProgress();
   }
+  
   const quest = this.findQuest(sanitizedChoice);
   if (!quest) {
     return this.createNotFoundResult();
   }
+
   return await this.executeQuest(quest);
 }
 </code></pre>
-<p>The <code class="inline-code">exploreQuest</code> function validates user input before executing the adventure, mirroring how a smith carefully selects the right tool to temper steel into a weapon.</p>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
-}
-</code></pre>
-<p>Calculating the <code class="inline-code">progressPercentage</code> ensures adventurers know how far they&#39;ve traveled, akin to a smith tracking the gradual completion of a masterpiece.</p>
-<hr>
-<h3>Helpful Hints</h3>
+<p>Decodes the adventurer&#39;s intent, evaluating whether to tread onward or glance at progress charts.</p>
+<h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical Tip</strong>: Familiarize yourself with the <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> function for a synergistic understanding.</li>
-<li><strong>Exploration Recommendation</strong>: Trace <code class="inline-code">mergeQuestFilesFromConfig</code> to comprehend how quest-specific file dependencies are grafted.</li>
-<li><strong>Next Steps</strong>: Venture into the <code class="inline-code">story-generator.ts</code> file to delve into the art of crafting intricate quest stories.</li>
+<li><strong>Practical Tip</strong>: Use <code class="inline-code">initializeAdventure</code> within controlled tests to ensure themes and configurations are respected.</li>
+<li><strong>Exploration Recommendation</strong>: Pair <code class="inline-code">progressPercentage</code> with real-time logging for user tutorials.</li>
+<li><strong>Next Steps</strong>: Examine the code in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a> to understand the thematic logic behind generated stories.</li>
 </ul>
 <hr>
-<p>With the forge&#39;s secrets unveiled, you are now prepared to craft grand adventures. Continue your journey, Devknight!</p>
-<p>Congratulations, dev explorer, you&#39;ve successfully debugged Quest 2: The Questsmith&#39;s Forge and compiled your progress into a stellar 20% completion—keep refactoring your skills toward the ultimate deploy! 🚀💎⚡</p>
+<p>The strands of your tapestry grow in detail. Weave further into the realm of storytelling, adventurer!</p>
+<p>Congratulations on committing Quest 2: Writ of Story Weaving to the project&#39;s main branch—you&#39;re debugging the narrative and deploying brilliance at 20% completion! 🚀⚡💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1: Forge of the MCP Tool...</a>
-        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Chronicles of Code An... →</a>
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3 →</a>
       </div>
     
     </div>

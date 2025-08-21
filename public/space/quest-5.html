@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Config Matrix Codex - Repo Adventure</title>
+    <title>Quest 5: Foundations of Exploration - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Cosmic Code Chronicles</a>
+                <a href="index.html">Galactic Adventures: The Codebase Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,17 +41,18 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Config Matrix Codex</h1>
+    <h1>Quest 5: Foundations of Exploration</h1>
 <hr>
-<p>In the uncharted void of the Nebula of Repositories, the <em>Code Explorer</em> receives an encoded signal pointing to a hidden vault: the Config Matrix Codex. This elusive repository holds the keys to standardizing communication protocols across galactic systems—a treasure crucial for seamless interstellar trade. Your mission is to locate the matrix by unraveling config files hidden deep within unstable systems and decipher their fragmented data using advanced Parsers and Extractors, ensuring that the Codex is safely brought online for universal access.</p>
+<p>As the starship Codebreaker glides silently through the dense cosmic swirls of the Zyphid Nebula, the crew braces themselves for the next crucial mission. The Repository Core draws near, a beacon of untapped potential shimmering faintly in the quantum star maps. Tasked with unleashing the starship’s full exploratory capabilities, the crew must decode and interface their systems to uncover the Repository’s secrets. Among their tools: a meticulously designed adventure configuration process, a critical foundation for navigating the galaxy’s challenges. Time is running out, and every setting is a step closer to the Core.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Config Handling Toolkit</h3>
-<p>This file is the cornerstone of the mission, facilitating the parsing, extraction, and formatting of the critical <code class="inline-code">adventure.config.json</code>. The <code class="inline-code">loadAdventureConfig</code> function is pivotal for checking the presence of raw configuration files, ensuring your starship’s navigational AI can access viable data. The <code class="inline-code">parseAdventureConfig</code> method initiates the decoding process, interpreting JSON files to uncover interlinking paths and strategies. Additionally, <code class="inline-code">extractUniqueFilePaths</code> triangulates referenced files, granting the crew an efficient route map through chaotic data clusters. Each function operates as a cog in the stellar machinery required to decipher the Config Matrix Codex and harness its transformative potential.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Adventure Configuration Utilities</h3>
+<p>This file contains the foundational utilities required to manage the adventure configuration system. The <code class="inline-code">adventure-config</code> library helps the Codebreaker load, parse, and optimize configuration data to adapt to dynamic scenarios. The utilities are essential for retrieving configuration details, extracting useful metadata, and fine-tuning prompt structures. This interweaves the mission’s technical objectives with the wider galactic exploration narrative.</p>
+<p>The <code class="inline-code">loadAdventureConfig</code> function provides low-level access to raw configuration data from the <code class="inline-code">adventure.config.json</code> file, serving as the first step in the processing pipeline. The next step, <code class="inline-code">parseAdventureConfig</code>, parses the JSON data while handling errors gracefully, producing actionable objects. Finally, the <code class="inline-code">formatAdventureConfigForPrompt</code> function condenses configurations into a concise, formatted structure, enabling efficient integration with the ship’s neural systems while minimizing cognitive loads. These utilities together provide a seamless bridge between raw data and the mission&#39;s sprawling purposes.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">loadAdventureConfig</code>: Load raw configuration files.</li>
-<li><code class="inline-code">parseAdventureConfig</code>: Parse JSON data for operational clarity.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Identify file paths to construct navigational directives.</li>
+<li>Facilitates access to core adventure parameters with the <code class="inline-code">loadAdventureConfig</code> utility.</li>
+<li>Guarantees robust error handling and validation through <code class="inline-code">parseAdventureConfig</code>.</li>
+<li>Enables adaptive storytelling with the <code class="inline-code">formatAdventureConfigForPrompt</code> generator.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
@@ -60,7 +61,7 @@
   return readFileIfExists(configPath);
 }
 </code></pre>
-<p>Like scanning for signs of life on a distant planet, this function checks for the existence and accessibility of the <code class="inline-code">adventure.config.json</code> file.</p>
+<p>Just as the ship’s sensors initiate exploration by retrieving cosmic signals, <code class="inline-code">loadAdventureConfig</code> starts the process by reading the raw configuration from storage.</p>
 <pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
@@ -71,50 +72,58 @@
   }
 }
 </code></pre>
-<p>Parsing the raw data is akin to converting alien languages into readable star charts, illuminating paths hidden within layers of complexity.</p>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+<p>Like deciphering an alien transmission, <code class="inline-code">parseAdventureConfig</code> translates raw JSON data into actionable insights, ready for further analysis or command.</p>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
-
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== &#39;object&#39;) continue;
-
-    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
-      const rel = node.path.trim();
-      if (fs.existsSync(path.resolve(projectPath, rel))) {
-        unique.add(rel);
-      }
-    }
-
-    const children = Array.isArray(node) ? node : Object.values(node);
-    children.forEach(child =&gt; {
-      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
-    });
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
   }
 
-  return Array.from(unique);
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure\n\n`;
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    const filePaths = quest.files
+      .filter((f: any) =&gt; f.path)
+      .map((f: any) =&gt; f.path);
+    if (filePaths.length &gt; 0) {
+      formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
+    }
+    const functions = quest.files
+      .flatMap((f: any) =&gt; f.highlights || [])
+      .filter((h: any) =&gt; h.name)
+      .map((h: any) =&gt; h.name);
+    if (functions.length &gt; 0) {
+      formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;
+    }
+    formatted += `\n`;
+  }
+
+  return formatted;
 }
 </code></pre>
-<p>This function acts as the stellar navigation system, tracing data routes embedded within the parsed configuration file for efficient cosmic exploration.</p>
+<p>Much like mapping a star system for navigation, <code class="inline-code">formatAdventureConfigForPrompt</code> condenses vast amounts of data into a crisp, usable guide for galactic missions.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Ensure the <code class="inline-code">projectPath</code> is accurately mapped to avoid mission-critical failures.</li>
-<li>Consider utilizing <code class="inline-code">extractUniqueFilePaths</code> early to prioritize vital routes within complex configurations.</li>
-<li>Use parsed data to create backup plans in case of corrupted JSON structures.</li>
+<li><strong>Practical tip</strong>: Ensure the <code class="inline-code">adventure.config.json</code> file is present and well-formed, as it’s vital for the quest’s success.</li>
+<li><strong>Exploration recommendation</strong>: Experiment with adjustments in the JSON file to tailor procedural outputs for unique scenarios.</li>
+<li><strong>Next steps</strong>: Enhance prompt formatting by integrating adaptive parameters for dynamic quests.</li>
 </ul>
 <hr>
-<p>The Config Matrix Codex awaits! Prepare to unlock universal communication and make your mark in intergalactic history, adventurer.</p>
-<p>⚡ Stellar work, star navigator—your mastery of Quest 5: Config Matrix Codex ignites the thrusters toward the final frontier with cosmic brilliance at 80% mission progress!</p>
+<p>The Repository Core awaits your ingenuity, star-farer. Harness the Codebreaker’s systems and bring the adventure closer to its stellar finale!</p>
+<p>Stellar work, Explorer! You&#39;ve ignited 80% of your thrusters on this cosmic voyage, laying the groundwork for interstellar mastery—Quest 5 complete and the stars await your next triumph! ⭐🚀💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4: Thematic Command Cent...</a>
+        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4</a>
         <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
       </div>
     

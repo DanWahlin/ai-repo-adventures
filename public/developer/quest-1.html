@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: Forge of the MCP Tools - Repo Adventure</title>
+    <title>Quest 1: Forge of Tools and Paths - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Repository Chronicles</a>
+                <a href="index.html">Mystic Archives of RepoVentures</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,17 +41,26 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: Forge of the MCP Tools</h1>
+    <h1>Quest 1: Forge of Tools and Paths</h1>
 <hr>
-<p>In the bustling kingdom of Codeoria, an ancient forge known as the MCP Toolworks hums with activity. Here, the guardian Devknights gather to wield enchanted tools, each imbued with the power to illuminate fragmented codebases. As the Forge sparks to life, your quest begins—crafting and commanding tools such as <code class="inline-code">start_adventure</code> and <code class="inline-code">view_progress</code> to unravel repositories&#39; secrets, bridging the gap between knowledge and innovation.</p>
+<p>In this realm of digital exploration, you come upon a mysterious enclave known as the MCP server. It stands as both guardian and guide, housing tools designed to illuminate the paths through complex repositories. Your mission is to delve deep into the core of this server and its tools, unraveling their ingenious design and forging your connection to the interactive story elements they power. Here, in the forge of tools and paths, lies your gateway to boundless adventure.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Implementation</h3>
-<p>This file contains the primary setup for the MCP server, handling dynamic tool listing, execution, and lifecycle management. Central to its architecture is the <code class="inline-code">RepoAdventureServer</code> class, which encapsulates the logic for providing an interactive and gamified experience. Critical methods like <code class="inline-code">setupHandlers</code> define the process for registering tools, while the <code class="inline-code">run</code> method initializes server transport and triggers preemptive code analysis to enhance user interactivity. As the entry point, the <code class="inline-code">main</code> function sets up handlers for graceful shutdown and unhandled errors.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Server&#39;s Foundation</h3>
+<p>The <code class="inline-code">server.ts</code> file acts as the backbone of the <code class="inline-code">RepoAdventureServer</code>, providing an infrastructure for managing requests and interactions within the MCP ecosystem. This file establishes a gamified MCP server that not only handles client-server communication but also dynamically responds to tool invocation and configuration. Key highlighted functionality includes <code class="inline-code">setupHandlers</code> for binding dynamic request handling, the <code class="inline-code">run</code> method for initializing the server, and the centralized <code class="inline-code">main</code> function for orchestration. Each of these elements demonstrates careful thought in design and function.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code> - Defines dynamic request handlers for tool listing and execution.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code> - Connects server transport and performs cache pre-generation tasks.</li>
-<li><code class="inline-code">main</code> - Orchestrates server startup and global signal handling for smooth operations.</li>
+<li><code class="inline-code">setupHandlers</code>: Configures request handling for tool listing and execution, dynamically adapting based on tool definitions.</li>
+<li><code class="inline-code">run</code>: Initializes server transport, connects it, and warms up repository analysis utilities.</li>
+<li><code class="inline-code">main</code>: Acts as the entry point, ensuring graceful startup and shutdown of the server.</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The Repository Toolkit</h3>
+<p>The <code class="inline-code">tools.ts</code> file serves as the entry point for including and consolidating all MCP tools. Organized for maintainability, it imports discrete tools like <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>. By re-exporting these tools and providing shared components for integration, this file ensures flexibility and robust functionality. The focus is on enabling consistent tool registration and adherence to MCP naming conventions.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code>: The primary initialization point for repository analysis and adventure generation.</li>
+<li><code class="inline-code">choose_theme.handler</code>: Provides thematic customization capability for adventures.</li>
+<li><code class="inline-code">explore_quest.handler</code>: Enables users to traverse individual quest narratives.</li>
+<li><code class="inline-code">view_progress.handler</code>: Monitors progression and uncompleted quest details.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -60,50 +69,70 @@
     const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
       name,
       description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, {
+      inputSchema: zodToJsonSchema(tool.schema, { 
         target: &#39;jsonSchema7&#39;,
         $refStrategy: &#39;none&#39;
       })
     }));
+
     return { tools: toolList };
   });
 
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    const { name, arguments: args } = request.params;
-    if (!(name in tools)) {
-      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+    try {
+      const { name, arguments: args } = request.params;
+
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+
+      const tool = tools[name as keyof typeof tools];
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) =&gt; 
+          `${err.path.join(&#39;.&#39;)}: ${err.message}`
+        ).join(&#39;, &#39;);
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
+
+      return await tool.handler(validationResult.data as any);
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
-    const tool = tools[name as keyof typeof tools];
-    const validationResult = tool.schema.safeParse(args);
-    if (!validationResult.success) {
-      const errorMessages = validationResult.error.issues.map((err) =&gt;
-        `${err.path.join(&#39;.&#39;)}: ${err.message}`
-      ).join(&#39;, &#39;);
-      throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-    }
-    return await tool.handler(validationResult.data as any);
   });
 }
 </code></pre>
-<p>This can be likened to setting up a marketplace where tools are displayed and their functionality validated before use.</p>
+<p>A blacksmith shaping tools dynamically, ensuring every request is polished and correct.</p>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-
+  
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
-<p>Visualize this as preparing a fleet of carts ahead of an expedition for seamless deployment in treasure hunting.</p>
+<p>The ignition of the forge, setting the machinery in motion to prepare for the wielder&#39;s arrival.</p>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; process.on(sig as NodeJS.Signals, gracefulShutdown));
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
+
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
@@ -111,47 +140,35 @@
   }
 }
 </code></pre>
-<p>This is akin to a captain organizing crew members and fail-safes before setting off on a voyage.</p>
-<hr>
-<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> MCP Tools Registry</h3>
-<p>The file serves as the centralized entry point for registering and exposing the MCP tools, enabling gamified exploration of repositories. It orchestrates several critical utilities—<code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>—ensuring their accessibility via logical mappings. The shared <code class="inline-code">adventureManager</code> is also exported for coordination across tools.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">start_adventure.handler</code> - Initiates the codebase analysis and proposes thematic options.</li>
-<li><code class="inline-code">choose_theme.handler</code> - Selects a theme and generates tailored adventures.</li>
-<li><code class="inline-code">explore_quest.handler</code> - Leads an interactive quest exploration.</li>
-<li><code class="inline-code">view_progress.handler</code> - Provides completion tracking and status updates.</li>
-</ul>
-<h2>Code</h2>
+<p>The captain at the helm, ensuring the ship launches smoothly despite stormy seas.</p>
 <h3>packages/mcp/src/tools.ts</h3>
 <pre><code class="language-typescript">export const start_adventure = startAdventure;
 </code></pre>
-<p>Think of this as lighting the beacon that calls adventurers to action.</p>
+<p>The spark that lights the initial path, pointing the adventurer toward their journey’s genesis.</p>
 <pre><code class="language-typescript">export const choose_theme = chooseTheme;
 </code></pre>
-<p>Consider this as choosing the colors and decorations for your banner before a campaign.</p>
+<p>The compass that aligns the adventurer’s voyage with a bespoke thematic compass.</p>
 <pre><code class="language-typescript">export const explore_quest = exploreQuest;
 </code></pre>
-<p>This feels like charting paths across uncharted lands dotted with hidden treasures.</p>
+<p>The guide enabling exploration of uncharted territories, one quest at a time.</p>
 <pre><code class="language-typescript">export const view_progress = viewProgress;
 </code></pre>
-<p>Imagine this as opening a ledger to count completed tasks and unfinished goals.</p>
-<hr>
+<p>The mapmaker, reflecting on traveled roads and the unnamed lands that still await.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">start_adventure</code> to prepare thematic insights for the repositories before diving deep.</li>
-<li>Explore <code class="inline-code">view_progress</code> periodically to track quests and avoid redundant exploration.</li>
-<li>Deepen utility by expanding MCP tools for specialized tasks, ensuring their schemas are meticulously validated.</li>
+<li><strong>Practical tip</strong>: Structure your own toolchains with modularity in mind for flexibility and maintainability.</li>
+<li><strong>Exploration recommendation</strong>: Dive deeper into <code class="inline-code">choose_theme</code> for insight into generating customized narratives.</li>
+<li><strong>Next steps</strong>: Investigate <code class="inline-code">repoAnalyzer</code> utilities for insight into back-end preparations for tool execution.</li>
 </ul>
 <hr>
-<p>Forge complete—equip yourself, brave adventurer, for the unending odyssey of code illumination!</p>
-<p>Congratulations on deploying the Forge of the MCP Tools—your first pull request in the quest log has been successfully merged into the master branch of growth, setting you on an upward refactor to greatness! 🚀⚡💎</p>
+<p>The tools are ready, and the paths are set. Venture forth, knowing that each line of code mastered becomes another step in your great adventure.</p>
+<p>🎉 Initialization of foundational tools and architecture successfully complete—Quest 1 is now a solid build artifact; onward to the next deploy! 🚀💎✨</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom nav-next-only">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: The Questsmith's Forg... →</a>
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
       </div>
     
     </div>

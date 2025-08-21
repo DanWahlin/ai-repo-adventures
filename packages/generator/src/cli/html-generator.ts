@@ -630,6 +630,13 @@ class HTMLAdventureGenerator {
       if (fs.existsSync(navigatorCSSSource)) {
         fs.copyFileSync(navigatorCSSSource, navigatorCSSTarget);
       }
+
+      // Copy compass icon SVG
+      const compassSVGSource = path.join(templatesDir, 'compass-icon.svg');
+      const compassSVGTarget = path.join(assetsDir, 'compass-icon.svg');
+      if (fs.existsSync(compassSVGSource)) {
+        fs.copyFileSync(compassSVGSource, compassSVGTarget);
+      }
     } catch (error) {
       console.log(chalk.yellow('⚠️ Warning: Could not copy quest navigator files'));
     }
@@ -695,7 +702,7 @@ class HTMLAdventureGenerator {
       const quest = this.quests[i];
       if (!quest) continue;
       
-      console.log(chalk.dim(`  📖 Generating quest ${i + 1}/${questsToGenerate}: ${quest.title}`));
+      console.log(chalk.dim(`  📖 Generating quest ${i + 1}/${questsToGenerate} [${this.selectedTheme}]: ${quest.title}`));
       
       try {
         const questContent = await this.generateQuestContentWithRetry(quest.id);
@@ -708,7 +715,7 @@ class HTMLAdventureGenerator {
         fs.writeFileSync(questPath, html);
         
       } catch (error) {
-        console.log(chalk.red(`    ❌ Failed to generate quest: ${quest.title}`));
+        console.log(chalk.red(`    ❌ Failed to generate quest [${this.selectedTheme}]: ${quest.title}`));
         const placeholderHTML = this.buildQuestHTML(quest, 'Quest content could not be generated.', i);
         const questPath = path.join(this.outputDir, quest.filename);
         fs.writeFileSync(questPath, placeholderHTML);
@@ -785,12 +792,12 @@ class HTMLAdventureGenerator {
       
       if (prevQuest) {
         bottomNavigation += `
-        <a href="${prevQuest.filename}" class="prev-quest-btn">← Previous: ${prevQuest.title.length > 30 ? prevQuest.title.slice(0, 30) + '...' : prevQuest.title}</a>`;
+        <a href="${prevQuest.filename}" class="prev-quest-btn">← Previous: Quest ${questIndex}</a>`;
       }
       
       if (nextQuest) {
         bottomNavigation += `
-        <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${nextQuest.title.length > 30 ? nextQuest.title.slice(0, 30) + '...' : nextQuest.title} →</a>`;
+        <a href="${nextQuest.filename}" class="next-quest-btn">Next: Quest ${questIndex + 2} →</a>`;
       } else if (prevQuest) {
         // On the last quest, add a button to return to the theme homepage
         bottomNavigation += `

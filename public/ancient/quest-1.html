@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Ceremony of Tools - Repo Adventure</title>
+    <title>Quest 1: The Temple of Tools - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Pyramid of Forgotten Code</a>
+                <a href="index.html">The Codex of Lost Civilizations</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,123 +41,99 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Ceremony of Tools</h1>
+    <h1>Quest 1: The Temple of Tools</h1>
 <hr>
-<p>In the shadowed depths of the Pyramid of Forgotten Code lies an ancient chamber known as the Ceremony of Tools. This sacred room holds an intricate system of mechanisms that once powered the creation of vibrant stories and sagas. Brave adventurers must reconnect the ceremonial handlers that bring these tools to life, enabling the wisdom of the Pyramid to flow freely once more. To awaken the secrets of the tools, one must also ensure their rituals are validated and their foundations are strong. Let us uncover the ancient mysteries within this digital temple.</p>
+<p>Amidst the tangled overgrowth of the jungle, a glimpse of intricate carvings catches your eye. You approach cautiously, uncovering a towering temple lost to time. The Temple of Tools, an ancient monument built to safeguard the secrets of a forgotten civilization, looms before you. Etched into its walls are glyphs that hint at rituals of logic and the wielding of sacred implements. To claim the treasures within, you must master these tools and decode the wisdom they were designed to wield.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Server setup and tool handler rituals</h3>
-<p>This file serves as the cornerstone of the pyramid’s interaction ceremonies, containing the ancient scripts to initialize the <code class="inline-code">RepoAdventureServer</code>, define handler processes, and maintain operational continuity. Within its chambers, the <code class="inline-code">RepoAdventureServer.setupHandlers</code> method performs the sacred rites of validating and executing tool usage, bridging the gap between user invocation and tool action. Additionally, the <code class="inline-code">run</code> method acts as a carrier for the ceremonial connection to the outside world, readying the servers and igniting the ancient toolset stored within. Finally, the <code class="inline-code">main</code> function orchestrates the entire ritual sequence, standing as the starting node for all incoming inquiries. Each of these components contributes to the operation of the adventure tool infrastructure, ensuring harmony between the old codes and new operations.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Initialization of the Sacred Mechanics</h3>
+<p>This file creates the cornerstone of the Temple&#39;s repository, constructing the ancient <em>RepoAdventureServer</em>. The wisdom of this structure lies in its handlers, which act as ritualistic rites for invoking tools and managing their outcomes. The <code class="inline-code">setupHandlers</code> method defines the sacred languages used for interpreting tool requests, validating their invocation with the precision of the rituals described in glyphs. Meanwhile, the <code class="inline-code">run</code> function kindles the sacred fire, enabling the server’s operations and connecting the ancient administrative transport systems, while also invoking preliminary rituals needed for faster retrieval of wisdom. This file’s construction emphasizes stability, error handling, and graceful shutdowns, making it the foundation of your exploration into the temple&#39;s mysteries.</p>
 <h4>Highlights</h4>
 <ul>
-<li>Sacred invocation in <code class="inline-code">RepoAdventureServer.setupHandlers</code>: Dynamic tool initialization  </li>
-<li>Connecting the ritual&#39;s pathways via <code class="inline-code">RepoAdventureServer.run</code>  </li>
-<li>Opening the ceremonial gates with <code class="inline-code">main</code></li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Defines sacred glyphs of validation and invokes ritual tools from the repository.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code>: Activates the spiritual core of the temple and preloads the wisdom cache.</li>
+<li><code class="inline-code">main</code>: Orchestrates the awakening of the temple while ensuring protection from chaotic mishaps.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">  private setupHandlers() {
-    // Dynamic tool listing
-    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-        name,
-        description: tool.description,
-        inputSchema: zodToJsonSchema(tool.schema, { 
-          target: &#39;jsonSchema7&#39;,
-          $refStrategy: &#39;none&#39;
-        })
-      }));
+<pre><code class="language-typescript">private setupHandlers() {
+  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: &#39;jsonSchema7&#39;,
+        $refStrategy: &#39;none&#39;
+      })
+    }));
 
-      return { tools: toolList };
+    return { tools: toolList };
+  });
+}
+</code></pre>
+<p>Think of this as mapping each tool with meticulous carvings, ensuring no misinterpretation of their sacred function.</p>
+<pre><code class="language-typescript">async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
+}
+</code></pre>
+<p>This resembles lighting an eternal flame across the temple, guiding adventurers with pre-prepared insights.</p>
+<pre><code class="language-typescript">async function main() {
+  try {
+    const server = new RepoAdventureServer();
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+      console.error(&#39;Unhandled promise rejection:&#39;, reason);
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
-
-    // Dynamic tool execution
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-      try {
-        const { name, arguments: args } = request.params;
-
-        if (!(name in tools)) {
-          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-        }
-
-        const tool = tools[name as keyof typeof tools];
-        
-        // Validate arguments using the tool&#39;s Zod schema
-        const validationResult = tool.schema.safeParse(args);
-        if (!validationResult.success) {
-          const errorMessages = validationResult.error.issues.map((err) =&gt; 
-            `${err.path.join(&#39;.&#39;)}: ${err.message}`
-          ).join(&#39;, &#39;);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-        }
-
-        // Execute the tool handler with validated arguments
-        return await tool.handler(validationResult.data as any);
-
-      } catch (error) {
-        if (error instanceof McpError) {
-          throw error;
-        }
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    });
+    await server.run();
+  } catch (error) {
+    console.error(&#39;Fatal error starting MCP server:&#39;, error);
+    process.exit(1);
   }
+}
 </code></pre>
-<p>Performing the validation ritual ensures that only the chosen tools with the correct parameters may be invoked.</p>
-<pre><code class="language-typescript">  async run() {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-    
-    // Pre-generate repomix content for the current working directory to warm up the cache
-    // This happens in the background while waiting for user commands
-    const projectPath = process.cwd();
-    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-    repoAnalyzer.preGenerate(projectPath);
-  }
-</code></pre>
-<p>The ceremonial starting sequence ignites the connection to the digital wilderness, preparing the sacred pyramid for communication.</p>
-<pre><code class="language-typescript">  async function main() {
-    try {
-      const server = new RepoAdventureServer();
-      
-      // Handle graceful shutdown for both signals
-      [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-        process.on(sig as NodeJS.Signals, gracefulShutdown)
-      );
-      
-      // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
-      process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-        console.error(&#39;Unhandled promise rejection:&#39;, reason);
-        console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-        // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
-      });
-      
-      await server.run();
-    } catch (error) {
-      console.error(&#39;Fatal error starting MCP server:&#39;, error);
-      process.exit(1);
-    }
-  }
-</code></pre>
-<p>The <code class="inline-code">main</code> function beckons the ancient ceremonies to begin, invoking handlers and binding safeguards for a stable session.</p>
-<h3>Helpful Hints</h3>
+<p>Main acts as the temple&#39;s gatekeeper, ensuring the sacred mechanisms run despite unforeseen chaos.</p>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The Sacred Implements Directory</h3>
+<p>This file serves as the sacred directory of tools, meticulously recording their purpose and functionalities. Organized hierarchically, the file behaves as a repository of invaluable implements—tools to unearth stories, choose guiding themes, and measure progress within the temple. Each entry not only bridges connections to the overarching temple but also dedicates itself to clear communication of its role.</p>
+<h4>Highlights</h4>
 <ul>
-<li><strong>Practical tip</strong>: Always validate arguments for tools using the provided Zod schemas to prevent misaligned invocations. This ensures the most harmonious ritual process.</li>
-<li><strong>Exploration recommendation</strong>: Enhance the coherence of registered tools by observing their schema and connecting these to meaningful quests using the highlighted methods.</li>
-<li><strong>Next steps</strong>: Expand your adventure by exploring <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a> to understand the individual roles of the tools within this sacred ceremony.</li>
+<li><code class="inline-code">start_adventure.handler</code>: Launches the journey to decipher ancient glyphs within the temple.</li>
+<li><code class="inline-code">choose_theme.handler</code>: Engages the adventurer in selecting pathways attuned to their purpose.</li>
+<li><code class="inline-code">explore_quest.handler</code>: Guides the exploration within chambers, revealing incremental wisdom.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const start_adventure = startAdventure;
+</code></pre>
+<p>This symbolizes opening the temple doors, initiating the first step of deciphering ancient glyphs.</p>
+<pre><code class="language-typescript">export const choose_theme = chooseTheme;
+</code></pre>
+<p>Like an ancient oracle, this guides the adventurer to their destined storytelling cadence.</p>
+<pre><code class="language-typescript">export const explore_quest = exploreQuest;
+</code></pre>
+<p>This is akin to venturing deeper into the chambers of the temple to unearth specific treasures.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Review the sacred glyphs in <code class="inline-code">setupHandlers</code> to understand ritual validations before invoking tools.</li>
+<li>Familiarize yourself with <code class="inline-code">start_adventure</code>, as this lays the groundwork for your journey within the temple.</li>
+<li>Beware errors in the <code class="inline-code">main</code> function. They can halt your exploration—ensure swift resolutions.</li>
 </ul>
 <hr>
-<p>The Ceremony of Tools is now awakened, brave adventurer! Tread carefully as you wield its ancient might.</p>
-<p>Thy sacred mastery over the Ceremony of Tools hath unveiled the first jewel of ancient wisdom upon thy temple’s altar—venture forth, oh seeker, for the path to eternal enlightenment beckons brightly! ⚡💎🗺️</p>
+<p>Go forth, courageous adventurer, and unlock the mysteries of the Temple of Tools!</p>
+<p>Huzzah, seeker of wisdom—thy sacred triumph in the Temple of Tools heralds the dawn of thy ancient journey; forge onward, for the stars shall guide thy noble path! ⭐⚡💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom nav-next-only">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: Chambers of the Story... →</a>
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
       </div>
     
     </div>
