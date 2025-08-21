@@ -1,37 +1,22 @@
-# Quest 1: Bridge Control – Activating the Galactic Toolset
+# Quest 1: Cosmic Tools Interface
 ---
-
-The *Codestar Phoenix* had approached the Stardock Outpost, a vast repository shrouded in the glimmering remnants of an ancient star. Alerts echoed through the cockpit—the outpost's core systems were fragmented, its encrypted data cores scattered like constellations waiting to be reconnected. Your first mission: take control of the bridge by repairing the tool management protocols. The *Codestar Phoenix*'s onboard systems, including the powerful MCP (Model Context Protocol) server, will be your guide in bringing this galactic toolset into operational alignment.
+In the boundless reaches of the cosmic code nebula, the Repo Voyager's crew faces their next stellar challenge: interfacing with the MCP tools repository to unlock the secrets of code exploration. Guided by the ever-resourceful AI, LLM-NOVA, the mission involves decoding the interface protocols of the MCP Server and the dynamic tools module. The goal? To forge a seamless command interface for navigating the galaxy of quests. Each tool is a star in the constellation of possibilities. Onward, brave adventurers!
 
 ## File Exploration
 
-### packages/mcp/src/server.ts: MCP Server Protocol Implementation
-The `packages/mcp/src/server.ts` file is the heart of the MCP server, ensuring seamless communication between the *Codestar Phoenix* and Stardock Repository systems. Its mission is to host and manage the adventure tools, a critical part of exploring and restoring the repository. Within the `RepoAdventureServer` class, you'll find the setup handlers that define how tools are listed and executed using the MCP protocol. The `run()` function initializes the `StdioServerTransport` connection while triggering data analysis to warm up the *repomix* cache. Meanwhile, the `main()` function acts as the story’s starting point, setting up graceful shutdowns for unexpected turbulence and handling potential errors.
-
-The brilliance of this file lies in its design—each component is modular and intuitive, allowing flexibility for future tool integrations. The handlers ensure that requests to list or execute tools are dynamically processed, verifying inputs while managing execution failures gracefully. By connecting the `StdioServerTransport`, the file listens for user inputs, creating an interactive, real-time experience for adventurers onboard the server.
+### packages/mcp/src/server.ts: MCP server protocol implementation
+The `packages/mcp/src/server.ts` file is the backbone of the MCP server interface. It hosts functions that manage dynamic tool interactions, from listing tools to executing commands. The `RepoAdventureServer` class sets the stage, defining how requests are handled through functions like `setupHandlers` and how the server establishes its runtime environment through `run`. The `main` function ensures smooth operation and robust recovery mechanisms under unpredictable galactic conditions.
 
 #### Highlights
-- The `RepoAdventureServer.setupHandlers()` function registers handlers for listing and executing tools dynamically.
-- The `RepoAdventureServer.run()` function connects the server to stdio and pre-generates codebase content for smooth operation.
-- The `main()` function ensures proper setup, including graceful handling of terminations and unexpected rejections.
-
-### packages/mcp/src/tools.ts: MCP Toolset Entry Point
-The `packages/mcp/src/tools.ts` file acts as the central hub for launching MCP tools. It brings the adventure to life through its perfectly orchestrated cycle: analyzing codebases (`start_adventure`), generating galactic stories (`choose_theme`), exploring coded quests (`explore_quest`), and monitoring mission progress (`view_progress`). These tools, defined with precision, allow easy maintenance and intuitive integration with the overarching storylines.
-
-By organizing tools into a single manageable export, this file achieves operational clarity. A highlight is its `tools` object, which collects and registers the four distinct tools in one place. Behind this simplicity lies significant power—the tools sync with the `adventureManager`, ensuring a consistent and immersive experience for the user.
-
-#### Highlights
-- The `start_adventure.handler` tool kickstarts your journey by analyzing repositories and presenting users with quest themes.
-- The `choose_theme.handler` generates themed narratives and determines the tone of the adventure.
-- The `explore_quest.handler` unravels quest content in actionable segments with built-in progress tracking.
-- The `view_progress.handler` provides reports on completed and remaining quests, ensuring no mission is missed.
+- **`RepoAdventureServer.setupHandlers`**: Responsible for registering handlers for listing and calling tools via MCP.
+- **`RepoAdventureServer.run`**: Connects to the stdio server transport and pre-generates `repomix` content.
+- **`main`**: The server's entry point, implementing graceful shutdown and error handling mechanisms.
 
 ## Code
 
 ### packages/mcp/src/server.ts
 ```typescript
 private setupHandlers() {
-  // Dynamic tool listing
   this.server.setRequestHandler(ListToolsRequestSchema, async () => {
     const toolList = Object.entries(tools).map(([name, tool]) => ({
       name,
@@ -41,11 +26,9 @@ private setupHandlers() {
         $refStrategy: 'none'
       })
     }));
-
     return { tools: toolList };
   });
 
-  // Dynamic tool execution
   this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
       const { name, arguments: args } = request.params;
@@ -55,23 +38,15 @@ private setupHandlers() {
       }
 
       const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool's Zod schema
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) => 
-          `${err.path.join('.')}: ${err.message}`
-        ).join(', ');
+          `${err.path.join('.')}: ${err.message}`).join(', ');
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
 
-      // Execute the tool handler with validated arguments
       return await tool.handler(validationResult.data as any);
-
     } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
       throw new McpError(
         ErrorCode.InternalError,
         `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
@@ -80,25 +55,91 @@ private setupHandlers() {
   });
 }
 ```
-Just as a captain charts courses for multiple missions, this function efficiently handles incoming requests to use the right tools for the job.
+The `setupHandlers` function is like programming the navigation system of a starship: it defines how the MCP server responds to incoming "coordinates" (tool requests) and validates their parameters for the correct "flight path."
 
-### packages/mcp/src/tools.ts
 ```typescript
-export const tools = {
-  start_adventure,
-  choose_theme,
-  explore_quest,
-  view_progress
-};
+async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error('Repo Adventure MCP server running on stdio');
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
+}
 ```
-This acts as a space station's control panel, consolidating essential buttons needed to explore and understand the repository galaxy.
+The `run` function acts as the ship's power-up sequence, connecting the stdio transport for communication and initiating background prep work for future explorations.
 
-## Helpful Hints
+```typescript
+async function main() {
+  try {
+    const server = new RepoAdventureServer();
+    
+    ['SIGINT', 'SIGTERM'].forEach(sig => 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    
+    process.on('unhandledRejection', (reason) => {
+      console.error('Unhandled promise rejection:', reason);
+    });
 
-- Always validate inputs using schemas to prevent unexpected crashes during tool execution.
-- Explore the `choose_theme` tool to add a more vibrant narrative layer to your quests.
-- Consider enhancing the `view_progress` tool with visual metrics for quest completion rates.
+    await server.run();
+  } catch (error) {
+    console.error('Fatal error starting MCP server:', error);
+    process.exit(1);
+  }
+}
+```
+The `main` function is the mission control center, coordinating all operations from the launch sequence to shutdown and error recovery.
 
 ---
 
-Mission accomplished, Commander—Quest 1 complete: the galactic toolset is online, the starship systems are charging forward, and the cosmos awaits your brilliance! 🚀⚡⭐
+### packages/mcp/src/tools.ts: The 4 main MCP tools interface
+The `packages/mcp/src/tools.ts` file orchestrates the core tools that allow interaction with the MCP. These tools provide functionality for starting an adventure, choosing a theme, exploring quests, and viewing progress. Each tool is defined modularly and structured for easy extension. This is where the user’s interface comes alive, turning input into an experiential journey.
+
+#### Highlights
+- **`start_adventure.handler`**: Analyzes repositories and presents users with available theme options.
+- **`choose_theme.handler`**: Enables users to generate personalized storylines and quests.
+- **`explore_quest.handler`**: Executes quest exploration with progress logging.
+- **`view_progress.handler`**: Monitors progress and displays remaining tasks.
+
+## Code
+
+### packages/mcp/src/tools.ts
+```typescript
+import { startAdventure } from './tools/start-adventure.js';
+
+const tools = {
+  start_adventure: startAdventure
+};
+```
+The `start_adventure.handler` operates like a stellar scanner, initiating the analysis of repository "terrain" and mapping out themes to guide further exploration.
+
+```typescript
+import { chooseTheme } from './tools/choose-theme.js';
+
+const tools = {
+  choose_theme: chooseTheme
+};
+```
+The `choose_theme.handler` is akin to configuring the crew's preferences before voyage, setting the tone, and plotting the adventure narrative.
+
+```typescript
+import { viewProgress } from './tools/view-progress.js';
+
+const tools = {
+  view_progress: viewProgress
+};
+```
+The `view_progress.handler` acts as the mission's dashboard, allowing the Voyager's crew to track their progress and plan strategical next steps.
+
+---
+
+## Helpful Hints
+- Always invoke `setupHandlers` before running the server to ensure tool compatibility with user requests.
+- Ensure the tools module is up-to-date by following the dependency structure in `tools.ts` for any additions or changes.
+- Use the `view_progress` tool to monitor your overarching quest completion progress.
+
+---
+The universe of coding adventures is vast and exciting! Ensure all protocols are functioning and tools ready for deployment before setting off into the cosmos. End mission sequence for "Cosmic Tools Interface."
+
+Mission accomplished, Star Navigator—your mastery of the Cosmic Tools Interface lights up the universe like a newborn star, propelling you toward the next galactic frontier! 🚀⭐⚡
