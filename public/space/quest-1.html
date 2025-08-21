@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The MCP Command Bridge - Repo Adventure</title>
+    <title>Quest 1: Galactic Control Interface - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Cosmic Codex: Adventures Across the Codebase Nebula</a>
+                <a href="index.html">Galactic Repository Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,17 +41,26 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The MCP Command Bridge</h1>
+    <h1>Quest 1: Galactic Control Interface</h1>
 <hr>
-<p>As <em>The Refactored Voyager</em> drifts through the data streams of the Codebase Nebula, the ship&#39;s MCP Command Bridge hums with activity. Your mission: to initiate the command protocols needed to bridge the gap between your tools and the ship&#39;s core server. This quest demands precision and collaboration, as your crew must establish robust handlers, enable tool support, and ensure safe activation of the MCP server. With exploration at stake, the outcome will lay the foundation for all future galactic endeavors to decode the ancient repository.</p>
+<p>The crew aboard the starship <em>Codexus</em> begins its vital mission through uncharted digital galaxies. To unlock the repository&#39;s mysteries, the ship&#39;s Galactic Control Interface pairs dynamic tool systems with stellar execution protocols. Utilizing AI navigators and theme engines, the <em>Codexus</em> seeks to transform chaotic nebulae of code into harmonious constellations. In this quest, your team must align the cosmic scanners with tools designed to interpret data streams and execute seamless operations. Success will grant control over the galaxy&#39;s digital pathways, empowering exploration and unity.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Command Interface Setup</h3>
-<p>This file is the foundation of the MCP server, acting as the interaction hub between command protocols and starship operations. Specifically, the <code class="inline-code">RepoAdventureServer</code> class defines critical setup routines, including handlers for dynamic tool listing and execution using schemas from the <code class="inline-code">tools</code> file. Among its highlights, <code class="inline-code">setupHandlers</code> provides dynamic registration logic for tools, <code class="inline-code">run</code> initiates the server&#39;s operational state, and <code class="inline-code">main</code> orchestrates the program lifecycle. These methods ensure smooth interaction between server protocols and user commands, and also handle errors during critical moments.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Galactic Server Configuration and Operations</h3>
+<p>This file orchestrates the infrastructure of the <em>Codexus</em> Galactic Control Interface, serving as the backbone for code repository exploration and interaction. From tool generation to transport initialization, it ensures mission stability through efficient resource management and execution protocols. The <code class="inline-code">RepoAdventureServer.setupHandlers</code> method dynamically lists available tools based on the galaxy&#39;s configuration and validates tool input schemas. Meanwhile, <code class="inline-code">RepoAdventureServer.run</code> initializes interstellar transport operations while optimizing systems with pre-generated content for faster processing. Lastly, the <code class="inline-code">main</code> function handles operational fail-safes, ensuring the starship runs efficiently, even amidst cosmic disturbances.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Configures how tools are listed and activated dynamically.  </li>
-<li><code class="inline-code">RepoAdventureServer.run</code>: Executes server start, connecting transport layers and warming up the cache.  </li>
-<li><code class="inline-code">main</code>: Orchestrates the server lifecycle, handling initialization and shutting down gracefully.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code> dynamically lists tools and validates parameters for mission execution.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code> activates transport and pre-generates actionable content for seamless workflows.</li>
+<li><code class="inline-code">main</code> ensures reliable handling of commands and errors, protecting interstellar navigation.</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The MCP Tool Arsenal</h3>
+<p>The MCP tools file defines the arsenal used by the <em>Codexus</em> crew for their galactic exploration. Its primary system organizes four main tools: <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>. These tools establish the workflow for initiating journeys, selecting thematic maps, diving into specific missions, and monitoring progress. The tools are wielded by the interface for clear and gamified navigation. Handlers such as <code class="inline-code">start_adventure.handler</code> and <code class="inline-code">choose_theme.handler</code> ensure that mission directives align with interstellar metaphors, making exploration intuitive and captivating.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code> initializes galaxy exploration through repository analysis.</li>
+<li><code class="inline-code">choose_theme.handler</code> aligns adventures with cosmic directives.</li>
+<li><code class="inline-code">explore_quest.handler</code> empowers the crew to access specific missions.</li>
+<li><code class="inline-code">view_progress.handler</code> tracks completion rates and remaining expanse.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -71,9 +80,11 @@
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
+
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
+
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
@@ -82,6 +93,7 @@
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
+
       return await tool.handler(validationResult.data as any);
     } catch (error) {
       if (error instanceof McpError) {
@@ -95,18 +107,17 @@
   });
 }
 </code></pre>
-<p><code class="inline-code">setupHandlers</code> is like configuring the neural pathways of the ship&#39;s AI, setting up inputs and responses for mission-critical tools.</p>
+<p>This segment equips the ship with tools for scanning and interacting with the galaxy, akin to configuring a universal translator for celestial data.</p>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
-<p><code class="inline-code">run</code> can be thought of as activating the &quot;warp drive&quot; of the MCP server, propelling it into operational readiness.</p>
+<p>This sets the spacecraft engines in motion, propelling the server through stellar transport layers for repository handling.</p>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
@@ -124,16 +135,34 @@
   }
 }
 </code></pre>
-<p><code class="inline-code">main</code> operates as the mission captain, orchestrating deployment and ensuring safety protocols are in place during journeys.</p>
+<p>This section is akin to plotting stellar coordinates and initiating launch sequences, safeguarding the ship from navigational hazards.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<p>This encapsulates the exploratory instruments for the crew, functioning as specialized modules tailored for interstellar navigation.</p>
+<pre><code class="language-typescript">export const start_adventure = startAdventure;
+export const choose_theme = chooseTheme;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
+</code></pre>
+<p>This serves as a cosmic alignment, connecting galaxy-mapping processes to mission endpoints.</p>
+<pre><code class="language-typescript">export { adventureManager };
+</code></pre>
+<p>Similar to the ship&#39;s AI interface, this enables cross-tool communication, ensuring smooth integration between systems.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical Tip</strong>: When expanding tool availability, first add definitions in <code class="inline-code">tools.ts</code>. Ensure schemas and handlers align precisely.</li>
-<li><strong>Exploration Tip</strong>: Investigate <code class="inline-code">tools.js</code> next for insight into how specific tools integrate with server requests.  </li>
-<li><strong>Next Steps</strong>: Once handlers are in place, bootstrap the MCP server and test interactive commands using a sample project.</li>
+<li>Always validate tool input before executing missions to avoid errors.</li>
+<li>Pre-generate content to enhance mission efficiency.</li>
+<li>Use <code class="inline-code">view_progress.handler</code> to maintain an overview of the galaxy&#39;s explored regions.</li>
 </ul>
 <hr>
-<p>The MCP Command Bridge is prepared, captain! Server handlers mapped and systems initialized – onward to cosmic discovery!</p>
-<p>Mission accomplished, Commander! You&#39;ve successfully navigated the cosmic labyrinth of the MCP Command Bridge—stellar work propelling you into orbit for the quests ahead! 🚀⭐⚡</p>
+<p>Captain, the pathway to seamless galactic navigation lies in your capable hands. Onward, to unity and exploration!</p>
+<p>Congratulations, star navigator—your mastery of the Galactic Control Interface propels you toward cosmic glory as the captain of this interstellar mission! ⭐🚀⚡</p>
 
 </div>
 

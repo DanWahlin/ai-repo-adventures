@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Ritual of the Interface - Repo Adventure</title>
+    <title>Quest 1: The Sacred Interface of Rituals - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Pyramid of Digital Enlightenment</a>
+                <a href="index.html">The Lost Pyramid of Codexis</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,17 +41,26 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Ritual of the Interface</h1>
+    <h1>Quest 1: The Sacred Interface of Rituals</h1>
 <hr>
-<p>Amid the dense jungle of fragmented repositories stands the Pyramid of Digital Enlightenment. Its chambers are adorned with inscriptions from the ancient civilization of structured code. Within lies &quot;The Ritual of the Interface&quot;, a sacred trial to master the art of connecting knowledge fragments. Intrepid adventurers brave enough to enter must wield the tools of wisdom encoded in the files of ancient architects. Success in unlocking these secrets will restore the flow of wisdom to the digital realms, but failure risks eternal confusion in the labyrinth of error logs.</p>
+<p>In the heart of the Pyramid of Codexis, darkened chambers filled with runes of power whisper the ancient secrets of interactive code analysis. You, the chosen seeker, have been summoned to decode the Sacred Interface of Rituals, a mysterious mechanism used to summon tools of wisdom and uncover the treasures hidden in repositories. Within this ancient labyrinth, the Rite of Handlers challenges you to invoke proper permissions, and the Ritual of Execution tests the clarity of your commands. Steel your resolve, adventurer, for wisdom lies beyond.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Lifecycle and Tool Interaction</h3>
-<p>The <code class="inline-code">server.ts</code> file serves as the entry point for the MCP ecosystem, where rituals required to link tools and handlers are performed. Its key highlights include the <code class="inline-code">setupHandlers</code> method, which inscribes the rules for dynamic tool execution. The <code class="inline-code">run</code> method invokes the sacred connection through MCP’s transport system, serving as the interface to external adventurers. Finally, the <code class="inline-code">main</code> function presides over the initiation of the server and gracefully handles termination. Together, these components form a foundation for interaction, ensuring tools act as conduits of wisdom in digital exploration.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server and Ritual Management</h3>
+<p>The <code class="inline-code">server.ts</code> file acts as the sacred core of the Pyramid&#39;s operational rituals. It defines the primary gateway to interactive storytelling through codebases, symbolized by the <code class="inline-code">RepoAdventureServer</code> class. Within, the <code class="inline-code">setupHandlers</code> function performs the Ritual of Tool Invocation, a dynamic act of registering and validating sacred tools. Meanwhile, the <code class="inline-code">run</code> function conducts the Ritual of Connectivity, enabling communication channels with the user&#39;s terminal. Finally, the <code class="inline-code">main</code> function represents the Ceremony of Initialization, orchestrating the entire process and preparing the Pyramid&#39;s interface for exploration. Each fragment serves its own sacred purpose.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Encodes dynamic tool execution mechanisms with validation schemas.</li>
-<li><code class="inline-code">run</code>: Establishes connection protocols and initializes background rituals.</li>
-<li><code class="inline-code">main</code>: Orchestrates lifecycle management and safeguards against interruptions.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code> provides dynamic listings and secure tool execution.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code> establishes transport linkage and pre-generates repository content.</li>
+<li><code class="inline-code">main</code> initializes the server and ensures proper shutdown rituals.</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The Sacred Instruments of the Pyramid</h3>
+<p>The <code class="inline-code">tools.ts</code> file encapsulates the sacred instruments of the Pyramid. These tools enable seekers to interactively analyze the codebase and progress through their quests. Functions such as <code class="inline-code">start_adventure.handler</code> and <code class="inline-code">choose_theme.handler</code> represent the rituals for initializing exploration and crafting narratives. The <code class="inline-code">explore_quest.handler</code> facilitates deep dives into individual challenges, while <code class="inline-code">view_progress.handler</code> provides insight into the adventurer&#39;s journey. Together, these tools serve as powerful aids for achieving balance between ancient wisdom and modern code mastery.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code> facilitates the initiation of the sacred quest.</li>
+<li><code class="inline-code">choose_theme.handler</code> guides adventurers in selecting a thematic journey.</li>
+<li><code class="inline-code">explore_quest.handler</code> implements the quest exploration ritual.</li>
+<li><code class="inline-code">view_progress.handler</code> illuminates the adventurer&#39;s current status.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -71,65 +80,73 @@
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
+
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
+
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
+
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) =&gt; 
           `${err.path.join(&#39;.&#39;)}: ${err.message}`
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
+
       return await tool.handler(validationResult.data as any);
     } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+      if (error instanceof McpError) throw error;
+      throw new McpError(ErrorCode.InternalError, error.message || String(error));
     }
   });
 }
 </code></pre>
-<p>The <code class="inline-code">setupHandlers</code> method represents the codex of rituals that govern interaction protocols, dynamically mapping incoming requests to specific tools.</p>
+<p>Just as a map reveals hidden paths, this function dynamically lists available tools and validates quests before invoking their handlers.</p>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
-<p>The <code class="inline-code">run</code> method is akin to the activation of ancient transport systems, channeling user interactions while pre-generating repository context.</p>
+<p>This function acts as an ancient messenger, bridging the Pyramid&#39;s interface to the seeker via communication rituals.</p>
 <pre><code class="language-typescript">async function main() {
-  try {
-    const server = new RepoAdventureServer();
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; process.on(sig as NodeJS.Signals, gracefulShutdown));
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-    });
-    await server.run();
-  } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
-  }
+  const server = new RepoAdventureServer();
+  [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; process.on(sig as NodeJS.Signals, gracefulShutdown));
+  process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+    console.error(&#39;Unhandled promise:&#39;, reason);
+  });
+  await server.run();
 }
 </code></pre>
-<p>The <code class="inline-code">main</code> function is the ceremonial starting point, invoking ancient protocols to ensure stability and reliability of the server.</p>
+<p>The <code class="inline-code">main</code> function conducts the opening ceremony, initiating critical handlers for server orchestration while safeguarding against disruptions.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const start_adventure = startAdventure;
+</code></pre>
+<p>This function ignites the flame of exploration, initializing the sacred journey into codebase analysis.</p>
+<pre><code class="language-typescript">export const choose_theme = chooseTheme;
+</code></pre>
+<p>The <code class="inline-code">choose_theme</code> function acts as a guiding oracle, allowing seekers to select paths aligned with their strengths and narrative desires.</p>
+<pre><code class="language-typescript">export const explore_quest = exploreQuest;
+</code></pre>
+<p>The <code class="inline-code">explore_quest</code> handler enables seekers to unravel individual quests, discovering treasure through well-structured challenges.</p>
+<pre><code class="language-typescript">export const view_progress = viewProgress;
+</code></pre>
+<p>This function illuminates progress, akin to a sacred sundial revealing the adventurer&#39;s journey and remaining goals.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">setupHandlers</code> as a reference for implementing custom tool integrations.</li>
-<li>Investigate the <code class="inline-code">run</code> method for pre-generating repository insights.</li>
-<li>Study patterns in <code class="inline-code">main</code> for lifecycle management and error handling.</li>
+<li>Use <code class="inline-code">setupHandlers</code> to dynamically list and register new tools for seamless exploration.</li>
+<li>The <code class="inline-code">view_progress.handler</code> function is perfect for staying aligned with your overarching quest.</li>
+<li>Begin your journey with <code class="inline-code">start_adventure.handler</code> to ensure clarity and proper entry into the Pyramid’s mysteries.</li>
 </ul>
 <hr>
-<p>The ritual is complete! Dare to continue your journey by exploring the treasures inscribed in <code class="inline-code">tools.ts</code> to master its sacred functions.</p>
-<p>Hark, seeker of sacred knowledge, thou hast unveiled the first veil of the ancients’ wisdom—let the heavens resound in thy honor as the Ritual of the Interface is triumphantly complete! ⭐⚡💎</p>
+<p>The Rite of the Sacred Interface has begun, and you stand at the threshold. Explore the Pyramid&#39;s chambers wisely, brave adventurer!</p>
+<p>Hallowed be thy triumph, seeker of wisdom, for thou hast deciphered the Sacred Interface of Rituals and unlocked the first scroll of ancient enlightenment—let thy journey shine ever brighter upon the stars of destiny! ⭐💎⚡</p>
 
 </div>
 
