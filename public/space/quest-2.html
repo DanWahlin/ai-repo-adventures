@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Commanding the Quest Generator - Repo Adventure</title>
+    <title>Quest 2: The Stellar Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -28,7 +28,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Voyage of the Galactic Repository</a>
+                <a href="index.html">Galactic Adventures: The Codex of the Stellar Repository</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,93 +40,141 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: Commanding the Quest Generator</h1>
+    <h1>Quest 2: The Stellar Engine</h1>
 <hr>
-<p>The starship <em>Codeseeker-42</em> ventures further into the cosmos, its mission clear: to decode the secrets of the galactic codebases and optimize the journeys of developers across the galaxy. On this leg of the voyage, you assume command of the Quest Generator, the heart of the starship’s adventure engine. With systems interfacing through cosmic protocols, your task is to recalibrate the dynamic generation of theme-based stories and ensure the accuracy of quest data to guide future explorers. Navigate the complexities of interstellar inputs, align the ship’s AI with galactic crafting standards, and optimize the generation of epic cosmic narratives. Power up, Commander, and steer this critical subsystem to stellar perfection!</p>
+<p>With the Stellar Repository’s harmonious energy grid under siege by rogue stellar forces, Galactic Command sends an urgent communication to the Quantum Voyager. A system-wide diagnosis reveals that the &quot;Stellar Engine,&quot; charged with regulating interstellar power flows, is faltering. Rogue galaxy-class AIs threaten the Repository&#39;s stability, disrupting cosmic governance. Captain, you must venture into the heart of the engine to deactivate malfunctioning subsystems, recalibrate the stellar streams, and restore balance to the farthest reaches of the galaxy before chaos engulfs civilization.  </p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Adventure orchestration managing state, themes, and user interactions</h3>
-<p>This file serves as the adventurer&#39;s compass, orchestrating the overarching story context and interaction logic within the Quest Generator. <code class="inline-code">AdventureManager</code> anchors the interplay between project details, thematic inputs, and user actions, managing the state using <code class="inline-code">AdventureState</code>. It employs <code class="inline-code">initializeAdventure()</code> to establish the context for each mission, including generating the epic storyline and accompanying quests based on project analysis. <code class="inline-code">exploreQuest()</code> is the main navigational tool for responding to user actions, validating inputs, and generating dynamic quest outputs. Meanwhile, the <code class="inline-code">progressPercentage</code> provides mission updates, quantifying exploration progress. Each function sheds light on how the Quest Generator adapts dynamically to the galactic repository landscape, ensuring seamless and exciting adventures for the galactic federation&#39;s developers.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Managing Quests and Adventures</h3>
+<p>The <code class="inline-code">adventure-manager.ts</code> file forms the backbone of Stellar Engine’s operational oversight and quest orchestration. It efficiently manages adventure states and user interaction with quests. Its <code class="inline-code">initializeAdventure</code> method constructs narratives and generates quests, while <code class="inline-code">exploreQuest</code> allows players to venture into specific tasks, tightly integrating with quest prerequisites.  </p>
+<p>A notable mechanism, <code class="inline-code">progressPercentage</code>, visualizes a player’s quest completion progress, enhancing mission clarity. Moreover, the <code class="inline-code">generateQuestContent</code> function harnesses dynamic storytelling to tailor quest experiences. Lastly, methods like <code class="inline-code">markQuestCompleted</code> ensure that mission logs remain reliable by identifying completed challenges.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><strong>AdventureManager.initializeAdventure</strong>: Kicks off the mission with story and quest generation.</li>
-<li><strong>AdventureManager.exploreQuest</strong>: Executes quests by validating user choices and generating their content.</li>
-<li><strong>AdventureState.progressPercentage</strong>: Tracks completion across quests, providing tangible progression metrics.</li>
+<li><code class="inline-code">initializeAdventure</code>: Constructs narrative and links context-sensitive quests.  </li>
+<li><code class="inline-code">exploreQuest</code>: Validates and allows progression through selected quests.  </li>
+<li><code class="inline-code">progressPercentage</code>: Tracks and calculates progress metrics.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  // Reset state for new adventure
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
-
-  // Set custom theme data if provided
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
-  }
-
-  // Generate the overall story and quests using LLM
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-
-  this.state.title = storyResponse.title;
-  this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
-
-  // Merge files from adventure config into generated quests
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  
-  // Enforce quest count from config and return the formatted story
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-  return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
-}
+<pre><code class="language-typescript">async initializeAdventure(   
+  projectInfo: ProjectInfo,  
+  theme: AdventureTheme,   
+  projectPath?: string,   
+  customThemeData?: CustomThemeData  
+): Promise&lt;string&gt; {  
+  this.state.reset();  
+  this.state.projectInfo = projectInfo;  
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);  
+  return this.formatStoryWithQuests({...storyResponse, quests: this.state.quests});  
+}  
 </code></pre>
-<p>Like a stellar navigator, this function establishes the adventure&#39;s scope, laying the foundation for the exploration of a codebase galaxy.</p>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-
-  // Check if this is a progress request
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-
-  // Find the quest based on the choice
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  // Execute the quest
-  return await this.executeQuest(quest);
-}
+<p>This method designs a cohesive exploration narrative using available project data and theme selection—fueling the engine’s quest generation.  </p>
+<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {  
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);  
+  const quest = this.findQuest(sanitizedChoice);  
+  if (!quest) {  
+    return this.createNotFoundResult();  
+  }  
+  return await this.executeQuest(quest);  
+}  
 </code></pre>
-<p>This is akin to a space pilot charting a path towards a new planet: assessing the choice, plotting the course, and setting actions in motion.</p>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
-}
+<p>This function permits galactic adventurers to concretely step into their chosen quest while adhering to mission prerequisites.  </p>
+<pre><code class="language-typescript">get progressPercentage(): number {  
+  return this.quests.length &gt; 0   
+    ? Math.round((this.completedQuests.size / this.quests.length) * 100)  
+    : 0;  
+}  
 </code></pre>
-<p>This function mirrors a progress bar on a starship console, displaying the level of exploration completed in a clear, actionable percentage.</p>
+<p>As the captain’s progress beacon, this calculation determines how much of the Repository’s stability has been restored.  </p>
+<hr>
+<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Dynamic Quest Creation</h3>
+<p>The <code class="inline-code">story-generator.ts</code> file powers the narrative engine, constructing immersive mission stories for the Stellar Repository. It constructs the overarching &quot;Stellar Engine&quot; narrative with methods like <code class="inline-code">generateStoryAndQuests</code> and <code class="inline-code">generateQuestContent</code>. Critical to the repository’s revival, this module converts static context into thrilling space expeditions tailored to each explorer’s journey.  </p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateStoryAndQuests</code>: Generates complete narratives and integrates corresponding quests.  </li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Converts markdown-based content into structured adventures.  </li>
+<li><code class="inline-code">generateQuestContent</code>: Builds quest-specific context pipelines for exploration.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(  
+  projectInfo: ProjectInfo,   
+  theme: AdventureTheme,  
+  projectPath?: string  
+): Promise&lt;StoryResponse&gt; {  
+  const validatedTheme = this.validateTheme(theme);  
+  return await this.generateWithLLM(projectInfo, validatedTheme);  
+}  
+</code></pre>
+<p>This method aligns stellar operational themes to validate, generate, and dock vivid narratives into the Galactic Command.  </p>
+<pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {  
+  const tokens = marked.lexer(markdownContent);  
+  const quests: Quest[] = [];  
+  tokens.forEach(token =&gt; {  
+    if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 3) {  
+      quests.push({title: token.text, description: &#39;&#39;});  
+    }  
+  });  
+  return {title: &#39;Adventure&#39;, story: markdownContent, quests};  
+}  
+</code></pre>
+<p>This function is an interstellar parser, translating narrative markdown into a structured sequence for quest assignments.  </p>
+<pre><code class="language-typescript">async generateQuestContent(  
+  quest: Quest,  
+  theme: AdventureTheme,  
+  codeContent: string  
+): Promise&lt;QuestContent&gt; {  
+  const prompt = loadQuestContentPrompt({theme, adventureTitle: quest.title, codeContent});  
+  const response = await this.llmClient.generateResponse(prompt);  
+  return {adventure: response.content, codeSnippets: [], hints: []};  
+}  
+</code></pre>
+<p>With its cosmic computation capacity, this method generates thematic, context-sensitive mission data for Stellar Engine operatives.  </p>
+<hr>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Handling Configurations</h3>
+<p>This configuration module anchors the Galactic Command’s operations to project-specific requirements. It ensures quests align with the actual Repository structure. Methods like <code class="inline-code">parseAdventureConfig</code> equip adventurers with targeted configurations, while <code class="inline-code">formatAdventureConfigForPrompt</code> synthesizes clean data summaries suited for narrative generation.  </p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code>: Decodes and validates the repository’s adventure template.  </li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Distills explanatory content for quests.  </li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Retrieves relevant operational pathways for quest execution.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {  
+  const raw = loadAdventureConfig(projectPath);  
+  return raw ? JSON.parse(raw) : null;  
+}  
+</code></pre>
+<p>This method decodes adventure metadata to deepen context around Stellar Engine’s failing subsystems.  </p>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {  
+  const parsed = parseAdventureConfig(projectPath);  
+  if (!parsed || typeof parsed !== &#39;object&#39;) return &#39;&#39;;  
+  return `### Quest Structure\n\n${parsed}`;  
+}  
+</code></pre>
+<p>This formatter crafts concise summaries for efficient quest-oriented decision-making, spotlighting affected repository zones.  </p>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {  
+  const parsed = parseAdventureConfig(projectPath);  
+  return parsed ? Object.keys(parsed).map(key =&gt; parsed[key].path) : [];  
+}  
+</code></pre>
+<p>Unique coordinates (file paths) of failing systems are pinpointed to improve operational diagnostics and exploration.  </p>
+<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical tip</strong>: Customize themes for tailored missions using <code class="inline-code">customThemeData</code> in <code class="inline-code">initializeAdventure()</code>.</li>
-<li><strong>Exploration recommendation</strong>: Discover how the <code class="inline-code">AdventureState</code> caches quest summaries to optimize repeated missions.</li>
-<li><strong>Next steps</strong>: Enhance the quest cache mechanism to store additional context for revisited adventures.</li>
+<li><strong>Progress Beacon</strong>: Use <code class="inline-code">progressPercentage</code> to measure repository restoration efforts.  </li>
+<li><strong>Quest Integrity</strong>: <code class="inline-code">generateQuestContent</code> dynamically adapts to failing systems&#39; intensity.  </li>
+<li><strong>Configuration Bridge</strong>: Always validate configuration edits using <code class="inline-code">parseAdventureConfig</code>.</li>
 </ul>
 <hr>
-<p>Mission accomplished: You&#39;ve successfully commanded the Quest Generator and decoded its core operations. Adventure progress updated. Select your next task to continue the cosmic journey!</p>
-<p>Stellar success achieved, Commander—Quest 2 complete and your cosmic trajectory is bright with 20% mission progress as you navigate through the universe of mastery! 🚀⚡⭐</p>
+<p>Captain, the Stellar Engine’s control systems await your intervention. Onward to the repository&#39;s heart—restore cosmic harmony! 🚀</p>
+<p>🚀 The crew has triumphantly ignited the Stellar Engine, propelling the mission to cosmic greatness—20% of our interstellar journey complete and the stars are cheering you onward! ⭐💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Analyzing Nebulae of Code →</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Galactic Analysis Relay →</a>
       </div>
     
     </div>

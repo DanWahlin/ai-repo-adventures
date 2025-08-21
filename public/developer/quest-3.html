@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Lens of Discovery - Repo Adventure</title>
+    <title>Quest 3: The Analyzer's Lens - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -28,7 +28,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Chronicles of Codecraft: Forge of Adventure</a>
+                <a href="index.html">The Repository Chronicles: Tales of the Codecraft</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,135 +40,120 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Lens of Discovery</h1>
+    <h1>Quest 3: The Analyzer&#39;s Lens</h1>
 <hr>
-<p>Delve into &quot;The Repository,&quot; the crystal-clear lens through which adventurers can unveil the unseen intricacies of codebases. In this quest, you harness the powers of code analysis and structured storytelling. Embark on the journey of creating targeted quests, identifying critical paths, and optimizing workflows. The Lens of Discovery offers tools to craft adventures from raw technical inputs, revealing untapped insights deep within the digital realm.</p>
+<p>The Adventure Engine unveils its newest challenge: understanding the Analyzer&#39;s Lens. Developers must peer into the code that processes repositories, unearthing insights from raw data and transforming them into actionable content. By exploring the Repo Analyzer and the LLM Client, adventurers will unlock tools that bridge code analysis and language models—crucial for shaping the stories within the Engine. Prepare to wield the lens and refine its capabilities!</p>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Integration of Repomix for Content Extraction</h3>
-<p>In this file, the <code class="inline-code">RepoAnalyzer</code> class bridges raw codebases with structured analytical output. By leveraging Repomix, developers can transform complex directories into consumable content for interactive quests. Core functions validate paths and ensure security, preventing intrusion risks. The <code class="inline-code">generateRepomixContext</code> method provides full project overviews while caching mechanisms optimize performance. Additionally, <code class="inline-code">generateTargetedContent</code> empowers focus on specific files, and <code class="inline-code">captureRepomixStdout</code> ensures reliable CLI execution under memory and timeout constraints.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Repository Analysis and Content Extraction</h3>
+<p>This file encapsulates the functionality of processing repositories and generating context using the <code class="inline-code">repomix</code> tool. Here, <code class="inline-code">RepoAnalyzer</code> serves as the core class, with methods to validate project paths, filter and secure file inputs, and efficiently cache analysis results. The highlights focus on the use of caching strategies for optimizing context generation and subprocess invocations that manage external CLI tools. Together, these unlock intelligent, reproducible interactions with repositories.</p>
 <h4>Highlights</h4>
 <ul>
-<li><strong>generateRepomixContext</strong>: Comprehensive project analysis with validation and caching.</li>
-<li><strong>generateTargetedContent</strong>: Allows specific file targeting for tailored analysis.</li>
-<li><strong>captureRepomixStdout</strong>: Ensures subprocess execution adheres to limits with timeout handling.</li>
+<li><code class="inline-code">RepoAnalyzer.generateRepomixContext</code>: Creates overall context for codebases, validating input and caching results for efficiency.</li>
+<li><code class="inline-code">RepoAnalyzer.generateTargetedContent</code>: Refines context generation by targeting specific files, ensuring security and accuracy.</li>
+<li><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code>: Manages subprocess communication with the <code class="inline-code">repomix</code> CLI, incorporating error handling and timeout protection.</li>
+</ul>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: Language Model Requests and Responses</h3>
+<p>This file explores the interface for interacting with Language Learning Models (LLMs), orchestrating requests and ensuring the responses are properly processed. Here, the <code class="inline-code">LLMClient</code> class bridges between code analysis and content generation, configuring LLMs for varied use cases (e.g., error handling, GPT-5-specific features) and maintaining robust error logging for complex integrations.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">LLMClient.generateResponse</code>: Builds and executes an LLM request with dynamic options, integrating GPT-5-specific parameters when applicable.</li>
+<li><code class="inline-code">LLMClient.constructor</code>: Initializes the client, selecting the appropriate provider (e.g., OpenAI or Azure).</li>
+<li><code class="inline-code">LLMClient.getApiKey</code>: Selects the relevant API key based on the LLM provider, ensuring secure access during operations.</li>
 </ul>
 <h2>Code</h2>
 <h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
 <pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
-  
-  // Check if adventure.config.json has specific files to include
   const configuredFiles = extractUniqueFilePaths(projectPath);
-  
   if (configuredFiles.length &gt; 0) {
-    try {
-      return await this.generateTargetedContent(projectPath, configuredFiles);
-    } catch (error) {
-      console.warn(`Fallback to full content generation: ${error}`);
-    }
+    return await this.generateTargetedContent(projectPath, configuredFiles);
   }
-
   const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
   const cached = this.cache.get(cacheKey);
   if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
     return cached.content;
   }
-
-  try {
-    const cliOptions: CliOptions = { style: options?.style || &#39;markdown&#39;, compress: options.compress !== false };
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Repomix execution failed: ${error.message}`);
-  }
+  // Additional logic omitted for brevity...
 }
 </code></pre>
-<p>This function acts like a magnifying glass scanning a library, validating paths for safety, caching frequent queries for efficiency, and extracting targeted context.</p>
+<p>This function acts as a guide, leading inputs through validation and caching before producing repository-wide context.</p>
 <pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
   const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  const cacheKey = `${path.resolve(projectPath)}:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-
-  try {
-    const cliOptions: CliOptions = { style: &#39;markdown&#39;, stdout: true, compress };
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Targeted repomix execution failed: ${error.message}`);
-  }
+  // Logic for cache key creation, subprocess invocation, and handling exceptions...
 }
 </code></pre>
-<p>This operation is akin to using a spotlight in a darkened room to focus solely on predefined landmarks while ignoring unrelated areas.</p>
+<p>Targeted content extraction operates like a lock picker, focusing precision on only specified codebase files.</p>
 <pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
   return new Promise((resolve, reject) =&gt; {
     const args = [...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
     const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
-    let stdout = &#39;&#39;, stderr = &#39;&#39;, stdoutSize = 0, isResolved = false;
-
-    const timeout = setTimeout(() =&gt; {
-      if (!isResolved) {
-        repomix.kill(&#39;SIGTERM&#39;);
-        setTimeout(() =&gt; repomix.kill(&#39;SIGKILL&#39;), REPOMIX_GRACEFUL_TIMEOUT);
-        isResolved = true;
-        reject(new Error(`Subprocess timeout for ${cwd}`));
-      }
-    }, REPOMIX_SUBPROCESS_TIMEOUT);
-
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      const chunk = data.toString();
-      stdoutSize += chunk.length;
-      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
-        if (!isResolved) {
-          isResolved = true;
-          clearTimeout(timeout);
-          repomix.kill(&#39;SIGKILL&#39;);
-          reject(new Error(`Output exceeds buffer size (${stdoutSize} bytes).`));
-        }
-        return;
-      }
-      stdout += chunk;
-    });
-
-    repomix.on(&#39;close&#39;, (code) =&gt; {
-      if (!isResolved) {
-        isResolved = true;
-        clearTimeout(timeout);
-        code === 0 &amp;&amp; stdout.trim().length &gt; 0 ? resolve(stdout) : reject(new Error(`Subprocess failed. Exit code: ${code}`));
-      }
-    });
-
-    repomix.on(&#39;error&#39;, (error) =&gt; {
-      if (!isResolved) {
-        isResolved = true;
-        clearTimeout(timeout);
-        reject(new Error(`Subprocess spawn failed: ${error.message}`));
-      }
-    });
+    let stdout = &#39;&#39;;
+    repomix.stdout.on(&#39;data&#39;, (data) =&gt; { stdout += data.toString(); });
+    repomix.on(&#39;close&#39;, (code) =&gt; { code === 0 ? resolve(stdout) : reject(new Error(&#39;CLI error&#39;)); });
   });
 }
 </code></pre>
-<p>Imagine setting a timer while boiling water: the timeout protects resources, ensuring no accidental overflow even under pressure.</p>
+<p>Communicating with the CLI resembles sending messages through encrypted scrolls, ensuring outputs are received securely.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
+<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+  try {
+    const requestParams = this.buildRequestParams(prompt, options);
+    const completion = await this.executeRequest(requestParams);
+    let content = this.validateResponse(completion);
+    if (options?.responseFormat === &#39;json_object&#39;) {
+      content = this.cleanJsonResponse(content);
+    }
+    this.logTokenUsage(completion);
+    return { content };
+  } catch (error) {
+    this.logDetailedError(error, prompt);
+    throw new Error(`LLM request failed: ${error.message}`);
+  }
+}
+</code></pre>
+<p>Here, the function crafts and relays inquiries to the LLM model, much like dispatching envoys to distant kingdoms.</p>
+<pre><code class="language-typescript">constructor() {
+  this.model = LLM_MODEL;
+  const apiKey = this.getApiKey();
+  if (this.isAzureOpenAI()) {
+    this.client = new AzureOpenAI({
+      endpoint: LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0],
+      apiKey,
+      apiVersion: LLM_API_VERSION,
+      deployment: this.model
+    });
+  } else {
+    this.client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+  }
+}
+</code></pre>
+<p>The constructor forges the connection to the chosen LLM, akin to tuning an enchanted artifact to the caster’s specifications.</p>
+<pre><code class="language-typescript">private getApiKey(): string {
+  if (LLM_BASE_URL.includes(&#39;azure.com&#39;)) {
+    if (!GITHUB_TOKEN) throw new Error(&#39;GITHUB_TOKEN required for GitHub Models.&#39;);
+    return GITHUB_TOKEN;
+  }
+  if (!LLM_API_KEY) throw new Error(&#39;LLM_API_KEY required.&#39;);
+  return LLM_API_KEY;
+}
+</code></pre>
+<p>Selecting the correct key works like deciphering a magical seal to access a tower’s secrets.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical Tip</strong>: Use targeted content generation for faster insights when working with large repositories.</li>
-<li><strong>Exploration Recommendation</strong>: Test configurations with adventure.config.json to refine content extraction.</li>
-<li><strong>Next Steps</strong>: Expand usage to explore user-specified files interactively via quest integration.</li>
+<li><strong>Practical Tip</strong>: Use <code class="inline-code">generateTargetedContent</code> for focused analysis, especially on large repositories.</li>
+<li><strong>Exploration Recommendation</strong>: Dive into the differences between OpenAI and Azure configurations for LLM interactions in the <code class="inline-code">LLMClient</code>.</li>
+<li><strong>Next Steps</strong>: Explore how <code class="inline-code">generateRepomixContext</code> integrates with higher-level adventure systems.</li>
 </ul>
 <hr>
-<p>You have revealed new facets of &quot;The Repository.&quot; However, the lens grants only as much wisdom as the wielder&#39;s intentions. Remember, every choice shapes the adventure ahead!</p>
-<p>Congratulations! You’ve successfully debugged the algorithm for Quest 3: The Lens of Discovery, unlocking 40% progress in your epic developer journey—keep refactoring brilliance and iterating toward triumph! 🚀👁️💎</p>
+<p>Adventure complete! You&#39;ve seen through the lens of analysis to uncover the key mechanics of content generation. Proceed with your newfound knowledge!</p>
+<p>Congratulations, developer explorer—Quest 3: The Analyzer&#39;s Lens has been successfully parsed and executed; your debugging skills shine brighter than a diamond in the compile log—keep refactoring toward that final deployment! 🚀⚡💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: The Threads of Creation →</a>
+        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: The Altar of Themes →</a>
       </div>
     
     </div>

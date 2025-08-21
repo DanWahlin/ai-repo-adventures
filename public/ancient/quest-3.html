@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Glyphs of Analytical Insight - Repo Adventure</title>
+    <title>Quest 3: Chamber of Code Analysis - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
@@ -28,7 +28,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Repository of Ancient Wisdom</a>
+                <a href="index.html">The Code of the Lost Civilization</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,143 +40,149 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Glyphs of Analytical Insight</h1>
+    <h1>Quest 3: Chamber of Code Analysis</h1>
 <hr>
-<p>In the shadow of age-old jungle canopies, you stand before the enigmatic Sacred Repository. Its walls glisten with glyphs carved by the ancient codemasters, each glowing faintly like embers awaiting ignition. These stone tablets contain the secrets of precise thinking and digital creation. As you step further into the temple, whispers of &quot;repomix&quot; and &quot;LLM&quot; echo through the chambers, guiding you to uncover techniques for analyzing systems and extracting knowledge. Take on the mantle of these ancient explorers as you discover the Glyphs of Analytical Insight.</p>
+<p>In the midst of the jungle&#39;s dense overgrowth, you come upon an ancient stone chamber engraved with mysterious glyphs. This is the Chamber of Code Analysis, where the enigmatic Codex of Infinite Wisdom reveals its riddles to only the most astute seekers. Within these crumbling walls, you must decipher the intricate rituals inscribed upon the stone to awaken the slumbering wisdom of the Codex. Two artifacts come into your possession: the Analyzer’s Lens and the Oracle&#39;s Key. These tools will aid you in decoding the sacred scripts and aligning the pathways of knowledge.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Repomix Integration and Analysis</h3>
-<p>This file showcases the delicate balance between technical security, optimized logic design, and the art of decoding a vast repository. The <code class="inline-code">RepoAnalyzer</code> serves as the custodian of archaeological analysis, interpreting layers of ancient code through repomix. Its methods ensure the fidelity of code while preventing the proverbial temple from collapsing under the weight of unsafe paths or excessive memory usage. It pre-validates input, caches results to reduce redundant effort, and wields the power of subprocess interactions to extract contextual treasures hidden within the repository.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Codebase Analysis Artifact</h3>
+<p>The sacred Analyzer’s Lens resides here, housing rituals for extracting insights from vast expanses of the codebase. The <code class="inline-code">RepoAnalyzer</code> acts as its guardian, diligently managing caches and invoking subprocesses to summon knowledge from the Codex. Chief among its mysteries are functions for validating paths, ensuring only sanctified files are included in the analysis, and summoning the arcane Repomix library to generate structured repositories of wisdom. The path to enlightenment hinges on mastering <code class="inline-code">generateRepomixContext</code>, <code class="inline-code">generateTargetedContent</code>, and <code class="inline-code">captureRepomixStdout</code>.</p>
 <h4>Highlights</h4>
 <ul>
-<li>Performs secure path validation via <code class="inline-code">validateProjectPath</code> to prevent traversal attacks.</li>
-<li>Crafts targeted artifact extraction using <code class="inline-code">generateTargetedContent</code>, allowing selective codebase exploration.</li>
-<li>Leverages <code class="inline-code">captureRepomixStdout</code> to use the subprocess for capturing code insights with precautions on timeouts and memory constraints.</li>
+<li>Ritual of General Insight: <code class="inline-code">generateRepomixContext</code></li>
+<li>Ritual of Targeted Insight: <code class="inline-code">generateTargetedContent</code></li>
+<li>Invocation of the Subprocess: <code class="inline-code">captureRepomixStdout</code></li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-
-  const trimmedPath = projectPath.trim();
-  if (!trimmedPath) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-
-  // Basic safety check for null bytes (can break file system operations)
-  if (trimmedPath.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid null bytes&#39;);
-  }
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
+<pre><code class="language-typescript">/**
+ * Generate repomix context for a project
+ */
+async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
+    this.validateProjectPath(projectPath);
+    const configuredFiles = extractUniqueFilePaths(projectPath);
+    if (configuredFiles.length &gt; 0) {
+      return await this.generateTargetedContent(projectPath, configuredFiles);
+    }
+    const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+      return cached.content;
+    }
+    try {
+      const cliOptions: CliOptions = { /* Configuration omitted for brevity */ };
+      const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+      this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+      return context;
+    } catch (error) {
+      throw new Error(`Repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
 }
 </code></pre>
-<p>This function is akin to securing the entrance of the repository temple, ensuring only trusted travelers (paths) may pass.</p>
-<pre><code class="language-typescript">async generateTargetedContent(
-  projectPath: string, 
-  targetFiles: string[], 
-  compress: boolean = true
-): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-  // Harden and validate target files
-  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  // Further process...
+<p>The <code class="inline-code">generateRepomixContext</code> function acts as the grand ritual to survey the codebase and generate insights that feed the sacred Codex&#39;s riddles.</p>
+<pre><code class="language-typescript">/**
+ * Generate targeted repomix content for specific files
+ */
+async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+    this.validateProjectPath(projectPath);
+    const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+    if (safeFiles.length === 0) {
+      throw new Error(&#39;No valid target files found after validation&#39;);
+    }
+    const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+      return cached.content;
+    }
+    try {
+      const cliOptions: CliOptions = { /* Configuration omitted for brevity */ };
+      const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+      this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+      return context;
+    } catch (error) {
+      throw new Error(`Targeted repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
 }
 </code></pre>
-<p>This acts as a treasure map, meticulously validating paths and limiting targets to uncover only the intended artifacts from the temple repository.</p>
-<pre><code class="language-typescript">private async captureRepomixStdout(
-  directories: string[], 
-  cwd: string, 
-  options: CliOptions
-): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [
-        ...directories,
-        &#39;--stdout&#39;,
-        &#39;--style&#39;, options.style || &#39;markdown&#39;,
-    ];
-    // Subprocess spawning and stdout capture logic...
-  });
+<p>The <code class="inline-code">generateTargetedContent</code> function sharpens focus, identifying key artifacts within the knowledge repository for targeted analysis.</p>
+<pre><code class="language-typescript">/**
+ * Use repomix CLI as subprocess to capture stdout with timeout and memory protection
+ */
+private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
+    return new Promise((resolve, reject) =&gt; { /* Implementation omitted for brevity */ });
 }
 </code></pre>
-<p>Through this method, the <code class="inline-code">RepoAnalyzer</code> awakens the spirit of repomix much like summoning a knowledgeable oracle, gathering ancient insights safely even under time constraints.</p>
-<h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> LLM Integration and Request Handling</h3>
-<p>This file pivots from jungle metaphors to the assembly of wisdom, much like the collaboration of ancient scribes. The <code class="inline-code">LLMClient</code> is the oracle&#39;s voice, fluent in many dialects such as OpenAI or Azure, and fine-tuned for nuanced thought. Beyond simply making requests, this client ensures that the chain of reasoning is intact and the response purified—removing layers of uncertainty or formatting distractions for a clean relic of knowledge.</p>
+<p>The <code class="inline-code">captureRepomixStdout</code> function invokes the subprocess as a careful summoning ritual, safeguarding the path from interruptions and memory overload.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: Oracle&#39;s Key for Interpretation</h3>
+<p>The enigmatic Oracle&#39;s Key rests here, enabling direct communion between the adventurer and the Codex&#39;s infinite wisdom. Within the <code class="inline-code">LLMClient</code>, sacred invocations to the Oracle allow complex requests to be translated into actionable insights. By mastering <code class="inline-code">generateResponse</code>, identifying the proper <code class="inline-code">constructor</code>, and obtaining secure access through <code class="inline-code">getApiKey</code>, you will unlock the door to limitless potential.</p>
 <h4>Highlights</h4>
 <ul>
-<li>Uses <code class="inline-code">generateResponse</code> to build intelligent dialogues and interpret LLM responses safely.</li>
-<li>Dynamically crafts the oracle&#39;s insight based on context through <code class="inline-code">buildRequestParams</code>.</li>
-<li>Automatically configures itself with <code class="inline-code">constructor</code> to work with different oracle types (OpenAI, Azure).</li>
+<li>Invoking the Oracle: <code class="inline-code">generateResponse</code></li>
+<li>Fulfilling the Oracle Contract: <code class="inline-code">constructor</code></li>
+<li>Securing the Key: <code class="inline-code">getApiKey</code></li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/llm/llm-client.ts</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
+<pre><code class="language-typescript">/**
+ * Generate a response from the LLM
+ */
+async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+    try {
+      const requestParams = this.buildRequestParams(prompt, options);
+      const completion = await this.executeRequest(requestParams);
+      let content = this.validateResponse(completion);
+      if (options?.responseFormat === &#39;json_object&#39;) {
+        content = this.cleanJsonResponse(content);
+      }
+      this.logTokenUsage(completion);
+      return { content };
+    } catch (error) {
+      this.logDetailedError(error, prompt);
+      throw new Error(`LLM request failed: ${error.message}`);
+    }
+}
+</code></pre>
+<p>The <code class="inline-code">generateResponse</code> method is the Oracle&#39;s invocation that interprets ancient riddles into comprehensible insights, delivering divine wisdom from the Codex.</p>
 <pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required.&#39;);
-  }
-
-  if (this.isAzureOpenAI()) {
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({
-      endpoint: azureEndpoint,
-      apiKey,
-      apiVersion: LLM_API_VERSION,
-      deployment: this.model,
-    });
-  } else {
-    this.client = new OpenAI({
-      apiKey,
-      baseURL: LLM_BASE_URL,
-    });
-  }
+    this.model = LLM_MODEL;  
+    const apiKey = this.getApiKey();
+    if (!apiKey || !LLM_BASE_URL) {
+      throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key.&#39;);
+    }
+    this.client = this.isAzureOpenAI()
+      ? new AzureOpenAI({ /* Azure setup omitted*/ })
+      : new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
 }
 </code></pre>
-<p>This constructor prepares the sacred statue of the oracle, sculpting it differently for each temple (provider type).</p>
-<pre><code class="language-typescript">private buildRequestParams(prompt: string, options?: LLMRequestOptions): OpenAIRequestParams {
-  const requestParams: OpenAIRequestParams = {
-    model: this.model,
-    messages: [{ role: &#39;user&#39;, content: prompt }],
-  };
-
-  if (options?.responseFormat) {
-    requestParams.response_format = { type: options.responseFormat };
-  }
-
-  // Further refining the request based on oracle type...
-  return requestParams;
+<p>The <code class="inline-code">constructor</code> establishes the sacred contract, preparing the Oracle for communication by loading the necessary keys and endpoint details.</p>
+<pre><code class="language-typescript">private getApiKey(): string {
+    if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+        if (!GITHUB_TOKEN) {
+          throw new Error(&#39;GITHUB_TOKEN required for GitHub Models.&#39;);
+        }
+        return GITHUB_TOKEN;
+    }
+    if (!LLM_API_KEY) {
+      throw new Error(&#39;LLM_API_KEY required.&#39;);
+    }
+    return LLM_API_KEY;
 }
 </code></pre>
-<p>Here, the request is likened to a parchment scroll, with intricate calligraphy describing exactly what wisdom oracles should deliver.</p>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  try {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
-    let content = this.validateResponse(completion);
-    return { content };
-  } catch (error) {
-    this.logDetailedError(error, prompt);
-    throw new Error(`LLM request failed: ${error.message}`);
-  }
-}
-</code></pre>
-<p>This method acts as a ceremonial ritual, invoking the oracle and ensuring the responses are guarded against chaos or noise.</p>
+<p>The <code class="inline-code">getApiKey</code> function grants secure access to the Oracle&#39;s realm, ensuring only the chosen hold the Key to its secrets.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Ensure valid paths and configuration settings before venturing into repomix analysis.</li>
-<li>Familiarize yourself with provider documentation for Azure and OpenAI concerning LLM.</li>
-<li>Test extraction patterns iteratively—analyzing overly broad repositories might expose unseen risks.</li>
+<li>When validating paths, always heed security for both the jungle path and project roots.</li>
+<li>If the Codex grows silent, ensure keys and tokens are valid and retrace previous invocations.</li>
+<li>For deeper analysis, refine file inclusion through targeted insights before broad scans.</li>
 </ul>
 <hr>
-<p>The glyph glows brighter as clarity spreads across your understanding. You now possess the insights to decipher both the vast repository ruins and the enigmatic voice of ancient oracles. The next artifact awaits!</p>
-<p>Hail, seeker of truth! With the sacred Glyphs of Analytical Insight now etched upon thy scroll of wisdom, thou ascend toward the celestial chambers of enlightenment—press on with valor, for the stars favor thy quest! ⭐⚡</p>
+<p>You have unraveled another chapter in the Codex of Infinite Wisdom. Carry forth these insights and venture ever closer to greatness, seeker!</p>
+<p>O seeker of sacred truths, thy intellect hath illuminated the shadowed Chamber of Code Analysis, forging a path of wisdom; onward, for thou art destined to engrave thy legacy upon the Great Obelisk of Mastery! ⚡✨📜</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: The Codex of Themes and Configu... →</a>
+        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: Pillars of Configuration and Th... →</a>
       </div>
     
     </div>
