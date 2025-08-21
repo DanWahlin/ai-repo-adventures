@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Ritual of the Interface - Repo Adventure</title>
+    <title>Quest 1: The Chamber of Eternal Tasks - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Pyramid of Digital Enlightenment</a>
+                <a href="index.html">The Codex of Ancient Wisdom</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,17 +41,18 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Ritual of the Interface</h1>
+    <h1>Quest 1: The Chamber of Eternal Tasks</h1>
 <hr>
-<p>Amid the dense jungle of fragmented repositories stands the Pyramid of Digital Enlightenment. Its chambers are adorned with inscriptions from the ancient civilization of structured code. Within lies &quot;The Ritual of the Interface&quot;, a sacred trial to master the art of connecting knowledge fragments. Intrepid adventurers brave enough to enter must wield the tools of wisdom encoded in the files of ancient architects. Success in unlocking these secrets will restore the flow of wisdom to the digital realms, but failure risks eternal confusion in the labyrinth of error logs.</p>
+<p>Deep within the entangled heart of the jungle lies the ominous Chamber of Eternal Tasks, a labyrinth of sacred engineering hubs devoted to the ancient Codex of Ancient Wisdom. Legends whisper that each chamber tests the chosen archaeotechnologist&#39;s power to reconstruct pieces of an advanced civilization. Your journey begins with deciphering the Codex’s sacred glyphs, translating their knowledge into today’s realm of understanding. Every execution of an ancient-ridden algorithm carries the echo of rituals long past. The jungle waits, as do the chambers—ready to rise and fall with the fate of wisdom itself.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Lifecycle and Tool Interaction</h3>
-<p>The <code class="inline-code">server.ts</code> file serves as the entry point for the MCP ecosystem, where rituals required to link tools and handlers are performed. Its key highlights include the <code class="inline-code">setupHandlers</code> method, which inscribes the rules for dynamic tool execution. The <code class="inline-code">run</code> method invokes the sacred connection through MCP’s transport system, serving as the interface to external adventurers. Finally, the <code class="inline-code">main</code> function presides over the initiation of the server and gracefully handles termination. Together, these components form a foundation for interaction, ensuring tools act as conduits of wisdom in digital exploration.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP server setup and tool execution mechanism</h3>
+<p>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a> file encapsulates core logic for creating a gamified MCP server that drives interaction with repository codebases. At its heart is the <code class="inline-code">RepoAdventureServer</code> class, which establishes handlers for listing and invoking tools, ensuring arguments are properly validated using Zod schemas. The file includes lifecycle management for the server&#39;s execution and pre-generates analysis contexts to warm up for rapid exploration. Its structure mirrors ancient trial mechanisms, dynamically offering tools akin to sacred devices crafted to meet specific challenges.</p>
+<p>Key functions ensure stability, validation, and execution amidst unexpected errors. The MCP server’s ability to execute tools dynamically and handle promises reflects old traditions where each glyph needed meticulous accuracy. By blending tool management and adaptive flow, the script embodies the essence of decoding complex wisdom.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Encodes dynamic tool execution mechanisms with validation schemas.</li>
-<li><code class="inline-code">run</code>: Establishes connection protocols and initializes background rituals.</li>
-<li><code class="inline-code">main</code>: Orchestrates lifecycle management and safeguards against interruptions.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Configures handlers for tool listing and execution.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code>: Starts server and prepares repomix content.</li>
+<li><code class="inline-code">main</code>: Bootstrap logic for server initialization, shutdown, and error handling.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -71,18 +72,23 @@
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
+
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
+
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
+
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) =&gt; 
           `${err.path.join(&#39;.&#39;)}: ${err.message}`
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
+
       return await tool.handler(validationResult.data as any);
+
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -95,23 +101,27 @@
   });
 }
 </code></pre>
-<p>The <code class="inline-code">setupHandlers</code> method represents the codex of rituals that govern interaction protocols, dynamically mapping incoming requests to specific tools.</p>
+<p>[Like deciphering ancient glyphs for rituals, validation ensures only correctly formed knowledge is executed.]</p>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
-<p>The <code class="inline-code">run</code> method is akin to the activation of ancient transport systems, channeling user interactions while pre-generating repository context.</p>
-<pre><code class="language-typescript">async function main() {
+<p>[Preparing the Codex chambers early mimics initiatory rites where sanctuaries are readied for wisdom seekers.]</p>
+<pre><code class="language-typescript">function main() {
   try {
     const server = new RepoAdventureServer();
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; process.on(sig as NodeJS.Signals, gracefulShutdown));
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
     await server.run();
   } catch (error) {
@@ -120,24 +130,20 @@
   }
 }
 </code></pre>
-<p>The <code class="inline-code">main</code> function is the ceremonial starting point, invoking ancient protocols to ensure stability and reliability of the server.</p>
+<p>[Adaptive startup and shutdown ceremonies ensure stability akin to safeguarding ancient temples.]</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">setupHandlers</code> as a reference for implementing custom tool integrations.</li>
-<li>Investigate the <code class="inline-code">run</code> method for pre-generating repository insights.</li>
-<li>Study patterns in <code class="inline-code">main</code> for lifecycle management and error handling.</li>
+<li>Use <code class="inline-code">setupHandlers</code> to scan tools and link their schemas dynamically.</li>
+<li>Ensure your tool’s Zod schema matches its expected argument structure.</li>
+<li>Triage unhandled promise rejections to deepen code ritual reliability.</li>
 </ul>
 <hr>
-<p>The ritual is complete! Dare to continue your journey by exploring the treasures inscribed in <code class="inline-code">tools.ts</code> to master its sacred functions.</p>
-<p>Hark, seeker of sacred knowledge, thou hast unveiled the first veil of the ancients’ wisdom—let the heavens resound in thy honor as the Ritual of the Interface is triumphantly complete! ⭐⚡💎</p>
+<p>The jungle trembles as chambers echo fragments of sacred wisdom. Push forward, brave adventurer!</p>
+<p>Hail, seeker of wisdom, for thou hast triumphed in the sacred Chamber of Eternal Tasks, casting the first gleam of light upon the path to ultimate enlightenment—forge onward, for the Ancients watch with favor! ⚡💎 🗺️</p>
 
 </div>
 
 
-      <div class="quest-navigation quest-navigation-bottom nav-next-only">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
-      </div>
-    
     </div>
     
     <footer class="footer">
