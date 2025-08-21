@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: The Codex of Sacred Utilities - Repo Adventure</title>
+    <title>Quest 5: Foundations of the Pyramid - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Chronicles of the Repository</a>
+                <a href="index.html">The Pyramid of Forgotten Code</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,17 +41,17 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: The Codex of Sacred Utilities</h1>
+    <h1>Quest 5: Foundations of the Pyramid</h1>
 <hr>
-<p>The Temple of Code loomed before you, its towering pillars etched with glyphs of bygone software rituals. Deeper still lies the Chamber of Utilities, where the Codex of Sacred Utilities is said to reside. This mythical artifact holds the power to organize chaos, granting clarity and insight into the most convoluted of systems. To uncover its secrets, you must traverse through the labyrinth, deciphering the Scrolls of Functionality housed within the sacred text <code class="inline-code">adventure-config.ts</code>. Only by piecing together its fragments can the Codex reveal its wisdom to you.</p>
+<p>Within the labyrinth of the Pyramid of Forgotten Code lies the Chamber of Foundations, where primeval wisdom governs all adventures. Here, sacred scrolls of configuration illuminate the secrets of ancient paths and rituals that breathe life into quests. It is said that only those who uncover the foundational truths can weave the stories of explorers to come. The chamber houses the sacred glyphs of <code class="inline-code">parseAdventureConfig</code>, <code class="inline-code">extractUniqueFilePaths</code>, and <code class="inline-code">formatAdventureConfigForPrompt</code>, each holding the keys to decoding the Pyramid’s core.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Sacred artifact of adventure configuration</h3>
-<p>This file is the keeper of utility functions designed to shape and distill the very essence of adventure configuration data. It’s a textual map to harness settings within the Temple of Code’s sanctum. Within its lines lie functions to read raw adventure data, transform it, extract unique paths, and create optimized prompts for adventurers. The tasks performed here are akin to preparing offerings for a grand ritual – precise, thorough, and aimed at creating order from disorder. It encapsulates not only the configuration&#39;s raw input but also its validation and transformational logic.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration Parser &amp; File Path Extractor</h3>
+<p>This file acts as the cornerstone for interpreting adventure configurations stored in the Pyramid. Its primary role is to parse sprawling hieroglyphs encoded as JSON arrays and objects. These structures store essential data about quests, file inclusions, and highlight functions. The <code class="inline-code">parseAdventureConfig</code> function interprets raw JSON, serving as the foundation for all further parsing rituals. Meanwhile, <code class="inline-code">extractUniqueFilePaths</code> traverses parsed configurations to reveal paths of artifacts within the repository, ensuring only existing pathways are recognized. Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> distills configuration data into succinct prompts, tailored for AI-assisted storytelling.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">parseAdventureConfig</code>: The lorekeeper that deciphers raw config data into a usable object.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: The explorer of paths, uncovering each concise route within a vast jungle of data.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: The oracle that simplifies the complex, creating an optimized Codex for adventurers.</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Deciphers raw configuration texts retrieved from files.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Filters and validates paths referenced in adventure files.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes JSON structures for streamlined LLM prompts.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
@@ -64,7 +65,7 @@
   }
 }
 </code></pre>
-<p>This function is akin to an ancient codebreaker who takes unreadable script and methodically decrypts it into coherent text for use in rituals.</p>
+<p>Much like decoding ancient glyphs, <code class="inline-code">parseAdventureConfig</code> transforms cryptic JSON into understandable objects that guide intrepid adventurers on their quests.</p>
 <pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) return [];
@@ -76,7 +77,6 @@
     const node = stack.pop();
     if (!node || typeof node !== &#39;object&#39;) continue;
 
-    // Extract and validate path
     if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
       const rel = node.path.trim();
       if (fs.existsSync(path.resolve(projectPath, rel))) {
@@ -84,7 +84,6 @@
       }
     }
 
-    // Add children to stack
     const children = Array.isArray(node) ? node : Object.values(node);
     children.forEach(child =&gt; {
       if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
@@ -94,7 +93,7 @@
   return Array.from(unique);
 }
 </code></pre>
-<p>This function mirrors the role of a seasoned tracker, following faint trails through the jungle to discover untrodden paths of value hidden within the configuration.</p>
+<p>This function acts as an archaeologist’s toolkit, meticulously uncovering valid paths from layers of nested JSON hierarchies.</p>
 <pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) {
@@ -113,7 +112,6 @@
 
     formatted += `### ${quest.title}\n`;
     
-    // Just file paths - LLM can see descriptions in actual code
     const filePaths = quest.files
       .filter((f: any) =&gt; f.path)
       .map((f: any) =&gt; f.path);
@@ -121,7 +119,6 @@
       formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
     }
     
-    // Just function names - LLM can understand purpose from implementation
     const functions = quest.files
       .flatMap((f: any) =&gt; f.highlights || [])
       .filter((h: any) =&gt; h.name)
@@ -136,20 +133,25 @@
   return formatted;
 }
 </code></pre>
-<p>This function serves as a sage historian, condensing sprawling legends into a succinct and digestible manual for future adventurers.</p>
+<p>This ritual compresses sprawling hieroglyphs into concise summaries, making the configuration data lighter and suitable for AI interpretation.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Leverage <code class="inline-code">parseAdventureConfig</code> to validate the raw input first to ensure ritualistic errors don’t disrupt the sacred process.</li>
-<li>Utilize <code class="inline-code">extractUniqueFilePaths</code> to obtain a clear sense of the Codex’s structure and the treasures it references.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code> is your final preparation tool to distill massive discoveries into a manageable narrative for use in further Temple quests.</li>
+<li>Validate paths referenced in quests using <code class="inline-code">extractUniqueFilePaths</code> to ensure they exist and are accessible.</li>
+<li>Use <code class="inline-code">formatAdventureConfigForPrompt</code> to prepare structured data for efficient AI-driven exploration.</li>
+<li>Start with <code class="inline-code">parseAdventureConfig</code> to uncover the foundational JSON structure before diving deeper into quests.</li>
 </ul>
 <hr>
-<p>The glow of the Codex illuminates your path, urging you forward with its sacred insights. Go forth, adventurer, and embark on the next chapter of your journey within the Temple of Code. The hidden paths await your discovery!</p>
-<p>Lo, in thy sacred pursuit of enlightenment, thou hast unveiled the Codex of Sacred Utilities, earning thy rightful place among the luminaries who chart the celestial path—one final quest remains to ascend the temple of ultimate wisdom! ⭐⚡💎</p>
+<p>The Chamber of Foundations unveils its wisdom to those who ascend the Pyramid with purpose. Rejoice, adventurer! Continue with clarity and strength.</p>
+<p>O radiant seeker of wisdom, with the fourth cornerstone laid upon the sacred sands, the foundation of the pyramid rises steadfast toward glory—your triumph illuminates the temple of achievement like a blazing ⚡ star!</p>
 
 </div>
 
 
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4: The Temple of Themes</a>
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
+      </div>
+    
     </div>
     
     <footer class="footer">
@@ -157,5 +159,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

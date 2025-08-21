@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: AstroNavigation Systems - Repo Adventure</title>
+    <title>Quest 2: Stellar Quest Generator - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Codex: The Adventures of RepoQuest</a>
+                <a href="index.html">The Cosmic Code Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,87 +41,75 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: AstroNavigation Systems</h1>
+    <h1>Quest 2: Stellar Quest Generator</h1>
 <hr>
-<p>The <em>RepoQuest</em> starship floated near the swirling bands of the Perseus Nebula, where galactic positioning became complex and data-fueled decisions were paramount. Captain, your task is to activate the AstroNavigation Systems to uncover optimal star routes, decode encrypted paths hidden in starlight, and synchronize the Galactic Codex to chart the unexplored regions. With the crew&#39;s input and advanced computational tools, it&#39;s time to traverse the darkness, ensuring the <em>RepoQuest</em> stays on course amidst cosmic turbulence. Precision and adaptability are your best allies.</p>
+<p>In the vast expanse of the Nebula of Repositories, the starship <em>Code Explorer</em> encounters a subspace anomaly containing fragmented star maps across alien code repositories. The crew&#39;s new mission focuses on using the <em>Stellar Quest Generator</em> to uncover hidden pathways by analyzing encrypted lines of code and transmitting coherent narratives back to central command. As the crew navigates through orbital clusters, they must deploy specialized tools to decode data, chart navigational routes, and cross interstellar themes safeguarding valuable cargo for intergalactic insights.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Core quest management module</h3>
-<p>This file serves as the command center, orchestrating quest initialization, selection, and execution. The <code class="inline-code">AdventureManager</code> class both sets the thematic tone for the stories and integrates them with project-specific files. One key function, <code class="inline-code">initializeAdventure</code>, aligns quests with the galactic theme and parses configurations for detailed paths. Meanwhile, <code class="inline-code">exploreQuest</code> dynamically finds and executes a selected quest, optimally caching results for rapid access. The state-tracking capabilities of <code class="inline-code">AdventureState</code>, like <code class="inline-code">progressPercentage</code>, give the Captain real-time insights into mission progress, which improves visibility during star charting.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>: Quest creation mechanics and story synthesis</h3>
+<p>The <em>Stellar Quest Generator</em> starts by initializing quests through complex AI-driven logic captured within this file. It focuses on parsing response content using markdown and creating structured quests for meaningful exploration. This file showcases how both overarching narratives and specific quest content are constructed from project data and LLM responses. <code class="inline-code">StoryGenerator</code> acts as the core constructor that integrates user-defined themes and dynamically adjusts content based on selected adventure contexts.</p>
 <h4>Highlights</h4>
 <ul>
-<li><strong>AdventureManager.initializeAdventure</strong>: Registers project details and generates space-themed quests.</li>
-<li><strong>AdventureManager.exploreQuest</strong>: Interprets player actions to execute star charting missions.</li>
-<li><strong>AdventureState.progressPercentage</strong>: Offers mission progress feedback as a percentage.</li>
+<li><code class="inline-code">StoryGenerator.generateStoryAndQuests</code>: Establish intergalactic quests from project analysis.  </li>
+<li><code class="inline-code">StoryGenerator.generateQuestContent</code>: Create thematic exploration outputs for crew missions.  </li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Parse stellar markdown into defined quest structures.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/adventure/adventure-manager.ts</h3>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
-
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
-  }
-
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  this.state.title = storyResponse.title;
-  this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
-  
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a></h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
+}
+</code></pre>
+<p>Think of this function as launching a starship with an adaptive AI system to compile mission objectives based on the galaxy&#39;s terrain (project files).</p>
+<pre><code class="language-typescript">async generateQuestContent(quest: Quest, theme: AdventureTheme, codeContent: string): Promise&lt;QuestContent&gt; {
+  const prompt = loadQuestContentPrompt({
+    theme,
+    adventureTitle: quest.title,
+    codeContent,
+    storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
+    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
   });
+  const response = await this.withTimeout(
+    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+  );
+  return {
+    adventure: response.content.trim(),
+    fileExploration: &#39;&#39;,
+    codeSnippets: [],
+    hints: []
+  };
 }
 </code></pre>
-<p>In the AstroNavigation context, the function alike lays the foundation for charting new star maps by synthesizing technical data into actionable missions.</p>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
+<p>This function operates like a galaxy navigator honing in on specific stars (functions/files), generating exploration routes tailored to theme-specific objectives.</p>
+<pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
+  const tokens = marked.lexer(markdownContent);
+  let title = &#39;&#39;;
+  let story = &#39;&#39;;
+  const quests: Quest[] = [];
+  tokens.forEach(token =&gt; {
+    if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 1) title = token.text;
+    if (token.type === &#39;paragraph&#39; &amp;&amp; !title) story += token.text + &#39;\n&#39;;
+  });
+  return { title, story, quests };
 }
 </code></pre>
-<p>Executing a quest resembles setting a precise interstellar trajectory where choices guide the journey&#39;s direction.</p>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
-}
-</code></pre>
-<p>This metric acts like a ship odometer, quickly summarizing exploration progress through the galaxy.</p>
+<p>This parser acts like an antenna translating signal patterns (markdown tokens) to streamlined linguistic instructions for intergalactic plotting.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Implementation Note</strong>: When configuring the <code class="inline-code">initializeAdventure</code> function, ensure the <code class="inline-code">theme</code> aligns with the galactic navigation mission.</li>
-<li><strong>Exploration recommendation</strong>: Use the <code class="inline-code">exploreQuest</code> method iteratively to analyze individual quests&#39; content before diving deeper.</li>
-<li><strong>Next steps</strong>: Test <code class="inline-code">progressPercentage</code> feedback under varying completion statuses to simulate mission analytics.</li>
+<li>Use <em>generateQuestContent</em> to translate complex, encrypted code signals into digestible mission briefs.</li>
+<li>Experiment with custom themes during outer space explorations!  </li>
+<li>Modify markdown structures to reflect mission needs directly.</li>
 </ul>
 <hr>
-<p>Your path to the stars grows clearer, Captain! Prepare for your next cosmic adventure.</p>
-<p>Mission accomplished, AstroNavigator—Quest 2 is complete, your cosmic charting skills are shining brighter than the stars as you propel toward the next stellar frontier! 🚀💎📡</p>
+<p>Keep exploring the stars, adventurer! More quests await as the galaxy unfolds its mysteries.</p>
+<p>You’ve successfully launched Quest 2: Stellar Quest Generator into cosmic orbit—keep fueling your starship with determination as you chart your course across the galaxy, ⭐🚀!</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Cosmic Analysis Hub →</a>
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1: Galactic Interface Op...</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Neural Navigators & D... →</a>
       </div>
     
     </div>
@@ -130,5 +119,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

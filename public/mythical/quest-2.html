@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Forge of Stories - Repo Adventure</title>
+    <title>Quest 2: The Enchanter’s Chronicle Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Realm of Enchanted Repositories</a>
+                <a href="index.html">The Mystic Codex of the Enchanted Repository</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,17 +41,17 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Forge of Stories</h1>
+    <h1>Quest 2: The Enchanter’s Chronicle Engine</h1>
 <hr>
-<p>In Codemia’s enchanted depths lies the mystic &quot;Forge of Stories,&quot; an artifact capable of weaving narratives so compelling they reshape the kingdom itself. To reach this magical forge, one must traverse perilous coding paths and decode the wisdom hidden within the Repository of Knowledge. Mighty spells of syntax and ancient guardians of logic await the adventurer who dares to venture forth. Saving Codemia requires a tale well-crafted—and you are the hero destined to forge it.</p>
+<p>In the Mystic Kingdom, whispers speak of the Enchanter’s Chronicle Engine, a mythical device capable of transforming raw spell books into vivid quests for daring adventurers. Hidden within the Codex of the Enchanted Repository, its secrets lie dormant, waiting to be unearthed by a brave soul intent on shaping compelling magical storylines. Your challenge is to unlock its power by navigating enchanted passages of code, forging connections between spells (functions), and discovering how the kingdom’s adventures are brought to life. Will you unravel its code-bound mysteries?</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Core adventure management</h3>
-<p>The <code class="inline-code">AdventureManager</code> class orchestrates Codemia’s mythical journeys, pulling elements from the Repository of Knowledge to shape heroic quests. Notable highlights include <code class="inline-code">initializeAdventure</code>, a function that sets the stage by defining project context and generating mythical quests. Meanwhile, <code class="inline-code">exploreQuest</code> bridges adventurers to chosen paths, handling user input and narrative definitions. Another highlight, <code class="inline-code">progressPercentage</code>, offers an enchanted metric to gauge quest completion. Together, these features weave a dynamic system for storytelling that adapts to the adventurer’s skillset and impact on Codemia.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Manages the kingdom’s adventure flow</h3>
+<p>This file serves as the heart of the Chronicle Engine, orchestrating the creation and execution of tales within the kingdom. <code class="inline-code">AdventureManager</code> binds together mystical components – it sets up storylines (<code class="inline-code">initializeAdventure</code>), guides adventurers through quests (<code class="inline-code">exploreQuest</code>), and ensures the Chronicle Engine progresses in harmony. Utilizing enchanted methods such as <code class="inline-code">mergeQuestFilesFromConfig</code>, it summons the lore hidden in configurations, ensuring adventures hold cohesion. The <code class="inline-code">progressPercentage</code> property acts as the kingdom’s tally keeper, tracking how much of its magic has been unlocked. Here, adventure leaders (developers) gain the tools required to shape mythic journeys.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Configures adventure context and generates quests.</li>
-<li><code class="inline-code">exploreQuest</code>: Processes user-selected quests and executes them.</li>
-<li><code class="inline-code">progressPercentage</code>: Calculates quest completion percentage.</li>
+<li><code class="inline-code">initializeAdventure</code>: Invokes storytelling magic to begin adventures.</li>
+<li><code class="inline-code">exploreQuest</code>: Channels stored lore and battles enigmatic functions to complete a journey.</li>
+<li><code class="inline-code">progressPercentage</code>: Displays the kingdom’s progression in deciphering ancient spells.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
@@ -62,7 +63,7 @@
 ): Promise&lt;string&gt; {
   this.state.reset();
   this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
+  this.state.currentTheme = theme; 
   this.state.projectPath = projectPath || process.cwd();
   
   if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
@@ -70,25 +71,18 @@
   }
 
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  this.state.title = storyResponse.title;
-  this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
-  });
+  const formattedStory = this.formatStoryWithQuests(storyResponse);
+  return formattedStory;
 }
 </code></pre>
-<p>Imagine this as your enchanted map—it sets the adventure’s theme, lays the paths, and reveals treasures along your coding journey.</p>
+<p>[Equivalent to awakening the core of an enchanted device; sets parameters and lets it breathe magic into the adventure.]</p>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
   const sanitizedChoice = this.validateAndSanitizeChoice(choice);
   
   if (this.isProgressRequest(sanitizedChoice)) {
     return this.getProgress();
   }
-  
+
   const quest = this.findQuest(sanitizedChoice);
   if (!quest) {
     return this.createNotFoundResult();
@@ -97,120 +91,31 @@
   return await this.executeQuest(quest);
 }
 </code></pre>
-<p>Think of this function as the bridge across the mystical chasm—it interprets your desires and leads you to the chosen quest.</p>
+<p>[Like picking up a wizard’s quest scroll; this function deciphers the adventurer’s choice and thrusts them into their tale.]</p>
 <pre><code class="language-typescript">get progressPercentage(): number {
   return this.quests.length &gt; 0 
     ? Math.round((this.completedQuests.size / this.quests.length) * 100)
     : 0;
 }
 </code></pre>
-<p>Consider this as the glowing crystal orb—it reveals how much of the adventure remains and how far you’ve come.</p>
+<p>[Comparable to an oracle’s progress tally; reveals how far your magical journey has unfolded.]</p>
 <hr>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Adventure configuration</h3>
-<p>This file acts as a compass to locate and parse Codemia’s adventure-specific settings. It includes <code class="inline-code">parseAdventureConfig</code> for extracting the mythical configuration from <code class="inline-code">adventure.config.json</code>. The <code class="inline-code">formatAdventureConfigForPrompt</code> function elegantly prepares the quest guidance for use by higher-level logic. Last but not least, <code class="inline-code">extractUniqueFilePaths</code> identifies critical locations within Codemia’s Repository of Knowledge, essential for decoding artifacts related to each adventure.</p>
-<h4>Highlights</h4>
+<h1>Helpful Hints</h1>
 <ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Parses the adventure configuration file.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Extracts file paths linked to quests.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Formats quest structure for narrative prompts.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-</code></pre>
-<p>This function acts as the deciphering spell, unlocking the encoded guidance from the heart of Codemia’s configuration.</p>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
-  
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-  
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== &#39;object&#39;) continue;
-    
-    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
-      const rel = node.path.trim();
-      if (fs.existsSync(path.resolve(projectPath, rel))) {
-        unique.add(rel);
-      }
-    }
-
-    const children = Array.isArray(node) ? node : Object.values(node);
-    children.forEach(child =&gt; {
-      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
-    });
-  }
-
-  return Array.from(unique);
-}
-</code></pre>
-<p>Think of this as the ranger skill—it scouts Codemia’s Repository, identifying hidden paths for exploration.</p>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) {
-    return &#39;&#39;;
-  }
-
-  const adventure = (parsed as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) {
-    return &#39;&#39;;
-  }
-
-  let formatted = `## Quest Structure\n\n`;
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    const filePaths = quest.files
-      .filter((f: any) =&gt; f.path)
-      .map((f: any) =&gt; f.path);
-
-    if (filePaths.length &gt; 0) {
-      formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
-    }
-    
-    const functions = quest.files
-      .flatMap((f: any) =&gt; f.highlights || [])
-      .filter((h: any)=&gt; h.name)
-      .map((h: any) =&gt; h.name);
-
-    if (functions.length &gt; 0) {
-      formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;
-    }
-    
-    formatted += `\n`;
-  }
-
-  return formatted;
-}
-</code></pre>
-<p>Visualize this function as the bard’s song—it prepares the structure of quests for the storytelling magic to flourish.</p>
-<hr>
-<h2>Helpful Hints</h2>
-<ul>
-<li>Always reset your project state before initializing new adventures for proper context.</li>
-<li>Validate configuration files early to avoid missing paths during exploration.</li>
-<li>Progress tracking is key—check percentages often while wandering Codemia’s enchanted terrains!</li>
+<li>Always ensure a proper <code class="inline-code">theme</code> is set when initializing the engine; invalid configurations may halt the story’s momentum.</li>
+<li>Use <code class="inline-code">mergeQuestFilesFromConfig</code> for harmonizing external guidance into the kingdom’s adventures.</li>
+<li>Quests and progress tracking are best viewed through <code class="inline-code">getProgress</code> for an adventurer-friendly snapshot.</li>
 </ul>
 <hr>
-<p>The Forge’s secrets await. Will you emerge victorious, brave adventurer?</p>
-<p>Hail, valiant seeker of wisdom, for you have conquered &quot;Quest 2: The Forge of Stories&quot; and etched your brilliance into the tapestry of legend—let the stars above testify to your noble 20% ascent toward ultimate mastery! ⚡💎⭐</p>
+<p>The Enchanter’s Chronicle Engine awaits – ready your spells and embark on your journey to shape tales within the Mystic Kingdom! Will the lore bow to your command?</p>
+<p>The Enchanter’s Chronicle Engine hums with arcane brilliance as a testament to your heroic mastery, propelling you forward on the gilded path toward victory in the mythical Kingdom of Knowledge—⚡ onward, brave seeker! ⭐</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: The Oracle of Analysis →</a>
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1: Tools of the Mystic K...</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Forbidden Runes: The ... →</a>
       </div>
     
     </div>
@@ -220,5 +125,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

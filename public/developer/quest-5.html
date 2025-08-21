@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Unearth the Foundation - Repo Adventure</title>
+    <title>Quest 5: Scrolls of Adventure Utilities - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository of Endless Adventures</a>
+                <a href="index.html">The Repository Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,26 +41,20 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Unearth the Foundation</h1>
+    <h1>Quest 5: Scrolls of Adventure Utilities</h1>
 <hr>
-<p>The ancient repository whispers secrets of the foundational configurations underpinning every quest. Fragments of code within these files hold the key to understanding critical paths, file extractions, and prompt formatting. To delve into the core structure of adventure generation, one must investigate the unseen logic of parsing and optimization buried within the walls of <code class="inline-code">adventure-config</code>. The way forward is clear: unearth the foundation and claim mastery over the tools that generate the adventure itself.</p>
+<p>Nestled deep within the repository vaults of Codeoria, the Scrolls of Adventure Utilities lie waiting to be unveiled. These ancient scripts allow Devknights to read, configure, and format dynamic adventures. Mastery over these scrolls provides unparalleled clarity over the hidden pathways of code, guiding the adventurer step by step through quests both treacherous and rewarding. The scrolls beckon to the curious and the clever—will you unlock their mysteries to propel the kingdom forward?</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Core configuration logic unifying adventures</h3>
-<p>This file holds the cornerstone functions used to parse adventure configurations, extract file paths, and structure the data into optimized formats for LLM prompts. At the heart of its implementation lies the delicate balance between raw file handling and nuanced data structuring for higher-level interactions. Functions like <code class="inline-code">parseAdventureConfig</code> transform JSON into accessible objects while gracefully managing errors. Meanwhile, <code class="inline-code">extractUniqueFilePaths</code> uses recursive exploration to locate and validate file paths. Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> condenses the data into concise representations, providing an efficient interface for AI-driven tools. Together, these functions embody essential patterns for handling data complexity in quest generation.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Core Adventure Configuration</h3>
+<p>This file serves as the backbone for managing and decoding <code class="inline-code">adventure.config.json</code>, the key configuration file for crafting quests. It contains functions essential for reading, parsing, extracting, and formatting the adventure configuration to be used in other systems. Written with modularity in mind, its methods separate concerns cleanly: file I/O, JSON parsing, and utility creation for downstream processes like prompt building. Each function begins with robust error handling to ensure the file can gracefully adapt to missing or malformed configurations. By consolidating functionality into this central place, the file streamlines access to adventure data for quest generation and validation systems.</p>
 <h4>Highlights</h4>
 <ul>
-<li>Loads and parses configuration files (<code class="inline-code">loadAdventureConfig</code>, <code class="inline-code">parseAdventureConfig</code>)</li>
-<li>Extracts file paths referenced in the configuration (<code class="inline-code">extractUniqueFilePaths</code>)</li>
-<li>Formats configuration for efficient interfacing with LLMs (<code class="inline-code">formatAdventureConfigForPrompt</code>)</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Parses and validates configuration JSON into usable objects.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Extracts unique file paths from nested adventure data.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes configuration data for prompt efficiency with reduced size.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
-</code></pre>
-<p>This function is like a key that opens a hidden chest, reading raw configuration data if the chest exists.</p>
 <pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
@@ -70,7 +65,35 @@
   }
 }
 </code></pre>
-<p>Parsing here acts as an interpreter translating a cryptic scroll (JSON) into readable instructions for the quest engine.</p>
+<p>Like translating a cryptic ancient language, this function deciphers the adventure configuration into modern objects, ensuring the data is legible.</p>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<p>This utility is akin to a treasure hunter identifying the exact location of buried chests, focusing on valid paths in the adventure.</p>
 <pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) {
@@ -88,14 +111,14 @@
     if (!quest.title || !Array.isArray(quest.files)) continue;
 
     formatted += `### ${quest.title}\n`;
-    
+
     const filePaths = quest.files
       .filter((f: any) =&gt; f.path)
       .map((f: any) =&gt; f.path);
     if (filePaths.length &gt; 0) {
       formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
     }
-    
+
     const functions = quest.files
       .flatMap((f: any) =&gt; f.highlights || [])
       .filter((h: any) =&gt; h.name)
@@ -103,27 +126,32 @@
     if (functions.length &gt; 0) {
       formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;
     }
-    
+
     formatted += `\n`;
   }
 
   return formatted;
 }
 </code></pre>
-<p>This function distills a dense scroll of information into a concise road map, preparing it for use in magical systems like LLMs.</p>
+<p>This function compresses the intricate details of an adventure into a concise guide, much like a map simplifying complex roads into a clean and readable layout.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">loadAdventureConfig</code> and <code class="inline-code">parseAdventureConfig</code> together to verify and validate configuration inputs effectively.</li>
-<li>Recursive validations in <code class="inline-code">extractUniqueFilePaths</code> enable safer file path referencing. Leverage this for detecting missing dependencies.</li>
-<li>Optimize the output of <code class="inline-code">formatAdventureConfigForPrompt</code> when interacting with LLMs by focusing on quest structure and actionable highlights.</li>
+<li>Always verify the structure of <code class="inline-code">adventure.config.json</code> before testing; malformed data may impact readability and parsing functions.</li>
+<li>Use <code class="inline-code">extractUniqueFilePaths</code> to quickly audit all files referenced in an adventure and ensure their validity within the project.</li>
+<li>For integrating new quest formats, extend <code class="inline-code">formatAdventureConfigForPrompt</code> to support additional fields.</li>
 </ul>
 <hr>
-<p>The foundation has been unearthed, granting you deeper control over adventure generation and a renewed understanding of its inner workings.</p>
-<p>Achievement unlocked: Quest 5 complete—Your codebase is now 80% optimized, with stellar refactoring and solid foundational commits; deploy the final sprint with confidence! 🚀⚡💎</p>
+<p>The magic of adventure utilities is now in your hands, brave Devknight. Use these scripts wisely to illuminate the hidden paths of Codeoria!</p>
+<p>Congratulations on pushing Quest 5: Scrolls of Adventure Utilities to production—your codebase for knowledge now stands at 80% completeness, and you&#39;re debugging the path to mastery like a true architect of innovation! 🚀⭐💎</p>
 
 </div>
 
 
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4: Thematic Frameworks o...</a>
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
+      </div>
+    
     </div>
     
     <footer class="footer">
@@ -131,5 +159,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 4: Stellar Configuration Nexus - Repo Adventure</title>
+    <title>Quest 4: Thematic Command Center - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Codex: The Adventures of RepoQuest</a>
+                <a href="index.html">The Cosmic Code Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,49 +41,142 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: Stellar Configuration Nexus</h1>
+    <h1>Quest 4: Thematic Command Center</h1>
 <hr>
-<p>In the starry vastness of the Galactic Codex, the <em>RepoQuest</em> crew uncovers the Stellar Configuration Nexus—a pivotal cosmic interface where universal constants align to fuel interstellar adventures. This quest challenges Captain and crew to disentangle intricate star-chart themes and optimize the Codex’s navigation modules for unprecedented accuracy. With tools honed for precision, and cosmic mysteries abound, this adventure promises to elevate their journey through nebulous terrain to uncharted celestial frontiers.</p>
+<p>In orbit around the binary stars of the Quel&#39;Thar system, the <em>Code Explorer</em> arrives at the Nexus Station: a relic of an ancient data-driven civilization. Here, the fragmented repositories across the galaxy are shaped into cohesive streams by a legendary Command Center. The task is to align the <em>Code Explorer&#39;s</em> systems with the Command Center&#39;s ancient protocols. A malfunction could disrupt the station’s fragile harmony, jeopardizing interstellar data unification. You must also balance error-free configuration with understanding the galaxy’s themes to ensure a successful cosmic connection.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Configuration constants for the Nexus system</h3>
-<p>This file outlines the critical settings and environmental variables needed to configure the <em>RepoQuest</em> starship for high-speed galactic traversal. It includes timeout settings (<code class="inline-code">LLM_REQUEST_TIMEOUT</code>), buffer limits (<code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code>), and maximum analysis depth (<code class="inline-code">MAX_SCAN_DEPTH</code>). These constants ensure seamless operation while safeguarding against computational overload. Specifically, the <code class="inline-code">IGNORE_PATTERNS</code> aids in filtering out cosmic debris—unnecessary files during exploration—and defines the galactic boundaries of active analysis.</p>
+<h3><span class="header-prefix">packages/core/src/shared/input-validator.ts:</span> Input validation utilities</h3>
+<p>This critical module in the <em>Code Explorer&#39;s</em> framework ensures smooth operability during exploration. It validates all incoming data streams, guaranteeing they comply with established protocols. A missed validation could lead to corrupted data compromising a quest. The utilities, like <code class="inline-code">validateAdventureChoice</code>, ensure user commands are clear and within limits. <code class="inline-code">validateTheme</code> cross-checks mission themes against an approved set, ensuring universal compatibility, while <code class="inline-code">sanitizeForDisplay</code> prevents cross-functional contamination by cleaning and formatting inputs. Deploying components from this file brings stability vital for mission-critical decisions.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Guides API request timing for Codex interactions.</li>
-<li><code class="inline-code">MAX_SCAN_DEPTH</code>: Prevents infinite recursion when charting new cosmic routes.</li>
-<li><code class="inline-code">PROMPT_PATHS</code>: Structurally organizes navigational directives.</li>
+<li><code class="inline-code">validateAdventureChoice</code>: Ensures user input is clear and concise.</li>
+<li><code class="inline-code">validateTheme</code>: Matches user-chosen themes with known options to prevent errors.</li>
+<li><code class="inline-code">sanitizeForDisplay</code>: Prevents formatting issues across systems.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/shared/config.ts</h3>
-<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
+<h3>packages/core/src/shared/input-validator.ts</h3>
+<pre><code class="language-typescript">export function validateAdventureChoice(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Choice is required&#39;);
+  }
+  
+  if (input.length &gt; 200) {
+    throw new Error(&#39;Choice too long (max 200 characters)&#39;);
+  }
+  
+  return input.trim();
+}
 </code></pre>
-<p>Think of this as the starship&#39;s cool-down timer—it prevents overheating during interstellar exploration missions.</p>
-<pre><code class="language-typescript">export const MAX_SCAN_DEPTH = 3; // Maximum directory depth to prevent infinite recursion and keep analysis focused
+<p>This ensures user input is properly sanitized, much like preventing noisy interference in data streams.</p>
+<pre><code class="language-typescript">export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Theme is required&#39;);
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
 </code></pre>
-<p>Visualize this as the ship&#39;s orbit restriction, keeping exploration targeted without veering off into the endless void.</p>
-<pre><code class="language-typescript">export const PROMPT_PATHS = {
-  STORY_GENERATION: &#39;src/prompts/story-generation-prompt.md&#39;,
-  QUEST_CONTENT: &#39;src/prompts/quest-content-prompt.md&#39;,
-  COMPLETION: &#39;src/prompts/completion-prompt.md&#39;,
-  THEME_GUIDELINES: &#39;src/prompts/theme-guidelines.json&#39;
+<p>This function verifies that the user-provided theme matches a valid set, akin to harmonizing the starship’s systems with the Command Center.</p>
+<pre><code class="language-typescript">export function sanitizeForDisplay(input: string, maxLength = 1000): string {
+  if (!input) return &#39;&#39;;
+  
+  return input
+    .replace(/[&lt;&gt;{}&quot;`]/g, &#39;&#39;)
+    .replace(/\s+/g, &#39; &#39;)
+    .trim()
+    .slice(0, maxLength);
+}
+</code></pre>
+<p>Here, the function safeguards data for display, acting like a filtration system for visual panels on the <em>Code Explorer</em>.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Theme definition and management</h3>
+<p>This file serves as the metadata framework for every quest theme. It centralizes theme definitions while providing utilities to parse user inputs and validate against registered themes. Functions like <code class="inline-code">getAllThemes</code> and <code class="inline-code">isValidTheme</code> ensure consistency in motif selection. The <code class="inline-code">THEMES</code> object encapsulates key details, including descriptions and identifiers for each theme. Such a system ensures that <em>Code Explorer</em> stays thematically relevant and well-aligned with its ongoing quests.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">THEMES</code>: Central registry of all themes.</li>
+<li><code class="inline-code">getAllThemes</code>: Retrieves all available themes for validation or display.</li>
+<li><code class="inline-code">isValidTheme</code>: Confirms the validity of a selected theme key.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/theme.ts</h3>
+<pre><code class="language-typescript">export const THEMES = {
+  SPACE: {
+    id: 1,
+    key: &#39;space&#39;,
+    displayName: &#39;Space Exploration&#39;,
+    emoji: &#39;🚀&#39;,
+    description: &#39;Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies&#39;,
+    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;, &#39;starship&#39;, &#39;astronaut&#39;, &#39;sci-fi&#39;, &#39;futuristic&#39;]
+  },
+  MYTHICAL: {
+    id: 2,
+    key: &#39;mythical&#39;,
+    displayName: &#39;Enchanted Kingdom&#39;,
+    emoji: &#39;🏰&#39;,
+    description: &#39;Explore magical and mythical realms where databases are dragon hoards and functions are powerful spells&#39;,
+    keywords: [&#39;mythical&#39;, &#39;magic&#39;, &#39;enchanted&#39;, &#39;castle&#39;, &#39;dragon&#39;, &#39;fantasy&#39;, &#39;medieval&#39;, &#39;kingdom&#39;]
+  },
+  ANCIENT: {
+    id: 3,
+    key: &#39;ancient&#39;,
+    displayName: &#39;Ancient Civilization&#39;,
+    emoji: &#39;🏺&#39;,
+    description: &#39;Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes&#39;,
+    keywords: [&#39;ancient&#39;, &#39;temple&#39;, &#39;pyramid&#39;, &#39;archaeology&#39;, &#39;historical&#39;, &#39;civilization&#39;, &#39;ruins&#39;]
+  },
+  DEVELOPER: {
+    id: 4,
+    key: &#39;developer&#39;,
+    displayName: &#39;Developer Documentation&#39;,
+    emoji: &#39;📖&#39;,
+    description: &#39;Technical documentation approach with clear explanations, best practices, and code analysis&#39;,
+    keywords: [&#39;developer&#39;, &#39;code&#39;, &#39;technical&#39;, &#39;debug&#39;, &#39;guide&#39;, &#39;tutorial&#39;, &#39;binary&#39;]
+  },
+  CUSTOM: {
+    id: 5,
+    key: &#39;custom&#39;,
+    displayName: &#39;Custom Theme&#39;,
+    emoji: &#39;🎨&#39;,
+    description: &#39;Design your own adventure! You\&#39;ll be prompted to provide theme name, description, and keywords&#39;,
+    keywords: [&#39;custom&#39;, &#39;personalized&#39;, &#39;unique&#39;, &#39;creative&#39;, &#39;personal&#39;]
+  }
 } as const;
 </code></pre>
-<p>These are the guiding star charts—a mapped directory leading the captain to themed navigation prompts.</p>
+<p>The THEMES object acts as a star chart, defining all known constellations (adventure themes) for the galaxy’s quests.</p>
+<pre><code class="language-typescript">export function getAllThemes(): ThemeDefinition[] {
+  return THEMES_ARRAY;
+}
+</code></pre>
+<p>Retrieves all themes, much like consulting the starship’s database on known stellar paths.</p>
+<pre><code class="language-typescript">export function isValidTheme(theme: string): theme is AdventureTheme {
+  return THEMES_ARRAY.some(t =&gt; t.key === theme);
+}
+</code></pre>
+<p>This ensures alignment of a given theme to a known path, like setting navigation coordinates to valid star systems.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical tip</strong>: Adjust <code class="inline-code">MAX_SCAN_DEPTH</code> only for limited cosmic environments. Too great a depth may overload the Codex navigation.</li>
-<li><strong>Exploration recommendation</strong>: Review <code class="inline-code">IGNORE_PATTERNS</code> if system lag arises—it effectively filters file redundancies.</li>
-<li><strong>Next steps</strong>: Test prompt generation paths using the <code class="inline-code">PROMPT_PATHS</code> constants for a smooth adventure launch.</li>
+<li>Prioritize <code class="inline-code">sanitizeForDisplay</code> to avoid conflicts in interstellar panels.</li>
+<li>Use the <code class="inline-code">THEMES</code> object for thematic consistency in all generated adventures.</li>
+<li>Validate early! Input checks reduce runtime errors during galactic navigation.</li>
 </ul>
 <hr>
-<p>Mission configured. Prepare to chart the uncharted stars!</p>
-<p>Cosmic adventurer, you’ve navigated the stellar labyrinth of Quest 4: Stellar Configuration Nexus with brilliance—your mission momentum accelerates as you soar at warp speed toward 100% completion! 🚀⭐💎</p>
+<p>The Command Center’s modules sing in harmony as the <em>Code Explorer</em> achieves thematic alignment. Onward to your next grand quest!</p>
+<p>Mission Control confirms a stellar achievement as Quest 4: Thematic Command Center is successfully docked, propelling you to 60% completion—keep your thrusters firing for the remaining cosmic challenges ahead! ⭐🚀📡</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-5.html" class="next-quest-btn">Next: Quest 5: Command Utility Core →</a>
+        <a href="quest-3.html" class="prev-quest-btn">← Previous: Quest 3: Neural Navigators & D...</a>
+        <a href="quest-5.html" class="next-quest-btn">Next: Quest 5: Config Matrix Codex →</a>
       </div>
     
     </div>
@@ -92,5 +186,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

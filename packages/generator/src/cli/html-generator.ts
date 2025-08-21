@@ -349,6 +349,9 @@ class HTMLAdventureGenerator {
     console.log(chalk.dim('🎨 Creating theme styling...'));
     this.generateThemeCSS();
 
+    console.log(chalk.dim('🧭 Adding quest navigator...'));
+    this.copyQuestNavigator();
+
     console.log(chalk.dim('🖼️ Copying images...'));
     this.copyImages();
 
@@ -603,6 +606,35 @@ class HTMLAdventureGenerator {
     }
   }
 
+  private copyQuestNavigator(): void {
+    const __dirname = path.dirname(new URL(import.meta.url).pathname);
+    const templatesDir = path.join(__dirname, 'templates');
+    const assetsDir = path.join(this.outputDir, 'assets');
+
+    try {
+      // Ensure assets directory exists
+      if (!fs.existsSync(assetsDir)) {
+        fs.mkdirSync(assetsDir, { recursive: true });
+      }
+
+      // Copy quest navigator JavaScript
+      const navigatorJSSource = path.join(templatesDir, 'quest-navigator.js');
+      const navigatorJSTarget = path.join(assetsDir, 'quest-navigator.js');
+      if (fs.existsSync(navigatorJSSource)) {
+        fs.copyFileSync(navigatorJSSource, navigatorJSTarget);
+      }
+
+      // Copy quest navigator CSS
+      const navigatorCSSSource = path.join(templatesDir, 'quest-navigator.css');
+      const navigatorCSSTarget = path.join(assetsDir, 'quest-navigator.css');
+      if (fs.existsSync(navigatorCSSSource)) {
+        fs.copyFileSync(navigatorCSSSource, navigatorCSSTarget);
+      }
+    } catch (error) {
+      console.log(chalk.yellow('⚠️ Warning: Could not copy quest navigator files'));
+    }
+  }
+
   private loadThemeCSS(theme: AdventureTheme): string {
     return this.loadCSSFile(`themes/${theme}.css`, 'themes/default.css');
   }
@@ -653,6 +685,11 @@ class HTMLAdventureGenerator {
 
   private async generateQuestPages(): Promise<void> {
     const questsToGenerate = this.maxQuests !== undefined ? Math.min(this.maxQuests, this.quests.length) : this.quests.length;
+    
+    // Trim the quests array to match the actual number being generated
+    if (questsToGenerate < this.quests.length) {
+      this.quests = this.quests.slice(0, questsToGenerate);
+    }
     
     for (let i = 0; i < questsToGenerate; i++) {
       const quest = this.quests[i];
@@ -725,13 +762,45 @@ class HTMLAdventureGenerator {
   }
 
   private buildQuestHTML(quest: QuestInfo, content: string, questIndex: number): string {
+    const prevQuest = questIndex > 0 ? this.quests[questIndex - 1] : null;
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
 
-    const bottomNavigation = nextQuest ? `
-      <div class="quest-navigation quest-navigation-bottom">
-        <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${nextQuest.title.length > 40 ? nextQuest.title.slice(0, 40) + '...' : nextQuest.title} →</a>
+    let bottomNavigation = '';
+    if (prevQuest || nextQuest) {
+      // Determine navigation CSS class based on which buttons are present
+      let navClass = 'quest-navigation quest-navigation-bottom';
+      const hasCompleteButton = !nextQuest && prevQuest; // Last quest with complete button
+      
+      if (prevQuest && nextQuest) {
+        // Both buttons present - use default space-between
+      } else if (prevQuest && !nextQuest && !hasCompleteButton) {
+        navClass += ' nav-prev-only';
+      } else if (!prevQuest && nextQuest) {
+        navClass += ' nav-next-only';
+      }
+      // Note: when hasCompleteButton is true, we use default space-between for proper alignment
+      
+      bottomNavigation = `
+      <div class="${navClass}">`;
+      
+      if (prevQuest) {
+        bottomNavigation += `
+        <a href="${prevQuest.filename}" class="prev-quest-btn">← Previous: ${prevQuest.title.length > 30 ? prevQuest.title.slice(0, 30) + '...' : prevQuest.title}</a>`;
+      }
+      
+      if (nextQuest) {
+        bottomNavigation += `
+        <a href="${nextQuest.filename}" class="next-quest-btn">Next: ${nextQuest.title.length > 30 ? nextQuest.title.slice(0, 30) + '...' : nextQuest.title} →</a>`;
+      } else if (prevQuest) {
+        // On the last quest, add a button to return to the theme homepage
+        bottomNavigation += `
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>`;
+      }
+      
+      bottomNavigation += `
       </div>
-    ` : '';
+    `;
+    }
 
     const variables = {
       ...this.getCommonTemplateVariables(),

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Harnessing the Story Glyphs - Repo Adventure</title>
+    <title>Quest 2: Chambers of the Story Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Chronicles of the Repository</a>
+                <a href="index.html">The Pyramid of Forgotten Code</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,17 +41,17 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: Harnessing the Story Glyphs</h1>
+    <h1>Quest 2: Chambers of the Story Engine</h1>
 <hr>
-<p>With ancient runes etched deep within its stony walls, the Temple of Code unveils a chamber filled with shimmering Story Glyphs. These sacred inscriptions hold the power to craft narratives that weave together themes, files, and adventures seamlessly. As the chosen explorer, your task is to decode their enigmatic glow. The Temple whispers that proper alignment of these glyphs will enable the generation of wisdom-filled stories and quests, guiding future adventurers through the labyrinth of code.</p>
+<p>In an ancient hall deep within the Pyramid of Forgotten Code rests the Chambers of the Story Engine. This sacred domain, once revered by the civilization of developers, houses the enigmatic mechanisms used to craft tales of exploration and discovery. It&#39;s here that the thematic blueprint of quests begins. Your journey demands that you unravel the cryptic workings of the Story Generation Engine, decipher its intricate prompts, and mend its fragmented components. For those who succeed, the Pyramid&#39;s secrets will reveal pathways to coding mastery.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Quest Management Repository</h3>
-<p>This file contains the structural logic that drives the creation, execution, and management of quests within the Temple’s realm. At its heart lies the <code class="inline-code">initializeAdventure</code> method, which bridges ancient wisdom by integrating project contexts, themes, and custom configurations into a harmonious one-page narrative. Furthermore, <code class="inline-code">exploreQuest</code> delves into mysteries by validating user choices and uncovering adventures hidden within each chosen glyph. Another highlight, <code class="inline-code">progressPercentage</code>, shines as a sacred marker of the adventurer&#39;s journey, calculating completion. The methods harmonize the temple&#39;s glyphs into tangible storylines that aid modern coders.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Manager for engine operations and quest interactions</h3>
+<p>The <code class="inline-code">adventure-manager.ts</code> file orchestrates the quest generation and execution process. At the heart of its functionality is the <code class="inline-code">AdventureManager</code> class, responsible for initializing quests, validating user inputs, and executing adventures. The <code class="inline-code">initializeAdventure</code> method stands out as the doorway to creating the story and quests. This method integrates configuration data, ensures thematic alignment using the Story Generator, and manages quest count based on strict rules. Meanwhile, the <code class="inline-code">exploreQuest</code> function validates user choices and provides exploration results rich with narrative details. The file&#39;s highlights exemplify methods critical to the interaction between user inputs and quest delivery mechanisms.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Shapes the narrative by merging project paths, themes, and quests.</li>
-<li><code class="inline-code">exploreQuest</code>: Deciphers adventure choices and leads the brave forward.</li>
-<li><code class="inline-code">progressPercentage</code>: Measures the journey’s accomplishment.</li>
+<li><code class="inline-code">initializeAdventure</code> initializes quests and story generation.</li>
+<li><code class="inline-code">exploreQuest</code> manages user selection of quests.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code> calculates current progress of quests.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
@@ -70,10 +71,8 @@
   }
 
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  
   this.state.title = storyResponse.title;
   this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
-  
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
   this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
@@ -83,130 +82,47 @@
   });
 }
 </code></pre>
-<p>This method resembles aligning ancient runes to shape a grand summoning ritual—merging elements to create cohesive wisdom for initiates.</p>
+<p>The <code class="inline-code">initializeAdventure</code> function is like a high priest preparing for a sacred ritual, setting up the narrative framework and quests aligned with the chosen theme.</p>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
   const sanitizedChoice = this.validateAndSanitizeChoice(choice);
   
   if (this.isProgressRequest(sanitizedChoice)) {
     return this.getProgress();
   }
-  
+
   const quest = this.findQuest(sanitizedChoice);
   if (!quest) {
     return this.createNotFoundResult();
   }
-  
+
   return await this.executeQuest(quest);
 }
 </code></pre>
-<p>Much like deciphering an ancient glyph for its secrets, this function unravels the intended path, leading adventurers to their chosen fates.</p>
+<p>The <code class="inline-code">exploreQuest</code> function is akin to a scout navigating the map of available adventures, ensuring valid paths forward while delivering tailored outcomes.</p>
 <pre><code class="language-typescript">get progressPercentage(): number {
   return this.quests.length &gt; 0 
     ? Math.round((this.completedQuests.size / this.quests.length) * 100)
     : 0;
 }
 </code></pre>
-<p>Visualize this as a sacred sundial marking the adventurer’s progress within the temple’s wisdom-filled chambers.</p>
-<h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Glyph Interpreter &amp; Compiler</h3>
-<p>This file acts as the master artisan behind the glyphs of the Temple. Through the use of <code class="inline-code">generateStoryAndQuests</code>, it combines theme intricacies and file-specific wisdom into an actionable story. The method, <code class="inline-code">generateQuestContent</code>, meticulously decodes files and shapes unique content using the glyphs’ light. Finally, the method <code class="inline-code">generateCompletionSummary</code> presents the culmination of each quest anew, celebrating the adventurer’s triumph using the Temple’s codified blessings.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">generateStoryAndQuests</code>: Creates foundational stories that bind files and themes.</li>
-<li><code class="inline-code">generateQuestContent</code>: Illuminates specific files, bringing glyph secrets to life.</li>
-<li><code class="inline-code">generateCompletionSummary</code>: Chronicles quest achievements with thematic grandeur.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/core/src/adventure/story-generator.ts</h3>
-<pre><code class="language-typescript">async generateStoryAndQuests(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string
-): Promise&lt;StoryResponse&gt; {
-  this.currentProject = projectInfo;
-  this.projectPath = projectPath;
-  
-  const validatedTheme = this.validateTheme(theme);
-  return await this.generateWithLLM(projectInfo, validatedTheme);
-}
-</code></pre>
-<p>Just as ancient scribes crafted narratives for civilizations, this method harmonizes project contexts and themes to form epic storylines.</p>
-<pre><code class="language-typescript">async generateQuestContent(
-  quest: Quest,
-  theme: AdventureTheme,
-  codeContent: string
-): Promise&lt;QuestContent&gt; {
-  let adventureGuidance = &#39;&#39;;
-  if (this.projectPath) {
-    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
-    if (formattedConfig) {
-      adventureGuidance = formattedConfig;
-    }
-  }
-
-  const prompt = loadQuestContentPrompt({
-    theme,
-    adventureTitle: quest.title,
-    codeContent,
-    storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
-    adventureGuidance: adventureGuidance || &#39;&#39;,
-    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
-  });
-
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
-  );
-  
-  let cleanContent = response.content.trim();
-  return {
-    adventure: cleanContent,
-    fileExploration: &#39;&#39;,
-    codeSnippets: [],
-    hints: []
-  };
-}
-</code></pre>
-<p>This method mirrors painstaking archaeological interpretation, revealing wisdom hidden within code glyphs.</p>
-<pre><code class="language-typescript">async generateCompletionSummary(
-  quest: Quest,
-  theme: AdventureTheme,
-  progress: number,
-  total: number
-): Promise&lt;string&gt; {
-  const percentComplete = Math.round((progress / total) * 100);
-  
-  let themeDescription: string = theme;
-  let vocabularyHint = &#39;&#39;;
-  
-  const prompt = loadCompletionPrompt({
-    themeDescription,
-    adventureTitle: quest.title,
-    progress,
-    total,
-    percentComplete,
-    vocabularyHint
-  });
-
-  const response = await this.llmClient.generateResponse(prompt);
-  return response.content.trim().replace(/^[&quot;&#39;]|[&quot;&#39;]$/g, &#39;&#39;);
-}
-</code></pre>
-<p>Picture this as the final inscription on a completed glyph, revealing the treasures earned by the adventurer.</p>
+<p>This progress calculation works like an ancient tally stone, marking milestones to reveal how far an explorer has journeyed into the Pyramid&#39;s depths.</p>
+<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Before proceeding, ensure all glyphs (files/highlights) required for the quest were identified accurately.</li>
-<li>Explore themes and completion configurations as distinct facets of glyph lore.</li>
-<li>Build upon the wisdom of previous quests to unlock hidden chambers.</li>
+<li>When deciphering quest details, identify missing files from the configuration for better thematic precision.</li>
+<li>Study how configurations are merged to guide structured story generation; use <code class="inline-code">mergeQuestFilesFromConfig</code> for insights.</li>
+<li>Next, delve deeper into <code class="inline-code">story-generator.ts</code> to grasp how quests are molded into narratives.</li>
 </ul>
 <hr>
-<p>The Story Glyphs glow brighter—your command over their sacred artistry grows. Press onward, noble adventurer! The Temple of Code beckons.</p>
-<p>By the sacred flame of the eternal temples, thou hast unlocked the wisdom of the Story Glyphs, forging thy path with the brilliance of ancients—march onward, noble seeker, for the stars await thy mastery! ⭐💎🗺️⚡</p>
+<p>May the chambers guide your understanding, and the Pyramid unlock its timeless treasures for you, brave adventurer!</p>
+<p>Hail, seeker of wisdom, for thou hast triumphed through the sacred Chambers of the Story Engine, carving thy name upon the eternal tablets of enlightenment—forge onward, for the stars themselves await thy mastery! ⭐⚡🗺️</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: Unearthing the Analytical Lens →</a>
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1: The Ceremony of Tools</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3: The Glyphs of Analysi... →</a>
       </div>
     
     </div>
@@ -216,5 +132,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>
