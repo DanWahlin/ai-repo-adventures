@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Cosmic Story Piloting System - Repo Adventure</title>
+    <title>Quest 2: Quest Generation Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Repository Chronicles</a>
+                <a href="index.html">Stellar Repository Expeditions</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,17 +41,24 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: Cosmic Story Piloting System</h1>
+    <h1>Quest 2: Quest Generation Engine</h1>
 <hr>
-<p>The starship <em>Codexus</em> hovers in orbit around the enigmatic Coding Nebula, its sensors analyzing streams of code-shaped starlight. The crew prepares to activate the Cosmic Story Piloting System, a feature that allows for the dynamic generation of narratives and quests that align with the galaxy&#39;s digital architecture. The mission? Use this system to chart routes through complex code constellations, enabling seamless interstellar exploration. Your targets: the <strong>Adventure Manager</strong>, <strong>Story Generator</strong>, and <strong>Adventure Config</strong> systems. Success means unlocking the secrets to effective story synthesis and mission deployment.</p>
+<p>The command deck hums with the energy of thousands of navigation calculations as you prepare the Quest Generation Engine for activation. This critical system, nestled within the digital galactic core, powers the creation of intricate and immersive quest paths across unexplored repositories. To embark on this mission, your task is twofold: optimize the <code class="inline-code">AdventureManager</code> circuits and calibrate the <code class="inline-code">StoryGenerator</code>. Your crew must chart the complex coding constellations while uncovering the intricacies of configuration mapping. Focus your scanners, Captain—these systems hold the key to mapping the stars of the codebase universe.</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Navigation Systems Scan</strong>: How does the <code class="inline-code">AdventureManager.initializeAdventure</code> function coordinate project data, themes, and quest generation to kickstart a mission?</li>
+<li>⚡ <strong>Quest Flow Dynamics</strong>: How are quests selected, explored, and managed through the <code class="inline-code">AdventureManager.exploreQuest</code> lifecycle?</li>
+<li>🛡️ <strong>Story Core Integrity</strong>: What patterns and safety checks are employed in the <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> to produce consistent and valid mission frameworks?</li>
+</ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: Adventure Management Core</h3>
-<p>The <strong>AdventureManager</strong> is the central navigation system of the Cosmic Story Piloting System. It initializes your journey, managing the state of adventures and dynamically generating quests. Key functions like <code class="inline-code">initializeAdventure</code> and <code class="inline-code">exploreQuest</code> ensure that the right narratives emerge for the coding realms. With state tracking via <code class="inline-code">AdventureState</code>, it dynamically computes progress through <code class="inline-code">progressPercentage</code>. This system is central to managing in-mission continuity, caching past exploration, and executing dynamic requests for new story arcs.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: The Quest Engine&#39;s Command Nucleus</h3>
+<p>This file orchestrates the primary subsystems of the Quest Generation Engine. It initializes quests, manages state, and coordinates between project information, themes, and quests. The <code class="inline-code">AdventureManager</code> class and its methods—<code class="inline-code">initializeAdventure</code>, <code class="inline-code">exploreQuest</code>, and <code class="inline-code">generateQuestContent</code>—serve as the pivotal control center for mission engagement.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Activates the storyline based on a chosen theme or project.</li>
-<li><code class="inline-code">AdventureManager.exploreQuest</code>: Deploys missions based on user quest selection.</li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Computes current adventure exploration progress.</li>
+<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Initializes adventures by resetting state, loading project context, and generating stories.</li>
+<li><code class="inline-code">AdventureManager.exploreQuest</code>: Executes specific quests, using caching for efficiency and validating user input.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code>: Calculates quest progress dynamically as a percentage.</li>
 </ul>
 <h2>Code</h2>
 <h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
@@ -61,151 +68,122 @@
   projectPath?: string,
   customThemeData?: CustomThemeData
 ): Promise&lt;string&gt; {
-  // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
   
-  // Generate story and quests
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
+
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+
   this.state.title = storyResponse.title;
   this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
   return this.formatStoryWithQuests({
     ...storyResponse,
     quests: this.state.quests
   });
 }
 </code></pre>
-<p>This acts like the ship&#39;s mission briefing system, initializing context for exploration and generating tailored missions.</p>
+<p>The initialization sequence here resets the starship for a new journey and aligns its mission coordinates with project context and thematic data.</p>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
   const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
+
   const quest = this.findQuest(sanitizedChoice);
   if (!quest) {
     return this.createNotFoundResult();
   }
+
   return await this.executeQuest(quest);
 }
 </code></pre>
-<p>This function identifies and engages missions based on user-determined coordinates (choices).</p>
+<p>This code handles navigation to specific constellations of quests based on user input or mission progress views.</p>
 <pre><code class="language-typescript">get progressPercentage(): number {
   return this.quests.length &gt; 0 
     ? Math.round((this.completedQuests.size / this.quests.length) * 100)
     : 0;
 }
 </code></pre>
-<p>Translates galactic progress into a clear percentage for ease of crew interpretation.</p>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>: Story Generation Nexus</h3>
-<p>The <strong>StoryGenerator</strong> processes narrative generation requests. It converts raw repository data into cohesive spacefaring narratives and quests. Using the <code class="inline-code">generateStoryAndQuests</code> method, it crafts the overall adventure script. In addition, <code class="inline-code">parseMarkdownToStoryResponse</code> interprets Markdown responses into structured quests for dynamic engagement. Functionality like <code class="inline-code">generateQuestContent</code> empowers content-specific mission evolution, ensuring rich narratives from raw data.</p>
+<p>This calculation dynamically monitors the &quot;distance traveled&quot; in your galactic quest progress.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>: Cosmic Storyweaver</h3>
+<p>This system derives the poetic star charts of the adventure. It generates immersive narratives, quest structures, and themed content in harmony with project data.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">StoryGenerator.generateStoryAndQuests</code>: Orchestrates overarching storylines and mission lists.</li>
-<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Converts a Markdown story structure into actionable quests.</li>
-<li><code class="inline-code">generateQuestContent</code>: Dynamically generates quest details tailored to the current mission’s focus.</li>
+<li><code class="inline-code">StoryGenerator.generateStoryAndQuests</code>: Processes project details to craft thematic stories and detailed quest lists.</li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Converts markdown-formatted narrative into structured JSON.</li>
+<li><code class="inline-code">StoryGenerator.generateQuestContent</code>: Produces detailed quest exploration data using code-focused prompts.</li>
 </ul>
 <h2>Code</h2>
 <h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a></h3>
 <pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
-  const prompt = loadStoryGenerationPrompt({
-    theme,
-    repomixContent: projectInfo.repomixContent,
-  });
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
-  );
-  return parseMarkdownToStoryResponse(response.content.trim());
+  this.currentProject = projectInfo;
+  this.projectPath = projectPath;
+
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
 }
 </code></pre>
-<p>This acts like the ship’s telescope, scanning the galaxy for story leads based on a chosen mission theme.</p>
+<p>This function configures the storytelling instruments and drafts the adventure framework.</p>
 <pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   const tokens = marked.lexer(markdownContent);
   let title = &#39;&#39;;
   let story = &#39;&#39;;
   const quests: Quest[] = [];
-  tokens.forEach((token) =&gt; {
+  
+  let currentQuest: Partial&lt;Quest&gt; = {};
+  tokens.forEach(token =&gt; {
     if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 1) {
       title = token.text;
     } else if (token.type === &#39;paragraph&#39;) {
       story += token.text + &#39;\n\n&#39;;
-    } else if (token.type === &#39;list&#39;) {
-      const quest: Quest = { id: `quest-${quests.length + 1}`, title: token.items?.[0]?.text || &#39;&#39;, description: &#39;&#39; };
-      quests.push(quest);
+    } else if (token.type === &#39;list&#39; &amp;&amp; currentQuest.title) {
+      currentQuest.description += token.items.map(item =&gt; item.text).join(&#39;\n&#39;);
     }
   });
-  return { title, story, quests };
+
+  return { title, story: story.trim(), quests };
 }
 </code></pre>
-<p>Transforms a nebula of textual stars into actionable celestial charts (structured story quests).</p>
-<pre><code class="language-typescript">async generateQuestContent(quest: Quest, theme: AdventureTheme, codeContent: string): Promise&lt;QuestContent&gt; {
+<p>This parses interstellar narrative logs into a structured exploration guide ready for mission use.</p>
+<pre><code class="language-typescript">async generateQuestContent(
+  quest: Quest,
+  theme: AdventureTheme,
+  codeContent: string
+): Promise&lt;QuestContent&gt; {
   const prompt = loadQuestContentPrompt({
     theme,
     adventureTitle: quest.title,
     codeContent,
+    storyContent: this.currentStoryContent || &#39;No story context available.&#39;
   });
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
-  );
-  const content = response.content.trim();
-  return { adventure: content, hints: [] };
+
+  const response = await this.llmClient.generateResponse(prompt, { maxTokens: 1024 });
+  return { 
+    adventure: response.content?.trim() || &#39;Adventure generation failed.&#39;, 
+    fileExploration: &#39;&#39;, 
+    codeSnippets: [], 
+    hints: [] 
+  };
 }
 </code></pre>
-<p>Generates mission-specific details by analyzing a segment of cosmic code.</p>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Adventure Config Interface</h3>
-<p>The <strong>Adventure Config</strong> ensures efficient pathfinding by parsing and validating configuration blueprints. Through <code class="inline-code">parseAdventureConfig</code>, it gleans directives for interstellar navigation. The <code class="inline-code">extractUniqueFilePaths</code> function maps important resources for quest generation. These utilities streamline story-building inputs to synchronize the ship’s cosmic trajectory.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Deciphers the adventure configuration blueprint.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies all critical file paths for mission creation.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Creates a sleek adventure summary for LLM-based storytelling.</li>
-</ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-</code></pre>
-<p>This is like decoding a star chart to ensure accurate navigation of mission parameters.</p>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-  while (stack.length) {
-    const node = stack.pop();
-    if (typeof node?.path === &#39;string&#39;) {
-      unique.add(node.path);
-    }
-  }
-  return Array.from(unique);
-}
-</code></pre>
-<p>Analyzes stellar maps to pinpoint key landmarks important for charted exploration.</p>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed) return &#39;&#39;;
-  let formatted = `## Quest Structure\n`;
-  return formatted;
-}
-</code></pre>
-<p>Reformats dense star maps into concise, pilot-ready charts for mission execution.</p>
-<hr>
+<p>This ties the generated creative energy directly back to the code&#39;s technical specifics for deeper engagement.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Mission Start</strong>: Always initialize your adventure with <code class="inline-code">initializeAdventure</code> to contextualize quests to your project.</li>
-<li><strong>Quest Refinement</strong>: Use <code class="inline-code">generateQuestContent</code> for fine-tuning activities in code-dense regions.</li>
-<li><strong>Config Parsing</strong>: Ensure your <code class="inline-code">adventure.config.json</code> is valid for smooth mission pathfinding.</li>
+<li>Start with <code class="inline-code">AdventureManager.initializeAdventure</code> to understand the voyage setup.</li>
+<li>Follow the flow of <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> for insights into narrative weaving.</li>
+<li>Investigate <code class="inline-code">AdventureManager.exploreQuest</code> for dynamic quest execution.</li>
 </ul>
 <hr>
-<p>The Cosmic Story Piloting System hums as quests unlock like stars: your journey is only beginning!</p>
-<p>Mission accomplished, Star Pilot—your mastery of the Cosmic Story Piloting System has ignited the engines for an interstellar journey, propelling us 20% closer to the stars! 🚀⭐💎</p>
+<p>The engine glows as mission systems synchronize—your journey into the codebase nebula is ready to proceed!</p>
+<p>Your stellar engineering has launched the Quest Generation Engine into orbit, propelling us 20% closer to completing our cosmic mission—keep blazing like a supernova, star voyager! 🚀⭐⚡</p>
 
 </div>
 

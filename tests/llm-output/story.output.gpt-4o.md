@@ -1,13 +1,13 @@
-# Galactic Adventures: The Code Chronicles
+# Galactic Adventures: The Codex Chronicles
 
-The Stellar Exploration Vessel *Codex Eternum* has embarked on its mission to chart the farthest reaches of the coding galaxy, unlocking the secrets of the universe through precise analysis, system optimization, and theme-based story generation. Powered by advanced LLM systems, your ship's success hinges on managing its core subsystems: mission tools, storytelling propulsion, data analyzers, configuration protocols, and foundational utilities. The fate of this celestial odyssey lies in your ability to master the code and maintain harmony in its stellar operations.
+The U.S.S. Codex, a starship designed for deep-space exploration of code galaxies, embarks on a mission to chart and systematize the vast and uncharted Nebula of Repositories. Using advanced AI-driven systems, including the Galactic Quest Generator (GQG) and the Stellar Analyzer, the ship’s crew deciphers cryptic cosmic pathways to coordinate exploration and uncover intergalactic development patterns. Your journey is to ensure the systems work seamlessly, guiding the crew through treacherous cosmic streams of syntax and logic.
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: MCP Tool Interface** - You explore the bridge of *Codex Eternum*, operating mission control interfaces crafted in `packages/mcp/src/server.ts` and modular tools from `packages/mcp/src/tools.ts`.
-**Quest 2: Quest Generation Engine** - You chart the ship's narrative propulsion system, diving into the power of `packages/core/src/adventure/adventure-manager.ts`, `packages/core/src/adventure/story-generator.ts`, and components of `packages/core/src/shared/adventure-config.ts`.
-**Quest 3: Code Analysis & Content Pipeline** - You calibrate the code analyzers within the data bay, synchronizing `packages/core/src/analyzer/repo-analyzer.ts` with the stellar computations of `packages/core/src/llm/llm-client.ts`.
-**Quest 4: Configuration & Theme System** - You configure the galaxy-wide adventure network by programming `packages/core/src/shared/config.ts` and harmonizing the themes from `packages/core/src/shared/theme.ts` and `packages/core/src/shared/input-validator.ts`.
-**Quest 5: Foundation & Utilities** - You optimize the ship's foundational utilities to read star charts by enhancing the core pipeline in `packages/core/src/shared/adventure-config.ts`.
+**Quest 1: The Neural Nexus Interface** - Investigate the starship’s interaction hub built on MCP systems to manage commands and quests using "packages/mcp/src/server.ts" and "packages/mcp/src/tools.ts".
+**Quest 2: Quest Forge Engine** - Uncover how the starship generates galactic missions and calculates astronaut progress by exploring "packages/core/src/adventure/adventure-manager.ts", "packages/core/src/adventure/story-generator.ts", and "packages/core/src/shared/adventure-config.ts".
+**Quest 3: Cosmic Content Pipeline** - Analyze how the ship gathers, transmits, and interprets stellar data for navigation using "packages/core/src/analyzer/repo-analyzer.ts" and "packages/core/src/llm/llm-client.ts".
+**Quest 4: Navigation & Calibration System** - Ensure reliable mission configurations and thematic stability by studying "packages/core/src/shared/config.ts", "packages/core/src/shared/theme.ts", and "packages/core/src/shared/input-validator.ts".
+**Quest 5: Galactic Utilities Core** - Probe the codex's foundational utilities and its adventure parsing mechanisms based on "packages/core/src/shared/adventure-config.ts".

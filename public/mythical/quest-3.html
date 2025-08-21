@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Mystic Eye of Analysis - Repo Adventure</title>
+    <title>Quest 3: The Mystic Sigils of Analysis - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Kingdom of Repository: A Tale of Heroic Adventures</a>
+                <a href="index.html">The Enchanted Repository Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,111 +41,158 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Mystic Eye of Analysis</h1>
+    <h1>Quest 3: The Mystic Sigils of Analysis</h1>
 <hr>
-<p>In the Kingdom of Repository, the Mystic Eye of Analysis awakens! This bewitching artifact represents the power to decipher the most cryptic spells of code, ensuring clarity amidst chaos. But as the enchanted Grimoire’s page pertaining to analysis magic lies torn and scattered, the harmony between order and knowledge falters. Brave Heroic Refactorer, your quest is to wield the might of the Mystic Eye, venturing forth to recover the analytic enchantments entwined within. Traverse two guarded domains to reclaim the spells that will restore reason to the land.</p>
+<p>In the heart of Reposithia&#39;s Archive of Insights lies the Chamber of Analysis, where ancient knowledge flows like rivers of light. Wise enchanters have inscribed Mystic Sigils upon enchanted scrolls to guide brave knights in taming the code-laden realm. Your next quest requires you to uncover and wield these sigils, deciphering the complexity of their magic. Will you delve into the depths of enchanted code tools and master the art of analysis to unlock their secrets? Steel your resolve and prepare!</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Sigil Detection</strong>: How does <code class="inline-code">validateProjectPath</code> ensure the safety and correctness of a specified project path?</li>
+<li>⚡ <strong>Invocation of Enchantment</strong>: What are the steps and safeguards followed by <code class="inline-code">generateRepomixContext</code> to produce contextual analysis?</li>
+<li>🛡️ <strong>Precise Commanding</strong>: How does <code class="inline-code">generateResponse</code> from <code class="inline-code">LLMClient</code> handle and respond to failed magical invocations (errors)?</li>
+</ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Analyzer of Mystical Repositories</h3>
-<p>The <code class="inline-code">repo-analyzer.ts</code> file is the heart of Repository’s analytic magic, designed to extract and refine crucial knowledge from the codebase. This file encapsulates functions that organize enchanted scrolls, validate the safety of artifact paths, and invoke the Repomix spell to condense repository contents into distilled wisdom. One of the key spells is <code class="inline-code">generateRepomixContext</code>, crafting the base framework for analysis. The additional <code class="inline-code">generateTargetedContent</code> focuses this magic on specified file sets, while <code class="inline-code">captureRepomixStdout</code> safeguards data extraction against treachery within encoders. Finally, this Scroll’s spell of <code class="inline-code">validateProjectPath</code> is crucial to ensure that charged incantations bind only to approved paths, avoiding the menace of null-byte corruption.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: RepoAnalyzer&#39;s Process</h3>
+<p>This file governs the magical rituals for extracting targeted insights from the scrolls of code it encounters. The <code class="inline-code">RepoAnalyzer</code> ensures paths are safe for exploration, builds caches for efficiency, and deploys the <code class="inline-code">repomix</code> subprocess to read from the Repository of Code. Key flows include path validation, invocation of the content generator, and optimization of outputs for efficiency.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateRepomixContext</code>: Synthesizes comprehensive repository artifacts.</li>
-<li><code class="inline-code">generateTargetedContent</code>: Refines analysis for specific file targets.</li>
-<li><code class="inline-code">validateProjectPath</code>: Defends against corrupted or unsafe path manipulations.</li>
+<li><code class="inline-code">validateProjectPath</code>: Ensures no dangerous paths are introduced.</li>
+<li><code class="inline-code">generateRepomixContext</code>: Orchestrates the full Repomix analysis process, considering caching and error handling.</li>
+<li><code class="inline-code">captureRepomixStdout</code>: Executes the Repomix subprocess while enforcing time and memory constraints.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
+<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
+  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
+  }
+
+  const trimmedPath = projectPath.trim();
+  if (!trimmedPath) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
+  }
+
+  // Basic safety check for null bytes (can break file system operations)
+  if (trimmedPath.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid null bytes&#39;);
+  }
+}
+</code></pre>
+<p>The enchanted spell that safeguards from malicious incursions into forbidden directories. Like a castle gate, it blocks null bytes and empty paths.</p>
 <pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
-  // Check if adventure.config.json has specific files to include
-  const configuredFiles = extractUniqueFilePaths(projectPath);
   
+  const configuredFiles = extractUniqueFilePaths(projectPath);
+
   if (configuredFiles.length &gt; 0) {
     try {
       return await this.generateOptimizedContent(projectPath, configuredFiles);
     } catch (error) {
-      console.warn(`Falling back to targeted content generation`);
-      return await this.generateTargetedContent(projectPath, configuredFiles);
+      console.warn(`Failed optimized content generation: ${String(error)}`);
     }
   }
-  return await this.generateTargetedContent(projectPath, configuredFiles);
-}
-</code></pre>
-<p>This spell acts like a seer’s crystal, encompassing the repository in a single gaze to guide deeper analysis.</p>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
 
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${targetFiles.join(&#39;,&#39;)}:compress=${compress}`;
+  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
   const cached = this.cache.get(cacheKey);
+
   if (cached) {
     return cached.content;
   }
 
   try {
-    const optimalData = await this.captureRepomixStdout([&#39;.&#39;], projectPath, {
-      include: targetFiles.join(&#39;,&#39;), compress
-    });
-    this.cache.set(cacheKey, { content: optimalData });
-    return optimalData;
+    // Default behavior: analyze entire codebase
+    const context = await this.captureRepomixStdout(
+      [&#39;.&#39;], projectPath, { style: options.style || &#39;markdown&#39;, compress: true }
+    );
+    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+    return context;
   } catch (error) {
-    throw new Error(&#39;Spell of extraction failed!&#39;);
+    throw new Error(`Repomix execution failed: ${String(error)}`);
   }
 }
 </code></pre>
-<p>This spell is akin to an enchanted spyglass, narrowing its focus to specific artifacts for precise clarity.</p>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  if (!projectPath.trim()) throw new Error(&#39;Invalid project path provided!&#39;);
-  const resolvedPath = path.resolve(projectPath);
-  if (!fs.existsSync(resolvedPath)) throw new Error(&#39;Path does not exist within realm boundaries.&#39;);
+<p>A conductor orchestrating a symphony of magic (analysis tools), determining whether to trust stored caches or awaken the powers of Repomix anew.</p>
+<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
+  return new Promise((resolve, reject) =&gt; {
+    const args = [&#39;repomix&#39;, ...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
+    if (options.compress) args.push(&#39;--compress&#39;);
+
+    const repomix = spawn(&#39;npx&#39;, args, { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
+    let stdout = &#39;&#39;, stderr = &#39;&#39;;
+
+    repomix.stdout.on(&#39;data&#39;, data =&gt; stdout += data.toString());
+    repomix.stderr.on(&#39;data&#39;, data =&gt; stderr += data.toString());
+
+    repomix.on(&#39;close&#39;, code =&gt; {
+      if (code === 0) resolve(stdout.trim());
+      else reject(new Error(`Repomix failed with code ${code}: ${stderr}`));
+    });
+  });
 }
 </code></pre>
-<p>This defensive rune ensures no corrupted paths taint the Analyst’s arcane rituals.</p>
+<p>The spell circle that channels the incantation of Repomix, ensuring its results are captured while safeguarding against timeout or excessive memory consumption.</p>
 <hr>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> The LLM&#39;s Oracle</h3>
-<p>Here lies the locus of spells that channel the wisdom of the LLM Oracle to the repositories of Repository. This file introduces the <code class="inline-code">LLMClient</code> class, housing incantations that enable the Heroic Refactorer to invoke responses precisely crafted for the Kingdom’s needs. Central to this Oracle is the generation spell, embedded in <code class="inline-code">generateResponse</code>, orchestrating communication with the mystical LLM. The constructor itself performs vital setups for proper invocation, while the protective <code class="inline-code">getApiKey</code> ensures only legitimate keys summon the Oracle&#39;s guidance.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: LLMClient&#39;s Ritual</h3>
+<p>This file commands the magical powers of a Large Language Model (LLM) for generating responses to user prompts. It defines the initiation of the client, validation of API keys, and robust error handling, ensuring that even failed invocations provide useful clues for debugging future queries.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateResponse</code>: The oracle’s conjuring spell for responses.</li>
-<li><code class="inline-code">constructor</code>: Instantiates the mystical wisdom interface via correct configurations.</li>
-<li><code class="inline-code">getApiKey</code>: Verifies keys to the sacred vault of LLM interaction.</li>
+<li><code class="inline-code">generateResponse</code>: Handles prompt processing and ensures results or errors are handled gracefully.</li>
+<li><code class="inline-code">constructor</code>: Initializes the client with safety checks for API keys and configuration.</li>
+<li><code class="inline-code">getApiKey</code>: Validates and retrieves the correct API key for the chosen provider.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/llm/llm-client.ts</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
 <pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   try {
     const requestParams = this.buildRequestParams(prompt, options);
     const completion = await this.executeRequest(requestParams);
-    return { content: this.validateResponse(completion) };
+    let content = this.validateResponse(completion);
+
+    if (options?.responseFormat === &#39;json_object&#39;) {
+      content = this.cleanJsonResponse(content);
+    }
+
+    this.logTokenUsage(completion);
+
+    return { content };
   } catch (error) {
-    throw new Error(&#39;The Oracle’s conjuring failed!&#39;);
+    this.logDetailedError(error, prompt);
+    throw new Error(`LLM request failed: ${error instanceof Error ? error.message : &#39;Unknown error&#39;}`);
   }
 }
 </code></pre>
-<p>This generation spell allows the invocation of the Oracle’s insight, transforming user prompts into wisdom.</p>
+<p>An invocation of magical intent that harnesses LLM&#39;s energy to provide wisdom—or rebuke the request if the enchantment fails.</p>
 <pre><code class="language-typescript">constructor() {
   this.model = LLM_MODEL;
+
   const apiKey = this.getApiKey();
-  if (!apiKey) throw new Error(&#39;Missing configuration for invoking the Oracle.&#39;);
-  this.client = new OpenAI({ apiKey });
+  if (!apiKey || !LLM_BASE_URL) {
+    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
+  }
+
+  this.client = this.isAzureOpenAI() ? new AzureOpenAI({ endpoint: LLM_BASE_URL, apiKey }) : new OpenAI({ baseURL: LLM_BASE_URL, apiKey });
 }
 </code></pre>
-<p>The constructor acts like the foundation stone, granting safe access to the Oracle&#39;s vast halls.</p>
+<p>The sacred anointing ritual that binds the configuration elements to the magical artifact, ensuring readiness for powerful incantations.</p>
 <pre><code class="language-typescript">private getApiKey(): string {
-  if (!LLM_API_KEY) throw new Error(&#39;An unkeyed incantation cannot summon the Oracle!&#39;);
+  if (LLM_BASE_URL.includes(&#39;azure.com&#39;)) {
+    if (!GITHUB_TOKEN) throw new Error(&#39;GITHUB_TOKEN is required&#39;);
+    return GITHUB_TOKEN;
+  }
+  if (!LLM_API_KEY) throw new Error(&#39;LLM_API_KEY is required&#39;);
   return LLM_API_KEY;
 }
 </code></pre>
-<p>This key-guarding charm ensures the Oracle responds only to legitimate summonings.</p>
-<hr>
+<p>The protective charm that ensures the chosen path of invocation is supported by a valid and empowered sigil (API key).</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Always verify path validity to avoid tainting spells with corrupted inputs.</li>
-<li>Test the output of repository analysis locally before invoking debugging adjustments.</li>
-<li>Consider expanding the LLM verbosity if the Oracle’s response seems terse.</li>
+<li>Monitor the logs in <code class="inline-code">generateResponse</code> to learn how issues are captured and how they can guide future responses.</li>
+<li>Investigate the validation steps in <code class="inline-code">validateProjectPath</code> and <code class="inline-code">getApiKey</code> to understand their defensive coding patterns.</li>
+<li>Try modifying or invalidating configurations to observe error handling in controlled scenarios.</li>
 </ul>
 <hr>
-<p>The Mystic Eye of Analysis grows warm as you recover its enchanted page. Knowledge brightens the darkened halls of Repository—your triumph here heralds the Kingdom&#39;s balance awaiting! Onward unto destiny!</p>
-<p>With the Mystic Eye of Analysis now claimed, your questing soul shines brighter than the stars of Eldara, advancing boldly through the sacred tapestry of wisdom—hail to the valiant seeker of truth! ⭐⚡👁️</p>
+<p>With newfound mastery of the Mystic Sigils, your power as an enchanter-knight grows ever stronger. Return to the castle to receive your next challenge from the Legendary Tome of Collaboration!</p>
+<p>With the Mystic Sigils of Analysis now mastered, the stars illuminate your path, brave seeker, as you surge forward through the Kingdom of Knowledge—destined to unveil further realms of brilliance! ⭐⚡💎</p>
 
 </div>
 

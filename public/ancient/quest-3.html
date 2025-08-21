@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Oracle of the Glyphs - Repo Adventure</title>
+    <title>Quest 3: The Chamber of Eternal Themes - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Lost Pyramid of Codexis</a>
+                <a href="index.html">The Pyramid of Ancient Knowledge</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,153 +41,78 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Oracle of the Glyphs</h1>
+    <h1>Quest 3: The Chamber of Eternal Themes</h1>
 <hr>
-<p>Hidden within the labyrinthine depths of the Pyramid of Codexis lies a sacred chamber, the Sanctum of Glyphs. It is said that the ancient Oracle resides within, its power tied to the enigmatic glyphs that adorn the walls—glyphs encoding the rituals of perfect software craftsmanship. To reach the Oracle, you must navigate the treacherous Repository Tunnels and decipher its sacred rites. Through wisdom and persistence, you may unlock the Oracle’s power to restore balance to the coding realms, unraveling mysteries that have lingered since the dawn of the digital age.</p>
+<p>In the heart of the Pyramid of Ancient Knowledge lies a sacred chamber known as the Chamber of Eternal Themes. Here, the wisdom held within governs the harmony of quests and adventures, ensuring that they align with universal principles. Glyphs and scrolls scattered across the chamber offer insights into the configuration, validation, and thematic organization that chain the Pyramid’s mysteries together. As a brave adventurer, you must decipher the rituals encoded in these glyphs to uncover their purpose and implementation in the ancient systems.</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:  </p>
+<ul>
+<li>🔍 <strong>Theme Alignment</strong>: How does the <code class="inline-code">THEMES</code> object establish foundational principles in thematic configuration?  </li>
+<li>⚡ <strong>Validation Ritual</strong>: What mechanisms does <code class="inline-code">validateThemeInput</code> use to ensure proper theme selection and input integrity?  </li>
+<li>🛡️ <strong>Timekeeper’s Wisdom</strong>: How does the configuration of <code class="inline-code">LLM_REQUEST_TIMEOUT</code> and <code class="inline-code">REPOMIX_CACHE_TTL</code> maintain the stability of ancient processes?</li>
+</ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Code repository analyzer for extracting project context</h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> is a map to the hidden treasures within a repository, distilling its essence into actionable insights. This class focuses on parsing repository structures, ensuring safety checks for file paths, and employing targeted optimizations for extracting contextual information. The class utilizes caching strategies to speed up repeated access—mimicking ancient inscriptions preserved in stone tablets.</p>
-<p>Key methods like <code class="inline-code">generateRepomixContext</code> filter the noise, revealing sacred highlights. Meanwhile, <code class="inline-code">validateProjectPath</code> ensures that explorers tread only within sanctified paths. The <code class="inline-code">captureRepomixStdout</code> serves as a conduit for invoking <code class="inline-code">repomix</code>, capturing the encoded wisdom hidden in the jungle of code.</p>
+<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Configuration Glyphs</h3>
+<p>The secrets housed in this file reveal configuration constants that govern timing, limits, and baseline rules for adventure generation. These sacred constants play a vital role in maintaining the stability and safety of the overarching systems. The encoded values ensure the rituals of the adventure maintain harmony and adhere to ancient rules. Within the constants such as <code class="inline-code">LLM_REQUEST_TIMEOUT</code>, limits are defined for communication delays, while <code class="inline-code">REPOMIX_CACHE_TTL</code> secures caching mechanisms. These limits act as celestial guardians, ensuring the processes remain efficient and unbroken.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><strong><code class="inline-code">RepoAnalyzer.generateRepomixContext</code></strong>: Generates comprehensive or targeted context from a repository to aid in exploration.</li>
-<li><strong><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code></strong>: Bridges raw content collection via the repomix subprocess.</li>
-<li><strong><code class="inline-code">RepoAnalyzer.validateProjectPath</code></strong>: Guards traversing sanctified paths, preventing unsafe journeys.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Encodes the maximum wait time for external requests within adventures.  </li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Preserves system state by defining cache retention duration.  </li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Establishes file size boundaries for stability.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-  
-  const configuredFiles = extractUniqueFilePaths(projectPath);
-  
-  if (configuredFiles.length &gt; 0) {
-    console.log(`Using adventure.config.json: analyzing ${configuredFiles.length} configured files with optimization`);
-    return await this.generateOptimizedContent(projectPath, configuredFiles);
-  }
-  
-  console.log(&#39;No adventure.config.json found: analyzing full codebase (compressed)&#39;);
-  
-  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-  
-  const cliOptions: CliOptions = {
-    style: options.style || &#39;markdown&#39;,
-    compress: options.compress !== false,
-    ignore: [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;, &#39;.nyc_output&#39;].join(&#39;,&#39;),
-    removeComments: true,
-    removeEmptyLines: true,
-    noDirectoryStructure: true
-  };
-  
-  const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-  this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-  return context;
-}
-</code></pre>
-<p>This method is the cartographer&#39;s tool, creating a map of the repository’s depths and efficiently caching its sacred glyphs.</p>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [
-      ...directories,
-      &#39;--stdout&#39;,
-      &#39;--style&#39;, options.style || &#39;markdown&#39;,
-      options.compress ? &#39;--compress&#39; : &#39;&#39;,
-      options.removeComments ? &#39;--remove-comments&#39; : &#39;&#39;,
-    ];
-    
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd });
-    
-    let stdout = &#39;&#39;;
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; { stdout += data.toString(); });
-    
-    repomix.on(&#39;close&#39;, (code) =&gt; {
-      if (code === 0) resolve(stdout);
-      else reject(new Error(`Repomix failed with code ${code}`));
-    });
-  });
-}
-</code></pre>
-<p>This subprocess invocation channels wisdom shared by external tools, weaving raw content into structured repositories of knowledge.</p>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  if (!projectPath || typeof projectPath !== &#39;string&#39; || projectPath.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Invalid project path&#39;);
-  }
-  
-  const trimmedPath = projectPath.trim();
-  if (!fs.existsSync(trimmedPath)) {
-    throw new Error(&#39;Project path does not exist&#39;);
-  }
-}
-</code></pre>
-<p>This safeguard ensures aspirants tread only valid paths, avoiding traps of misconfiguration or dangerous byways.</p>
-<h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Interface to language models for code assistance</h3>
-<p>The <code class="inline-code">LLMClient</code> serves as an ancient Oracle interpreter, connecting to sacred entities like OpenAI and Azure OpenAI to decode the wisdom hidden in prompts. Whether through invoking distant temples (APIs) or translating glyph-symbolic responses, it shepherds the journey from query to enlightenment.</p>
-<p>Key functions clarify the Oracle’s response, guard important decisions like selecting API tokens, and shape requests tailored to specific temples. The constructor sets the stage by configuring access credentials, ensuring seekers approach the Oracle in reverence.</p>
-<h4>Highlights</h4>
-<ul>
-<li><strong><code class="inline-code">LLMClient.generateResponse</code></strong>: Invokes the Oracle to unravel mysteries from prompts.</li>
-<li><strong><code class="inline-code">LLMClient.constructor</code></strong>: Sanctifies the class, enabling safe and structured Oracle consultation.</li>
-<li><strong><code class="inline-code">LLMClient.getApiKey</code></strong>: Retrieves the key to access esoteric temples, ensuring secure and authenticated entry.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/core/src/llm/llm-client.ts</h3>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  const requestParams = this.buildRequestParams(prompt, options);
-  const completion = await this.executeRequest(requestParams);
-  let content = this.validateResponse(completion);
-  
-  if (options?.responseFormat === &#39;json_object&#39;) {
-    content = this.cleanJsonResponse(content);
-  }
-  
-  this.logTokenUsage(completion);
-  return { content };
-}
-</code></pre>
-<p>This method acts as a ritual to pose questions to the Oracle, carefully crafting their structure and verifying divine answers.</p>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required.&#39;);
-  }
+<h3>packages/core/src/shared/config.ts</h3>
+<pre><code class="language-typescript">/**
+ * Shared constants for adventure configuration
+ */
 
-  this.client = LLM_BASE_URL.includes(&#39;azure.com&#39;)
-    ? new AzureOpenAI({ endpoint: LLM_BASE_URL, apiKey })
-    : new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || &#39;30000&#39;, 10); // Default to 30s
+export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;43200000&#39;, 10); // Default to 12 hours
+export const MAX_FILE_SIZE_MB = 50; // Max allowable file size for processing
+</code></pre>
+<p>These values serve as ancient guardians – protecting against delays (<code class="inline-code">LLM_REQUEST_TIMEOUT</code>), ensuring relics are securely cached (<code class="inline-code">REPOMIX_CACHE_TTL</code>), and respecting space for artifacts (<code class="inline-code">MAX_FILE_SIZE_MB</code>).  </p>
+<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Rituals of Theme Configuration</h3>
+<p>This file encodes the comprehensive listing of all adventure themes, known collectively as <code class="inline-code">THEMES</code>. Furthermore, it provides validation rituals (<code class="inline-code">validateThemeInput</code>) which ensure only sacred, recognized themes are chosen during adventure setup. The glyphs reveal how the configuration of themes creates harmony and diversity in the landscapes of generated quests.  </p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">THEMES</code>: A sacred collection of predefined thematic choices for adventures.  </li>
+<li><code class="inline-code">validateThemeInput</code>: Rituals enforcing input integrity and alignment with accepted themes.  </li>
+<li><code class="inline-code">getAllThemes</code>: Retrieves the full register of recognized adventure themes.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/theme.ts</h3>
+<pre><code class="language-typescript">/**
+ * Adventure Themes System: Defines accepted themes for generated adventures
+ */
+
+export const THEMES = {
+  ancient: &quot;Ancient ruins, forgotten wisdom, pyramids&quot;,
+  space: &quot;Cosmic exploration, distant galaxies, alien worlds&quot;,
+  jungle: &quot;Treacherous forests, hidden civilizations, survival&quot;,
+};
+
+export function validateThemeInput(input: string): string {
+  const normalizedInput = input.toLowerCase().trim();
+  if (!THEMES[normalizedInput]) {
+    throw new Error(`Invalid theme specified: ${input}. Choose from ${Object.keys(THEMES).join(&#39;, &#39;)}`);
+  }
+  return normalizedInput;
+}
+
+export function getAllThemes(): string[] {
+  return Object.keys(THEMES).map(themeKey =&gt; THEMES[themeKey]);
 }
 </code></pre>
-<p>The constructor establishes a sacred bond with the chosen entity, creating a conduit for the flow of ancient wisdom.</p>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-    if (!GITHUB_TOKEN) {
-      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models.&#39;);
-    }
-    return GITHUB_TOKEN;
-  }
-  
-  if (!LLM_API_KEY) {
-    throw new Error(&#39;LLM_API_KEY required.&#39;);
-  }
-  return LLM_API_KEY;
-}
-</code></pre>
-<p>This guardian ensures only those equipped with the sacred keys (API credentials) may proceed to approach the Oracle.</p>
+<p>The <code class="inline-code">THEMES</code> object acts as a sacred lexicon of possible landscapes for adventurers. <code class="inline-code">validateThemeInput</code> is akin to a gatekeeper, ensuring no unworthy or unrecognized themes destabilize adventures.  </p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Be wary of paths not aligned with project expectations; validate thoroughly before starting a quest.</li>
-<li>When interacting with the Oracle, ensure prompts are streamlined for the most lucid insights.</li>
-<li>Use caching to revisit safely well-traveled knowledge pathways without redundancy.</li>
+<li>To ensure stability in your experiments, adjust <code class="inline-code">LLM_REQUEST_TIMEOUT</code> and <code class="inline-code">REPOMIX_CACHE_TTL</code> wisely within your environment file.  </li>
+<li>Examine how the configuration constants integrate with other files to understand the full cycle of adventure generation.  </li>
+<li>Explore <code class="inline-code">validateThemeInput</code> rituals for insight into theme selection and rejection processes.</li>
 </ul>
 <hr>
-<p>You feel the glyphs resonate—the Oracle appears. The wisdom of craftsmanship is within your grasp.</p>
-<p>Through thy steadfast pursuit and sacred wisdom, thou hast unveiled the ancient glyphs of the oracle—rejoice, for the path to enlightenment shines brighter with each triumphant step, noble seeker! ⚡💎🗺️</p>
+<p>With the sacred glyphs interpreted and the mysteries unraveled, you have laid another foundation stone in your journey through the Pyramid of Ancient Knowledge. May your next steps be as wise as the mechanics you now understand!</p>
+<p>Lo, valiant seeker, thou hast unlocked the sacred wisdom of the Chamber of Eternal Themes, a luminous triumph upon thy path through the hallowed quests—press on, for the ancient stars bear witness to thy growing might! ⚡💎🗺️</p>
 
 </div>
 
