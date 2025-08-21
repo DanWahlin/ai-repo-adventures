@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Command Utility Core - Repo Adventure</title>
+    <title>Quest 5: Astronavigation Utilities - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Codex: The Adventures of RepoQuest</a>
+                <a href="index.html">Cosmic Codex: Adventures Across the Codebase Nebula</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,78 +41,117 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Command Utility Core</h1>
+    <h1>Quest 5: Astronavigation Utilities</h1>
 <hr>
-<p>Through the swirling maelstrom of the nebula, the <em>RepoQuest</em> encounters an anomaly—a fragment of the Galactic Codex whose paths are hidden within layers of encrypted stellar data. The ship&#39;s Command Utility Core must be configured to decode these layers, transform raw cosmic inputs into actionable exploration routes, and extract critical mission files. Captain, prepare your crew to delink the barrier and leverage advanced parsing algorithms to ensure the Codex reveals the secrets of this realm.</p>
+<p>Amid the swirling tendrils of the Codebase Nebula, a challenge emerges - your mission is to decode and harness utility modules for stellar navigation. <em>The Refactored Voyager</em> must tap into the repository&#39;s specialized code segments that guide starship trajectories across treacherous star systems. These mechanics, hidden deep within abstract file structures, are essential for transcending the barriers of cosmic exploration and ensuring your crew&#39;s survival in the vast void. Venture forth into the labyrinthine scripts and unveil the Astronavigation Utilities.  </p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Core configuration mechanics for quest objectives</h3>
-<p>This file contains the structural foundation to read, parse, and analyze adventure configurations stored as JSON. It outlines the core functionality required to load configuration files from the filesystem, validate their contents, and extract mission-critical file paths for stellar navigation. Three key highlights include reading raw config files via <code class="inline-code">loadAdventureConfig</code>, parsing them into structured objects using <code class="inline-code">parseAdventureConfig</code>, and extracting unique file paths referenced across the decoded configuration objects via <code class="inline-code">extractUniqueFilePaths</code>. These methods form the backbone of the Command Utility Core, enabling seamless exploration of the Codex’s encrypted layers.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Foundation for Stellar Navigation</h3>
+<p>The file <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a> serves as the cornerstone for extracting and understanding configuration guidelines housed within the cosmic repository. In this stellar library, essential functions shape our astronavigation path through both data fidelity and configuration streamlining. Key highlights include parsing complex input structures (<code class="inline-code">parseAdventureConfig</code>), extracting validated file paths across celestial segments (<code class="inline-code">extractUniqueFilePaths</code>), and formatting raw inputs for intelligible cosmic prompts (<code class="inline-code">formatAdventureConfigForPrompt</code>). These logical components simulate navigational aid devices, interpreting celestial phenomena with precision.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">loadAdventureConfig</code>: Handles raw input retrieval with fail-safes.</li>
-<li><code class="inline-code">parseAdventureConfig</code>: Decodes adventure configurations into actionable objects.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Extracts file paths essential for navigation.</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Decodes and validates interstellar configuration formats.  </li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Retrieves distinct and verified navigation paths for exploration.  </li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Reduces raw data into a compact format for mission planning AI.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {  
+  const raw = loadAdventureConfig(projectPath);  
+  if (!raw) return null;  
+  try {  
+    return JSON.parse(raw);  
+  } catch {  
+    return null;  
+  }  
+}  
 </code></pre>
-<p>Like a scanner probing distant star charts, this function retrieves raw data from the filesystem, ensuring missing or unreadable files don’t obstruct critical missions.</p>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+<p>Think of this as the ship’s data translator, turning cryptic star charts into actionable routes.  </p>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {  
+  const parsed = parseAdventureConfig(projectPath);  
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];  
+
+  const unique = new Set&lt;string&gt;();  
+  const stack: any[] = [parsed];  
+
+  while (stack.length) {  
+    const node = stack.pop();  
+    if (!node || typeof node !== &#39;object&#39;) continue;  
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {  
+      const rel = node.path.trim();  
+      if (fs.existsSync(path.resolve(projectPath, rel))) {  
+        unique.add(rel);  
+      }  
+    }  
+
+    const children = Array.isArray(node) ? node : Object.values(node);  
+    children.forEach(child =&gt; {  
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);  
+    });  
+  }  
+
+  return Array.from(unique);  
+}  
 </code></pre>
-<p>This function acts as a decoder, translating cosmic data into structured objects, much like transforming static star signals into galactic map coordinates.</p>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+<p>This acts like the ship’s stellar compass, pinpointing the safest star lanes.  </p>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {  
+  const parsed = parseAdventureConfig(projectPath);  
+  if (!parsed || typeof parsed !== &#39;object&#39;) {  
+    return &#39;&#39;;  
+  }  
 
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
+  const adventure = (parsed as any).adventure;  
+  if (!adventure || !Array.isArray(adventure.quests)) {  
+    return &#39;&#39;;  
+  }  
 
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== &#39;object&#39;) continue;
+  let formatted = `## Quest Structure\n\n`;  
 
-    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
-      const rel = node.path.trim();
-      if (fs.existsSync(path.resolve(projectPath, rel))) {
-        unique.add(rel);
-      }
-    }
+  for (const quest of adventure.quests) {  
+    if (!quest.title || !Array.isArray(quest.files)) continue;  
 
-    const children = Array.isArray(node) ? node : Object.values(node);
-    children.forEach(child =&gt; {
-      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
-    });
-  }
+    formatted += `### ${quest.title}\n`;  
 
-  return Array.from(unique);
-}
+    const filePaths = quest.files  
+      .filter((f: any) =&gt; f.path)  
+      .map((f: any) =&gt; f.path);  
+    if (filePaths.length &gt; 0) {  
+      formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;  
+    }  
+
+    const functions = quest.files  
+      .flatMap((f: any) =&gt; f.highlights || [])  
+      .filter((h: any) =&gt; h.name)  
+      .map((h: any) =&gt; h.name);  
+    if (functions.length &gt; 0) {  
+      formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;  
+    }  
+
+    formatted += `\n`;  
+  }  
+
+  return formatted;  
+}  
 </code></pre>
-<p>This extraction function behaves like a stellar sieve, filtering through cosmic detritus to identify valid paths leading to hidden mission files.</p>
+<p>Visualize this as the ship’s mission log, summarizing critical objectives in a concise format.  </p>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical Tip:</strong> Always validate your Codex configuration files for unknown errors before integration into larger missions.</li>
-<li><strong>Exploration Recommendation:</strong> Test edge cases (e.g., empty objects or nested structures) to ensure extracted paths match mission requirements.</li>
-<li><strong>Next Steps:</strong> Extend path validation logic to include remote destinations and alien nodes for future Codex entries.</li>
+<li>Ensure all configuration files are properly formatted before invoking functions.  </li>
+<li>Use extracted file paths to simulate safe galactic routes for mission planning.  </li>
+<li>Formatting the config helps AI systems like your autopilot clarify inputs for navigation.</li>
 </ul>
 <hr>
-<p>Your Command Utility Core is primed, Captain. The secrets of this stellar realm await your decoding!</p>
-<p>Mission Control confirms an astronomical success as Quest 5: Command Utility Core is powered up—you&#39;re 80% through the cosmic journey, a true starship captain blazing through the galactic frontier! ⭐🚀⚡</p>
+<p>Tools decoded. Your astronavigation systems are becoming operational, adventurer! Proceed boldly into the cosmos!</p>
+<p>🚀 Stellar achievement unlocked, Cadet—Quest 5: Astronavigation Utilities is complete, charting your trajectory toward mastery at warp speed with cosmic brilliance! ⭐</p>
 
 </div>
 
 
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4</a>
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
+      </div>
+    
     </div>
     
     <footer class="footer">
@@ -119,5 +159,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

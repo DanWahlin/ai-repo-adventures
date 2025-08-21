@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: MCP Command Module - Repo Adventure</title>
+    <title>Quest 1: The MCP Command Bridge - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Galactic Codex: The Adventures of RepoQuest</a>
+                <a href="index.html">Cosmic Codex: Adventures Across the Codebase Nebula</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,17 +41,17 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: MCP Command Module</h1>
+    <h1>Quest 1: The MCP Command Bridge</h1>
 <hr>
-<p>In the far reaches of the Andromeda cluster, the starship <em>RepoQuest</em> traverses a dense nebula of data, searching for cosmic whispers of uncharted knowledge. Among its many systems, the MCP Command Module emerges as the centerpiece—a console capable of decoding the Galactic Codex. To reconfigure its stellar tools and initialize the adventure ahead, you must first ensure seamless functionality. Navigate through dynamic handlers and validate operational pipelines to prepare for interstellar anomalies and coding conundrums.</p>
+<p>As <em>The Refactored Voyager</em> drifts through the data streams of the Codebase Nebula, the ship&#39;s MCP Command Bridge hums with activity. Your mission: to initiate the command protocols needed to bridge the gap between your tools and the ship&#39;s core server. This quest demands precision and collaboration, as your crew must establish robust handlers, enable tool support, and ensure safe activation of the MCP server. With exploration at stake, the outcome will lay the foundation for all future galactic endeavors to decode the ancient repository.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Configuration and Handlers</h3>
-<p>This file lies at the heart of the MCP command system, orchestrating server initialization and tool execution. Through its key methods, <code class="inline-code">RepoAdventureServer</code> defines how the MCP interprets incoming data streams and routes tool commands. The <code class="inline-code">setupHandlers</code> function dynamically lists and validates tools, connecting tool descriptions to their execution schemas. Additionally, the <code class="inline-code">run</code> function translates these commands into actionable outcomes while preloading repository data using <code class="inline-code">repoAnalyzer</code>. Finally, the <code class="inline-code">main</code> function ensures the server starts fault-tolerantly, enabling graceful shutdowns and robust error-handling.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Command Interface Setup</h3>
+<p>This file is the foundation of the MCP server, acting as the interaction hub between command protocols and starship operations. Specifically, the <code class="inline-code">RepoAdventureServer</code> class defines critical setup routines, including handlers for dynamic tool listing and execution using schemas from the <code class="inline-code">tools</code> file. Among its highlights, <code class="inline-code">setupHandlers</code> provides dynamic registration logic for tools, <code class="inline-code">run</code> initiates the server&#39;s operational state, and <code class="inline-code">main</code> orchestrates the program lifecycle. These methods ensure smooth interaction between server protocols and user commands, and also handle errors during critical moments.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code> dynamically registers tool commands based on the defined schema.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code> executes the server transport while initializing caches for efficiency.</li>
-<li><code class="inline-code">main</code> safely launches the MCP server, handling edge cases like shutdown and unhandled promise rejections.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Configures how tools are listed and activated dynamically.  </li>
+<li><code class="inline-code">RepoAdventureServer.run</code>: Executes server start, connecting transport layers and warming up the cache.  </li>
+<li><code class="inline-code">main</code>: Orchestrates the server lifecycle, handling initialization and shutting down gracefully.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -64,18 +65,15 @@
         $refStrategy: &#39;none&#39;
       })
     }));
-
     return { tools: toolList };
   });
 
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
-
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
@@ -84,9 +82,7 @@
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
-
       return await tool.handler(validationResult.data as any);
-
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -99,7 +95,7 @@
   });
 }
 </code></pre>
-<p>Just like mapping a constellation, the <code class="inline-code">setupHandlers</code> method connects each tool to its purpose using schemas to coordinate input and execution.</p>
+<p><code class="inline-code">setupHandlers</code> is like configuring the neural pathways of the ship&#39;s AI, setting up inputs and responses for mission-critical tools.</p>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
@@ -110,7 +106,7 @@
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
-<p>Imagine initializing the ship&#39;s engines—this <code class="inline-code">run</code> method powers up the server and ensures preemptive data with <code class="inline-code">repoAnalyzer</code>.</p>
+<p><code class="inline-code">run</code> can be thought of as activating the &quot;warp drive&quot; of the MCP server, propelling it into operational readiness.</p>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
@@ -128,41 +124,22 @@
   }
 }
 </code></pre>
-<p>Like preparing the crew for launch, <code class="inline-code">main</code> oversees server initialization and ensures safe operations regardless of unexpected interruptions.</p>
-<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Adventure Tool Registration</h3>
-<p>This file acts as the proverbial toolbox of the MCP module, importing and organizing essential adventure-handling tools. Through curated tools such as <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>, the file encapsulates primary activities for interactive exploration. It’s built for extensibility, allowing seamless tool integration while maintaining a structured registration system.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">start_adventure.handler</code> provides analysis initiation capability to facilitate the exploration setup.</li>
-<li><code class="inline-code">choose_theme.handler</code> empowers users to select a theme, personalizing the experience.</li>
-<li><code class="inline-code">explore_quest.handler</code> drives modular quest engagement, keeping narrative momentum alive.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/mcp/src/tools.ts</h3>
-<pre><code class="language-typescript">import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
-</code></pre>
-<p>This line signals the start, akin to setting course for the cosmos with the <code class="inline-code">start_adventure</code> module.</p>
-<pre><code class="language-typescript">import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
-</code></pre>
-<p>Choosing a theme is like defining a starship’s mission objective—it enables personalized cosmic narratives.</p>
-<pre><code class="language-typescript">import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
-</code></pre>
-<p>Quest modules like these are the warp drives, propelling the starship through its galactic journey.</p>
+<p><code class="inline-code">main</code> operates as the mission captain, orchestrating deployment and ensuring safety protocols are in place during journeys.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Consider running <code class="inline-code">RepoAdventureServer.run</code> first on test data to familiarize yourself with interstellar debugging.</li>
-<li>Use <code class="inline-code">setupHandlers</code> to delve deep into tool functionality and execution paths.</li>
-<li>Review <code class="inline-code">explore_quest.handler</code> to uncover quest-specific mechanics.</li>
+<li><strong>Practical Tip</strong>: When expanding tool availability, first add definitions in <code class="inline-code">tools.ts</code>. Ensure schemas and handlers align precisely.</li>
+<li><strong>Exploration Tip</strong>: Investigate <code class="inline-code">tools.js</code> next for insight into how specific tools integrate with server requests.  </li>
+<li><strong>Next Steps</strong>: Once handlers are in place, bootstrap the MCP server and test interactive commands using a sample project.</li>
 </ul>
 <hr>
-<p>Brave Captain, your MCP Command Module is primed for operation! Chart your course through the Codex and guide your crew boldly where no algorithm has gone before.</p>
-<p>Mission accomplished, cadet—Quest 1: MCP Command Module is secure in the cosmic archives, propelling you one giant leap closer to interstellar mastery! 🚀⭐</p>
+<p>The MCP Command Bridge is prepared, captain! Server handlers mapped and systems initialized – onward to cosmic discovery!</p>
+<p>Mission accomplished, Commander! You&#39;ve successfully navigated the cosmic labyrinth of the MCP Command Bridge—stellar work propelling you into orbit for the quests ahead! 🚀⭐⚡</p>
 
 </div>
 
 
-      <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2: AstroNavigation Systems →</a>
+      <div class="quest-navigation quest-navigation-bottom nav-next-only">
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
       </div>
     
     </div>
@@ -172,5 +149,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

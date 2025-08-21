@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Unearth the Foundation - Repo Adventure</title>
+    <title>Quest 5: The Architect’s Ledger - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository of Endless Adventures</a>
+                <a href="index.html">The Codebound Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,27 +41,25 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Unearth the Foundation</h1>
+    <h1>Quest 5: The Architect&#39;s Ledger</h1>
 <hr>
-<p>The ancient repository whispers secrets of the foundational configurations underpinning every quest. Fragments of code within these files hold the key to understanding critical paths, file extractions, and prompt formatting. To delve into the core structure of adventure generation, one must investigate the unseen logic of parsing and optimization buried within the walls of <code class="inline-code">adventure-config</code>. The way forward is clear: unearth the foundation and claim mastery over the tools that generate the adventure itself.</p>
+<p>In the shadow of the Great Repository, an ancient ledger beckons from the depths of a secure code vault. This ledger, encoded in layers of JSON and logic gates, guides how quests within the system are structured and recorded. To unlock its wisdom, you must navigate the <code class="inline-code">adventure-config.ts</code> file - the cornerstone of how quests, themes, and files interweave into meaningful experiences. Wield your technomancy well, for insights gained here will reverberate through every corner of the codebase.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Core configuration logic unifying adventures</h3>
-<p>This file holds the cornerstone functions used to parse adventure configurations, extract file paths, and structure the data into optimized formats for LLM prompts. At the heart of its implementation lies the delicate balance between raw file handling and nuanced data structuring for higher-level interactions. Functions like <code class="inline-code">parseAdventureConfig</code> transform JSON into accessible objects while gracefully managing errors. Meanwhile, <code class="inline-code">extractUniqueFilePaths</code> uses recursive exploration to locate and validate file paths. Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> condenses the data into concise representations, providing an efficient interface for AI-driven tools. Together, these functions embody essential patterns for handling data complexity in quest generation.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> The cornerstone of quest configuration</h3>
+<p>This file is instrumental in managing the adventure configuration system. It combines file handling, JSON parsing, and data extraction to enable custom configurations for generating development-themed quests. By reading, interpreting, and parsing from the <code class="inline-code">adventure.config.json</code> file, it supports the dynamic adaptation of quest content. Its methods ensure robust handling of user-defined parameters while safeguarding against unexpected input errors.</p>
 <h4>Highlights</h4>
 <ul>
-<li>Loads and parses configuration files (<code class="inline-code">loadAdventureConfig</code>, <code class="inline-code">parseAdventureConfig</code>)</li>
-<li>Extracts file paths referenced in the configuration (<code class="inline-code">extractUniqueFilePaths</code>)</li>
-<li>Formats configuration for efficient interfacing with LLMs (<code class="inline-code">formatAdventureConfigForPrompt</code>)</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Parses and validates the configuration from JSON to an internal object.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Scans the configuration for unique, valid file paths referenced as part of quest metadata.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Formats the configuration content to an optimized structure designed specifically for use with large language models.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
-</code></pre>
-<p>This function is like a key that opens a hidden chest, reading raw configuration data if the chest exists.</p>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+<pre><code class="language-typescript">/**
+ * Parses the adventure config into an object (or null on error/missing).
+ * Single point of JSON parsing and validation.
+ */
+export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
   try {
@@ -70,8 +69,46 @@
   }
 }
 </code></pre>
-<p>Parsing here acts as an interpreter translating a cryptic scroll (JSON) into readable instructions for the quest engine.</p>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+<p>Like a careful librarian decoding an ancient book, this function transforms raw JSON from the adventure configuration file into a JavaScript object, discarding errors along the way.</p>
+<pre><code class="language-typescript">/**
+ * Extracts all unique, existing file paths referenced by &quot;path&quot; fields anywhere in the config.
+ */
+export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    // Extract and validate path
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    // Add children to stack
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<p>This function behaves like a scout, identifying every unique file path buried within the configuration, pruning out irrelevant or invalid entries.</p>
+<pre><code class="language-typescript">/**
+ * Formats adventure config into a minimal format for LLM prompts
+ * OPTIMIZED: Reduced from 7,279 to ~1,763 characters (76% reduction)
+ * Eliminates redundant descriptions since LLM can infer from actual code
+ */
+export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) {
     return &#39;&#39;;
@@ -89,6 +126,7 @@
 
     formatted += `### ${quest.title}\n`;
     
+    // Just file paths - LLM can see descriptions in actual code
     const filePaths = quest.files
       .filter((f: any) =&gt; f.path)
       .map((f: any) =&gt; f.path);
@@ -96,6 +134,7 @@
       formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
     }
     
+    // Just function names - LLM can understand purpose from implementation
     const functions = quest.files
       .flatMap((f: any) =&gt; f.highlights || [])
       .filter((h: any) =&gt; h.name)
@@ -110,20 +149,25 @@
   return formatted;
 }
 </code></pre>
-<p>This function distills a dense scroll of information into a concise road map, preparing it for use in magical systems like LLMs.</p>
+<p>Like a minimalist designer, this method distills the configuration into its most essential pieces for optimized readability by LLMs, preserving only necessary quest and function details.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">loadAdventureConfig</code> and <code class="inline-code">parseAdventureConfig</code> together to verify and validate configuration inputs effectively.</li>
-<li>Recursive validations in <code class="inline-code">extractUniqueFilePaths</code> enable safer file path referencing. Leverage this for detecting missing dependencies.</li>
-<li>Optimize the output of <code class="inline-code">formatAdventureConfigForPrompt</code> when interacting with LLMs by focusing on quest structure and actionable highlights.</li>
+<li><strong>Practical tip</strong>: Always verify <code class="inline-code">adventure.config.json</code> for syntax correctness to avoid unexpected parsing errors.</li>
+<li><strong>Exploration recommendation</strong>: Study how <code class="inline-code">extractUniqueFilePaths</code> validates paths by integrating with Node.js <code class="inline-code">fs</code> methods.</li>
+<li><strong>Next steps</strong>: Investigate how the configuration system feeds into quest generation via <code class="inline-code">StoryGenerator</code> methods.</li>
 </ul>
 <hr>
-<p>The foundation has been unearthed, granting you deeper control over adventure generation and a renewed understanding of its inner workings.</p>
-<p>Achievement unlocked: Quest 5 complete—Your codebase is now 80% optimized, with stellar refactoring and solid foundational commits; deploy the final sprint with confidence! 🚀⚡💎</p>
+<p>The ledger’s secrets slowly reveal themselves under your care. Adorned with meaningful abstractions and efficient pipelines, it promises a future where configuration adapts seamlessly to developer needs. Venture onward, technomancer—your understanding grows with every line unspooled.</p>
+<p>Quest 5: The Architect’s Ledger successfully deployed with 100% test coverage—stellar execution, developer! 🚀 You&#39;re now 80% closer to the final build, so let’s refactor, optimize, and conquer the next level! ⚡</p>
 
 </div>
 
 
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4</a>
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
+      </div>
+    
     </div>
     
     <footer class="footer">
@@ -131,5 +175,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

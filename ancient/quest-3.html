@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: Unearthing the Analytical Lens - Repo Adventure</title>
+    <title>Quest 3: The Obelisk of Insight - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -28,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Chronicles of the Repository</a>
+                <a href="index.html">The Pyramid of Code: An Archaeological Adventure</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -40,154 +41,93 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: Unearthing the Analytical Lens</h1>
+    <h1>Quest 3: The Obelisk of Insight</h1>
 <hr>
-<p>The Temple of Code beckons once more, its walls echoing tales of the Analytical Lens – the fabled device said to grant unparalleled insight into the very essence of software. Only those able to navigate the hieroglyphic traps of logic and decipher riddles of optimization can reach this treasure. As the chosen archaeologist, you must delve into chambers guarded by ancient mechanisms like <code class="inline-code">RepoAnalyzer</code> and <code class="inline-code">LLMClient</code>. Will you unravel the secrets of adaptive systems and their computational wisdom, etched in the Scrolls of Adventure? Beware – vigilance and intellect are paramount.</p>
+<p>Amid the shadowed corridors of the Pyramid of Code lies a chamber rumored to hold the Obelisk of Insight, a towering artifact radiating an unearthly glow. Ancient civilizations revered this monolith, believing it could interpret the hidden messages buried deep within the Repository of Knowledge. Your task is perilous: decode the rituals encoded in its markings and harness its power to unlock fragments of the grand Repository architecture. But tread carefully, for each layer of wisdom has its own challenges.</p>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Repository Analyzer Utility</h3>
-<p>At the heart of the Analytical Lens lies the <code class="inline-code">RepoAnalyzer</code>, a sacred artifact designed to interpret and extract insights from vast code repositories. This utility encapsulates rituals for project path validation, selective file analysis, and efficient code extraction. Critically, its power to generate repomix content and ensure efficient token handling underscores its significance within the temple. The methods <code class="inline-code">generateRepomixContext</code>, <code class="inline-code">generateTargetedContent</code>, and <code class="inline-code">captureRepomixStdout</code> highlight key processes—mapping logical paths, validating inputs, and initiating subprocesses to extract rich repository insights.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> The Repository&#39;s Code Scribe</h3>
+<p>The <code class="inline-code">repo-analyzer.ts</code> file serves as the skilled scribe of the Repository, charged with generating intelligible insights from the jungle of source code. This module works by extracting, formatting, and serving content from the repository through layers of validation and optimization. A critical utility for maintaining the adventurer’s path, it aims to balance efficiency and security while handling potentially expansive repositories.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateRepomixContext</code>: Decides and orchestrates adventure journeys for analysis.</li>
-<li><code class="inline-code">generateTargetedContent</code>: Builds curated avenues of content extraction, compressing and optimizing.</li>
-<li><code class="inline-code">captureRepomixStdout</code>: Harnesses subprocesses, ensuring efficient execution and guarding against resource exhaustion.</li>
+<li><code class="inline-code">RepoAnalyzer.generateRepomixContext</code><ul>
+<li>Generates insights into the repository’s content using Repomix.</li>
+</ul>
+</li>
+<li><code class="inline-code">RepoAnalyzer.generateTargetedContent</code><ul>
+<li>Focuses analysis on specific files within a repository.</li>
+</ul>
+</li>
+<li><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code><ul>
+<li>Orchestrates Repomix interaction and safeguards process integrity.</li>
+</ul>
+</li>
+</ul>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> The Oracle&#39;s Voice</h3>
+<p>This file represents the Oracle’s mystical apparatus, the <code class="inline-code">LLMClient</code>. Through it, explorers seek guidance from the wisdom of language models. The Oracle converts inquiries into structured queries, bridging the realms of mortal code and divine insight. The methods inside navigate model-specific rituals with precision, ensuring the phrases echoing back are meaningful and clear.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">LLMClient.generateResponse</code><ul>
+<li>Interfaces with the oracle (LLM) to produce coherent answers.</li>
+</ul>
+</li>
+<li><code class="inline-code">LLMClient.constructor</code><ul>
+<li>Constructs the Oracle&#39;s parameters, clarifying its connection to external systems.</li>
+</ul>
+</li>
+<li><code class="inline-code">LLMClient.getApiKey</code><ul>
+<li>Retrieves the sacred API key, a critical element of authentication.</li>
+</ul>
+</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
 <pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-    this.validateProjectPath(projectPath);
-    const configuredFiles = extractUniqueFilePaths(projectPath);
-
-    if (configuredFiles.length &gt; 0) {
-        try {
-            return await this.generateOptimizedContent(projectPath, configuredFiles);
-        } catch (error) {
-            console.warn(&#39;Falling back to targeted content due to error:&#39;, error.message);
-            return await this.generateTargetedContent(projectPath, configuredFiles);
-        }
-    }
-    console.log(&#39;Analyzing full codebase (compressed)&#39;);
-    const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-
-    const cached = this.cache.get(cacheKey);
-    if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-        return cached.content;
-    }
-    return await this.captureRepomixStdout([&#39;.&#39;], projectPath, {
-        style: &#39;markdown&#39;,
-        compress: options.compress !== false,
-        ignore: &#39;node_modules,dist,build,.git&#39;
-    });
+  // Implementation of context generation and caching
 }
 </code></pre>
-<p>This method acts as the ritual master, determining whether to focus on selective insights or navigate the full archaeological expanse.</p>
+<p>The explorer deciphers the whole repository map, ensuring optimized tokens are used efficiently.</p>
 <pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
-    this.validateProjectPath(projectPath);    
-    const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-
-    const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-
-    if (this.cache.has(cacheKey)) {
-        return this.cache.get(cacheKey).content;
-    }
-
-    try {
-        const cliOptions: CliOptions = {
-            style: &#39;markdown&#39;, compress, 
-            include: safeFiles.join(&#39;,&#39;), 
-            noDirectoryStructure: true
-        };
-        const context = await this.captureRepomixStdout(safeFiles, projectPath, cliOptions);
-        this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-        return context;
-    } catch (error) {
-        throw new Error(`Targeted repomix execution failed: ${error.message}`);
-    }
+  // Implementation focusing on extracting specific treasures within the repository
 }
 </code></pre>
-<p>This function sharpens the map for exploration, singling out paths of interest among a labyrinth of potential targets.</p>
+<p>Like following a treasure map, this narrows search efforts to only the most valuable regions.</p>
 <pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-    return new Promise((resolve, reject) =&gt; {
-        const args = [&#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
-        if (options.compress) args.push(&#39;--compress&#39;);
-        const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd });
-        let stdout = &#39;&#39;, stderr = &#39;&#39;;
-
-        const timeout = setTimeout(() =&gt; {
-            repomix.kill(&#39;SIGTERM&#39;);
-            reject(new Error(`Timeout reached: ${REPOMIX_SUBPROCESS_TIMEOUT}ms`));
-        }, REPOMIX_SUBPROCESS_TIMEOUT);
-
-        repomix.stdout.on(&#39;data&#39;, data =&gt; stdout += data.toString());
-        repomix.stderr.on(&#39;data&#39;, data =&gt; stderr += data.toString());
-        repomix.on(&#39;close&#39;, code =&gt; {
-            clearTimeout(timeout);
-            code === 0 ? resolve(stdout) : reject(new Error(`Exit ${code}: ${stderr}`));
-        });
-    });
+  // Handles Repomix subprocess interaction with fail-safes
 }
 </code></pre>
-<p>This subprocess crafts the tools needed for extracting treasure while implementing measures to prevent burnout from trapped recursive tasks.</p>
-<hr>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> LLM Client Interface</h3>
-<p>Adjacent to the Analyzer, the <code class="inline-code">LLMClient</code> operates like the mystical guide, interpreting user prompts and relaying insights from computational energy fields. Critical steps include secure API key retrieval, engaging GPT-backed models, and optimizing token limits. The client streamlines interactions between adventurers and the knowledge repository, managing response generation through its <code class="inline-code">generateResponse</code>, constructor, and <code class="inline-code">getApiKey</code> functions.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">generateResponse</code>: Spearheads interaction, transforming prompts into actionable outputs.</li>
-<li><code class="inline-code">constructor</code>: Establishes sacred configurations for client invocations.</li>
-<li><code class="inline-code">getApiKey</code>: Secures the lifeblood (API key) essential for communication with the divine models.</li>
-</ul>
-<h2>Code</h2>
+<p>The meticulous bureaucracy ensures emissaries between adventurer and Obelisk operate seamlessly.</p>
 <h3>packages/core/src/llm/llm-client.ts</h3>
 <pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
-    let content = this.validateResponse(completion);
-
-    if (options?.responseFormat === &#39;json_object&#39;) {
-        content = this.cleanJsonResponse(content);
-    }
-    this.logTokenUsage(completion);
-    return { content };
+  // Generates a response from the Oracle using a structured prompt
 }
 </code></pre>
-<p>This function channels user-driven rituals into cohesive responses, ensuring their alignment with the Analytical Lens.</p>
+<p>Petitioning the Oracle provides guidance, answering riddles of the Repository labyrinth.</p>
 <pre><code class="language-typescript">constructor() {
-    this.model = LLM_MODEL;
-    const apiKey = this.getApiKey();
-    this.client = this.isAzureOpenAI() 
-        ? new AzureOpenAI({endpoint: LLM_BASE_URL, apiKey, deployment: this.model})
-        : new OpenAI({apiKey, baseURL: LLM_BASE_URL});
+  // Constructs the Oracle&#39;s connection to the ancient or Azure frameworks
 }
 </code></pre>
-<p>This initializes the sacred link between adventurer and divine tool, ensuring proper communication channels are protected.</p>
+<p>The Oracle’s shrine is built, connecting timeless wisdom with modern seekers through ritual initialization.</p>
 <pre><code class="language-typescript">private getApiKey(): string {
-    if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;) &amp;&amp; GITHUB_TOKEN) {
-        return GITHUB_TOKEN;
-    }
-    if (LLM_API_KEY) {
-        return LLM_API_KEY;
-    }
-    throw new Error(&#39;No valid API key provided.&#39;);
+  // Retrieves the Oracle’s key, a sacred token
 }
 </code></pre>
-<p>This ensures that only the chosen bearers of the correct talisman (API key) can awaken the Lens.</p>
-<hr>
+<p>The Oracle&#39;s key unlocks its voice, allowing seekers to commune with its wisdom.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Validate paths comprehensively when constructing analytical journeys to avoid logical pitfalls.</li>
-<li>Create distinctions in tool configurations to optimize usage for specific quests.</li>
-<li>Watch for timeout behaviors in subprocesses during extraction.</li>
+<li><strong>Practical tip</strong>: Be sure to verify the pyramid paths carefully. File validations can avoid misleading routes.</li>
+<li><strong>Exploration recommendation</strong>: Focus on refining the prompts you present to the Oracle; clarity will yield deeper insights.</li>
+<li><strong>Next steps</strong>: Dive into targeted Repomix outputs to specialize your repository journey.</li>
 </ul>
 <hr>
-<p>The Analytical Lens grows within your grasp, its eternal mysteries awaiting further exploration, brave archaeologist! Will you proceed deeper into its sacred chambers?</p>
-<p>Hail, seeker of sacred insight, for thou hast triumphed in Quest 3—Unearthing the Analytical Lens—and carved thy name upon the tablets of wisdom eternal; the temple of enlightenment now beckons thee onward with radiant glory! ⚡💎🗺️</p>
+<p>With the Obelisk deciphered, a fragment of the map to ultimate Repository understanding is now yours. Continue as an explorer of the sacred Repository, where wisdom and adventure entwine.</p>
+<p>Hark, seeker of truth, thou hast unlocked the sacred wisdom of the Obelisk of Insight, etching thy name upon the eternal scrolls of enlightenment—press onward, for the temple of ultimate knowledge awaits! 🕍⚡💎</p>
 
 </div>
 
 
       <div class="quest-navigation quest-navigation-bottom">
-        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4: Unlocking the Pyramid's Themes →</a>
+        <a href="quest-2.html" class="prev-quest-btn">← Previous: Quest 2</a>
+        <a href="quest-4.html" class="next-quest-btn">Next: Quest 4 →</a>
       </div>
     
     </div>
@@ -197,5 +137,8 @@
             <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
         </div>
     </footer>
+    
+    <!-- Quest Navigator Script -->
+    <script src="assets/quest-navigator.js"></script>
 </body>
 </html>
