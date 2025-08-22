@@ -1,13 +1,13 @@
-# Stellar Codebase Expedition
+# Galactic Adventures: Navigating the Codeverse
 
-In the distant quadrant of the cosmos, an elite crew aboard the starship *Repomix Explorer* receives a transmission from the Galactic Command: a mysterious project repository has surfaced, brimming with unknown components critical for cosmic exploration missions. As the crew, you must unlock its secrets, harness its technologies, and configure its themes to ensure safe passage through uncharted nebulae. Your mission? Navigate the repository's vast depths, analyze its core systems, and steer your starship to stellar success through calculated quests.
+In the vast expanse of the digital cosmos, the starship **CodeExplorer** embarks on a mission to decode the mysteries hidden within the swirling nebula of your repository. Guided by the **Adventure Manager AI**, the ship's crew charts new paths, analyzes celestial configurations, and builds narratives to uncover the secrets of your codebase. Every star, every constellation represents a facet of the repo—each awaiting your exploration to ensure the harmony of the Codeverse.
 
-**Adventure Awaits** – Choose your quest wisely, brave adventurer!
+**Adventure Awaits** – Choose your quest wisely, brave astronaut!
 
 **🗺️ Available Quests:**
 
-**Quest 1: Galactic Interface Deployment** - Explore the *MCP Tool Interface* to command starship systems using `packages/mcp/src/server.ts` and `packages/mcp/src/tools.ts`.
-**Quest 2: Stellar Story Engine Calibration** - Unlock narrative-generation protocols through the *Quest Generation Engine* using `packages/core/src/adventure/adventure-manager.ts`, `packages/core/src/adventure/story-generator.ts`, and `packages/core/src/shared/adventure-config.ts`.
-**Quest 3: Cosmic Pipeline Optimization** - Investigate celestial data processing with *Code Analysis & Content Pipeline* tools in `packages/core/src/analyzer/repo-analyzer.ts` and `packages/core/src/llm/llm-client.ts`.
-**Quest 4: Orbital Theme Configuration** - Fine-tune galactic settings and themes through the *Configuration & Theme System* using `packages/core/src/shared/config.ts`, `packages/core/src/shared/theme.ts`, and `packages/core/src/shared/input-validator.ts`.
-**Quest 5: Repository Navigation Utilities** - Chart unknown repository paths and cosmic file structures using *Foundation & Utilities* in `packages/core/src/shared/adventure-config.ts`.
+**Quest 1: Mapping the Tool Universe** - Explore the constellation of **MCP tools** by analyzing `packages/mcp/src/server.ts` and `packages/mcp/src/tools.ts` to understand how the starship’s crew interfaces with galactic systems.
+**Quest 2: Orchestrating Cosmic Narratives** - Pilot the adventure craft across the **Quest Generation Engine**, navigating `packages/core/src/adventure/adventure-manager.ts`, `packages/core/src/adventure/story-generator.ts`, and `packages/core/src/shared/adventure-config.ts` to craft stellar stories and technical missions.
+**Quest 3: Probing Stellar Data Streams** - Journey into the realm of **Code Analysis & Content Pipeline**, decoding the secrets of `packages/core/src/analyzer/repo-analyzer.ts` and `packages/core/src/llm/llm-client.ts` to understand how insights are harnessed from the codebase nebula.
+**Quest 4: Configuring Galactic Systems** - Calibrate the starship’s operational framework through the **Configuration & Theme System** by interfacing with `packages/core/src/shared/config.ts`, `packages/core/src/shared/theme.ts`, and `packages/core/src/shared/input-validator.ts`.
+**Quest 5: Harnessing Nebula Utilities** - Examine the foundations of cosmic exploration by surveying the **Foundation & Utilities** within `packages/core/src/shared/adventure-config.ts` to unlock the secrets of adventure parsing and configuration.

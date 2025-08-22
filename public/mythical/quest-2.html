@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Quest Generation Codex - Repo Adventure</title>
+    <title>Quest 2: Quest Generation Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Kingdom of Code: The Enchanted Repository</a>
+                <a href="index.html">Chronicles of the Enchanted Repository</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,200 +41,175 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Quest Generation Codex</h1>
+    <h1>Quest 2: Quest Generation Engine</h1>
 <hr>
-<p>In the mythical Kingdom of Code, the Quest Generation Codex is an ancient spellbook said to hold the secrets of weaving interconnected adventures. This enchanted book was scattered across three vital scrolls, hidden in the depths of the Codebase Castle. King Repo has tasked you with recovering these fragments from the <code class="inline-code">adventure-manager.ts</code>, the <code class="inline-code">adventure-config.ts</code>, and the <code class="inline-code">story-generator.ts</code> files.</p>
-<p>The Mystic Compiler warns that only through deciphering the spells of initialization, exploration, and content creation will you succeed in restoring the lost Codex. Brave adventurer, the future of narrative magic rests in your scroll-reading prowess.</p>
+<p>In the citadel of scripts, you stride as a quest-smith, binding runes to repositories with the quills <code class="inline-code">StoryGenerator</code> and <code class="inline-code">AdventureManager</code>. Enchanted parchments whisper of <code class="inline-code">adventure-config.json</code>, and the <code class="inline-code">repoAnalyzer</code> calls from cavernous archives. Under the watch of time sigils, the <code class="inline-code">LLMClient</code> invokes oracles to shape sagas that suit the mystic theme scrolls. Through this chapter, decode how tales are forged: how quests are summoned, merged with scroll guidance, and returned to heroes as shining paths. Ready your mind, knight of code, and read the spells themselves.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Codex Initialization</strong>: How does the <code class="inline-code">AdventureManager</code> initialize the Kingdom&#39;s adventures and manage their context?</li>
-<li>⚡ <strong>Codex Exploration</strong>: What mechanisms allow the <code class="inline-code">AdventureManager</code> to validate and execute selected quests?</li>
-<li>🛡️ <strong>Codex Composition</strong>: How does the <code class="inline-code">StoryGenerator</code> construct stories and generate adventure content?</li>
+<li>🔍 Mystic Mapping: How does <code class="inline-code">AdventureManager.initializeAdventure</code> weave together LLM-spun quests with <code class="inline-code">adventure.config.json</code> files, and in what order are merges and truncations performed?</li>
+<li>⚡ Oracle Channeling: In <code class="inline-code">StoryGenerator.generateStoryAndQuests</code>, how are prompts assembled and validated, and where is the final story content stored for reuse during quest generation?</li>
+<li>🛡️ Ward of Guidance: How does <code class="inline-code">formatAdventureConfigForPrompt</code> reduce config verbosity, and how does <code class="inline-code">StoryGenerator</code> incorporate this trimmed guidance into LLM prompts?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: Managing the adventure state and quest orchestration</h3>
-<p>This file reveals the core mechanisms for initializing quests, exploring them, and maintaining the <code class="inline-code">AdventureState</code>. The <code class="inline-code">AdventureManager</code> class orchestrates quest selection, story generation, and content validation. Key highlights include how adventures are initiated using project themes (<code class="inline-code">initializeAdventure</code>), quest execution (<code class="inline-code">exploreQuest</code>), and progress tracking (<code class="inline-code">progressPercentage</code>).</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Quest orchestration and merging with guidance</h3>
+<p>Within this hall, <code class="inline-code">AdventureManager</code> governs the journey from initialization to exploration. The ritual begins in <code class="inline-code">initializeAdventure</code>, where the <code class="inline-code">AdventureState</code> is reset and the <code class="inline-code">StoryGenerator</code> is invoked to craft a narrative and quests. Once the oracles respond, the manager merges scroll-specified files into quests via <code class="inline-code">mergeQuestFilesFromConfig</code>, then enforces count alignment with <code class="inline-code">enforceConfigQuestCount</code>. This ordering means config-guided files are attached first, and only afterward are excess quests trimmed to match the scroll’s decree. When a hero selects a path, <code class="inline-code">exploreQuest</code> sanitizes the choice using <code class="inline-code">validateAdventureChoice</code>, resolves the intended quest by number, id, or title, and handles special “progress” invocations through <code class="inline-code">isProgressRequest</code>. Upon execution, <code class="inline-code">executeQuest</code> either retrieves cached quest content or conjures fresh content using <code class="inline-code">repoAnalyzer.generateTargetedContent</code> when specific files are set, falling back to full <code class="inline-code">repomixContent</code> if needed. Summaries are then forged by <code class="inline-code">StoryGenerator.generateCompletionSummary</code>, and progress blooms through <code class="inline-code">progressPercentage</code>. Note the careful prerequisite wards in <code class="inline-code">validateQuestPrerequisites</code> that ensure a theme and project context exist before any deep magic is attempted. Finally, formatted outputs are returned using <code class="inline-code">formatStoryWithQuests</code> and <code class="inline-code">formatQuestResult</code>, while <code class="inline-code">getAvailableQuestChoices</code> signs each completed quest with a checkmark for noble clarity.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Adventure setup with project context and themes</li>
-<li><code class="inline-code">AdventureManager.exploreQuest</code>: Execution of quests chosen by the adventurer</li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Tracking completed quests as a percentage</li>
-</ul>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Configuration parsing and file extraction</h3>
-<p>This file offers insight into how adventure configurations are parsed from JSON and transformed into manageable entities. It plays a vital role in merging external configurations with procedural story generation. Key highlights focus on configuration interpretation and file path extraction.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Converts raw JSON adventure configurations into structured objects</li>
-<li><code class="inline-code">loadAdventureConfig</code>: Reads metadata files required for adventure generation</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Gathers file paths referenced within the configuration</li>
-</ul>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>: Generating mythical tales</h3>
-<p>This file is where stories come alive. The <code class="inline-code">StoryGenerator</code> integrates project context and themes into dynamic prompts for story and quest creation. By leveraging structured data and validation, it ensures consistency and immersion in the adventures. Key points include story generation, quest content handling, and theme guidelines.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">StoryGenerator.generateStoryAndQuests</code>: Core functionality for initiating stories and quest lists</li>
-<li><code class="inline-code">StoryGenerator.generateQuestContent</code>: Tailors quest content using code-relevant context</li>
-<li><code class="inline-code">loadAdventureConfig</code>: Loads guidance for templated adventure setups</li>
+<li>Initialization pipeline: reset state, LLM generation, config merge, quest count enforcement</li>
+<li>Exploration flow: choice validation, progress checks, quest lookup by number/id/title</li>
+<li>Execution path: cache reuse vs targeted repo analysis, summary generation, progress updates</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
   theme: AdventureTheme, 
   projectPath?: string,
   customThemeData?: CustomThemeData
 ): Promise&lt;string&gt; {
+  // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
-
+  
+  // Set custom theme data if provided
   if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
     this.storyGenerator.setCustomTheme(customThemeData);
   }
 
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(
-    projectInfo, 
-    theme, 
-    this.state.projectPath
-  );
-
+  // Generate the overall story and quests using LLM
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  
   this.state.title = storyResponse.title;
-  this.state.quests = this.enforceConfigQuestCount(
-    this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath), 
-    this.state.projectPath
-  );
+  this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
+  
+  // Merge files from adventure config into the generated quests
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  
+  // Enforce quest count from adventure.config.json if it exists
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
+  // Return the story with available quests
   return this.formatStoryWithQuests({
     ...storyResponse,
     quests: this.state.quests
   });
 }
 </code></pre>
-<p>This initializes an adventure with its context, quests, and thematic direction, akin to selecting a magical scroll for your journey.</p>
+<p>Like a royal herald assembling banners, it first gathers all quests, adorns them with config-bound files, then trims to match the scroll’s final decree.</p>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
   const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  
+  // Check if this is a progress request
   if (this.isProgressRequest(sanitizedChoice)) {
     return this.getProgress();
   }
-
+  
+  // Find the quest based on the choice
   const quest = this.findQuest(sanitizedChoice);
   if (!quest) {
     return this.createNotFoundResult();
   }
 
+  // Execute the quest
   return await this.executeQuest(quest);
 }
 </code></pre>
-<p>Ensures quest exploration proceeds only after charmed validation, much like testing the purity of an enchanted blade.</p>
+<p>As a gatewarden, it cleans the traveler’s request, reveals progress on command, or guides them to the right chamber of challenges.</p>
 <pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0
+  return this.quests.length &gt; 0 
     ? Math.round((this.completedQuests.size / this.quests.length) * 100)
     : 0;
 }
 </code></pre>
-<p>This calculates progress as a percentage, ensuring every step is a measurable climb toward the castle&#39;s pinnacle.</p>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+<p>A simple abacus of triumphs, tallying completed banners against all quests to show the realm’s advance.</p>
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+  this.currentProject = projectInfo;
+  this.projectPath = projectPath;
+  
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
 }
 </code></pre>
-<p>Here, raw JSON transforms into actionable configurations, much like enchanting runes for deciphering arcane maps.</p>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
-</code></pre>
-<p>This loads adventure metadata and establishes the boundary for your narrative world, like consulting a crystal ball.</p>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
-
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-
-  while (stack.length) {
-    const node = stack.pop();
-    if (node &amp;&amp; typeof node === &#39;object&#39; &amp;&amp; typeof node.path === &#39;string&#39;) {
-      unique.add(node.path.trim());
-      stack.push(...Object.values(node));
+<p>Like a court mage, it records the realm and path, blesses the theme, and invokes the grand summoning.</p>
+<pre><code class="language-typescript">private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise&lt;StoryResponse&gt; {
+  const repomixContent = projectInfo.repomixContent || &#39;No repomix content available&#39;;
+  
+  // Use formatted adventure config instead of raw JSON
+  let adventureGuidance = &#39;&#39;;
+  if (this.projectPath) {
+    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+    if (formattedConfig) {
+      adventureGuidance = formattedConfig;
     }
   }
 
-  return Array.from(unique);
-}
-</code></pre>
-<p>Harvests file paths like shards of a crystal, ensuring no valuable clue escapes the adventurer&#39;s grasp.</p>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a></h3>
-<pre><code class="language-typescript">async generateStoryAndQuests(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string
-): Promise&lt;StoryResponse&gt; {
-  const adventureGuidance = formatAdventureConfigForPrompt(projectPath || &#39;&#39;);
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(
-      loadStoryGenerationPrompt({
-        theme,
-        repomixContent: projectInfo.repomixContent || &#39;&#39;,
-        adventureGuidance
-      }),
-      { maxTokens: LLM_MAX_TOKENS_STORY }
-    )
-  );
+  const prompt = loadStoryGenerationPrompt({
+    theme,
+    repomixContent,
+    ...(adventureGuidance &amp;&amp; { adventureGuidance }),
+    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
+  });
 
-  const parsed = parseMarkdownToStoryResponse(response.content || &#39;&#39;);
-  return StoryResponseSchema.parse(parsed);
+  const response = await this.withTimeout(
+    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
+  );
+  
+  if (!response.content || response.content.trim() === &#39;&#39;) {
+    throw new Error(&#39;LLM returned empty response&#39;);
+  }
+  
+  let parsed;
+  try {
+    // Preprocess response to remove markdown code block wrapper if present
+    let cleanContent = response.content.trim();
+    if (cleanContent.startsWith(&#39;```markdown&#39;)) {
+      cleanContent = cleanContent.replace(/^```markdown\s*/, &#39;&#39;).replace(/\s*```$/, &#39;&#39;);
+    }
+    
+    parsed = parseMarkdownToStoryResponse(cleanContent);
+    // Validate with Zod schema for safety
+    StoryResponseSchema.parse(parsed);
+    
+    // Store the story content for consistency in quest generation
+    this.currentStoryContent = typeof parsed.story === &#39;string&#39; ? parsed.story : parsed.story.content;
+  } catch (error) {
+    console.error(&#39;💥 Parsing error:&#39;, error instanceof Error ? error.message : &#39;Unknown error&#39;);
+    console.error(&#39;💥 Full response:&#39;, response.content);
+    throw new Error(`Invalid LLM response for story: ${error instanceof Error ? error.message : &#39;Unknown error&#39;}. Response: ${response.content.substring(0, 200)}...`);
+  }
+  return parsed;
 }
 </code></pre>
-<p>Constructs mythical tales by blending enchanting guidance with the kingdom&#39;s context, like weaving an ancient tapestry.</p>
+<p>The mage composes a prompt, consults the oracle, cleans the prophecy, validates its structure, and preserves the tale for later rites.</p>
 <pre><code class="language-typescript">async generateQuestContent(
-  quest: Quest, 
-  theme: AdventureTheme, 
+  quest: Quest,
+  theme: AdventureTheme,
   codeContent: string
 ): Promise&lt;QuestContent&gt; {
-  const adventureGuidance = formatAdventureConfigForPrompt(this.projectPath || &#39;&#39;);
+  // Include formatted adventure config as context if available
+  let adventureGuidance = &#39;&#39;;
+  if (this.projectPath) {
+    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+    if (formattedConfig) {
+      adventureGuidance = formattedConfig;
+    }
+  }
+
   const prompt = loadQuestContentPrompt({
     theme,
     adventureTitle: quest.title,
     codeContent,
-    adventureGuidance
-  });
+    storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
+    adventureGuidance: adventureGuidance || &#39;&#39;,
+    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
+  }) + &#39;\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n
 
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
-  );
-
-  return {
-    adventure: response.content.trim(),
-    codeSnippets: [],
-    hints: []
-  };
-}
+By the decree of the ancient runes, your valiant completion of Quest 2: Quest Generation Engine forges a gleaming milestone upon the royal codex—1 of 5 quests conquered (20% complete)—a triumph worthy of heroes, with the forge-fires of mastery blazing brighter as you march onward under guiding stars ⭐ toward the next legendary chapter!
 </code></pre>
-<p>Generates quest details from the ether of possibility, turning generic context into personal inquiries for heroes.</p>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, &#39;adventure.config.json&#39;);
-  return fs.existsSync(configPath) ? fs.readFileSync(configPath, &#39;utf-8&#39;) : null;
-}
-</code></pre>
-<p>Gathers adventure configurations directly from the source, ensuring no secret spell is overlooked.</p>
-<h2>Helpful Hints</h2>
-<ul>
-<li>Ensure that all paths are valid to retrieve full story contexts.</li>
-<li>Use the <code class="inline-code">progressPercentage</code> to track progress and optimize your quest order.</li>
-<li>Study the quest-merging mechanics in <code class="inline-code">adventure-manager.ts</code> to understand how configurations influence outcomes.</li>
-</ul>
-<hr>
-<p>The Codex awaits, reconstructed at your hands! Step forth and reclaim harmony in the Kingdom of Code!</p>
-<p>With the wisdom of ancient sages unlocked in the Quest Generation Codex, you ascend as a luminous champion, blazing the trail toward triumph in the kingdom&#39;s grand odyssey—shield high and destiny at hand! ⚡💎🗺️</p>
 
 </div>
 

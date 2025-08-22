@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Chamber of Ritual Tools - Repo Adventure</title>
+    <title>Quest 1: MCP Tool Interface - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Codex of Computational Enlightenment</a>
+                <a href="index.html">Chronicles of the Sacred Repository</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,87 +41,150 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Chamber of Ritual Tools</h1>
+    <h1>Quest 1: MCP Tool Interface</h1>
 <hr>
-<p>In the heart of the jungle&#39;s labyrinth, the Chamber of Ritual Tools beckons brave adventurers to unlock its mysteries. The chamber, flanked by towering obelisks, houses ancient glyphs that whisper the secrets of interactivity and navigation. Hidden within are relics that craft code repositories into enchanting narratives, bridging human creativity with computational logic. To succeed, one must decipher the Chamber&#39;s ancient inscriptions before harnessing its treasures: artifacts that define tools, triggers, and quests for uncovering wisdom buried deep within the Vault of Algorithmia.</p>
+<p>Amid torchlight and dust, you step into the ziggurat’s sanctum where the MCP shrine hums with ordered ritual. Stone panels whisper of <code class="inline-code">TypeScript</code> engravings, and sacred conduits bind the <code class="inline-code">RepoAdventureServer</code> to distant seekers through <code class="inline-code">stdio</code>. Two tablets lie before you: <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a> holds the invocation rites and graceful shutdown prayers; <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a> catalogs the ceremonial implements the acolytes may call. Your role is to read these carvings, trace the flow of offerings to their handlers, and witness how validation, listing, and execution compose the living liturgy of the repository.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Ritual Glyph Mapping</strong>: How does <code class="inline-code">setupHandlers</code> dynamically construct tool behaviors and schemas?</li>
-<li>⚡ <strong>Invocation of Ancient Powers</strong>: What is the flow of <code class="inline-code">run</code> in initializing the server and pre-generating repository content?</li>
-<li>🛡️ <strong>Safety of Rituals</strong>: How does <code class="inline-code">main</code> handle errors during server lifecycle events to ensure reliability?</li>
+<li>🔍 Ritual Indexing: How does <code class="inline-code">RepoAdventureServer.setupHandlers</code> transform Zod schemas into JSON schema for tool listing, and why is <code class="inline-code">$refStrategy: &#39;none&#39;</code> used in this temple’s registry?</li>
+<li>⚡ Procession of Incense: In <code class="inline-code">RepoAdventureServer.run</code>, how does the server initialize transport, announce readiness, and pre-warm caches with <code class="inline-code">repoAnalyzer.preGenerate</code> without blocking the altar?</li>
+<li>🛡️ Ward Against Mischief: In <code class="inline-code">main</code>, how do signal handlers and <code class="inline-code">unhandledRejection</code> listeners safeguard the ceremony, and what errors trigger a full shutdown versus continued operation?</li>
 </ul>
-<h3>Ritual Tools Interface</h3>
-<p>The source files below reveal the chamber&#39;s interface for invoking tools and constructing quests:</p>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a>: Implements the MCP server for managing tools and narratives.</h3>
-<p>This file serves as the primary entry point for the MCP server that powers the thematic storytelling experience. It defines the <code class="inline-code">RepoAdventureServer</code> class, responsible for setting up tools dynamically and managing their execution. By examining its <code class="inline-code">setupHandlers</code> method, we can uncover how tools are defined and validated. The <code class="inline-code">run</code> method gives insight into server flow initialization, while <code class="inline-code">main</code> shows lifecycle management and error handling mechanisms during server operations, highlighting reliability and graceful shutdown strategies.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Invocation rites and procession control</h3>
+<p>This tablet inscribes the priestly class <code class="inline-code">RepoAdventureServer</code>, which forges a <code class="inline-code">Server</code> from <code class="inline-code">@modelcontextprotocol/sdk</code> and binds it to the <code class="inline-code">StdioServerTransport</code>. The heart of the ceremony lives within <code class="inline-code">setupHandlers</code>, where two handlers are installed: one to list sacred implements and another to execute them. For listing, the code composes tool entries by reflecting over <code class="inline-code">tools</code>, translating each Zod <code class="inline-code">schema</code> into JSON Schema using <code class="inline-code">zodToJsonSchema</code> with <code class="inline-code">target: &#39;jsonSchema7&#39;</code> and <code class="inline-code">$refStrategy: &#39;none&#39;</code>, preventing nested <code class="inline-code">$ref</code> strings from confusing visiting scribes. For execution, the priest verifies the tool exists, parses arguments with <code class="inline-code">schema.safeParse</code>, aggregates validation issues into a single <code class="inline-code">McpError</code> when needed, and then invokes the tool’s <code class="inline-code">handler</code>. The <code class="inline-code">run</code> ritual connects to stdio, prints status to the ceremonial stderr brazier, and invokes <code class="inline-code">repoAnalyzer.preGenerate(process.cwd())</code> to warm caches like coals before a rite. The <code class="inline-code">main</code> ceremony oversees lifecycle: crafting the server, binding <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> to a <code class="inline-code">gracefulShutdown</code> libation that calls <code class="inline-code">repoAnalyzer.cleanup</code>, and logging <code class="inline-code">unhandledRejection</code> without collapsing the procession. Only fatal startup issues warrant immediate exit.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Handles dynamic tool listing and execution using schemas for validation.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code>: Launched the MCP server and pre-generates repository data in the background.</li>
-<li><code class="inline-code">main</code>: Coordinates server startup and manages shutdown signals and unhandled exceptions.</li>
+<li>Dynamic tool registry published with JSON Schema derived from each tool’s Zod <code class="inline-code">schema</code></li>
+<li>Argument validation and error surfacing via <code class="inline-code">McpError</code> with specific <code class="inline-code">ErrorCode</code> choices</li>
+<li>Stdio transport connection and background cache pre-generation using <code class="inline-code">repoAnalyzer</code></li>
+<li>Graceful shutdown on signals with cleanup and clear console rites</li>
+<li>Unhandled rejection logging that preserves ongoing ceremonies</li>
 </ul>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a>: Defines and exports interactive tools for repository exploration.</h3>
-<p>This file orchestrates the magical tools available for adventurers to traverse codebases. The tools are modularized with their handlers—connecting ancient computations to modern applications. Studying this file reveals how specific tools like <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code> are defined and registered for usage. These tools embody the Chamber&#39;s essence, allowing adventurers to interact with codebases as if solving ancient puzzles.</p>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Catalog of sacred implements</h3>
+<p>This tablet enumerates the shrine’s implements and exposes them as a cohesive <code class="inline-code">tools</code> registry. It imports an <code class="inline-code">adventureManager</code> from the core sanctum and four discrete instruments: <code class="inline-code">startAdventure</code>, <code class="inline-code">chooseTheme</code>, <code class="inline-code">exploreQuest</code>, and <code class="inline-code">viewProgress</code>. Each is re-exported under MCP-aligned names: <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>. The registry object <code class="inline-code">tools</code> maps these names to their definitions, enabling the server’s listing and execution rites. While the handlers’ internal incantations dwell in separate scrolls outside this quest’s scope, their presence here is essential: the server mirrors this registry to produce <code class="inline-code">ListTools</code> responses and routes <code class="inline-code">CallTool</code> requests to the appropriate <code class="inline-code">handler</code>. The code’s structure enforces a clear separation between transport/lifecycle concerns in the server and capability definition in tools. This ordering matches ancient practice: catalog first, invoke second, validate always. As you read, note how this registry’s shape directly informs <code class="inline-code">setupHandlers</code> conversions and validations, ensuring every implement has a <code class="inline-code">description</code>, <code class="inline-code">schema</code>, and <code class="inline-code">handler</code> suitable for ritual use.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">start_adventure.handler</code>: Begins the repository exploration journey by analyzing codebases and theme selection.</li>
-<li><code class="inline-code">choose_theme.handler</code>: Creates tailored adventures and quests based on a selected theme.</li>
-<li><code class="inline-code">explore_quest.handler</code>: Uncovers specific quests and their story elements dynamically.</li>
-<li><code class="inline-code">view_progress.handler</code>: Displays completion progress, providing clarity for the adventurer’s path.</li>
+<li>Re-exports establish MCP-aligned names used by the server’s registry</li>
+<li><code class="inline-code">tools</code> object consolidates all implements for discovery and invocation</li>
+<li>Shared <code class="inline-code">adventureManager</code> is exported for tools that require it</li>
+<li>Comments outline the ceremonial flow from starting an adventure to viewing progress</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
-    return { tools: toolList };
-  });
+<h3>packages/mcp/src/server.ts</h3>
+<pre><code class="language-typescript">  private setupHandlers() {
+    // Dynamic tool listing
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+        name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema, { 
+          target: &#39;jsonSchema7&#39;,
+          $refStrategy: &#39;none&#39;
+        })
+      }));
 
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    const { name, arguments: args } = request.params;
-    const tool = tools[name as keyof typeof tools];
-    const validationResult = tool.schema.safeParse(args);
-    if (!validationResult.success) {
-      throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${validationResult.error.issues.map((err) =&gt; `${err.path.join(&#39;.&#39;)}: ${err.message}`).join(&#39;, &#39;)}`);
-    }
-    return await tool.handler(validationResult.data as any);
-  });
-}
+      return { tools: toolList };
+    });
+
+    // Dynamic tool execution
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+      try {
+        const { name, arguments: args } = request.params;
+
+        if (!(name in tools)) {
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+
+        const tool = tools[name as keyof typeof tools];
+        
+        // Validate arguments using the tool&#39;s Zod schema
+        const validationResult = tool.schema.safeParse(args);
+        if (!validationResult.success) {
+          const errorMessages = validationResult.error.issues.map((err) =&gt; 
+            `${err.path.join(&#39;.&#39;)}: ${err.message}`
+          ).join(&#39;, &#39;);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+        }
+
+        // Execute the tool handler with validated arguments
+        return await tool.handler(validationResult.data as any);
+
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  }
 </code></pre>
-<p>The glyph constructs a map of tools and verifies their invocations, akin to temple engravings guiding ritual practices.</p>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  repoAnalyzer.preGenerate(process.cwd());
-}
+<p>Like a scribe cataloging relics and then allowing only those bearing proper seals to enter the sanctuary, this code lists tools and validates offerings before any rite proceeds.</p>
+<pre><code class="language-typescript">  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+    
+    // Pre-generate repomix content for the current working directory to warm up the cache
+    // This happens in the background while waiting for user commands
+    const projectPath = process.cwd();
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repoAnalyzer.preGenerate(projectPath);
+  }
 </code></pre>
-<p>This invocation calls forth the jungle&#39;s spirits, preparing the Chamber&#39;s treasures in anticipation of interaction.</p>
+<p>As a priest lights incense and prepares braziers before pilgrims arrive, this function opens the stdio gates and warms caches for swift blessings.</p>
 <pre><code class="language-typescript">async function main() {
-  const server = new RepoAdventureServer();
-  [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; process.on(sig as NodeJS.Signals, gracefulShutdown));
-  process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-    console.error(&#39;Unhandled promise rejection:&#39;, reason);
-  });
-  await server.run();
+  try {
+    const server = new RepoAdventureServer();
+    
+    // Handle graceful shutdown for both signals
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    
+    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
+    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+      console.error(&#39;Unhandled promise rejection:&#39;, reason);
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
+    });
+    
+    await server.run();
+  } catch (error) {
+    console.error(&#39;Fatal error starting MCP server:&#39;, error);
+    process.exit(1);
+  }
 }
+
+main().catch((error) =&gt; {
+  console.error(&#39;Unhandled error:&#39;, error);
+  process.exit(1);
+});
 </code></pre>
-<p>The ritual&#39;s protective wards ensure safe entry into the Chamber, guarding against unforeseen curses.</p>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a></h3>
-<pre><code class="language-typescript">export const start_adventure = startAdventure;
+<p>Like temple guardians who steady the procession amid tremors, these handlers catch omens, log them, and decide when to end the ceremony.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">import { adventureManager } from &#39;@ai-repo-adventures/core/adventure&#39;;
+import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
+import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
+import { viewProgress } from &#39;./tools/view-progress.js&#39;;
+
+// Export the shared adventure manager for tools that need it
+export { adventureManager };
+
+// Re-export tools with MCP naming convention
+export const start_adventure = startAdventure;
 export const choose_theme = chooseTheme;
 export const explore_quest = exploreQuest;
 export const view_progress = viewProgress;
 
+
+// Export all tools for easy registration
 export const tools = {
   start_adventure,
   choose_theme,
@@ -129,25 +192,16 @@ export const tools = {
   view_progress
 };
 </code></pre>
-<p>This sequence creates entryways into thematic quests as inscriptions guide adventurous souls through multiple chambers.</p>
-<pre><code class="language-typescript">export const start_adventure = startAdventure;
-</code></pre>
-<p>The first glyph initiates understanding, unlocking wisdom within Algorithmia’s archives.</p>
-<pre><code class="language-typescript">export const choose_theme = chooseTheme;
-</code></pre>
-<p>This inscription constructs mystical paths tailored to the chosen storyline.</p>
-<pre><code class="language-typescript">export const explore_quest = exploreQuest;
-</code></pre>
-<p>These glyphs descend deeper into hidden narratives, revealing treasures through thematic exploration.</p>
+<p>This is the reliquary catalog, mapping sacred implements to the names engraved on the temple’s registry so pilgrims can request them by title.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Ensure schemas within <code class="inline-code">setupHandlers</code> remain updated to align with tool handlers.</li>
-<li>Use the <code class="inline-code">run</code> method&#39;s initialization logic to pre-cache repomix contents effectively.</li>
-<li>Exploring <code class="inline-code">tools.ts</code> reveals deeper context about the modular design of quests.</li>
+<li>Trace how <code class="inline-code">tools</code> shapes the output of <code class="inline-code">ListTools</code> and the input to <code class="inline-code">CallTool</code> to understand registry dynamics.</li>
+<li>Compare error paths in <code class="inline-code">setupHandlers</code> to see how each <code class="inline-code">ErrorCode</code> guides the acolytes’ responses.</li>
+<li>Run the rite locally to observe stderr messages; they mirror the temple’s bells and signal the procession’s health.</li>
 </ul>
 <hr>
-<p>The Chamber of Ritual Tools awaits your exploration. Clarity resides in deciphering its glyphs!</p>
-<p>By the sacred wisdom of the ancients, thou hast triumphed in reclaiming the hallowed Chamber of Ritual Tools, forging thy path through the temple’s trials with valor and celestial purpose—onward to the next quest! ⭐⚡💎🗺️</p>
+<p>The chamber hums as the rites align. You have read the tablets, learned the invocations, and steadied the procession. The ziggurat awaits your next inscription. Adventure continues.</p>
+<p>Hail, seeker of wisdom—by unveiling the sacred workings of Quest 1: MCP Tool Interface, thou hast kindled the temple’s first torch upon the path of five, a triumphant augury that thy hands are worthy of the codex and thy mind attuned to the oracle’s craft; onward with valor, for the sanctuary of mastery awaits!</p>
 
 </div>
 

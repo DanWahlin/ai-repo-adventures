@@ -678,16 +678,11 @@ class HTMLAdventureGenerator {
   }
 
   private getFallbackCSS(): string {
-    return `/* Fallback CSS */
-    :root {
-      --primary-bg: #f5f5f5;
-      --primary-text: #333;
-      --accent-primary: #1976d2;
-      --accent-secondary: #42a5f5;
-      --font-primary: -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-heading: -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-code: Monaco, 'Courier New', monospace;
-    }`;
+    try {
+      return this.loadCSSFile('themes/fallback.css', null) || '/* No fallback CSS available */';
+    } catch {
+      return '/* Fallback CSS load failed */';
+    }
   }
 
   private generateIndexHTML(): void {

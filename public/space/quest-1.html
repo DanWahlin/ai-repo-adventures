@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: MCP Command Bridge - Repo Adventure</title>
+    <title>Quest 1: MCP Relay Beacon Activation - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Stellar Repository Exploration: A Space Adventure</a>
+                <a href="index.html">Starship Repo Odyssey</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,90 +41,101 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: MCP Command Bridge</h1>
+    <h1>Quest 1: MCP Relay Beacon Activation</h1>
 <hr>
-<p>The Command Bridge of your starship has initiated the core MCP system, central to decoding alien codebases across the cosmic galaxy. This interactive server system will serve as the backbone for future quests, enabling your crew to execute advanced tools and dynamically process requests. Your mission begins with investigating the structure and operational mechanics of this bridge–ensure its protocols are safeguarded and its tools calibrated for deep-space mysteries.</p>
+<p>Your starship glides along the rim of a code galaxy as the MCP relay flickers to life. The AdventureManager and StoryGenerator chart routes across repositories while the RepoAnalyzer compresses stellar data into tight-band signals. You, navigator, must activate the relay beacon that links ground crews to command consoles. Calibrate the handlers, verify tool manifests, and ensure safe orbit insertion for every request traversing the relay. With the LLMClient translating cosmic noise, your mission is to unify scanning, storytelling, and tool execution into a seamless voyage across the code cosmos.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Tool Protocol Scanning</strong>: How does the <code class="inline-code">setupHandlers</code> function dynamically validate tools and handle their execution requests?</li>
-<li>⚡ <strong>Transport Link Activation</strong>: What is the role of the <code class="inline-code">run</code> function in connecting the MCP server to its interstellar transport system?</li>
-<li>🛡️ <strong>Signal Shielding Mechanisms</strong>: How does the <code class="inline-code">main</code> function handle system interruptions and safeguard operations against unexpected failures?</li>
+<li>🔍 Scanner Calibration: How does <code class="inline-code">RepoAdventureServer.setupHandlers</code> transform Zod schemas into JSON Schemas and bundle them in <code class="inline-code">ListToolsRequestSchema</code> responses?</li>
+<li>⚡ Relay Signal Flow: In <code class="inline-code">main</code> and <code class="inline-code">RepoAdventureServer.run</code>, how is the stdio transport initialized, the server connected, and the pre-generation warm-up triggered without blocking startup?</li>
+<li>🛡️ Fault Containment Shield: When <code class="inline-code">CallToolRequestSchema</code> executes a tool, how are invalid parameters distinguished from unknown tools, and how are unexpected errors wrapped and surfaced?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Functionality Overview</h3>
-<p>This file serves as the primary interface of the starship&#39;s MCP Command Bridge. It initiates a <code class="inline-code">RepoAdventureServer</code> instance, orchestrating tool execution via dynamic handler requests and establishing a connection through transport systems like <code class="inline-code">StdioServerTransport</code>. The <code class="inline-code">main</code> function also integrates graceful shutdown mechanisms, ensuring crisis mitigation during cosmic turbulence. Additionally, error handling mechanics prevent disruptions and allow system recovery.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP server bootstrap and handler orchestration</h3>
+<p>This file constructs the <code class="inline-code">RepoAdventureServer</code> bridge that exposes tools through MCP and ensures reliable signal handling. The <code class="inline-code">constructor</code> seeds a <code class="inline-code">Server</code> instance with service metadata and <code class="inline-code">capabilities.tools</code> to advertise tool readiness. Within <code class="inline-code">setupHandlers</code>, the relay lists tools dynamically by reflecting over the exported <code class="inline-code">tools</code> registry and converting each tool’s Zod <code class="inline-code">schema</code> into a JSON Schema via <code class="inline-code">zodToJsonSchema</code>. This ensures MCP clients receive machine-parseable <code class="inline-code">inputSchema</code> for validation on the client side. The same method also defines the call path for executing tools: it validates arguments using <code class="inline-code">tool.schema.safeParse</code>, returns parsed data to <code class="inline-code">tool.handler</code> only on success, and applies precise error mapping. Unknown tools emit <code class="inline-code">ErrorCode.MethodNotFound</code>, while invalid parameters yield <code class="inline-code">ErrorCode.InvalidParams</code> with aggregated, path-specific messages. Any other failure is encapsulated as <code class="inline-code">ErrorCode.InternalError</code>, preserving operational clarity.</p>
+<p>In <code class="inline-code">run</code>, the server connects over <code class="inline-code">StdioServerTransport</code>, logging status, then pre-warms repository context with <code class="inline-code">repoAnalyzer.preGenerate(process.cwd())</code>. This approach improves first-interaction latency without blocking the server loop. The <code class="inline-code">main</code> routine anchors lifecycle control: it installs <code class="inline-code">SIGINT</code>/<code class="inline-code">SIGTERM</code> traps for graceful cleanup via <code class="inline-code">repoAnalyzer.cleanup</code>, logs unhandled rejections without crashing, and guards startup with a fatal error path. The orchestration balances responsiveness, safety, and observability across the relay mission.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Defines how tools are dynamically listed and executed with argument validation provided by Zod schemas. Error handling systems protect tool execution pathways.</li>
-<li><code class="inline-code">run</code>: Establishes the MCP server transport and initiates background processes for analyzing repository data.</li>
-<li><code class="inline-code">main</code>: Coordinates graceful shutdown processes for signals like <code class="inline-code">SIGINT</code> and protects against unhandled promise rejections.</li>
+<li>Dynamic capability publication via <code class="inline-code">ListToolsRequestSchema</code> with Zod-to-JSON Schema translation</li>
+<li>Robust tool invocation pipeline with schema validation and granular <code class="inline-code">McpError</code> mapping</li>
+<li>Non-blocking startup and caching warm-up using <code class="inline-code">repoAnalyzer.preGenerate</code></li>
+<li>Graceful shutdown signals and unhandled rejection handling for operational resilience</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Tool registry and MCP naming convention</h3>
+<p>This file acts as the manifest for the exploration instruments mounted on the relay. It imports the <code class="inline-code">adventureManager</code> for shared state and orchestrates four mission-critical tools: <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>. Each tool is sourced from its dedicated module and re-exported with snake_case identifiers that align with client-side MCP expectations. The <code class="inline-code">tools</code> object aggregates these entries for discovery by the server. This registry becomes the single source of truth the server reflects upon when listing tools and executing them. While the individual handlers reside in their own files, this registry defines how they are surfaced to the MCP universe and ensures a consistent interface. The structure enables modular maintenance: tools evolve independently while the registry maintains stable MCP-facing names and descriptions. Clients receive coherent capabilities, and server introspection remains clean and deterministic.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Centralized export of <code class="inline-code">adventureManager</code> for cross-tool coordination</li>
+<li>Canonical MCP tool naming via <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, <code class="inline-code">view_progress</code></li>
+<li>Aggregated <code class="inline-code">tools</code> registry consumed by the server for dynamic listing and dispatch</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  // Dynamic tool listing
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
+<pre><code class="language-typescript">  private setupHandlers() {
+    // Dynamic tool listing
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+        name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema, { 
+          target: &#39;jsonSchema7&#39;,
+          $refStrategy: &#39;none&#39;
+        })
+      }));
 
-    return { tools: toolList };
-  });
+      return { tools: toolList };
+    });
 
-  // Dynamic tool execution
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
+    // Dynamic tool execution
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+      try {
+        const { name, arguments: args } = request.params;
 
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        if (!(name in tools)) {
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+
+        const tool = tools[name as keyof typeof tools];
+        
+        // Validate arguments using the tool&#39;s Zod schema
+        const validationResult = tool.schema.safeParse(args);
+        if (!validationResult.success) {
+          const errorMessages = validationResult.error.issues.map((err) =&gt; 
+            `${err.path.join(&#39;.&#39;)}: ${err.message}`
+          ).join(&#39;, &#39;);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+        }
+
+        // Execute the tool handler with validated arguments
+        return await tool.handler(validationResult.data as any);
+
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
-
-      const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool&#39;s Zod schema
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      // Execute the tool handler with validated arguments
-      return await tool.handler(validationResult.data as any);
-
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
+    });
+  }
 </code></pre>
-<p>This represents a cosmic control center where tools are verified and securely executed using schemas like Zod.</p>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
-  // Pre-generate repomix content for the current working directory to warm up the cache
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
+<p>Like a docking controller, it publishes a manifest of tools and validates cargo before allowing any operation to proceed.</p>
+<pre><code class="language-typescript">  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+    
+    // Pre-generate repomix content for the current working directory to warm up the cache
+    // This happens in the background while waiting for user commands
+    const projectPath = process.cwd();
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repoAnalyzer.preGenerate(projectPath);
+  }
 </code></pre>
-<p>Think of this as activating a space relay station to ensure seamless interstellar communication flows.</p>
+<p>Like initiating a radio uplink, it connects on stdio and spins up background telemetry caching for faster responses.</p>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
@@ -147,17 +158,48 @@
     process.exit(1);
   }
 }
+
+main().catch((error) =&gt; {
+  console.error(&#39;Unhandled error:&#39;, error);
+  process.exit(1);
+});
 </code></pre>
-<p>The starship&#39;s safeguards ensure the system remains operational under cosmic disturbances like unexpected shutdowns.</p>
+<p>Like a bridge officer’s protocol, it watches ship signals, logs anomalies, and keeps the mission alive unless failure is fatal.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">import { adventureManager } from &#39;@ai-repo-adventures/core/adventure&#39;;
+import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
+import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
+import { viewProgress } from &#39;./tools/view-progress.js&#39;;
+
+// Export the shared adventure manager for tools that need it
+export { adventureManager };
+
+// Re-export tools with MCP naming convention
+export const start_adventure = startAdventure;
+export const choose_theme = chooseTheme;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
+
+
+// Export all tools for easy registration
+export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<p>Like a ship’s armory manifest, it catalogs instruments and presents them under standardized call signs for mission control.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Always validate tool inputs using the provided Zod schemas to prevent execution anomalies.</li>
-<li>Monitor the <code class="inline-code">run</code> function&#39;s logs to diagnose connectivity issues with the transport system.</li>
-<li>Investigate how signal handling mechanisms prioritize error recovery while preserving runtime stability.</li>
+<li>Trace error paths: follow <code class="inline-code">McpError</code> codes to see how clients will interpret failures during tool calls.</li>
+<li>Compare schemas: observe how Zod schemas become JSON Schema via <code class="inline-code">zodToJsonSchema</code> for client-side validation.</li>
+<li>Watch lifecycle hooks: signals and unhandled rejection paths reveal operational guarantees during long missions.</li>
 </ul>
 <hr>
-<p>Your starship&#39;s command bridge now pulses with activity, unlocking dynamic tool integration for future interstellar quests. Adventure onward, brave explorer, to unravel the galaxy&#39;s programming mysteries!</p>
-<p>Stellar success achieved, Commander—Quest 1: MCP Command Bridge is complete; your cosmic journey ignites at warp speed toward the galaxies of knowledge ahead! 🚀⭐⚡</p>
+<p>Relay beacon aligned and transmitting. Your crew can now receive quests across the code cosmos. Proceed to calibrate additional instruments in the next sector.</p>
+<p>Mission control confirms a triumphant ignition as you successfully activate Quest 1: MCP Relay Beacon, locking in a stellar milestone on your cosmic learning trajectory—engines hot, 📡 aligned, and course set for the next frontier! 🚀⭐⚡</p>
 
 </div>
 

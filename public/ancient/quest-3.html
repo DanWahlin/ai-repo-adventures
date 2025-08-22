@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Hall of the Insightful Oracle - Repo Adventure</title>
+    <title>Quest 3: Code Analysis & Content Pipeline - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Codex of Computational Enlightenment</a>
+                <a href="index.html">Chronicles of the Sacred Repository</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,196 +41,262 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Hall of the Insightful Oracle</h1>
+    <h1>Quest 3: Code Analysis &amp; Content Pipeline</h1>
 <hr>
-<p>In the heart of the ancient Vault of Algorithmia lies a sacred chamber known as the Hall of the Insightful Oracle. Here, wise inscriptions guide adventurers through the mysteries of automated analysis and computational reasoning. You are tasked with deciphering the secrets of the Oracle, leveraging its glyphs to unravel efficient workflows, evaluate code-based queries, and ensure the reliability of repository allegiances. The power of the Sacred Codex will aid you in summoning both precision and clarity.</p>
-<p><strong>Tread carefully, adventurer!</strong> The Hall tests not just skill in action but wisdom in understanding.</p>
+<p>In the dim vaults beneath the ziggurat, you trace chisel-marks on tablets of logic. Here the archaeological rites of the repository awaken: the Repo Analyzer summons inscriptions from the strata of files, while the LLM Oracle interprets omens from distant endpoints. Bronze timers, cache amphorae, and sigils of safety guard each ritual. Your task is to unite these scrolls into a single living narrative, discerning how prompts are weighed, how paths are purified, and how responses are judged worthy. Step with care, seeker, for these rites shape the temple’s voice.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Glyph of Invocation</strong>: How is the LLM request built and integrated with different configurations, ensuring compatibility across providers?</li>
-<li>⚡ <strong>Token Tally Ritual</strong>: What mechanisms handle token usage tracking and ensure prompt adaptability during LLM requests?</li>
-<li>🛡️ <strong>Enigma of Validation</strong>: How are project paths and file operations safeguarded to prevent misuse or errors during repository analysis?</li>
+<li>🔍 Glyph Sorting: How does <code class="inline-code">RepoAnalyzer.generateTargetedContent</code> transform requested paths into a safe, deduplicated <code class="inline-code">include</code> list, and how does this influence repomix’s CLI arguments?</li>
+<li>⚡ Ritual Flow: In <code class="inline-code">LLMClient.generateResponse</code>, which steps ensure proper model parameters, execution timing, and post-processing for <code class="inline-code">json_object</code> responses?</li>
+<li>🛡️ Wardings of the Gate: What validations in <code class="inline-code">RepoAnalyzer.validateProjectPath</code> and environment key selection in <code class="inline-code">LLMClient.getApiKey</code> prevent misconfiguration or unsafe inputs?</li>
+<li>🔍 Incense and Wind: How does <code class="inline-code">RepoAnalyzer.captureRepomixStdout</code> enforce timeout and buffer limits to protect the ceremony from runaway processes?</li>
+<li>🛡️ Oracle Provenance: How does <code class="inline-code">LLMClient.constructor</code> decide between Azure and standard OpenAI clients, and what checks ensure configuration completeness?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: The Insightful Oracle&#39;s Gateway</h3>
-<p>The <code class="inline-code">llm-client.ts</code> file equips the system to interface with large language models (LLMs). It embodies the Oracle’s voice, creating responses and adapting to the constraints of both OpenAI and Azure OpenAI providers. Key features include dynamic configuration management (<code class="inline-code">getApiKey</code>, <code class="inline-code">isAzureOpenAI</code>), error handling, and token usage logging, enabling seamless interactions.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> The Tablet of Gathered Inscriptions</h3>
+<p>This tablet governs how the temple extracts and refines code context. The rite begins with <code class="inline-code">validateProjectPath</code>, a simple but firm ward against empty strings and null bytes, ensuring the pilgrim’s path is real and untainted. Then, <code class="inline-code">generateTargetedContent</code> conducts a careful procession: deduplicate and sanitize <code class="inline-code">targetFiles</code>, confine them within the project boundary, verify existence, and assemble a stable cache key. Only then is repomix invoked, with compression and comment-cleansing as optional austerities. Meanwhile, <code class="inline-code">captureRepomixStdout</code> choreographs a subprocess ceremony guarded by twin sentinels: a duration sandglass via <code class="inline-code">REPOMIX_SUBPROCESS_TIMEOUT</code> and a memory amphora via <code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code>. If the brazier burns too long or too hot, the rite terminates with grace, then force. Together these steps ensure that only intended scriptures are read and that the scribe is never overwhelmed by an endless scroll. Observe how each choice—<code class="inline-code">include</code> filters, sorted files, and <code class="inline-code">noDirectoryStructure</code>—seeks clarity, consistency, and protection. These patterns reveal a design that values stable cache keys, bounded resource use, and precise extraction, so the Oracle receives a faithful codex.</p>
 <h4>Highlights</h4>
 <ul>
-<li><strong><code class="inline-code">LLMClient.constructor</code></strong>: Examines how the client is initialized based on provider and API.</li>
-<li><strong><code class="inline-code">LLMClient.generateResponse</code></strong>: Manages response generation, including building requests and processing outputs.</li>
-<li><strong><code class="inline-code">LLMClient.getApiKey</code></strong>: Focuses on determining the correct API key for different LLM endpoints.</li>
+<li>Validates project path to prevent null bytes and emptiness</li>
+<li>Normalizes and confines target files within project root</li>
+<li>Uses stable cache keys to avoid repeated invocations</li>
+<li>Executes repomix with strict timeout and buffer limits</li>
+<li>Provides clear error messages for diagnostics</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
-  }
-
-  if (this.isAzureOpenAI()) {
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({
-      endpoint: azureEndpoint,
-      apiKey,
-      apiVersion: LLM_API_VERSION,
-      deployment: this.model
-    });
-  } else {
-    this.client = new OpenAI({
-      apiKey,
-      baseURL: LLM_BASE_URL
-    });
-  }
-}
-</code></pre>
-<p>The constructor ensures the client adapts to the chosen LLM, initializing properties for either OpenAI or Azure OpenAI seamlessly.</p>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  try {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
-    let content = this.validateResponse(completion);
-    
-    if (options?.responseFormat === &#39;json_object&#39;) {
-      content = this.cleanJsonResponse(content);
+<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
+<pre><code class="language-typescript">  private validateProjectPath(projectPath: string): void {
+    if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+      throw new Error(&#39;Project path must be a non-empty string&#39;);
     }
 
-    this.logTokenUsage(completion);
-    
-    return { content };
-  } catch (error) {
-    this.logDetailedError(error, prompt);
-    
-    const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
-    throw new Error(`LLM request failed: ${message}`);
-  }
-}
-</code></pre>
-<p>This method constructs and executes LLM requests, processing outputs and logging token usage while ensuring robust error handling.</p>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-    if (!GITHUB_TOKEN) {
-      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN environment variable.&#39;);
+    const trimmedPath = projectPath.trim();
+    if (!trimmedPath) {
+      throw new Error(&#39;Project path must be a non-empty string&#39;);
     }
-    return GITHUB_TOKEN;
+
+    // Basic safety check for null bytes (can break file system operations)
+    if (trimmedPath.includes(&#39;\0&#39;)) {
+      throw new Error(&#39;Project path contains invalid null bytes&#39;);
+    }
   }
-  
-  if (!LLM_API_KEY) {
-    throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY environment variable.&#39;);
-  }
-  return LLM_API_KEY;
-}
 </code></pre>
-<p><code class="inline-code">getApiKey</code> determines the access key for LLM providers, ensuring security and compatibility across integrations.</p>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: The Repository Sage</h3>
-<p>The <code class="inline-code">repo-analyzer.ts</code> file represents the Repository Sage, dedicated to extracting structured insights from the codebase. It protects its operations with validation rituals and caching strategies to ensure efficiency and safety. Here, the focus is on preparing data for content generation and ensuring the integrity of all inputs.</p>
-<h4>Highlights</h4>
-<ul>
-<li><strong><code class="inline-code">RepoAnalyzer.validateProjectPath</code></strong>: Validates project paths to ensure no invalid or malicious inputs.</li>
-<li><strong><code class="inline-code">RepoAnalyzer.generateTargetedContent</code></strong>: Produces focused content for specific repository files.</li>
-<li><strong><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code></strong>: Manages subprocess execution of <code class="inline-code">repomix</code> while safeguarding resources.</li>
-</ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
+<p>Like a gatekeeper asking for a proper travel pass, it refuses blank or poisoned paths.</p>
+<pre><code class="language-typescript">  async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+    this.validateProjectPath(projectPath);
+    
+    if (!targetFiles || targetFiles.length === 0) {
+      throw new Error(&#39;Target files array cannot be empty&#39;);
+    }
+    
+    // Harden and validate target files
+    const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+    if (safeFiles.length === 0) {
+      throw new Error(&#39;No valid target files found after validation&#39;);
+    }
+    
+    // Create stable cache key from normalized files
+    const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+      return cached.content;
+    }
+    
+    
+    try {
+      // Configure repomix options for targeted extraction
+      const cliOptions: CliOptions = {
+        style: &#39;markdown&#39;,
+        stdout: true,
+        compress: compress, // Configurable compression
+        include: safeFiles.join(&#39;,&#39;), // Only include validated files
+        removeComments: compress, // Remove comments if compressing
+        removeEmptyLines: compress, // Remove empty lines if compressing
+        noDirectoryStructure: true
+      };
 
-  const trimmedPath = projectPath.trim();
-  if (!trimmedPath) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
+      // Capture stdout during repomix execution
+      const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+      
+      // Cache the result
+      this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+      
+      return context;
+    } catch (error) {
+      throw new Error(`Targeted repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
-
-  if (trimmedPath.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid null bytes&#39;);
-  }
-}
 </code></pre>
-<p>This function ensures project paths are valid and free from vulnerabilities such as null byte injections.</p>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-    
-  if (!targetFiles || targetFiles.length === 0) {
-    throw new Error(&#39;Target files array cannot be empty&#39;);
-  }
-
-  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  if (safeFiles.length === 0) {
-    throw new Error(&#39;No valid target files found after validation&#39;);
-  }
-
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-    
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-
-  try {
-    const fullContent = await this.generateTargetedContent(projectPath, targetFiles, compress);
-    const optimizedContent = this.extractFunctionFocusedContent(fullContent);
-    this.cache.set(cacheKey, { content: optimizedContent, timestamp: Date.now() });
-    return optimizedContent;
-  } catch (error) {
-    throw new Error(`Targeted content generation failed: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-</code></pre>
-<p>The function securely generates and caches focused content for specific repository files, improving performance through reuse.</p>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [
-      ...directories,
-      &#39;--stdout&#39;,
-      &#39;--style&#39;, options.style || &#39;markdown&#39;
-    ];
-
-    if (options.compress) args.push(&#39;--compress&#39;);
-    
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd });
-
-    let stdout = &#39;&#39;;
-    let stderr = &#39;&#39;;
-    let stdoutSize = 0;
-    let isResolved = false;
-
-    const timeout = setTimeout(() =&gt; {
-      if (!isResolved) {
-        repomix.kill();
-        isResolved = true;
-        reject(new Error(`Repomix timed out`));
-      }
-    }, 5000); // Adjust timeout as needed
-
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      stdout += data.toString();
-      stdoutSize += data.length;
-      if (stdoutSize &gt; 10_000_000) { // Arbitrary size limit
-        repomix.kill();
-        reject(new Error(`Output size exceeded`));
-      }
+<p>This is a curated excavation that lists only approved chambers, memoized for repeat visits.</p>
+<pre><code class="language-typescript">  private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
+    return new Promise((resolve, reject) =&gt; {
+      // Build repomix CLI arguments
+      const args = [
+        ...directories,
+        &#39;--stdout&#39;,
+        &#39;--style&#39;, options.style || &#39;markdown&#39;
+      ];
+      
+      if (options.compress) args.push(&#39;--compress&#39;);
+      if (options.removeComments) args.push(&#39;--remove-comments&#39;);
+      if (options.removeEmptyLines) args.push(&#39;--remove-empty-lines&#39;);
+      if (options.noDirectoryStructure) args.push(&#39;--no-directory-structure&#39;);
+      if (options.ignore) args.push(&#39;--ignore&#39;, options.ignore);
+      if (options.include) args.push(&#39;--include&#39;, options.include);
+      
+      // Spawn repomix as subprocess
+      const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], {
+        cwd,
+        stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;]
+      });
+      
+      let stdout = &#39;&#39;;
+      let stderr = &#39;&#39;;
+      let stdoutSize = 0;
+      let isResolved = false;
+      
+      // Set up timeout with graceful then force kill
+      const timeout = setTimeout(() =&gt; {
+        if (!isResolved) {
+          console.warn(`Repomix subprocess timeout (${REPOMIX_SUBPROCESS_TIMEOUT}ms), killing process...`);
+          repomix.kill(&#39;SIGTERM&#39;);
+          setTimeout(() =&gt; repomix.kill(&#39;SIGKILL&#39;), REPOMIX_GRACEFUL_TIMEOUT);
+          isResolved = true;
+          reject(new Error(`Repomix subprocess timed out after ${REPOMIX_SUBPROCESS_TIMEOUT}ms (${cwd})`));
+        }
+      }, REPOMIX_SUBPROCESS_TIMEOUT);
+      
+      repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
+        const chunk = data.toString();
+        stdoutSize += chunk.length;
+        
+        // Memory protection
+        if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
+          if (!isResolved) {
+            isResolved = true;
+            clearTimeout(timeout);
+            repomix.kill(&#39;SIGKILL&#39;);
+            reject(new Error(`Repomix output too large (${stdoutSize} bytes) for ${cwd}`));
+          }
+          return;
+        }
+        
+        stdout += chunk;
+      });
+      
+      repomix.stderr.on(&#39;data&#39;, (data) =&gt; {
+        stderr += data.toString();
+      });
+      
+      repomix.on(&#39;close&#39;, (code) =&gt; {
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeout);
+          
+          if (code === 0 &amp;&amp; stdout.trim().length &gt; 0) {
+            resolve(stdout);
+          } else {
+            reject(new Error(`Repomix failed (exit ${code}): ${stderr.substring(0, 200)}`));
+          }
+        }
+      });
+      
+      repomix.on(&#39;error&#39;, (error) =&gt; {
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeout);
+          reject(new Error(`Repomix spawn failed: ${error.message}`));
+        }
+      });
     });
-
-    repomix.on(&#39;close&#39;, () =&gt; resolve(stdout));
-    repomix.on(&#39;error&#39;, reject);
-  });
-}
+  }
 </code></pre>
-<p>This subprocess handler ensures <code class="inline-code">repomix</code> operations are tightly controlled, protecting against excessive memory usage or infinite execution.</p>
+<p>Like a scribe with a waterclock and a grain measure, it stops overflowing scrolls and overlong chants.</p>
+<h3>packages/core/src/llm/llm-client.ts</h3>
+<pre><code class="language-typescript">  constructor() {
+    this.model = LLM_MODEL;
+    
+    // Determine API key based on provider
+    const apiKey = this.getApiKey();
+    if (!apiKey || !LLM_BASE_URL) {
+      throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
+    }
+
+    if (this.isAzureOpenAI()) {
+      // Azure OpenAI requires endpoint without the path
+      const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
+      this.client = new AzureOpenAI({
+        endpoint: azureEndpoint,
+        apiKey,
+        apiVersion: LLM_API_VERSION,
+        deployment: this.model
+      });
+    } else {
+      this.client = new OpenAI({
+        apiKey,
+        baseURL: LLM_BASE_URL
+      });
+    }
+  }
+</code></pre>
+<p>The high priest chooses the shrine: Azure or OpenAI, then lays the correct altar stones.</p>
+<pre><code class="language-typescript">  private getApiKey(): string {
+    // GitHub Models (hosted on Azure) uses GITHUB_TOKEN
+    if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+      if (!GITHUB_TOKEN) {
+        throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN environment variable.&#39;);
+      }
+      return GITHUB_TOKEN;
+    }
+    // All other providers (OpenAI, Azure OpenAI, Ollama, etc.) use LLM_API_KEY
+    if (!LLM_API_KEY) {
+      throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY environment variable.&#39;);
+    }
+    return LLM_API_KEY;
+  }
+</code></pre>
+<p>The keymaster selects the proper seal from two chests, refusing to proceed if either is empty.</p>
+<pre><code class="language-typescript">  private isAzureOpenAI(): boolean {
+    return LLM_BASE_URL.includes(&#39;.openai.azure.com&#39;) || LLM_BASE_URL.includes(&#39;cognitiveservices.azure.com&#39;);
+  }
+</code></pre>
+<p>A simple omen-reading: Azure signs in the river stones mark the chosen path.</p>
+<pre><code class="language-typescript">  async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+    try {
+      const requestParams = this.buildRequestParams(prompt, options);
+      const completion = await this.executeRequest(requestParams);
+      let content = this.validateResponse(completion);
+      
+      // Post-process JSON responses that might be wrapped in markdown
+      if (options?.responseFormat === &#39;json_object&#39;) {
+        content = this.cleanJsonResponse(content);
+      }
+      
+      this.logTokenUsage(completion);
+      
+      return { content };
+    } catch (error) {
+      // Enhanced error logging for debugging
+      this.logDetailedError(error, prompt);
+      
+      const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
+      throw new Error(`LLM request failed: ${message}`);
+    }
+  }
+</code></pre>
+<p>This rite gathers incense, consults the oracle, cleans sacred wrappers, counts offerings, then records the omen.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Examine how configurations adapt to different LLM providers for compatibility insights.</li>
-<li>Focus on the structure of request handling to identify reusable patterns.</li>
-<li>Investigate how validation rituals avoid malicious input exploitation.</li>
+<li>Trace how cache keys are formed; small ordering changes in paths alter reuse of prior invocations.</li>
+<li>Compare <code class="inline-code">max_tokens</code> vs <code class="inline-code">max_completion_tokens</code> behavior in GPT-5 handling within the request builder.</li>
+<li>Pay attention to how timeouts and buffer guards fail fast with actionable diagnostics, revealing intended operational boundaries.</li>
 </ul>
 <hr>
-<p>You sense the Oracle’s glyphs illuminating—each line of your quest has brought clarity! Return soon for more ancient wisdom.</p>
-<p>Through the sacred corridors of wisdom&#39;s temple, thou hast unveiled the insights of the venerable Oracle—take heart, noble seeker, for thy journey shines like a celestial jewel upon the tapestry of destiny! ⭐⚡💎</p>
+<p>You have mapped the sacred conduits from inscription to oracle. The temple stirs, eager for the next ritual where story and quest tablets will be inscribed with newfound clarity. Proceed, seeker.</p>
+<p>Hail, seeker of wisdom—thou hast deciphered the code and consecrated the content pipeline in Quest 3, etching sacred runes of analysis upon the temple of knowledge and forging a triumphant step to 40% completion, onward to further lore and glory!</p>
 
 </div>
 

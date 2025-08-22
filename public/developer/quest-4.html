@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 4: The Vault of Themes - Repo Adventure</title>
+    <title>Quest 4: The Hall of Themes and Runes - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Repository of Infinite Adventures</a>
+                <a href="index.html">Mythic Repository Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,76 +41,50 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: The Vault of Themes</h1>
+    <h1>Quest 4: The Hall of Themes and Runes</h1>
 <hr>
-<p>You stand before the towering shelves of the Vault of Themes, where the essence of every possible adventure is meticulously cataloged and bound in shimmering scrolls of data. This is the heart of thematic operations, housing the intricate configurations and robust validation schemas that breathe life into the adventures of countless explorers. Embrace your role as the Keeper of Code and traverse this repository of boundless imagination. Decode the logic, analyze the structures, and harness the power of the Vault to customize or rectify the realms of narrative exploration.</p>
+<p>In this technical exploration, you will examine the theme registry and validation runes that govern configuration and input safety. This quest focuses on how theme metadata is defined, parsed, and validated, as well as how configuration constants establish limits and cadence. Treat the questions below as a guided checklist while reading the code, intended to help you identify architectural patterns, data flow, and validation safeguards. All examples reference real code from the specified files to ensure practical, implementation-focused learning.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:  </p>
+<p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Thematic Threads</strong>: How are themes structured and retrieved? What makes the theme system maintainable and extensible?  </li>
-<li>⚡ <strong>Validation Nexus</strong>: How does the <code class="inline-code">validateTheme</code> function ensure user inputs align with existing themes? What patterns make this mechanism robust?  </li>
-<li>🛡️ <strong>Defensive Coding</strong>: How do <code class="inline-code">validateTheme</code> and <code class="inline-code">sanitizeForDisplay</code> ensure safe and proper handling of user inputs?</li>
+<li>🔍 Theme Sentinel: How does <code class="inline-code">parseTheme</code> combine exact key matching, numeric ID matching, and keyword includes to resolve a user input to a theme?</li>
+<li>⚡ Configuration Cadence: Which configuration constants directly influence LLM behavior and pipeline constraints, and how are env vars integrated safely?</li>
+<li>🛡️ Input Wardens: How do <code class="inline-code">validateTheme</code>, <code class="inline-code">validateProjectPath</code>, and <code class="inline-code">sanitizeForDisplay</code> constrain untrusted input while remaining developer-friendly?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/input-validator.ts:</span> Input validation for themes</h3>
-<p>This file handles validating user input for theme selection and project paths, ensuring they conform to defined expectations. The logic uses structured error handling and leverages imported data about themes to ensure a valid selection. Functions like <code class="inline-code">validateTheme</code> integrate with theme definitions to allow for seamless validation and normalization. Additionally, <code class="inline-code">sanitizeForDisplay</code> prevents unsafe characters from being displayed by removing potential malicious input.  </p>
-<h4>Highlights</h4>
+<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Centralized theme registry and resolution logic</h3>
+<p>This file provides a single source of truth for theme definitions and helpers. The <code class="inline-code">THEMES</code> object encodes each theme’s <code class="inline-code">id</code>, <code class="inline-code">key</code>, <code class="inline-code">displayName</code>, <code class="inline-code">emoji</code>, <code class="inline-code">description</code>, and <code class="inline-code">keywords</code>. Retrieval helpers <code class="inline-code">getThemeById</code>, <code class="inline-code">getThemeByKey</code>, and <code class="inline-code">getAllThemes</code> operate on a derived <code class="inline-code">THEMES_ARRAY</code>. Validation and parsing are intentionally simple, relying on array scanning rather than complex data structures, improving readability and maintainability given the small fixed set.</p>
+<p>Key flow:</p>
 <ul>
-<li><code class="inline-code">validateTheme</code>: Ensures user-specified themes exist and are valid.  </li>
-<li><code class="inline-code">sanitizeForDisplay</code>: Cleans potentially unsafe strings for display.  </li>
-<li><code class="inline-code">validateAdventureChoice</code>: Normalizes and validates input for adventure selection.</li>
+<li><code class="inline-code">parseTheme</code> normalizes input, attempts exact key matching with <code class="inline-code">getThemeByKey</code>, then numeric parsing via <code class="inline-code">getThemeById</code>, and finally a keyword includes scan over all entries. This sequence allows flexible user input such as numeric IDs or descriptive keywords.</li>
+<li><code class="inline-code">isValidTheme</code> is a type guard that checks presence of <code class="inline-code">theme.key</code> within <code class="inline-code">THEMES_ARRAY</code>, ensuring post-parse validity.</li>
+<li>Formatting helpers like <code class="inline-code">formatThemeOption</code> and <code class="inline-code">getFormattedThemeOptions</code> create display-ready text while maintaining the underlying canonical data.</li>
 </ul>
-<h2>Code</h2>
-<h3>packages/core/src/shared/input-validator.ts</h3>
-<pre><code class="language-typescript">export function validateTheme(input: string): string {
-  if (!input?.trim()) {
-    throw new Error(&#39;Theme is required&#39;);
-  }
-  
-  const normalized = input.toLowerCase().trim();
-  const parsedTheme = parseTheme(normalized);
-  
-  if (!parsedTheme || !isValidTheme(parsedTheme)) {
-    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
-    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
-  }
-  
-  return parsedTheme;
-}
-</code></pre>
-<p>This function ensures the chosen theme is valid by normalizing inputs, parsing them for matching a theme, and throwing errors for invalid choices.  </p>
-<pre><code class="language-typescript">export function sanitizeForDisplay(input: string, maxLength = 1000): string {
-  if (!input) return &#39;&#39;;
-  
-  return input
-    .replace(/[&lt;&gt;{}&quot;`]/g, &#39;&#39;)
-    .replace(/\s+/g, &#39; &#39;)
-    .trim()
-    .slice(0, maxLength);
-}
-</code></pre>
-<p>This function makes string data safe to display by removing potentially harmful characters or unnecessary whitespace.  </p>
-<pre><code class="language-typescript">export function validateAdventureChoice(input: string): string {
-  if (!input?.trim()) {
-    throw new Error(&#39;Choice is required&#39;);
-  }
-  
-  if (input.length &gt; 200) {
-    throw new Error(&#39;Choice too long (max 200 characters)&#39;);
-  }
-  
-  return input.trim();
-}
-</code></pre>
-<p>This function validates user input for adventure choices, ensuring mandatory requirements like length and presence.  </p>
-<hr>
-<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Centralized theme handling</h3>
-<p>This file defines all themes, their structure, and logic for interacting with them throughout the system. It maintains extensibility through easily structured definitions and provides utility functions like <code class="inline-code">isValidTheme</code> and <code class="inline-code">parseTheme</code> for input processing. Each theme encapsulates its unique identifiers, a description, display name, emoji, and matching keywords used to validate user choices effectively.  </p>
+<p>The combination of explicit structure and minimal logic enables robust, auditable theme resolution with clear extension points if more themes are added.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">THEMES</code>: Core theme definitions holding critical properties.  </li>
-<li><code class="inline-code">getAllThemes</code>: Retrieves all theme options for iteration or validation.  </li>
-<li><code class="inline-code">isValidTheme</code>: Verifies if an input string corresponds to a defined theme.</li>
+<li><code class="inline-code">THEMES</code> defines canonical theme data and keywords</li>
+<li><code class="inline-code">getAllThemes</code> returns a list used by validation and formatting</li>
+<li><code class="inline-code">isValidTheme</code> provides a type guard for post-parse checks</li>
+<li><code class="inline-code">parseTheme</code> implements multi-strategy input resolution</li>
+<li><code class="inline-code">formatThemeOption</code> standardizes theme display text</li>
+</ul>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Configuration runes and operational limits</h3>
+<p>This file centralizes configuration for LLM interaction, analysis timeouts, cache TTLs, and adventure-specific limits. Environment variables are loaded via <code class="inline-code">dotenv</code> with defaults for safe operation. Constants like <code class="inline-code">LLM_REQUEST_TIMEOUT</code>, <code class="inline-code">REPOMIX_CACHE_TTL</code>, and <code class="inline-code">MAX_FILE_SIZE_MB</code> directly influence performance, reliability, and resource usage.</p>
+<p>Key flow:</p>
+<ul>
+<li>LLM settings (<code class="inline-code">LLM_BASE_URL</code>, <code class="inline-code">LLM_MODEL</code>, <code class="inline-code">LLM_MAX_TOKENS_*</code>, <code class="inline-code">LLM_TEMPERATURE</code>) define generation capacity and variability, with defaults providing a sensible baseline.</li>
+<li>Timeouts and buffers (<code class="inline-code">FILE_READ_TIMEOUT</code>, <code class="inline-code">LLM_REQUEST_TIMEOUT</code>, <code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code>) protect the system from stalls and memory exhaustion.</li>
+<li>Analysis constraints (<code class="inline-code">MAX_SCAN_DEPTH</code>, <code class="inline-code">MAX_FILE_SIZE_MB</code>, <code class="inline-code">MAX_FILES_PER_QUEST</code>) keep content generation bounded and reproducible.</li>
+<li>Error messages and ignore patterns establish consistent user-facing feedback and predictable scanning scope.</li>
+</ul>
+<p>This centralized approach encourages consistent configuration usage across modules and simplifies operational tuning via env vars.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code> sets upper bound for story generation requests</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code> governs context caching duration</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code> constrains analysis to keep resource use predictable</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/theme.ts</h3>
@@ -131,49 +105,91 @@
     description: &#39;Explore magical and mythical realms where databases are dragon hoards and functions are powerful spells&#39;,
     keywords: [&#39;mythical&#39;, &#39;magic&#39;, &#39;enchanted&#39;, &#39;castle&#39;, &#39;dragon&#39;, &#39;fantasy&#39;, &#39;medieval&#39;, &#39;kingdom&#39;]
   },
-  // Additional themes truncated for brevity
-};
+  ANCIENT: {
+    id: 3,
+    key: &#39;ancient&#39;,
+    displayName: &#39;Ancient Civilization&#39;,
+    emoji: &#39;🏺&#39;,
+    description: &#39;Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes&#39;,
+    keywords: [&#39;ancient&#39;, &#39;temple&#39;, &#39;pyramid&#39;, &#39;archaeology&#39;, &#39;historical&#39;, &#39;civilization&#39;, &#39;ruins&#39;]
+  },
+  DEVELOPER: {
+    id: 4,
+    key: &#39;developer&#39;,
+    displayName: &#39;Developer Documentation&#39;,
+    emoji: &#39;📖&#39;,
+    description: &#39;Technical documentation approach with clear explanations, best practices, and code analysis&#39;,
+    keywords: [&#39;developer&#39;, &#39;code&#39;, &#39;technical&#39;, &#39;debug&#39;, &#39;guide&#39;, &#39;tutorial&#39;, &#39;binary&#39;]
+  },
+  CUSTOM: {
+    id: 5,
+    key: &#39;custom&#39;,
+    displayName: &#39;Custom Theme&#39;,
+    emoji: &#39;🎨&#39;,
+    description: &#39;Design your own adventure! You\&#39;ll be prompted to provide theme name, description, and keywords&#39;,
+    keywords: [&#39;custom&#39;, &#39;personalized&#39;, &#39;unique&#39;, &#39;creative&#39;, &#39;personal&#39;]
+  }
+} as const;
 </code></pre>
-<p>This object serves as the single source of truth, housing the metadata for all predefined themes.  </p>
+<p>Think of <code class="inline-code">THEMES</code> as a well-structured catalog where each entry has a fixed SKU, readable name, and tags for search.</p>
 <pre><code class="language-typescript">export function getAllThemes(): ThemeDefinition[] {
   return THEMES_ARRAY;
 }
 </code></pre>
-<p>This function retrieves all themes by processing the <code class="inline-code">THEMES</code> object for easy iteration.  </p>
+<p>This is like returning all items from inventory without filters for easy iteration and display.</p>
 <pre><code class="language-typescript">export function isValidTheme(theme: string): theme is AdventureTheme {
   return THEMES_ARRAY.some(t =&gt; t.key === theme);
 }
 </code></pre>
-<p>This function validates whether a given string matches one of the predefined theme keys.  </p>
-<hr>
-<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Configuration constants</h3>
-<p>This file provides constants for the system. It includes runtime settings like API timeouts, maximum file sizes, and default values. For the theme system, it houses the <code class="inline-code">DEFAULT_THEME</code>, used as a fallback for invalid or missing inputs.  </p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">DEFAULT_THEME</code>: Specifies the fallback or initial theme.  </li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Restricts file size for analysis.  </li>
-<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Configures caching duration.</li>
-</ul>
-<h2>Code</h2>
+<p>This is a gatekeeper that only allows known keys to pass as valid entries.</p>
+<pre><code class="language-typescript">export function parseTheme(input: string): AdventureTheme | null {
+  if (!input) return null;
+  
+  const normalized = input.trim().toLowerCase();
+  
+  const exactMatch = getThemeByKey(normalized);
+  if (exactMatch) return exactMatch.key as AdventureTheme;
+  
+  const numericId = parseInt(normalized, 10);
+  if (!isNaN(numericId)) {
+    const byId = getThemeById(numericId);
+    if (byId) return byId.key as AdventureTheme;
+  }
+  
+  for (const theme of THEMES_ARRAY) {
+    if (theme.keywords.some(keyword =&gt; normalized.includes(keyword.toLowerCase()))) {
+      return theme.key as AdventureTheme;
+    }
+  }
+  
+  return null;
+}
+</code></pre>
+<p>This works like a multi-stage search: exact match, ID lookup, then keyword relevance.</p>
+<pre><code class="language-typescript">export function formatThemeOption(theme: ThemeDefinition): string {
+  return `${theme.emoji} **${theme.id}. ${theme.displayName}** - ${theme.description}`;
+}
+</code></pre>
+<p>This is a formatter that produces a consistent, human-friendly listing entry.</p>
 <h3>packages/core/src/shared/config.ts</h3>
-<pre><code class="language-typescript">export const DEFAULT_THEME = &#39;space&#39; as const;
+<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
 </code></pre>
-<p>Defines the default theme as <code class="inline-code">space</code>, ensuring a consistent fallback for adventure generation.  </p>
-<pre><code class="language-typescript">export const MAX_FILE_SIZE_MB = 10;
-</code></pre>
-<p>Limits the file size for analysis to focus resources on manageable input.  </p>
+<p>Treat this as a stopwatch that prevents LLM calls from running indefinitely.</p>
 <pre><code class="language-typescript">export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;60000&#39;); // 60 seconds, configurable via env
 </code></pre>
-<p>Sets the cache expiration period to improve performance and allow configuration via environment variables.  </p>
+<p>This is a freshness timer ensuring repomix results are reused for a short window.</p>
+<pre><code class="language-typescript">export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
+</code></pre>
+<p>This functions like a gate that blocks oversized files from analysis.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Investigate how <code class="inline-code">THEMES</code> enables centralized and maintainable theme management.  </li>
-<li>Consider edge cases covered by <code class="inline-code">validateTheme</code> and how errors surface user-friendly messages.  </li>
-<li>Explore using <code class="inline-code">sanitizeForDisplay</code> for broader safety in user-facing features.</li>
+<li>Prefer <code class="inline-code">parseTheme</code> followed by <code class="inline-code">isValidTheme</code> for resilient theme resolution paths.</li>
+<li>Use configuration constants rather than hardcoding values to keep behavior consistent and tunable via env vars.</li>
+<li>Pair <code class="inline-code">validateProjectPath</code> and <code class="inline-code">sanitizeForDisplay</code> (from <code class="inline-code">input-validator.ts</code>) with error messages from <code class="inline-code">config.ts</code> to provide clear, safe feedback.</li>
 </ul>
 <hr>
-<p>You have successfully unlocked the secrets of the Vault of Themes! Your newfound clarity will serve you well in deciphering and wielding the thematic powers of the adventure system.</p>
-<p>Congratulations on debugging your way through Quest 4: The Vault of Themes—your commitment to iterating on complex challenges is deploying success at 60% completion; keep pushing towards the final milestone! 🚀⚡💎</p>
+<p>Adventure complete. You have mapped the theme registry, validation runes, and configuration limits that shape system behavior. Use these insights to implement consistent theme resolution and secure configuration in your own modules.</p>
+<p>Quest 4: The Hall of Themes and Runes successfully merged into main—excellent refactor of styling patterns and semantic tokens—bringing you to 60% completion; keep shipping clean, modular UI architecture and iterate like a pro 🚀⚡.</p>
 
 </div>
 

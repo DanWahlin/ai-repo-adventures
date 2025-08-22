@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The MCP Nexus - Repo Adventure</title>
+    <title>Quest 1: The Gate of MCP Tools - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Repository of Infinite Adventures</a>
+                <a href="index.html">Mythic Repository Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,28 +41,38 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The MCP Nexus</h1>
+    <h1>Quest 1: The Gate of MCP Tools</h1>
 <hr>
-<p>Within the Repository of Infinite Adventures, the MCP Nexus hums with energy. Its cryptic algorithms weave together tales of exploration and intrigue, each story a new challenge for the Keeper of Code. As you approach a glowing terminal, you recognize this as the interface to the &quot;MCP Tool Interface.&quot; Its purpose: to facilitate dynamic interactions between the codebase&#39;s tools and its users. Prepare yourself to decode its operations and uncover the secrets of interactive tool execution!</p>
+<p>In this quest, you audit the MCP gateway that exposes tools for initiating, choosing, and progressing through developer adventures. Your focus is the server interface and its tool registry: how requests are validated, routed, and executed, and how transport and lifecycle concerns are handled. This guide is an exploration path, not a prerequisite checklist. Study the implementations to understand how code becomes an interactive interface for repository-guided learning, and how argument schemas, error handling, and background preprocessing align to deliver reliable, tool-driven workflows.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Handler Construction</strong>: How does the <code class="inline-code">setupHandlers</code> method dynamically configure tool listing and execution within the server?</li>
-<li>⚡ <strong>Server Lifecycle</strong>: What steps does the <code class="inline-code">run</code> function take to initialize the MCP server and ensure readiness for operation?</li>
-<li>🛡️ <strong>Error Handling Protocol</strong>: How does the <code class="inline-code">main</code> function manage unexpected errors during startup and runtime?</li>
+<li>🔍 Gateway Map: How does <code class="inline-code">RepoAdventureServer.setupHandlers</code> produce dynamic tool listings with per-tool schemas, and what pattern ensures JSON Schema compatibility?</li>
+<li>⚡ Transport Cadence: In <code class="inline-code">RepoAdventureServer.run</code>, how is the stdio transport initialized and why is pre-generation invoked without awaiting completion?</li>
+<li>🛡️ Fault Ward: In <code class="inline-code">main</code>, how do signal handlers and unhandled rejection listeners ensure resilience without premature termination?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Core MCP Server Setup and Lifecycle</h3>
-<p>This file defines the <code class="inline-code">RepoAdventureServer</code>, the entry point for the MCP server that facilitates communication between tools and the user. It sets request handlers for dynamic tool management, initializes the server, and ensures operational stability through robust error handling.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP server setup, tool routing, transport, and lifecycle orchestration</h3>
+<p>This file defines the MCP server that publishes tools and executes them on demand. The <code class="inline-code">RepoAdventureServer</code> encapsulates a <code class="inline-code">Server</code> instance configured with a name, version, description, and <code class="inline-code">tools</code> capability. The critical <code class="inline-code">setupHandlers</code> method registers request handlers for both <code class="inline-code">ListToolsRequestSchema</code> and <code class="inline-code">CallToolRequestSchema</code>. For listing, it enumerates <code class="inline-code">tools</code> and converts each Zod <code class="inline-code">schema</code> to JSON Schema using <code class="inline-code">zodToJsonSchema</code> with <code class="inline-code">target: &#39;jsonSchema7&#39;</code> and <code class="inline-code">$refStrategy: &#39;none&#39;</code>. This ensures clients receive fully inlined schemas that are straightforward to validate client-side. For execution, it validates input via <code class="inline-code">tool.schema.safeParse(args)</code>, aggregates Zod error messages if invalid, and throws typed <code class="inline-code">McpError</code> instances with <code class="inline-code">ErrorCode</code> values for predictable client handling. Successful validation leads to invoking <code class="inline-code">tool.handler(validatedArgs)</code> and returning its result.</p>
+<p>The <code class="inline-code">run</code> method wires a <code class="inline-code">StdioServerTransport</code>, connects, logs readiness, then triggers <code class="inline-code">repoAnalyzer.preGenerate(projectPath)</code> to warm caches in the background. It deliberately does not await this to avoid blocking tool availability. The <code class="inline-code">main</code> function constructs the server, registers graceful shutdown for <code class="inline-code">SIGINT</code>/<code class="inline-code">SIGTERM</code> via <code class="inline-code">gracefulShutdown</code> that includes <code class="inline-code">repoAnalyzer.cleanup()</code>, and installs an <code class="inline-code">unhandledRejection</code> listener that logs and continues, preserving uptime unless startup fails. Fatal startup errors are caught, logged, and cause exit with status 1. This design balances robustness with responsiveness, ensuring tool listing and calling are reliable while background preprocessing optimizes later operations.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code> dynamically generates and configures handlers for listing and executing tools.</li>
-<li><code class="inline-code">run</code> initializes the server and prepares it for user interaction while preloading the repository context.</li>
-<li><code class="inline-code">main</code> orchestrates server startup, integrates graceful shutdown signals, and manages unhandled promise rejections.</li>
+<li>Dynamic tool listing with JSON Schema generation for every registered tool</li>
+<li>Input validation using Zod with aggregated error messaging mapped to <code class="inline-code">McpError</code></li>
+<li>Background pre-generation of analysis to improve subsequent interactions</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Tool registry and re-exports for MCP integration</h3>
+<p>This module aggregates and exports the MCP tools that the server exposes. It imports <code class="inline-code">adventureManager</code> for shared state across tools, then imports four tool modules (<code class="inline-code">start-adventure</code>, <code class="inline-code">choose-theme</code>, <code class="inline-code">explore-quest</code>, <code class="inline-code">view-progress</code>) and re-exports them under MCP-friendly snake_case names: <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, <code class="inline-code">view_progress</code>. The final <code class="inline-code">tools</code> object is a flat registry keyed by these names and is what <code class="inline-code">server.ts</code> enumerates for listing and calling. This structure separates tool implementation detail from registration, enabling the server to remain generic. The comments document the recommended flow: starting an adventure, selecting a theme, exploring quests, and viewing progress. While handlers for each tool are implemented in their respective files, their presence here ensures that <code class="inline-code">server.ts</code> can reference a single source of truth for available tools, their <code class="inline-code">description</code>, <code class="inline-code">schema</code>, and <code class="inline-code">handler</code>. This design supports scalable addition or removal of tools without altering server routing logic, and encourages schema-first definitions for reliable validation and discoverability through the MCP protocol.</p>
+<h4>Highlights</h4>
+<ul>
+<li>Clear registry pattern mapping tools to MCP-exposed names</li>
+<li>Centralized export <code class="inline-code">tools</code> consumed by server listing and execution</li>
+<li>Documentation of tool flow supports client-side orchestration</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
+<pre><code class="language-typescript">  private setupHandlers() {
+    // Dynamic tool listing
     this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
       const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
         name,
@@ -76,6 +86,7 @@
       return { tools: toolList };
     });
 
+    // Dynamic tool execution
     this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
       try {
         const { name, arguments: args } = request.params;
@@ -86,6 +97,7 @@
 
         const tool = tools[name as keyof typeof tools];
         
+        // Validate arguments using the tool&#39;s Zod schema
         const validationResult = tool.schema.safeParse(args);
         if (!validationResult.success) {
           const errorMessages = validationResult.error.issues.map((err) =&gt; 
@@ -94,6 +106,7 @@
           throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
         }
 
+        // Execute the tool handler with validated arguments
         return await tool.handler(validationResult.data as any);
 
       } catch (error) {
@@ -106,31 +119,36 @@
         );
       }
     });
-}
+  }
 </code></pre>
-<p>The <code class="inline-code">setupHandlers</code> method is like a wizard configuring spells dynamically: here, tool listing is a map, and tool execution is invoked through validation and error-safe calls.</p>
-<pre><code class="language-typescript">async run() {
+<p>Like a receptionist who both prints a directory and validates appointments before letting visitors in.</p>
+<pre><code class="language-typescript">  async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
     
+    // Pre-generate repomix content for the current working directory to warm up the cache
+    // This happens in the background while waiting for user commands
     const projectPath = process.cwd();
     console.error(`Pre-generating repomix content for project at ${projectPath}...`);
     repoAnalyzer.preGenerate(projectPath);
-}
+  }
 </code></pre>
-<p>The <code class="inline-code">run</code> function is the launch pad for the server, connecting the transport layer and warming up cache for smooth user interaction.</p>
+<p>Like opening the shop doors, greeting customers, and quietly prepping supplies in the back room without blocking the front.</p>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
     
+    // Handle graceful shutdown for both signals
     [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
     
+    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
     });
     
     await server.run();
@@ -139,17 +157,48 @@
     process.exit(1);
   }
 }
+
+main().catch((error) =&gt; {
+  console.error(&#39;Unhandled error:&#39;, error);
+  process.exit(1);
+});
 </code></pre>
-<p>The <code class="inline-code">main</code> function is like deploying a fortress: it handles fatal startup errors, sets up signals for safe shutdown, and maintains resilience against unhandled promises.</p>
+<p>Like assigning staff to handle fire alarms and complaint logs, keeping the store open unless the opening routine fails.</p>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">import { adventureManager } from &#39;@ai-repo-adventures/core/adventure&#39;;
+import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
+import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
+import { viewProgress } from &#39;./tools/view-progress.js&#39;;
+
+// Export the shared adventure manager for tools that need it
+export { adventureManager };
+
+// Re-export tools with MCP naming convention
+export const start_adventure = startAdventure;
+export const choose_theme = chooseTheme;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
+
+
+// Export all tools for easy registration
+export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<p>Like a catalog that standardizes product names and displays an index for easy checkout.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>To modify or add new tools, see <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a>. Ensure the proper schemas and handlers are defined.</li>
-<li>Investigate MCP&#39;s tool listing schema in <code class="inline-code">setupHandlers</code> to learn how tool metadata transforms into dynamic capabilities.</li>
-<li>Preloading the repository context in <code class="inline-code">run</code> boosts user experience performance.</li>
+<li>Validate schemas at the boundary: use Zod <code class="inline-code">safeParse</code> and convert to JSON Schema for client discoverability.</li>
+<li>Keep transport setup minimal: initialize <code class="inline-code">StdioServerTransport</code> and return quickly to avoid blocking tool usage.</li>
+<li>Optimize warm paths: trigger background preprocessing to improve first-response latency without delaying startup.</li>
 </ul>
 <hr>
-<p>Quest completed! You have successfully decoded the intricate operations of the MCP server interface, uncovering the hidden sequences that power this interactive engine.</p>
-<p>Congratulations, Developer! You&#39;ve successfully debugged Quest 1: The MCP Nexus—your codebase just experienced a monumental merge; onward to deploy 🚀💎!</p>
+<p>Adventure checkpoint reached. You have mapped the MCP gateway’s listing, validation, and lifecycle. Continue with tool implementations to complete the interface.</p>
+<p>Quest 1: The Gate of MCP Tools successfully merged—great job initializing your toolchain and validating the integration pipeline; keep iterating toward the remaining milestones with clean commits, strong test coverage, and continuous delivery momentum 🚀⚡</p>
 
 </div>
 
