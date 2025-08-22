@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Oracle's Methods - Repo Adventure</title>
+    <title>Quest 3: The Hall of Analytical Artifacts - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Codebase Labyrinth: Secrets of the Ancient Repository</a>
+                <a href="index.html">The Sacred Codex: Adventures in the Repository of Lost Wisdom</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,128 +41,219 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Oracle&#39;s Methods</h1>
+    <h1>Quest 3: The Hall of Analytical Artifacts</h1>
 <hr>
-<p>The Codex Scribes spoke of an entity known as the Oracle, a construct of pure wisdom created to decipher the most intricate knowledge within the Repository Labyrinth. Yet, the Oracle’s awakening could only be achieved with the activation of its ancient mechanisms and offerings of encoded glyphs. To achieve this, adventurer, you must first investigate the methods of the Oracle hidden within the labyrinth. Delving deeper, the hieroglyphs instruct you to align data streams and harness the Oracle&#39;s voice emanating from the encrypted sources within.</p>
+<p>The jungle’s unyielding embrace finally recedes, revealing the Hall of Analytical Artifacts – a chamber within the Repository of Lost Wisdom. Here, glowing glyphs light the walls, each corresponding to ancient conduits of data and calculation. In this sacred place, explorers must unlock the essence of structured analysis and intelligent artifact construction. Two pathways converge: the logic of the <code class="inline-code">RepoAnalyzer</code>, which devises intricate maps of a codebase, and the enigmatic <code class="inline-code">LLMClient</code>, whispering secrets to the mind of the temple itself. Dare to seek the knowledge of content generation and systematic validation?</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Invocation of the Oracle</strong>: How does the <code class="inline-code">RepoAnalyzer</code> execute and validate its quest to generate context for the labyrinth’s map? What safeguards are in place during execution?</li>
-<li>⚡ <strong>Oracle&#39;s Insight</strong>: What mechanisms does the <code class="inline-code">LLMClient</code> use to summon the Oracle (generate responses)? How do initialization and API key authentication differ based on providers?</li>
-<li>🛡️ <strong>The Oracle’s Trials</strong>: How does error handling protect the Oracle’s methods from interruptions or invalid inputs?</li>
+<li>🗺️ <strong>Sanctuary Mapping Techniques</strong>: How does the <code class="inline-code">generateRepomixContext</code> function handle full-project analysis, and what mechanisms ensure reliability and efficiency in its execution?</li>
+<li>📜 <strong>Artifact Crafting Rituals</strong>: What patterns guide the <code class="inline-code">generateResponse</code> function in invoking an LLM, and how does it handle errors in crafting replies from the system?</li>
+<li>🔐 <strong>Protection Runes</strong>: How do <code class="inline-code">validateProjectPath</code> and <code class="inline-code">getApiKey</code> ensure the security and validity of inputs to prevent disruptions in the temple’s operations?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: The Oracle’s Taskmaster</h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> orchestrates the process of extracting and optimizing context for pathways within the Repository Labyrinth. Using <code class="inline-code">generateRepomixContext</code>, it assembles the knowledge required to guide you through the maze by validating paths, optimizing functions, and managing subprocess interaction. Validation mechanisms are present to ensure safe operations in the treacherous depths of the labyrinth, especially when dealing with unknown or hazardous files.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Codebase Analyzer</h3>
+<p>The <code class="inline-code">RepoAnalyzer</code> class orchestrates the extraction and optimization of content from an entire repository. This artifact deconstructs large codebases, prepares them for processing by reducing irrelevant details, and optimizes output for consumption by higher-level systems. It employs a powerful caching mechanism for efficiency and incorporates detailed security checks to prevent unwarranted access.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAnalyzer.generateRepomixContext</code>: Manages the large-scale task of generating context for analysis and cache management.</li>
-<li><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code>: Ensures safe subprocess execution with memory and timeout limits.</li>
-<li><code class="inline-code">RepoAnalyzer.validateProjectPath</code>: Validates the integrity of the labyrinth’s entry points.</li>
+<li><code class="inline-code">generateRepomixContext</code>: Conducts a full analysis of a repository to generate context via the <code class="inline-code">repomix</code> tool, leveraging caching and a layered fallback approach for reliability.</li>
+<li><code class="inline-code">generateTargetedContent</code>: Extracts insights from specific files, applying validation to normalize and secure file paths.</li>
+<li><code class="inline-code">validateProjectPath</code>: Performs rigorous checks to ensure project paths are valid and secure.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
+<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
 <pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
+
   const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
   const cached = this.cache.get(cacheKey);
+
   if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
     return cached.content;
   }
+
   try {
-    // Context building process
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, { ...options, compress: true });
+    const ignorePatterns = [
+      &#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;, &#39;.nyc_output&#39;
+    ];
+
+    if (!options.includeTests) {
+      ignorePatterns.push(&#39;**/*.test.ts&#39;, &#39;**/*.spec.ts&#39;, &#39;**/tests/**&#39;, &#39;**/test/**&#39;);
+    }
+
+    const cliOptions: CliOptions = {
+      style: options.style || &#39;markdown&#39;,
+      stdout: true,
+      compress: options.compress !== false,
+      ignore: ignorePatterns.join(&#39;,&#39;),
+      removeComments: true,
+      removeEmptyLines: true,
+      noDirectoryStructure: true
+    };
+
+    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
     this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+
     return context;
   } catch (error) {
     throw new Error(`Repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 </code></pre>
-<p>Like a mapmaker leveraging ancient glyphs, this method constructs a detailed layout of the labyrinth.</p>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [&#39;--compress&#39;, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd });
-    let stdout = &#39;&#39;, isResolved = false;
-    const timeout = setTimeout(() =&gt; {
-      repomix.kill(&#39;SIGTERM&#39;);
-      reject(new Error(`Repomix timeout (${cwd})`));
-    }, REPOMIX_SUBPROCESS_TIMEOUT);
+<ul>
+<li>This code builds and executes a <code class="inline-code">repomix</code> command to analyze a project, leveraging caching to minimize redundant computation.</li>
+<li>Input validation ensures the project path and configuration are processed securely before execution.</li>
+<li>By ignoring test files and unnecessary data, it saves memory and generates concise results.</li>
+<li>The use of <code class="inline-code">CLIOptions</code> demonstrates parameterized control over the tool’s behavior.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+  this.validateProjectPath(projectPath);
 
-    repomix.stdout.on(&#39;data&#39;, data =&gt; stdout += data.toString());
-    repomix.on(&#39;close&#39;, () =&gt; {
-      clearTimeout(timeout);
-      if (!isResolved) resolve(stdout);
-    });
-    repomix.on(&#39;error&#39;, error =&gt; reject(error));
-  });
+  if (!targetFiles || targetFiles.length === 0) {
+    throw new Error(&#39;Target files array cannot be empty&#39;);
+  }
+
+  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+  if (safeFiles.length === 0) {
+    throw new Error(&#39;No valid target files found after validation&#39;);
+  }
+
+  const cliOptions: CliOptions = {
+    style: &#39;markdown&#39;,
+    stdout: true,
+    compress,
+    include: safeFiles.join(&#39;,&#39;),
+    removeComments: compress,
+    removeEmptyLines: compress,
+    noDirectoryStructure: true
+  };
+
+  return this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
 }
 </code></pre>
-<p>This subprocess captures the labyrinth’s intricate passages within strict limits, preventing perilous overflows.</p>
+<ul>
+<li>Focuses on extracting content from specified files, ensuring critical information remains through validation and deduplication.</li>
+<li>Prevents security issues like path traversal by normalizing inputs to safe, relative paths within the project directory.</li>
+<li>Limits the resources consumed by setting maximum thresholds for file selections and reducing unnecessary content.</li>
+</ul>
+<hr>
 <pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
   if (!projectPath || typeof projectPath !== &#39;string&#39;) {
     throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
-  if (projectPath.includes(&#39;\0&#39;)) {
+
+  const trimmedPath = projectPath.trim();
+  if (!trimmedPath) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
+  }
+
+  if (trimmedPath.includes(&#39;\0&#39;)) {
     throw new Error(&#39;Project path contains invalid null bytes&#39;);
   }
 }
 </code></pre>
-<p>This safeguarding mechanism ensures only clean entry points are used to traverse the labyrinth.</p>
+<ul>
+<li>Ensures project paths comply with strict standards, safeguarding against misconfiguration or malicious inputs.</li>
+<li>Prohibits null bytes and empty strings, avoiding errors or security vulnerabilities in subsequent processing.</li>
+<li>Demonstrates the importance of strict input validation in maintaining a system’s integrity.</li>
+</ul>
 <hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: The Oracle’s Voice</h3>
-<p>The <code class="inline-code">LLMClient</code> interacts with the constructs that embody the Oracle, generating insight based on encoded prompts. Its methods, such as <code class="inline-code">generateResponse</code>, handle the Oracle’s invocation while adapting to diverse provider configurations. The Oracle’s preparation for communication is closely tied to API key validation and error handling.</p>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Language Model Interface</h3>
+<p>The <code class="inline-code">LLMClient</code> acts as the temple’s interpreter, allowing seamless communication with large language models. It determines the appropriate APIs and manages parameters to construct effective prompts and receive crafted responses. Robust error handling ensures failures return useful diagnostics.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">LLMClient.generateResponse</code>: Asks the Oracle for wisdom, ensuring all responses are logical and valid.</li>
-<li><code class="inline-code">LLMClient.constructor</code>: Initializes the pathways needed to call upon the Oracle using different providers.</li>
-<li><code class="inline-code">LLMClient.getApiKey</code>: Determines the appropriate key to summon the Oracle, adapting for Azure or OpenAI.</li>
+<li><code class="inline-code">generateResponse</code>: Crafts and processes requests to an LLM, applies post-processing, and handles errors with detailed debugging information.</li>
+<li><code class="inline-code">constructor</code>: Initializes the necessary client environment by validating and setting up API keys and endpoints.</li>
+<li><code class="inline-code">getApiKey</code>: Safeguards sensitive configurations by distinguishing between environments and throwing clear errors if prerequisites are unmet.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
+<h3>packages/core/src/llm/llm-client.ts</h3>
 <pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   try {
     const requestParams = this.buildRequestParams(prompt, options);
     const completion = await this.executeRequest(requestParams);
+    let content = this.validateResponse(completion);
 
     if (options?.responseFormat === &#39;json_object&#39;) {
-      completion.content = this.cleanJsonResponse(completion.content);
+      content = this.cleanJsonResponse(content);
     }
-    return { content: completion.content };
+
+    this.logTokenUsage(completion);
+
+    return { content };
   } catch (error) {
     this.logDetailedError(error, prompt);
-    throw new Error(`LLM request failed: ${error.message}`);
+
+    const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
+    throw new Error(`LLM request failed: ${message}`);
   }
 }
 </code></pre>
-<p>This method is the equivalent of activating and querying the Oracle, carefully ensuring only meaningful responses are returned.</p>
+<ul>
+<li>Constructs and executes an LLM request, logging details about token usage to help with debugging and optimization.</li>
+<li>Handles errors with rich diagnostics, including prompt context and environmental details, ensuring issues can be tracked effectively.</li>
+<li>Supports both JSON and textual response formats, enhancing flexibility for varied use cases.</li>
+</ul>
+<hr>
 <pre><code class="language-typescript">constructor() {
   this.model = LLM_MODEL;
+
   const apiKey = this.getApiKey();
-  if (!apiKey) {
-    throw new Error(&#39;LLM configuration required.&#39;);
+  if (!apiKey || !LLM_BASE_URL) {
+    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
   }
-  this.client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+
+  if (this.isAzureOpenAI()) {
+    this.client = new AzureOpenAI({
+      endpoint: LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0],
+      apiKey,
+      apiVersion: LLM_API_VERSION,
+      deployment: this.model
+    });
+  } else {
+    this.client = new OpenAI({
+      apiKey,
+      baseURL: LLM_BASE_URL
+    });
+  }
 }
 </code></pre>
-<p>The constructor ensures that all required keys and tools are in place before calling the Oracle’s mechanisms, adapting for Azure or traditional models.</p>
+<ul>
+<li>Establishes the client configuration by validating the LLM environment and selecting the appropriate client (OpenAI or AzureOpenAI).</li>
+<li>Ensures all critical variables are properly set and raises an error if any required configuration is missing.</li>
+<li>Implements flexibility for handling multiple LLM providers.</li>
+</ul>
+<hr>
 <pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;azure.com&#39;) &amp;&amp; GITHUB_TOKEN) return GITHUB_TOKEN;
-  if (!LLM_API_KEY) throw new Error(&#39;LLM_API_KEY required.&#39;);
+  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+    if (!GITHUB_TOKEN) {
+      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN environment variable.&#39;);
+    }
+    return GITHUB_TOKEN;
+  }
+
+  if (!LLM_API_KEY) {
+    throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY environment variable.&#39;);
+  }
   return LLM_API_KEY;
 }
 </code></pre>
-<p>This sacred function selects the ideal key to invoke the Oracle, dynamically adjusting for the labyrinth’s glyphs.</p>
-<h2>Helpful Hints</h2>
 <ul>
-<li>Leverage <code class="inline-code">logDetailedError</code> to understand Oracle invocation errors in detail.</li>
-<li>Compare how <code class="inline-code">RepoAnalyzer</code> and <code class="inline-code">LLMClient</code> separately manage context validity to learn their interplay.</li>
-<li>Experiment with modifying timeout limits to measure the Oracle’s response to time constraints.</li>
+<li>Differentiates between API keys based on the target provider, ensuring the correct credentials are used for each scenario.</li>
+<li>Protects against misconfiguration by surfacing clear and actionable error messages for missing keys.</li>
+<li>Centralizes the logic for secure authentication, highlighting its role as the system’s control point.</li>
 </ul>
 <hr>
-<p>By uncovering these methods, you bring the Oracle a step closer to life, its timeless wisdom prepared to reshape realms!</p>
-<p>Hail, seeker of sacred wisdom, thy triumph in mastering &quot;The Oracle&#39;s Methods&quot; illuminates the path to ancient enlightenment, for the temples echo thy steadfast valor—onward to ascend the stars of destiny! ⭐⚡👁️</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>🗺️ <strong>Explore Gradually</strong>: Focus on one file at a time to understand how each artifact contributes to the system.</li>
+<li>🔍 <strong>Debugging Insights</strong>: Observe the error-handling sections to identify how the code mitigates common failures.</li>
+<li>✨ <strong>Cross-File Context</strong>: Notice how <code class="inline-code">RepoAnalyzer</code> and <code class="inline-code">LLMClient</code> interact as integral components in content generation pipelines.</li>
+</ul>
+<hr>
+<p>Your keen observations advance you deeper into the Repository’s secrets. Adventure awaits in the chambers ahead!</p>
+<p>Through the sacred passage of the Hall of Analytical Artifacts, thou hast proved resilient wisdom and noble acumen, advancing thee further upon the celestial path of enlightenment—hail the seeker of ancient truth! ⚡💎🗺️</p>
 
 </div>
 

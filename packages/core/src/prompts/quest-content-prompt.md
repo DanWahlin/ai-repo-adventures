@@ -21,6 +21,9 @@ Generate {{theme}}-themed quest content for: "{{adventureTitle}}"
 - If guidance lists 3 highlights for a file, show code for all 3 highlights
 - Each highlight name corresponds to a function/method that must appear in code section
 - Missing any highlight is unacceptable - complete coverage required
+- In the File Exploration Highlights section, describe each function/method that will be shown in code
+- Format highlights as: `functionName` followed by what it does and why it's important
+- DO NOT just list function names - provide meaningful descriptions
 
 ## Quest Objectives Requirements
 **IMPORTANT**: Quest Objectives must be investigative questions based on the actual code:
@@ -48,24 +51,49 @@ As you explore the code below, investigate these key questions:
 ### [filepath]: [description]
 [200-300 word analysis paragraph with backticked code elements]
 #### Highlights
-- [3-5 bullets with key points]
+- [3-5 descriptive bullets explaining what key functions/methods do and why they matter]
+- [Each highlight should mention a specific function/method name and describe its purpose]
+- [Format: `functionName` followed by description of what it does and its significance]
+- [Example: `setupHandlers` dynamically lists tools and validates parameters for mission execution]
+- [Example: `run` activates transport and pre-generates actionable content for seamless workflows]
 
 ## Code
 ### [filepath]
 ```[language]
 [Code for highlight 1 - e.g., setupHandlers function]
 ```
-[Plain English analogy sentence]
+[After each code snippet, provide 3-5 bullet points explaining:]
+- What this code does in the context of the system
+- Key patterns or techniques being used
+- Why this approach was chosen or what problems it solves
+- How it connects to other parts of the codebase
+- Important details readers should notice
+
+---
 
 ```[language]
 [Code for highlight 2 - e.g., run function]  
 ```
-[Plain English analogy sentence]
+[3-5 educational bullet points about this code:]
+- Core functionality and purpose
+- Technical implementation details
+- Design decisions and their benefits
+- Relationships to other components
+- Key concepts illustrated
+
+---
 
 ```[language]
 [Code for highlight 3 - e.g., main function]
 ```
-[Plain English analogy sentence]
+[3-5 insightful bullet points covering:]
+- The role this code plays in the larger system
+- Specific techniques or patterns demonstrated
+- Error handling or edge cases addressed
+- Performance or architectural considerations
+- Learning opportunities for readers
+
+---
 
 ## Helpful Hints
 - [Practical tip]
