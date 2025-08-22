@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Stellar Narrative Engine Ignition - Repo Adventure</title>
+    <title>Quest 2: Forging the Adventure Core Reactor - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Starship Repo Odyssey</a>
+                <a href="index.html">Galactic Expedition: Chronicles of the Codebase</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,98 +41,74 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: Stellar Narrative Engine Ignition</h1>
+    <h1>Quest 2: Forging the Adventure Core Reactor</h1>
 <hr>
-<p>With the Repo Odyssey drifting past a nebula of tangled commits, your console flickers: the AdventureManager and StoryGenerator are warming their cores. The MCP relay hums as <code class="inline-code">parseAdventureConfig</code> feeds navigational waypoints into the plotter. Your mission: synchronize the narrative engine so future crews can orbit stories and descend into quests with precision. Tune the scanners to config signals, verify quest trajectories, and route LLM pulses without losing thrust. Align these subsystems, and the code galaxy reveals safe passages and lively star charts for every explorer on board.</p>
+<p>The <em>Codexus</em> hums with anticipation as your team orbits the enigmatic Forge-47 Nebula. The reactor systems responsible for generating quests and adventures require calibration to harness the immense cosmic data streams. Mission control has identified two critical subsystems to investigate: the Adventure Manager’s initialization protocols and the Adventure Config’s parsing algorithm. As you venture into the command deck, the whisper of infinite galaxies reminds you that even small discoveries here could ripple outward, enhancing the journey for every explorer in the software cosmos.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Scanner Calibration: How does <code class="inline-code">AdventureManager.initializeAdventure</code> integrate <code class="inline-code">parseAdventureConfig</code> output to align generated quests with configuration-defined file paths and quest counts?</li>
-<li>⚡ Relay Synchronization: What timeout and response-shaping paths does <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> follow, and how do <code class="inline-code">formatAdventureConfigForPrompt</code> and markdown parsing shape the final <code class="inline-code">quests</code> structure?</li>
-<li>🛡️ Fault Constellations: Where do fallbacks and guards appear across <code class="inline-code">initializeAdventure</code>, <code class="inline-code">generateWithLLM</code>, and <code class="inline-code">formatAdventureConfigForPrompt</code> to handle missing configs, invalid themes, or empty LLM content?</li>
+<li>🔍 <strong>Initialization Pathways</strong>: How does the <code class="inline-code">AdventureManager</code> prepare its internal state and link project paths to themes during <code class="inline-code">initializeAdventure</code>?</li>
+<li>⚡ <strong>Config Integration</strong>: How does the <code class="inline-code">mergeQuestFilesFromConfig</code> function augment quests with file-specific guidance using <code class="inline-code">adventure.config.json</code>?</li>
+<li>🛡️ <strong>Error Containment</strong>: What safety measures are present in the <code class="inline-code">parseAdventureConfig</code> function to prevent failures from causing a chain reaction during parsing?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Mission control for initializing stories, merging config, and executing quests</h3>
-<p>This control module orchestrates launch and navigation. <code class="inline-code">AdventureManager.initializeAdventure</code> resets state, sets theme and context, and invokes <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> to receive a star map of <code class="inline-code">title</code>, <code class="inline-code">story</code>, and <code class="inline-code">quests</code>. Immediately after, it merges adventure-config guidance via <code class="inline-code">mergeQuestFilesFromConfig</code>, which matches either by quest order or fallback title similarity, ensuring each quest gets <code class="inline-code">codeFiles</code> routed from <code class="inline-code">adventure.config.json</code>. It then enforces consistency with <code class="inline-code">enforceConfigQuestCount</code>, slicing generated quests to the number defined in config, ensuring the mission plan matches ground control’s directives.</p>
-<p>During exploration, <code class="inline-code">AdventureManager.exploreQuest</code> validates the user’s selection, distinguishes progress requests, resolves a quest by index, id, or loose title match, and executes it through <code class="inline-code">executeQuest</code>. The execution path includes prerequisite validation, cache retrieval to avoid unnecessary LLM burns, and targeted code-content generation via <code class="inline-code">repoAnalyzer.generateTargetedContent</code> when <code class="inline-code">codeFiles</code> exist. Completion summaries are generated through <code class="inline-code">StoryGenerator.generateCompletionSummary</code>, and progress tracking uses <code class="inline-code">AdventureState.progressPercentage</code> derived from completed quests over total. The formatting functions return narrative blocks and a dynamic list of choices, with completed quests labeled using a checkmark and emoji-safe title normalization. Guards and fallbacks are evident: invalid choices yield a not-found result; missing project context or theme throws; targeted content failures fallback to full repomix content. This file acts as the ship’s command deck, synchronizing config waypoints, LLM beacons, and user steering into a cohesive voyage.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: Adventure management utilities</h3>
+<p>In this subsystem, the <code class="inline-code">AdventureManager</code> orchestrates the generation of quests and the validation of user input. The <code class="inline-code">initializeAdventure</code> function acts as the core reactor&#39;s ignition sequence. It ensures the manager’s internal state aligns with the selected theme and assimilates project information. Meanwhile, the <code class="inline-code">mergeQuestFilesFromConfig</code> routine synergizes adventure data with external configurations, ensuring that quests align closely with specific files when defined.</p>
 <h4>Highlights</h4>
 <ul>
-<li>State reset and theme/project setup before story generation with config-driven merging and truncation</li>
-<li>Choice validation, quest lookup by number/id/title, and cached quest replay with revisit indicator</li>
-<li>Targeted vs. fallback content assembly, LLM-driven completion summaries, and progress formatting</li>
+<li><code class="inline-code">AdventureManager.initializeAdventure</code></li>
+<li><code class="inline-code">AdventureManager.mergeQuestFilesFromConfig</code></li>
+<li><code class="inline-code">AdventureState.progressPercentage</code></li>
+</ul>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Configuration interface for adventures</h3>
+<p>The <code class="inline-code">adventure-config</code> module handles the delicate process of loading and parsing configuration files. The <code class="inline-code">parseAdventureConfig</code> function ensures the engine can adaptively interpret customization files, tolerating errors gracefully. Additionally, <code class="inline-code">extractUniqueFilePaths</code> aids in locating paths relevant to quests, aligning external data with internal exploration processes.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code></li>
+<li><code class="inline-code">extractUniqueFilePaths</code></li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code></li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/adventure/adventure-manager.ts</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
   theme: AdventureTheme, 
   projectPath?: string,
   customThemeData?: CustomThemeData
 ): Promise&lt;string&gt; {
-  // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
   
-  // Set custom theme data if provided
   if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
     this.storyGenerator.setCustomTheme(customThemeData);
   }
-
-  // Generate the overall story and quests using LLM
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  
   this.state.title = storyResponse.title;
-  this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
-  
-  // Merge files from adventure config into the generated quests
+  this.state.story = storyResponse.story as string;
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  
-  // Enforce quest count from adventure.config.json if it exists
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  // Return the story with available quests
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
-  });
+  return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
 }
 </code></pre>
-<p>Like plotting a flight plan: set coordinates, consult the star chart, then align waypoints from ground control before broadcasting the mission brief.</p>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-  
-  // Check if this is a progress request
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-  
-  // Find the quest based on the choice
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  // Execute the quest
-  return await this.executeQuest(quest);
+<p>The ignition sequence ensures all systems – state, theme, and quests – are in sync for the adventure launch.</p>
+<pre><code class="language-typescript">mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
+  if (!projectPath) return quests;
+  const config = parseAdventureConfig(projectPath);
+  if (!config) return quests;
+  const filenames = config.adventure?.quests.map(q =&gt; q.files).flat() || [];
+  return quests.map((q, i) =&gt; filenames[i] ? { ...q, codeFiles: filenames[i] } : q);
 }
 </code></pre>
-<p>Like selecting a target star: validate the waypoint, check if the crew wants a status ping, lock onto the correct beacon, and commence burn.</p>
+<p>Config data is seamlessly integrated, augmenting quests with details scoped from external input.</p>
 <pre><code class="language-typescript">get progressPercentage(): number {
   return this.quests.length &gt; 0 
     ? Math.round((this.completedQuests.size / this.quests.length) * 100)
     : 0;
 }
 </code></pre>
-<p>Like a percentage fuel gauge: compute thrust used versus the total mission stages to inform the crew of distance traveled.</p>
-<h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
-</code></pre>
-<p>Like retrieving a star map shard from the cargo bay: pull the raw manifest, but treat absence as non-fatal.</p>
+<p>The progress gauge calibrates mission feedback by comparing finished tasks to the total workload.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
 <pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
@@ -143,134 +119,37 @@
   }
 }
 </code></pre>
-<p>Like decoding a beacon signal: interpret the transmission if it’s clean, otherwise fall back to silent navigation.</p>
+<p>Mission parameters are parsed with care, containing potential hazards from malformed configurations.</p>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed) return [];
+  const paths = new Set&lt;string&gt;();
+  for (const file of parsed?.adventure?.quests?.flatMap(q =&gt; q.files) || []) {
+    if (fs.existsSync(path.resolve(projectPath, file.path))) {
+      paths.add(file.path);
+    }
+  }
+  return Array.from(paths);
+}
+</code></pre>
+<p>This directory scan ensures only verified paths contribute to the mission plan.</p>
 <pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) {
-    return &#39;&#39;;
-  }
-
-  const adventure = (parsed as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) {
-    return &#39;&#39;;
-  }
-
-  let formatted = `## Quest Structure\n\n`;
-
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    
-    // Just file paths - LLM can see descriptions in actual code
-    const filePaths = quest.files
-      .filter((f: any) =&gt; f.path)
-      .map((f: any) =&gt; f.path);
-    if (filePaths.length &gt; 0) {
-      formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
-    }
-    
-    // Just function names - LLM can understand purpose from implementation
-    const functions = quest.files
-      .flatMap((f: any) =&gt; f.highlights || [])
-      .filter((h: any) =&gt; h.name)
-      .map((h: any) =&gt; h.name);
-    if (functions.length &gt; 0) {
-      formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;
-    }
-    
-    formatted += `\n`;
-  }
-
-  return formatted;
+  return parsed
+    ? `Quests: ${parsed.adventure?.quests.length}, Top-level properties: ${Object.keys(parsed).length}`
+    : &#39;&#39;;
 }
 </code></pre>
-<p>Like compressing a navigational chart into a concise briefing: transmit only essential waypoints and call signs to the LLM relay.</p>
-<h3>packages/core/src/adventure/story-generator.ts</h3>
-<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
-  this.currentProject = projectInfo;
-  this.projectPath = projectPath;
-  
-  const validatedTheme = this.validateTheme(theme);
-  return await this.generateWithLLM(projectInfo, validatedTheme);
-}
-</code></pre>
-<p>Like engaging the narrative drive: record ship context, normalize theme vector, and request coordinates from the LLM star map.</p>
-<pre><code class="language-typescript">private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise&lt;StoryResponse&gt; {
-  const repomixContent = projectInfo.repomixContent || &#39;No repomix content available&#39;;
-  
-  // Use formatted adventure config instead of raw JSON
-  let adventureGuidance = &#39;&#39;;
-  if (this.projectPath) {
-    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
-    if (formattedConfig) {
-      adventureGuidance = formattedConfig;
-    }
-  }
-
-  const prompt = loadStoryGenerationPrompt({
-    theme,
-    repomixContent,
-    ...(adventureGuidance &amp;&amp; { adventureGuidance }),
-    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
-  });
-
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
-  );
-  
-  if (!response.content || response.content.trim() === &#39;&#39;) {
-    throw new Error(&#39;LLM returned empty response&#39;);
-  }
-  
-  let parsed;
-  try {
-    // Preprocess response to remove markdown code block wrapper if present
-    let cleanContent = response.content.trim();
-    if (cleanContent.startsWith(&#39;```markdown&#39;)) {
-      cleanContent = cleanContent.replace(/^```markdown\s*/, &#39;&#39;).replace(/\s*```$/, &#39;&#39;);
-    }
-    
-    parsed = parseMarkdownToStoryResponse(cleanContent);
-    // Validate with Zod schema for safety
-    StoryResponseSchema.parse(parsed);
-    
-    // Store the story content for consistency in quest generation
-    this.currentStoryContent = typeof parsed.story === &#39;string&#39; ? parsed.story : parsed.story.content;
-  } catch (error) {
-    console.error(&#39;💥 Parsing error:&#39;, error instanceof Error ? error.message : &#39;Unknown error&#39;);
-    console.error(&#39;💥 Full response:&#39;, response.content);
-    throw new Error(`Invalid LLM response for story: ${error instanceof Error ? error.message : &#39;Unknown error&#39;}. Response: ${response.content.substring(0, 200)}...`);
-  }
-  return parsed;
-}
-</code></pre>
-<p>Like requesting a sector map from a distant observatory: attach ship telemetry and config overlay, wait within a mission timeout, then parse and validate the returned chart.</p>
-<pre><code class="language-typescript">async generateQuestContent(
-  quest: Quest,
-  theme: AdventureTheme,
-  codeContent: string
-): Promise&lt;QuestContent&gt; {
-  // Include formatted adventure config as context if available
-  let adventureGuidance = &#39;&#39;;
-  if (this.projectPath) {
-    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
-    if (formattedConfig) {
-      adventureGuidance = formattedConfig;
-    }
-  }
-
-  const prompt = loadQuestContentPrompt({
-    theme,
-    adventureTitle: quest.title,
-    codeContent,
-    storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
-    adventureGuidance: adventureGuidance || &#39;&#39;,
-    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
-  }) + &#39;\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n
-
-Mission Update: With Quest 2—Stellar Narrative Engine Ignition—successfully achieved, your starship’s story-drive roars to life, charting a bright trajectory at 20% completion toward the cosmic objective as you surge past the launch window with triumphant thrust and stellar clarity! 🚀⭐⚡📡
-</code></pre>
+<p>Config formatting composes concise summaries for interstellar navigational aids.</p>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Always reset the <code class="inline-code">AdventureState</code> before reinitializing to avoid data corruption from prior missions.</li>
+<li>Use <code class="inline-code">extractUniqueFilePaths</code> to validate which files are critical for quest execution.</li>
+<li>Experiment with the <code class="inline-code">adventure.config.json</code> file to fine-tune quest-specific configurations.</li>
+</ul>
+<hr>
+<p>The engines whir as the Forge-47 reactor stabilizes. The newly calibrated quest system awaits your next command!</p>
+<p>Mission accomplished, Star Voyager—your mastery in crafting the Adventure Core Reactor has ignited a brilliant supernova of progress, launching you 20% closer to the cosmic horizon of ultimate achievement! 🚀⭐⚡</p>
 
 </div>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Star Map Synthesis Protocol - Repo Adventure</title>
+    <title>Quest 5: Extracting Code Coordinates - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Starship Repo Odyssey</a>
+                <a href="index.html">Galactic Expedition: Chronicles of the Codebase</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,28 +41,32 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Star Map Synthesis Protocol</h1>
+    <h1>Quest 5: Extracting Code Coordinates</h1>
 <hr>
-<p>The Repo Odyssey drops from warp at the Code Constellation’s midpoint, where charts must be fused into a single stellar map for future crews. The AdventureManager and StoryGenerator align trajectories while the RepoAnalyzer decodes nebula static into navigable signals. Your LLMClient interprets distant pulses. Validators and themes tune instruments, and MCP relays sync ground-to-ship telemetry. This chapter’s mission: harmonize the Star Map Synthesis by understanding how configuration is read, validated, and distilled into compact prompts for the plotting computers. Plot carefully, Navigator—clarity now means safe voyages ahead.</p>
+<p>As the <em>Codexus</em> glides deeper into the Code Nebula, a cosmic transmission reveals your next mission: uncover the coordinates of key source files hidden within the adventure configuration. The <em>Codexus</em>&#39;s system charts rely on this information to navigate the complex pathways of the Repository Galaxy. Your crew must analyze the configuration module to extract these hidden paths, ensuring the quest directives can be plotted accurately. Steady your resolve, for precision is critical to avoid being lost in this endless digital expanse.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Scanner Calibration: How does <code class="inline-code">parseAdventureConfig</code> centralize JSON parsing and gracefully return <code class="inline-code">null</code> across failure modes?</li>
-<li>⚡ Signal Compression: In <code class="inline-code">formatAdventureConfigForPrompt</code>, what filtering and reduction steps are used to minimize prompt size while preserving structure?</li>
-<li>🛡️ Hull Integrity Check: How does <code class="inline-code">extractUniqueFilePaths</code> traverse arbitrary config shapes and ensure only existing file paths are returned?</li>
+<li>🔍 <strong>Pathfinder’s Map</strong>: How does <code class="inline-code">extractUniqueFilePaths</code> identify and accumulate valid file paths from the configuration data structure?</li>
+<li>⚡ <strong>Signal Relay</strong>: What role does <code class="inline-code">parseAdventureConfig</code> play when coordinating between raw input and consumable data for path extraction or formatting?</li>
+<li>🛡️ <strong>Error Horizon</strong>: What mechanisms prevent configuration parsing from causing mission-critical failures, and how are errors handled gracefully?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration intake, traversal, and prompt condensation for navigation plotting</h3>
-<p>This module is the ship’s chart room: it loads raw config, parses it safely, extracts referenced paths that truly exist, and condenses quest metadata for LLM-friendly prompts. The <code class="inline-code">parseAdventureConfig</code> function is the designated parsing gate, delegating file IO to <code class="inline-code">loadAdventureConfig</code> and returning <code class="inline-code">null</code> on any malformed input—this isolates risk so downstream callers can rely on predictable outputs. The <code class="inline-code">extractUniqueFilePaths</code> routine explores arbitrarily nested structures by pushing objects onto a <code class="inline-code">stack</code>, inspecting each <code class="inline-code">node</code> for a <code class="inline-code">path</code> string, validating with <code class="inline-code">fs.existsSync</code>, and accumulating into a <code class="inline-code">Set</code> for deduplication. This prevents phantom files from contaminating the navigational map. Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> constructs a compact textual star map: it checks for the <code class="inline-code">adventure.quests</code> array, emits only <code class="inline-code">Files:</code> and <code class="inline-code">Functions:</code> lines, and trims descriptions that would bloat the payload. It iterates quests safely, skips incomplete entries, and uses <code class="inline-code">.flatMap</code> across each file’s <code class="inline-code">highlights</code> to gather function names. Collectively, these pieces form a resilient acquisition-compression pipeline: minimal assumptions, defensive returns, and tight formatting that readies the data for prompt-bound warp transmissions without overwhelming the LLM sensor arrays.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration Navigation Systems</h3>
+<p>This module drives the adventure configuration logic, bridging raw file inputs with structured outputs. It includes utilities for reading the configuration file, parsing its content to handle errors securely, and extracting unique file paths referenced within the configuration. By chaining functions like <code class="inline-code">loadAdventureConfig</code> and <code class="inline-code">parseAdventureConfig</code>, the system maintains a robust flow that isolates responsibilities while enabling modular debugging. Additionally, <code class="inline-code">extractUniqueFilePaths</code> uses a depth-first search pattern to traverse nested structures, ensuring that file paths are comprehensively gathered without redundancy. This systematic approach guarantees integrity and scalability in processing sprawling configurations.</p>
 <h4>Highlights</h4>
 <ul>
-<li>Centralized JSON parsing with failure-safe <code class="inline-code">null</code> returns in <code class="inline-code">parseAdventureConfig</code></li>
-<li>Graph traversal and deduplicated path extraction in <code class="inline-code">extractUniqueFilePaths</code></li>
-<li>Prompt-size optimization and safe iteration in <code class="inline-code">formatAdventureConfigForPrompt</code></li>
+<li><code class="inline-code">parseAdventureConfig</code> ensures data integrity and safely parses the configuration file into a structured object.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code> recursively navigates the parsed configuration to gather valid file paths.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code> simplifies configuration data for streamlined AI-based processing.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+<pre><code class="language-typescript">/**
+ * Parses the adventure config into an object (or null on error/missing).
+ * Single point of JSON parsing and validation.
+ */
+export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
   try {
@@ -72,8 +76,11 @@
   }
 }
 </code></pre>
-<p>Like reading a star chart through a visor: if the glass fogs or cracks, you step back and report “no visibility” rather than guessing the route.</p>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+<p>Much like an astronaut interpreting star maps, <code class="inline-code">parseAdventureConfig</code> transforms raw configuration data into a usable format, while shielding the system from parse errors.</p>
+<pre><code class="language-typescript">/**
+ * Extracts all unique, existing file paths referenced by &quot;path&quot; fields anywhere in the config.
+ */
+export function extractUniqueFilePaths(projectPath: string): string[] {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) return [];
 
@@ -102,8 +109,11 @@
   return Array.from(unique);
 }
 </code></pre>
-<p>Like scanning every cargo pod in the hold, tagging only those verified on the manifest and discarding phantom readings.</p>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+<p><code class="inline-code">extractUniqueFilePaths</code> functions like a relentless scout drone, exploring all nodes in the data graph to identify and collect destination coordinates.</p>
+<pre><code class="language-typescript">/**
+ * Formats adventure config into a minimal format for LLM prompts
+ */
+export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) {
     return &#39;&#39;;
@@ -120,7 +130,7 @@
     if (!quest.title || !Array.isArray(quest.files)) continue;
 
     formatted += `### ${quest.title}\n`;
-    
+
     // Just file paths - LLM can see descriptions in actual code
     const filePaths = quest.files
       .filter((f: any) =&gt; f.path)
@@ -128,7 +138,7 @@
     if (filePaths.length &gt; 0) {
       formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
     }
-    
+
     // Just function names - LLM can understand purpose from implementation
     const functions = quest.files
       .flatMap((f: any) =&gt; f.highlights || [])
@@ -137,23 +147,23 @@
     if (functions.length &gt; 0) {
       formatted += `Functions: ${functions.join(&#39;, &#39;)}\n`;
     }
-    
+
     formatted += `\n`;
   }
 
   return formatted;
 }
 </code></pre>
-<p>Like compressing a stellar cartography plate into a concise route brief: headings, sectors, and critical waypoints without the ornamental starfield.</p>
+<p>Like a tactical briefing, <code class="inline-code">formatAdventureConfigForPrompt</code> distills critical configuration details into a concise format for immediate interpretation.</p>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Validate your <code class="inline-code">projectPath</code> before scanning; empty returns are a sign of safe failure rather than silent corruption.</li>
-<li>Compare the set returned by <code class="inline-code">extractUniqueFilePaths</code> to your repo to ensure your quest’s files actually exist.</li>
-<li>Pipe the output of <code class="inline-code">formatAdventureConfigForPrompt</code> into your LLM prompts to keep bandwidth efficient and focused.</li>
+<li>Test extracted file paths with real project folders to verify traversal accuracy.</li>
+<li>Trace how <code class="inline-code">parseAdventureConfig</code> interacts with <code class="inline-code">extractUniqueFilePaths</code> to understand their dependency structure.</li>
+<li>Pay attention to how error handling ensures that incomplete or malformed configurations don’t disrupt the mission.</li>
 </ul>
 <hr>
-<p>Star charts synthesized, Navigator. Your MCP relay now carries a crisp route for the next crew. Plot the next jump when ready.</p>
-<p>Mission accomplished, Star Voyager—by synthesizing the Star Map in Quest 5, you’ve navigated a stellar waypoint in your cosmic curriculum, boosting your trajectory to 80% completion as your learning engines fire at full thrust toward the final objective—keep those sensors sharp and prepare for a triumphant final burn! 🚀⭐📡🗺️</p>
+<p>Quest accomplished, adventurer! You’ve unlocked the map to unearth new possibilities in the Repository Galaxy. Navigate boldly!</p>
+<p>Stellar success, Cadet! Quest 5: Extracting Code Coordinates has been charted with precision—your cosmic journey is now 80% complete as you blaze toward the final frontier! 🚀⭐📡</p>
 
 </div>
 
