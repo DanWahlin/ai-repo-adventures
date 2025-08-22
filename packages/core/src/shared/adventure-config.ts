@@ -69,7 +69,7 @@ export function extractUniqueFilePaths(projectPath: string): string[] {
 
 /**
  * Formats adventure config into a minimal format for LLM prompts
- * OPTIMIZED: Reduced from 7,279 to ~1,763 characters (76% reduction)
+ * OPTIMIZED: Reduced from 7,279 to ~2,000 characters (72% reduction)
  * Eliminates redundant descriptions since LLM can infer from actual code
  */
 export function formatAdventureConfigForPrompt(projectPath: string): string {
@@ -83,31 +83,23 @@ export function formatAdventureConfigForPrompt(projectPath: string): string {
     return '';
   }
 
-  let formatted = `## Quest Structure\n\n`;
+  let formatted = `## Quest Structure\n`;
 
   for (const quest of adventure.quests) {
     if (!quest.title || !Array.isArray(quest.files)) continue;
 
     formatted += `### ${quest.title}\n`;
     
-    // Just file paths - LLM can see descriptions in actual code
-    const filePaths = quest.files
-      .filter((f: any) => f.path)
-      .map((f: any) => f.path);
-    if (filePaths.length > 0) {
-      formatted += `Files: ${filePaths.join(', ')}\n`;
-    }
+    // Just file paths, no verbose descriptions
+    const filePaths = quest.files.map((f: any) => f.path).filter(Boolean);
+    formatted += `Files: ${filePaths.join(', ')}\n`;
     
-    // Just function names - LLM can understand purpose from implementation
+    // Just function names, no descriptions
     const functions = quest.files
       .flatMap((f: any) => f.highlights || [])
-      .filter((h: any) => h.name)
-      .map((h: any) => h.name);
-    if (functions.length > 0) {
-      formatted += `Functions: ${functions.join(', ')}\n`;
-    }
-    
-    formatted += `\n`;
+      .map((h: any) => h.name)
+      .filter(Boolean);
+    formatted += `Functions: ${functions.join(', ')}\n\n`;
   }
 
   return formatted;

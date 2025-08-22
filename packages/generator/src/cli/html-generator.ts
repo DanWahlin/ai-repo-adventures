@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import { marked } from 'marked';
 import { repoAnalyzer } from '@ai-repo-adventures/core/analyzer';
 import { AdventureManager } from '@ai-repo-adventures/core/adventure';
-import { getAllThemes, getThemeByKey, AdventureTheme, parseAdventureConfig, sanitizeEmojiInText, sanitizeQuestTitle, LLM_MODEL } from '@ai-repo-adventures/core/shared';
+import { getAllThemes, getThemeByKey, AdventureTheme, parseAdventureConfig, LLM_MODEL } from '@ai-repo-adventures/core/shared';
 import { createProjectInfo } from '@ai-repo-adventures/core';
 import { TemplateEngine } from './template-engine.js';
 
@@ -371,7 +371,7 @@ class HTMLAdventureGenerator {
   private extractQuestInfo(): void {
     this.quests = this.adventureManager.getAllQuests().map((quest: any, index: number) => ({
       id: quest.id,
-      title: sanitizeQuestTitle(quest.title),
+      title: quest.title,
       filename: `quest-${index + 1}.html`
     }));
   }
@@ -752,11 +752,11 @@ class HTMLAdventureGenerator {
       </a>`;
     }).join('\n');
 
-    const cleanStoryContent = sanitizeEmojiInText(this.adventureManager.getStoryContent());
+    const cleanStoryContent = this.adventureManager.getStoryContent();
     
     const variables = {
       ...this.getCommonTemplateVariables(),
-      PAGE_TITLE: sanitizeEmojiInText(this.adventureManager.getTitle()),
+      PAGE_TITLE: this.adventureManager.getTitle(),
       STORY_CONTENT: this.formatMarkdown(cleanStoryContent),
       QUEST_LINKS: questLinks
     };

@@ -16,15 +16,9 @@ export interface Quest {
 }
 
 
-export interface Story {
-  content: string;
-  theme: AdventureTheme;
-  setting: string;
-}
-
 export interface StoryResponse {
   title: string;
-  story: string | Story;
+  story: string;
   quests: Quest[];
 }
 
@@ -177,20 +171,18 @@ export class StoryGenerator {
 
   /**
    * Generate story - for backward compatibility with tests
-   * Maps to generateStoryAndQuests but returns a Story object
+   * Maps to generateStoryAndQuests but returns simplified story object
    */
-  async generateStory(theme: AdventureTheme): Promise<Story> {
+  async generateStory(theme: AdventureTheme): Promise<{ content: string; theme: AdventureTheme; setting: string }> {
     if (!this.currentProject) {
       throw new Error('No project information available. Please analyze a project first.');
     }
 
     const response = await this.generateStoryAndQuests(this.currentProject, theme);
     
-    // Convert StoryResponse to Story format
-
     return {
       theme,
-      content: typeof response.story === 'string' ? response.story : response.story.content,
+      content: response.story,
       setting: `A ${theme}-themed exploration of your codebase`
     };
   }
@@ -352,7 +344,7 @@ export class StoryGenerator {
       StoryResponseSchema.parse(parsed);
       
       // Store the story content for consistency in quest generation
-      this.currentStoryContent = typeof parsed.story === 'string' ? parsed.story : parsed.story.content;
+      this.currentStoryContent = parsed.story;
     } catch (error) {
       console.error('💥 Parsing error:', error instanceof Error ? error.message : 'Unknown error');
       console.error('💥 Full response:', response.content);

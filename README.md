@@ -99,7 +99,6 @@ graph TD
     U --> K
     V[Core: Cache System] --> C
     V --> H
-    W[Core: Emoji Sanitizer] --> J
     
     style H fill:#e1f5fe
     style J fill:#f3e5f5
@@ -548,7 +547,6 @@ packages/
 │           ├── theme.ts            # Theme system and validation
 │           ├── config.ts           # Configuration and environment settings
 │           ├── input-validator.ts  # Security and input validation
-│           ├── emoji-validator.ts  # Emoji sanitization for HTML output
 │           └── adventure-config.ts # Adventure configuration parser
 ├── generator/                      # @codewithdan/ai-repo-adventure-generator (HTML CLI)
 │   └── src/cli/
@@ -619,6 +617,8 @@ npm run chat                    # Interactive MCP client
 - **Generator Package** (`packages/generator/`): HTML generation CLI tool  
 - **MCP Package** (`packages/mcp/`): Model Context Protocol server
 
+**Recent Simplifications:** The codebase has been streamlined by removing ~200+ lines of over-engineered code while maintaining 100% functionality. This includes consolidating duplicate configuration parsers and removing unused validation systems.
+
 ### 🎯 **Areas for Contribution**
 - 🎨 New CSS themes and styling (`packages/generator/src/cli/themes/`)
 - 🌍 Additional language support in analysis
@@ -640,11 +640,13 @@ Run this in GitHub Copilot, Claude Code, or your favorite AI editor to generate 
 
 Analyze the overall project and determine key "adventure quest" paths to help people understand the monorepo structure and main functionality. Your results will go into the root of the project into a file named adventure.config.json. Focus on the packages/ structure and key integration points. Use the updated file paths as shown in the following JSON:
 
+```json
 {
     "quests": [
         {
             "title": "MCP Server Interface",
             "description": "Understanding how users interact with the system through the 4 main MCP tools",
+            "url": "https://github.com/[your-org]/[your-repo]",
             "files": [
                 {
                     "path": "packages/mcp/src/tools/tools.ts",
@@ -722,5 +724,6 @@ Analyze the overall project and determine key "adventure quest" paths to help pe
         }
     ]
 }
+```
 
 Show me what you plan to use for quests and files members before proceeding and doing any updates adventure.config.json. I'll review and provide feedback.

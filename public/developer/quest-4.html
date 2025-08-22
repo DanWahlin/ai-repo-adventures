@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 4: The Foundation Stone - Repo Adventure</title>
+    <title>Quest 4: Configuration & Theme System - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Mythos of the Codebase Chronicles</a>
+                <a href="index.html">Repository of Ancient Adventures</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,113 +41,71 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: The Foundation Stone</h1>
+    <h1>Quest 4: Configuration &amp; Theme System</h1>
 <hr>
-<p>In this epic adventure, you delve into the core structures that make the MCP Repository Adventure system possible. At the heart lies the Foundation Stone – a set of essential utilities and configurations that govern the behavior of adventures. By understanding themes, input validation, and core configuration, you will align the magical Repository Adventure Engine to craft stories with precision and clarity.</p>
+<p>The ancient repository hums with potential as you venture into its deep settings, a labyrinth of configurations and theme definitions. Here lies the core machinery dictating how adventures come alive, shaping the journey with rules and aesthetics. The files you will uncover form the backbone of storytelling and validation, offering clarity amidst chaos. Harness the tools of configuration, validate your choices, and explore the realm of themes. Brave adventurer, the system awaits your discovery—will you master the art of merging flexibility and control?</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Core Understanding</strong>: How are recurring patterns used to validate and sanitize user input across the system?</li>
-<li>⚡ <strong>Theme Insights</strong>: What is the structure of theme definitions, and how are they parsed and validated?</li>
-<li>🛡️ <strong>Configuration Depth</strong>: How do environment variables and constants shape the constraints and behaviors of the adventure system?</li>
+<li>🔍 <strong>Adventure Parameters</strong>: How are timeout settings and limits structured within the configuration system to balance efficiency and resource constraints?</li>
+<li>⚡ <strong>Theme Magic</strong>: How does the theme system define and validate themes while ensuring user flexibility with robust matching techniques?</li>
+<li>🛡️ <strong>Sanctuary Validation</strong>: What mechanisms ensure the input validation system sanitizes and safeguards adventure pathways for seamless user experience?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/input-validator.ts:</span> Input Validator for Choices and Paths</h3>
-<p>This file includes utility functions for ensuring user inputs adhere to expected formats, helping maintain stability and consistency throughout the system. It prevents errors and sanitizes data early in the process. </p>
+<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Configuration Setup</h3>
+<p>This file encapsulates core constants used across the MCP tool interface. It handles environment variables, timeout definitions, analysis limits, and theme defaults, providing a centralized management point for the application. By exploring this file, you can understand how reliability and scalability are baked into the quest generation framework.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">validateAdventureChoice</code>: Ensures user-provided adventure choices are non-empty, within length limits, and trimmed for unnecessary whitespace.</li>
-<li><code class="inline-code">validateTheme</code>: Validates that a selected theme exists in the defined themes and provides feedback on valid options.</li>
-<li><code class="inline-code">sanitizeForDisplay</code>: Removes potentially unsafe or extraneous characters from an input, ensuring safe output display.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Configures the timeout for large requests, enabling efficient handling of complex story generation tasks.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Defines cache expiration for short-term storage, balancing performance optimization with memory constraints.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Establishes a file size limit for scanning operations to prevent resource exhaustion and maintain system stability.</li>
+</ul>
+<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Theme Definitions</h3>
+<p>This file acts as the single source of truth for theme-related data, defining themes, their structure, and functions to validate and match user inputs. The modular approach ensures clean code and straightforward scalability.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">THEMES</code>: Provides predefined theme configurations, complete with identifiers, descriptions, and keywords.</li>
+<li><code class="inline-code">isValidTheme</code>: Validates themes against predefined options using efficient type guards.</li>
+<li><code class="inline-code">parseTheme</code>: Parses user input based on various matching criteria, including exact keys, numeric IDs, and keywords.</li>
+</ul>
+<h3><span class="header-prefix">packages/core/src/shared/input-validator.ts:</span> Input Validation</h3>
+<p>This file implements utility functions to validate and sanitize user inputs, ensuring robust error handling and clean data processing. It acts as a critical layer for maintaining integrity within the adventure system.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">validateAdventureChoice</code>: Validates the user’s adventure selection for proper formatting and length constraints.</li>
+<li><code class="inline-code">validateTheme</code>: Ensures the provided theme matches one of the defined configurations, throwing descriptive errors when invalid.</li>
+<li><code class="inline-code">sanitizeForDisplay</code>: Cleans input strings and prepares them for safe rendering, avoiding display corruption.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/shared/input-validator.ts</h3>
-<pre><code class="language-typescript">export function validateAdventureChoice(input: string): string {
-  if (!input?.trim()) {
-    throw new Error(&#39;Choice is required&#39;);
-  }
-  
-  if (input.length &gt; 200) {
-    throw new Error(&#39;Choice too long (max 200 characters)&#39;);
-  }
-  
-  return input.trim();
-}
+<h3>packages/core/src/shared/config.ts</h3>
+<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
+export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;60000&#39;); // 60 seconds, configurable via env
+export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
 </code></pre>
 <ul>
-<li>Ensures critical user inputs for adventure selection are non-empty and within acceptable length limits.</li>
-<li>Trims unnecessary whitespace, preventing hidden errors or trivial user mistakes.</li>
-<li>Allows early errors during input validation, saving resources downstream by eliminating invalid data early.</li>
+<li>The <code class="inline-code">LLM_REQUEST_TIMEOUT</code> ensures prolonged operations for intensive prompts without causing abrupt termination.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code> optimizes performance with configurable caching using environment variables.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code> limits file scanning to maintain speed and prevent overloading memory.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function validateTheme(input: string): string {
-  if (!input?.trim()) {
-    throw new Error(&#39;Theme is required&#39;);
-  }
-  
-  const normalized = input.toLowerCase().trim();
-  const parsedTheme = parseTheme(normalized);
-  
-  if (!parsedTheme || !isValidTheme(parsedTheme)) {
-    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
-    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
-  }
-  
-  return parsedTheme;
-}
-</code></pre>
-<ul>
-<li>Matches user input to available themes using normalization, guarding against typos or case mismatches.</li>
-<li>Verifies validity via <code class="inline-code">isValidTheme</code>, ensuring only predefined themes are available.</li>
-<li>Enhances user experience by listing valid options if the input theme fails validation.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function sanitizeForDisplay(input: string, maxLength = 1000): string {
-  if (!input) return &#39;&#39;;
-  
-  return input
-    .replace(/[&lt;&gt;{}&quot;`]/g, &#39;&#39;)
-    .replace(/\s+/g, &#39; &#39;)
-    .trim()
-    .slice(0, maxLength);
-}
-</code></pre>
-<ul>
-<li>Protects displayed output by stripping unsafe characters (e.g., <code class="inline-code">&lt;&gt;{}&quot;</code>).</li>
-<li>Optimizes displayed string length while ensuring inputs maintain their original intention.</li>
-<li>Important for sanitizing dynamic inputs, reducing risks of injection attacks or misaligned content.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Theme System for Adventures</h3>
-<p>This file is the single source of truth for all system themes, including predefined default themes and user-provided customizations. It provides functionality for theme validation, customization, and listing.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">getAllThemes</code>: Returns a complete list of predefined themes as an array.</li>
-<li><code class="inline-code">isValidTheme</code>: Verifies if a string matches any predefined theme keys.</li>
-<li><code class="inline-code">parseTheme</code>: Attempts to parse user input into a valid theme by matching IDs, keys, or keywords.</li>
-</ul>
 <h3>packages/core/src/shared/theme.ts</h3>
-<pre><code class="language-typescript">export function getAllThemes(): ThemeDefinition[] {
-  return THEMES_ARRAY;
-}
-</code></pre>
-<ul>
-<li>Retrieves all predefined themes, ensuring centralized access to valid options.</li>
-<li>Provides data consistency across the system by eliminating duplicated theme definitions.</li>
-<li>Powers other functionality like theme validation and structured user interfaces for theme selection.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function isValidTheme(theme: string): theme is AdventureTheme {
+<pre><code class="language-typescript">export const THEMES = {
+  SPACE: {
+    id: 1,
+    key: &#39;space&#39;,
+    displayName: &#39;Space Exploration&#39;,
+    emoji: &#39;🚀&#39;,
+    description: &#39;Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies&#39;,
+    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;, &#39;starship&#39;, &#39;astronaut&#39;, &#39;sci-fi&#39;, &#39;futuristic&#39;]
+  },
+  // Other themes...
+};
+
+export function isValidTheme(theme: string): theme is AdventureTheme {
   return THEMES_ARRAY.some(t =&gt; t.key === theme);
 }
-</code></pre>
-<ul>
-<li>Validates themes by checking against the keys of all available themes.</li>
-<li>Implements a type guard to ensure the system handles only valid themes in strongly-typed contexts.</li>
-<li>Helps prevent invalid configurations or runtime errors by restricting input to known values.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function parseTheme(input: string): AdventureTheme | null {
+
+export function parseTheme(input: string): AdventureTheme | null {
   if (!input) return null;
   
   const normalized = input.trim().toLowerCase();
@@ -171,53 +129,65 @@
 }
 </code></pre>
 <ul>
-<li>Supports flexible theme parsing by matching exact keys, numeric IDs, or associated keywords.</li>
-<li>Improves user experience by accommodating loosely defined inputs.</li>
-<li>Demonstrates a layered validation approach for diverse input formats.</li>
+<li><code class="inline-code">THEMES</code> defines universal configuration for theme options, aligning symbols and descriptions with keywords for intuitive exploration.</li>
+<li><code class="inline-code">isValidTheme</code> validates user-provided themes against the known set using efficient iteration techniques.</li>
+<li><code class="inline-code">parseTheme</code> leverages multi-tiered matching logic to deliver flexibility in recognizing user inputs.</li>
 </ul>
 <hr>
-<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Configurations for Adventure Management</h3>
-<p>This file provides constant values and environment-based configurations that determine how adventures are processed. By concentrating these settings in one place, it simplifies maintenance and ensures consistency across the system.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Defines a global timeout for LLM-related requests, ensuring robustness against lengthy operations.</li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Specifies the maximum size of files for processing, focusing resources on viable content.</li>
-<li><code class="inline-code">DEFAULT_THEME</code>: Establishes a fallback theme when no user input is provided.</li>
-</ul>
-<h3>packages/core/src/shared/config.ts</h3>
-<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
+<h3>packages/core/src/shared/input-validator.ts</h3>
+<pre><code class="language-typescript">export function validateAdventureChoice(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Choice is required&#39;);
+  }
+  
+  if (input.length &gt; 200) {
+    throw new Error(&#39;Choice too long (max 200 characters)&#39;);
+  }
+  
+  return input.trim();
+}
+
+export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Theme is required&#39;);
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
+
+export function sanitizeForDisplay(input: string, maxLength = 1000): string {
+  if (!input) return &#39;&#39;;
+  
+  return input
+    .replace(/[&lt;&gt;{}&quot;`]/g, &#39;&#39;)
+    .replace(/\s+/g, &#39; &#39;)
+    .trim()
+    .slice(0, maxLength);
+}
 </code></pre>
 <ul>
-<li>Provides a clear timeout threshold for API requests, capturing performance constraints.</li>
-<li>Essential for managing cloud-based APIs that operate over variable latencies.</li>
-<li>Empowers developers to manage system responsiveness by adjusting timeout values as needed.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
-</code></pre>
-<ul>
-<li>Prevents resource exhaustion by limiting the size of files included in analysis.</li>
-<li>Directly impacts exploration scope, favoring efficiency and manageability.</li>
-<li>Aligns well with memory limitations typical of runtime environments.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export const DEFAULT_THEME = &#39;space&#39; as const;
-</code></pre>
-<ul>
-<li>Establishes a fallback option for use cases without explicit theme customization.</li>
-<li>Ensures there is always a valid theme context if input validation fails or is skipped.</li>
-<li>Reinforces system reliability by preventing undefined or null values in critical paths.</li>
+<li><code class="inline-code">validateAdventureChoice</code> enforces constraints and formats user selections, preventing invalid choices.</li>
+<li><code class="inline-code">validateTheme</code> ensures the user’s theme aligns with available configurations and checks for improper input formatting.</li>
+<li><code class="inline-code">sanitizeForDisplay</code> cleans user-generated strings for safe rendering, avoiding inconsistencies or malicious outputs.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Familiarize yourself with theme matching to ensure your adventures align seamlessly with user preferences.</li>
-<li>Use robust input validation methods to maintain data integrity across all layers of the adventure system.</li>
-<li>Leverage configuration constants to explore customizable system limits and boundaries.</li>
+<li>For configuration adjustments: consider using <code class="inline-code">.env</code> overrides to personalize parameters and system limits.</li>
+<li>Keep the predefined themes accessible through the <code class="inline-code">THEMES_ARRAY</code> for quick reference or modification.</li>
+<li>Use the validator functions as utilities across the applications to ensure consistent logic enforcement.</li>
 </ul>
 <hr>
-<p>A new chapter in the adventure awaits, brave developer. Take what you’ve uncovered here and use it to illuminate the path forward!</p>
-<p>Congratulations, developer! Quest 4: The Foundation Stone has been successfully compiled and executed—your codebase of knowledge is now 60% optimized for the ultimate release; keep refactoring toward the final milestone! ⚡🚀💎</p>
+<p>Harness the knowledge uncovered within these files to refine your mastery of configuration and thematic systems. The codebase&#39;s secrets await further exploration!</p>
+<p>Quest 4: Configuration &amp; Theme System successfully merged into the main branch—your codebase of knowledge is 60% compiled and executing with stellar precision; onward to the next milestone, sysadmin superstar! 🚀⚡💎</p>
 
 </div>
 

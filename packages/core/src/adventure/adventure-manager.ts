@@ -76,7 +76,7 @@ export class AdventureManager {
     const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
     
     this.state.title = storyResponse.title;
-    this.state.story = typeof storyResponse.story === 'string' ? storyResponse.story : storyResponse.story.content;
+    this.state.story = storyResponse.story;
     
     // Merge files from adventure config into the generated quests
     this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
