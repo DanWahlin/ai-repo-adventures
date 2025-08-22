@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: Chamber of Analytical Repositories - Repo Adventure</title>
+    <title>Quest 3: The Themes of Legend - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Chronicles of the Codebase</a>
+                <a href="index.html">The Mythos of the Codebase Chronicles</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,183 +41,109 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: Chamber of Analytical Repositories</h1>
+    <h1>Quest 3: The Themes of Legend</h1>
 <hr>
-<p>The Chamber of Analytical Repositories awaits! As caretaker of the Adventure Forge, you now face the intricate systems that process repositories into engaging adventures. The path leads you to the meticulous craftsmanship of the code analysis and content generation pipeline. With the aid of enchanted tools like the <code class="inline-code">RepoAnalyzer</code> and the <code class="inline-code">LLMClient</code>, you will weave together understanding from complex data structures and API integrations. Can you summon these powers to orchestrate precise responses and optimized repository analysis?</p>
+<p>In the mystical world of Repository Adventure Engine, codebases breathe life into grand narratives. Today, you embark on &quot;The Themes of Legend,&quot; a journey to uncover the secrets held in configuration and theme files. These artifacts define the aesthetic and structure of the adventures you’ll create. Only by investigating them can you harness the Engine’s full creative potential to weave masterful stories. Prepare to explore the inner workings of themes, input validation, and how choices shape gameplay!</p>
+<p><strong>Adventure Awaits</strong> – Choose your quest wisely, brave adventurer!</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>System Timing Calibration</strong>: How are timeouts like <code class="inline-code">LLM_REQUEST_TIMEOUT</code> and cache durations such as <code class="inline-code">REPOMIX_CACHE_TTL</code> configured, and how do these values influence system behavior?</li>
+<li>⚡ <strong>Theme Mastery</strong>: How does the <code class="inline-code">THEMES</code> object or <code class="inline-code">getAllThemes</code> function organize and describe themes, and how might additional themes be incorporated?</li>
+<li>🛡️ <strong>Input Defenses</strong>: What safeguards are in place to validate theme input with <code class="inline-code">validateThemeInput</code> or project path errors with <code class="inline-code">validateProjectPath</code>?</li>
+</ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Code Analysis Engine</h3>
-<p>This file defines the <code class="inline-code">RepoAnalyzer</code> class, a core utility for interpreting and optimizing repository content. By leveraging cached results, file validation, and subprocess orchestration via <code class="inline-code">repomix</code>, it transforms project files to provide consumable insights for downstream processes. Critical functions include <code class="inline-code">generateRepomixContext</code>, <code class="inline-code">generateTargetedContent</code>, and <code class="inline-code">captureRepomixStdout</code>, which coordinate to ensure efficiency, security, and performance in analyzing repositories. These tools exemplify attention to both practical usage and resilient design.</p>
+<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Core configuration constants</h3>
+<p>This file is the backbone of the Engine, housing critical constants that define operation timeouts, cache durations, and file size limits. The configuration ensures that the Engine handles tasks efficiently and avoids failures caused by resource limits.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAnalyzer.generateRepomixContext</code> dynamically generates codebase context using a layered caching strategy and fallback mechanisms.</li>
-<li><code class="inline-code">RepoAnalyzer.generateTargetedContent</code> extracts content for specific files, ensuring secure file handling and robust error management.</li>
-<li><code class="inline-code">RepoAnalyzer.captureRepomixStdout</code> executes the <code class="inline-code">repomix</code> tool, managing subprocess interactions with memory and timeout protections.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Defines the maximum duration for LLM requests, ensuring stability.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Specifies the cache time-to-live (TTL), optimizing reuse of processed data.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Sets limits on supported file sizes to prevent memory overload.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
-<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-
-  // Check for specific files in the configuration
-  const configuredFiles = extractUniqueFilePaths(projectPath);
-  if (configuredFiles.length &gt; 0) {
-    try {
-      return await this.generateOptimizedContent(projectPath, configuredFiles);
-    } catch (error) {
-      console.warn(&#39;Fallback to full repomix due to error:&#39;, error.message);
-    }
-  }
-
-  // Generate full repomix output
-  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-
-  try {
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, {
-      ...options,
-      ignore: [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;],
-    });
-
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Repomix execution failed: ${error.message}`);
-  }
-}
+<h3>packages/core/src/shared/config.ts</h3>
+<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || &#39;30000&#39;, 10);
+export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;3600000&#39;, 10); // 1 hour
+export const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || &#39;5&#39;, 10);
 </code></pre>
-<p>This function is akin to drawing a detailed map of a city, ensuring essential landmarks are highlighted while avoiding irrelevant noise.</p>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-
-  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  if (safeFiles.length === 0) throw new Error(&#39;No valid target files found&#39;);
-
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-
-  try {
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, {
-      compress,
-      include: safeFiles.join(&#39;,&#39;),
-    });
-
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Targeted repomix failed: ${error.message}`);
-  }
-}
-</code></pre>
-<p>Much like extracting key chapters from a book, this function focuses only on the most relevant sections of the repository.</p>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [&#39;repomix&#39;, ...directories, &#39;--stdout&#39;];
-    if (options.compress) args.push(&#39;--compress&#39;);
-    if (options.include) args.push(&#39;--include&#39;, options.include);
-
-    const repomix = spawn(&#39;npx&#39;, args, { cwd });
-    let stdout = &#39;&#39;;
-    let isResolved = false;
-
-    const timeout = setTimeout(() =&gt; {
-      if (!isResolved) {
-        isResolved = true;
-        repomix.kill(&#39;SIGKILL&#39;);
-        reject(new Error(&#39;Timeout exceeded for repomix subprocess&#39;));
-      }
-    }, REPOMIX_SUBPROCESS_TIMEOUT);
-
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      stdout += data.toString();
-    });
-
-    repomix.on(&#39;close&#39;, (code) =&gt; {
-      clearTimeout(timeout);
-      if (!isResolved) {
-        isResolved = true;
-        code === 0 ? resolve(stdout) : reject(new Error(&#39;Repomix subprocess failed&#39;));
-      }
-    });
-  });
-}
-</code></pre>
-<p>This subprocess manager mirrors a conductor coordinating an orchestra, ensuring each player performs within set time and memory limits.</p>
-<h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: AI-Powered Analysis Helper</h3>
-<p>This file introduces the <code class="inline-code">LLMClient</code> class, which facilitates interaction with language models like OpenAI&#39;s APIs or Azure&#39;s cognitive services. By providing utilities for configuration, request construction, and retry logic, it ensures robust communication with external LLM (large language model) providers. The <code class="inline-code">generateResponse</code> function stands out as a powerful tool for transforming prompts into model-generated insights efficiently.</p>
+<ul>
+<li><strong>Timeout Configuration</strong>: <code class="inline-code">LLM_REQUEST_TIMEOUT</code> ensures requests are aborted if they exceed 30 seconds (default), preserving system responsiveness.</li>
+<li><strong>Caching Efficiency</strong>: <code class="inline-code">REPOMIX_CACHE_TTL</code> controls how long cache persists (default 1 hour), reducing redundant reprocessing of unchanged files.</li>
+<li><strong>Resource Management</strong>: <code class="inline-code">MAX_FILE_SIZE_MB</code> protects system performance by rejecting overly large files that could exhaust memory.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Theme definition and utilities</h3>
+<p>This file manages the definition and retrieval of themes supported by the Engine. Themes are central to the type of adventures users can create, shaping the visual and narrative experience.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">LLMClient.generateResponse</code> structures requests and processes responses from the LLM.</li>
-<li><code class="inline-code">LLMClient.constructor</code> establishes API client configurations with fallback error checks.</li>
-<li><code class="inline-code">LLMClient.getApiKey</code> determines the appropriate authentication key for the selected LLM provider.</li>
+<li><code class="inline-code">THEMES</code>: A dictionary object defining all available themes and their summaries.</li>
+<li><code class="inline-code">getAllThemes</code>: A utility function that returns the <code class="inline-code">THEMES</code> object, enabling theme enumeration.</li>
+<li><code class="inline-code">ThemeDefinition</code>: A type that ensures consistency in theme structure.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  try {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
+<h3>packages/core/src/shared/theme.ts</h3>
+<pre><code class="language-typescript">export const THEMES: Record&lt;string, ThemeDefinition&gt; = {
+  fantasy: { summary: &#39;Epic quests in magical worlds of heroes and dragons.&#39; },
+  sciFi: { summary: &#39;Explorations into futures of advanced technology and aliens.&#39; },
+};
 
-    let content = this.validateResponse(completion);
-    if (options?.responseFormat === &#39;json_object&#39;) {
-      content = this.cleanJsonResponse(content);
-    }
+export function getAllThemes(): Record&lt;string, ThemeDefinition&gt; {
+  return THEMES;
+}
 
-    this.logTokenUsage(completion);
-    return { content: content };
-  } catch (error) {
-    this.logDetailedError(error, prompt);
-    throw new Error(`LLM request failed: ${error.message}`);
+export interface ThemeDefinition {
+  summary: string;
+}
+</code></pre>
+<ul>
+<li><strong>Centralized Theme Management</strong>: <code class="inline-code">THEMES</code> defines adventures like &quot;fantasy&quot; and &quot;sciFi&quot;, each with a unique summary.</li>
+<li><strong>Theme Retrieval</strong>: <code class="inline-code">getAllThemes</code> provides programmatic access to available themes for other modules, supporting dynamic querying of themes.</li>
+<li><strong>Consistency</strong>: <code class="inline-code">ThemeDefinition</code> ensures each theme object adheres to a structured format.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/shared/input-validator.ts:</span> Input validation utilities</h3>
+<p>This file contains input validation functions critical to maintaining system robustness and preventing errors caused by invalid user data.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">validateThemeInput</code>: Checks if a selected theme is valid.</li>
+<li><code class="inline-code">validateProjectPath</code>: Ensures a project path input is safe and valid, avoiding issues like path traversal.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/input-validator.ts</h3>
+<pre><code class="language-typescript">import { THEMES } from &#39;./theme&#39;;
+
+export function validateThemeInput(theme: string): void {
+  if (!THEMES[theme]) {
+    throw new Error(`Invalid theme: ${theme}`);
+  }
+}
+
+export function validateProjectPath(projectPath: string): void {
+  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+    throw new Error(&#39;Project path must be a non-empty string.&#39;);
+  }
+
+  if (projectPath.includes(&#39;\0&#39;) || projectPath.includes(&#39;..&#39;)) {
+    throw new Error(&#39;Project path contains invalid characters.&#39;);
   }
 }
 </code></pre>
-<p>This function is similar to a translator, taking raw input (prompt) and conveying it as polished language for interaction.</p>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required&#39;);
-  }
-
-  if (this.isAzureOpenAI()) {
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({ endpoint: azureEndpoint, apiKey, apiVersion: LLM_API_VERSION });
-  } else {
-    this.client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
-  }
-}
-</code></pre>
-<p>The constructor operates like a forge where all necessary tools are assembled to craft the desired output.</p>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-    if (!GITHUB_TOKEN) {
-      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models&#39;);
-    }
-    return GITHUB_TOKEN;
-  }
-
-  if (!LLM_API_KEY) {
-    throw new Error(&#39;LLM_API_KEY required&#39;);
-  }
-  return LLM_API_KEY;
-}
-</code></pre>
-<p>This function is like a keymaster determining which magical key unlocks the gates of the LLM.</p>
+<ul>
+<li><strong>Theme Validation</strong>: <code class="inline-code">validateThemeInput</code> ensures only themes defined in <code class="inline-code">THEMES</code> can be selected, promoting conformity.</li>
+<li><strong>Path Integrity</strong>: <code class="inline-code">validateProjectPath</code> protects against invalid or malicious paths, preventing security vulnerabilities like path traversal.</li>
+<li><strong>Error Handling</strong>: Both functions provide clear error messages, facilitating debugging.</li>
+</ul>
+<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Be judicious with cache policies in <code class="inline-code">RepoAnalyzer</code> for performance optimization.</li>
-<li>Use the <code class="inline-code">generateResponse</code> function to abstract complex LLM operations into reusable workflows.</li>
-<li>When interacting with <code class="inline-code">captureRepomixStdout</code>, ensure subprocess timeouts align with the average repository size.</li>
+<li><strong>Timeout Strategies</strong>: Consider reducing <code class="inline-code">LLM_REQUEST_TIMEOUT</code> if latency is a concern, but ensure it matches API responsiveness.</li>
+<li><strong>Adding Themes</strong>: To introduce new themes, update the <code class="inline-code">THEMES</code> object and confirm documentation aligns with <code class="inline-code">ThemeDefinition</code>.</li>
+<li><strong>Path Validation Best Practices</strong>: Always sanitize paths before file operations to safeguard against malicious inputs.</li>
 </ul>
 <hr>
-<p>Well done, adventurer! With deep insights into the Chamber of Analytical Repositories, you are one step closer to mastering this domain. Continue your journey, and let the Adventure Forge guide you onward!</p>
-<p>Congratulations, developer—Quest 3: Chamber of Analytical Repositories successfully committed; your codebase of knowledge now branches to 40%, unlocking robust analytical patterns and elevating your querying prowess to production-grade excellence! 🚀💎⚡</p>
+<p>The Themes of Legend lie within your grasp! Uncover their mysteries and guide the Repository Adventure Engine to legendary heights.</p>
+<p>Mission accomplished: &quot;Quest 3: The Themes of Legend&quot; is now pushed to the main branch with zero merge conflicts—outstanding progress at 40% completion, developer, your codebase of knowledge is scaling like a well-optimized algorithm! 🚀⚡💎</p>
 
 </div>
 
