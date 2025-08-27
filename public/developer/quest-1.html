@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Toolwright’s Summit - Repo Adventure</title>
+    <title>Quest 1: The Call of the MCP - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Adventures of the Repository Chronicles</a>
+                <a href="index.html">The Repository’s Legendary Adventure</a>
             </div>
             <div class="nav-middle">
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
@@ -45,24 +45,24 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Toolwright’s Summit</h1>
+    <h1>Quest 1: The Call of the MCP</h1>
 <hr>
-<p>In a world brimming with digital potential and untamed source code, the realm of repository adventures remains uncharted, awaiting the guiding hand of a toolwright. Your mission, brave developer, is to journey into the realm of repository tools and lay the groundwork for code-driven storytelling. The heart of today’s summit lies in the <code class="inline-code">MCP Tool Interface</code>, where handlers are forged, adventures launched, and quests brought to life. By studying the mechanisms for tool orchestration and server flows, you will gain the keys to unlock the next chapter of the Repository Chronicles.</p>
+<p>In the vast expanse of collaborative software development, automation and creativity collide in the realm of the mythical <strong>Repository of Adventures</strong>. The Master Control Program (MCP) beckons you to embark on your first challenge: unravel the workings of its tool interface and server processes. As a brave developer-explorer, your mission is to investigate the mechanisms that animate the MCP server and its dynamic tools. So prepare your IDE and sharpen your debugging skills – the adventure begins here!</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Tool Manifest Assembly</strong>: How does <code class="inline-code">RepoAdventureServer.setupHandlers</code> dynamically list tools with descriptions and schemas?</li>
-<li>⚡ <strong>Orchestration Initiation</strong>: What is the flow of initialization from <code class="inline-code">main</code> to <code class="inline-code">RepoAdventureServer.run</code>?</li>
-<li>🛡️ <strong>Execution Integrity</strong>: How does the system validate tool arguments and handle execution errors in <code class="inline-code">CallToolRequestSchema</code>?</li>
+<li>🔍 <strong>Tool Cataloging Mysteries</strong>: How does the MCP dynamically list all available tools and their schemas to clients in <code class="inline-code">setupHandlers</code>?</li>
+<li>⚡ <strong>Execution Under Command</strong>: How does the MCP handle tool execution requests and validate arguments before running them?</li>
+<li>🛡️ <strong>Boot and Signal Guarding</strong>: How does the <code class="inline-code">main</code> function ensure the server starts and gracefully shuts down during interrupts or unhandled rejections?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Orchestrator</h3>
-<p>This file defines the <code class="inline-code">RepoAdventureServer</code> class, which serves as the heart of the MCP tool interface. It handles tool requests, validates arguments, and ensures proper error management. Key functions include <code class="inline-code">setupHandlers</code>, which dynamically generates a list of available tools, and <code class="inline-code">run</code>, which initializes the server transport and pre-generates repository content. The <code class="inline-code">main</code> function ties it all together by managing lifecycle events and ensuring graceful shutdown.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Core</h3>
+<p>This file contains the main server implementation for the MCP, managing tool registration, request handling, and lifecycle events. The <code class="inline-code">RepoAdventureServer</code> provides the foundation for listing and invoking tools, while robust error-handling mechanisms ensure smooth operations even in challenging scenarios. Through its <code class="inline-code">setupHandlers</code> method, key endpoints like dynamic tool listing and execution are established. The <code class="inline-code">main</code> function orchestrates the server&#39;s lifecycle, including graceful shutdown for signals or runtime issues.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Dynamically generates a tool manifest, converting each tool’s schema to JSON Schema for validation.</li>
-<li><code class="inline-code">run</code>: Initializes the STDIO transport, prepares the repository analyzer, and starts the server.</li>
-<li><code class="inline-code">main</code>: The application’s entry point, handling startup, shutdown signals, and unhandled rejections.</li>
+<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Registers dynamic handlers for listing tools and executing a selected tool based on incoming client requests.</li>
+<li><code class="inline-code">RepoAdventureServer.run</code>: Starts the MCP server, initializing transport and pre-generating repository analysis.</li>
+<li><code class="inline-code">main</code>: Initializes the server class, handles system signals for graceful shutdown, and logs unhandled promise rejections.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -117,11 +117,10 @@
 }
 </code></pre>
 <ul>
-<li>Dynamically lists all registered tools and maps their metadata for clients.</li>
-<li>Utilizes <code class="inline-code">zodToJsonSchema</code> to convert Zod schemas into JSON Schema for validation.</li>
-<li>Enforces strong validation by parsing tool arguments against defined schemas.</li>
-<li>Handles exceptions gracefully, distinguishing internal errors from invalid requests.</li>
-<li>Ensures each tool implements both descriptive metadata and robust request validation.</li>
+<li>Establishes request handlers for listing all tools dynamically and executing a specific tool.</li>
+<li>Uses Zod schemas (<code class="inline-code">tool.schema</code>) for runtime argument validation, ensuring robust input handling.</li>
+<li>Introduces <code class="inline-code">McpError</code> for standardized error reporting, differentiating between known issues (e.g., invalid parameters) and unexpected failures.</li>
+<li>Simplifies server extensibility through dynamic retrieval of tools (<code class="inline-code">tools[name]</code>).</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
@@ -129,64 +128,67 @@
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
   
+  // Pre-generate repomix content for the current working directory to warm up the cache
+  // This happens in the background while waiting for user commands
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Initializes the server with STDIO transport, ideal for inter-process communication.</li>
-<li>Logs startup details to the console for debugging and monitoring.</li>
-<li>Prepares repository content by warming up the <code class="inline-code">repoAnalyzer</code> cache asynchronously.</li>
-<li>Uses <code class="inline-code">process.cwd()</code> to dynamically determine the project path at runtime.</li>
-<li>Promotes efficient handling of incoming requests without delay.</li>
+<li>Initializes the server using the <code class="inline-code">StdioServerTransport</code>, enabling bidirectional client communication.</li>
+<li>Prepares repository content with <code class="inline-code">repoAnalyzer.preGenerate</code>, improving responsiveness for subsequent queries.</li>
+<li>Logs key lifecycle events to assist in monitoring operations and debugging.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
-
+    
+    // Handle graceful shutdown for both signals
     [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
-
+    
+    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
     });
-
+    
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
     process.exit(1);
   }
 }
+
+main().catch((error) =&gt; {
+  console.error(&#39;Unhandled error:&#39;, error);
+  process.exit(1);
+});
 </code></pre>
 <ul>
-<li>Instantiates the <code class="inline-code">RepoAdventureServer</code>, which orchestrates all tool-related interactions.</li>
-<li>Sets up signal handlers to ensure a graceful shutdown on <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code>.</li>
-<li>Monitors and logs unhandled promise rejections for debugging purposes.</li>
-<li>Executes the <code class="inline-code">run</code> function to bootstrap the server’s core functionality.</li>
-<li>Handles fatal errors during startup, preventing the process from hanging indefinitely.</li>
+<li>Deploys a <code class="inline-code">RepoAdventureServer</code> instance, ensuring the MCP server lifecycle is fully managed.</li>
+<li>Registers signal handlers for proper cleanup (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>) via <code class="inline-code">gracefulShutdown</code>.</li>
+<li>Retains server resilience by safely logging unhandled promise rejections without forcing shutdown during non-critical errors.</li>
+<li>Acts as the entry point for MCP server startup, containing fallback mechanisms against fatal scripting errors.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Practical Tip</strong>: Focus on the interplay between <code class="inline-code">zodToJsonSchema</code> and <code class="inline-code">CallToolRequestSchema</code> for understanding validation flows.</li>
-<li><strong>Exploration Recommendation</strong>: Investigate the <code class="inline-code">tools</code> module in the next quest to see how individual tools are defined and implemented.</li>
-<li><strong>Next Steps</strong>: Prepare to venture deeper into the adventure tools and explore how their handlers drive quests.</li>
+<li>Review the <code class="inline-code">tools</code> object imported in <code class="inline-code">tools.ts</code> to understand which functionalities can be dynamically executed by the MCP.</li>
+<li>Use breakpoints or logging when exploring <code class="inline-code">setupHandlers</code> to observe how <code class="inline-code">zod</code> validates inputs in real time.</li>
+<li>Test the graceful shutdown by triggering signals (e.g., <code class="inline-code">Ctrl+C</code>) and reviewing how resources are cleaned up.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Congratulations, developer! 🎉 You’ve successfully debugged and compiled your way through Quest 1: The Toolwright’s Summit—a stellar first commit on your codebase to mastery; onward to the next feature build! 🚀💻</p>
+<p>🎉 console.log(&#39;System.out.println(&quot;Quest 1: The Call of the MCP has been successfully compiled and executed—your progress buffer is initialized, and you’re ready to commit to the next level of the stack! 🚀⚡💎&quot;)&#39;);</p>
 
 </div>
 
 
-      <div class="quest-navigation quest-navigation-bottom nav-next-only">
-        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
-      </div>
-    
     </div>
     
     <footer class="footer">

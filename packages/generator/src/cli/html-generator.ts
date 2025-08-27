@@ -1075,7 +1075,7 @@ class HTMLAdventureGenerator {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP Repo Adventure - AI Repo Adventures</title>
+    <title>${repoName} - Repository Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
 </head>
 <body>
@@ -1096,13 +1096,13 @@ class HTMLAdventureGenerator {
         <div class="hero-section">
             <div class="hero-background"></div>
             <div class="hero-content">
-                <h1>MCP Repo Adventure<br><span class="subtitle">AI Repo Adventures</span></h1>
+                <h1>${repoName}<br><span class="subtitle">Repository Adventure</span></h1>
             </div>
         </div>
         
         <div class="story-content">
             <div class="welcome-section">
-                <p>Welcome to AI Repo Adventures! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the <a href="${repoUrl}" target="_blank" rel="noopener noreferrer">${repoName}</a> repo's code, transforming technical exploration into fun and engaging storytelling.</p>
+                <p>Welcome to Repository Adventure! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the <a href="${repoUrl}" target="_blank" rel="noopener noreferrer">${repoName}</a> repo's code, transforming technical exploration into fun and engaging code exploration.</p>
             </div>
             
             <div class="theme-selector">
