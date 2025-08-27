@@ -199,6 +199,7 @@
       this.enhanceQuestNavigation();
       this.attachEventListeners();
       this.addKeyboardShortcuts();
+      this.addNavbarQuestLink();
     }
 
     createFloatingButton() {
@@ -443,6 +444,17 @@
         this.closeNavigator();
       } else {
         this.openNavigator();
+      }
+    }
+
+    addNavbarQuestLink() {
+      // Add click handler for the "Quests" link in the navbar
+      const questLink = document.querySelector('.quest-map-trigger');
+      if (questLink) {
+        questLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.openNavigator();
+        });
       }
     }
   }

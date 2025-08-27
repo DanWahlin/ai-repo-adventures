@@ -11,7 +11,7 @@
     space: {
       mapTitle: 'Star Map',
       homeText: 'Return to Command Deck',
-      questPrefix: 'Mission',
+      questPrefix: 'Quest',
       bgClass: 'space-map'
     },
     mythical: {
@@ -23,13 +23,13 @@
     ancient: {
       mapTitle: 'Ancient Map',
       homeText: 'Return to Temple',
-      questPrefix: 'Journey',
+      questPrefix: 'Quest',
       bgClass: 'ancient-map'
     },
     developer: {
       mapTitle: 'Navigation',
       homeText: 'Return to Index',
-      questPrefix: 'Module',
+      questPrefix: 'Quest',
       bgClass: 'developer-map'
     }
   };
@@ -199,6 +199,7 @@
       this.enhanceQuestNavigation();
       this.attachEventListeners();
       this.addKeyboardShortcuts();
+      this.addNavbarQuestLink();
     }
 
     createFloatingButton() {
@@ -305,7 +306,7 @@
       if (this.questTitles && this.questTitles[questNum]) {
         const title = this.questTitles[questNum];
         // Clean up common quest number prefixes
-        const cleanTitle = title.replace(/^Quest \d+:\s*/, '').replace(/^Mission \d+:\s*/, '').replace(/^Journey \d+:\s*/, '').replace(/^Module \d+:\s*/, '');
+        const cleanTitle = title.replace(/^Quest \d+:\s*/, '');
         return cleanTitle || title; // Return original if cleaning resulted in empty string
       }
       
@@ -318,7 +319,7 @@
           this.questTitles[questNum] = pageTitle;
           this.saveQuestTitles();
           
-          const cleanTitle = pageTitle.replace(/^Quest \d+:\s*/, '').replace(/^Mission \d+:\s*/, '').replace(/^Journey \d+:\s*/, '').replace(/^Module \d+:\s*/, '');
+          const cleanTitle = pageTitle.replace(/^Quest \d+:\s*/, '');
           return cleanTitle || pageTitle;
         }
       }
@@ -334,7 +335,7 @@
           this.questTitles[questNum] = title;
           this.saveQuestTitles();
           
-          const cleanTitle = title.replace(/^Quest \d+:\s*/, '').replace(/^Mission \d+:\s*/, '').replace(/^Journey \d+:\s*/, '').replace(/^Module \d+:\s*/, '');
+          const cleanTitle = title.replace(/^Quest \d+:\s*/, '');
           return cleanTitle || title;
         }
       }
@@ -443,6 +444,17 @@
         this.closeNavigator();
       } else {
         this.openNavigator();
+      }
+    }
+
+    addNavbarQuestLink() {
+      // Add click handler for the "Quests" link in the navbar
+      const questLink = document.querySelector('.quest-map-trigger');
+      if (questLink) {
+        questLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.openNavigator();
+        });
       }
     }
   }

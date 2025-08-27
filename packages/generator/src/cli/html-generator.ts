@@ -43,6 +43,7 @@ class HTMLAdventureGenerator {
   private maxQuests?: number;
   private logLlmOutput: boolean = false;
   private serve: boolean = false;
+  private isMultiTheme: boolean = false;
 
   constructor() {
     this.rl = readline.createInterface({
@@ -566,6 +567,11 @@ class HTMLAdventureGenerator {
 
     const icons = (themeIcons as any)[this.selectedTheme] || themeIcons.space;
     
+    // Add "Change Theme" link only when in multi-theme mode
+    const changeThemeLink = this.isMultiTheme 
+      ? '<a href="../index.html" class="nav-link">Change Theme</a>'
+      : '';
+
     return {
       ADVENTURE_TITLE: adventureTitle,
       INDEX_LINK: 'index.html',
@@ -574,7 +580,8 @@ class HTMLAdventureGenerator {
       REPO_URL: repoUrl,
       THEME_ICON: icons.theme,
       QUEST_ICON: icons.quest,
-      GITHUB_LOGO: this.getGitHubLogo()
+      GITHUB_LOGO: this.getGitHubLogo(),
+      CHANGE_THEME_LINK: changeThemeLink
     };
   }
 
@@ -891,6 +898,7 @@ class HTMLAdventureGenerator {
 
   private async generateAllThemes(args: Map<string, string>): Promise<void> {
     console.log(chalk.green('✅ Generating all themes'));
+    this.isMultiTheme = true;
     
     // Set output directory from args
     const outputArg = args.get('output');
@@ -976,6 +984,7 @@ class HTMLAdventureGenerator {
         themeGenerator['outputDir'] = themeDir;
         themeGenerator['maxQuests'] = this.maxQuests;
         themeGenerator['logLlmOutput'] = this.logLlmOutput;
+        themeGenerator['isMultiTheme'] = this.isMultiTheme;
         
         await themeGenerator.generateAdventure();
         
