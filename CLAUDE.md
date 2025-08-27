@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-- **Build**: `npm run build` - Compiles TypeScript to `/dist` directory
-- **Run**: `npm start` - Runs the MCP server via tsx
+- **Build**: `npm run build` - Compiles all TypeScript packages using workspace dependencies
+- **Run**: `npm start` - Runs the production MCP server
 - **Development**: `npm run dev` - Runs with file watching for development
+- **HTML Generation**: `npm run generate-html` - Interactive CLI for creating themed adventure websites
 
 ### Linting Commands
 - **Lint All**: `npm run lint` - Check code quality and complexity
@@ -14,14 +15,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Complexity Check**: `npm run lint:complexity` - Focus on cyclomatic complexity analysis
 
 ### Testing Commands
-- **All Tests**: `npm test` - Runs comprehensive test suite
+- **All Tests**: `npm test` - Runs comprehensive test suite across all packages
 - **Unit Tests**: `npm run test:unit` - Core algorithm and component tests
-- **Integration Tests**: `npm run test:integration` - LLM integration tests
-- **Individual Test Suites**: 
-  - `npm run test:unit:algorithms` - Adventure algorithm tests
-  - `npm run test:unit:llm` - LLM client tests
-  - `npm run test:simple` - Basic MCP workflow test
-  - `npm run test:real-world` - Full MCP integration test
+- **Integration Tests**: `npm run test:integration` - LLM provider and repomix integration tests
+- **System Tests**:
+  - `npm run test:simple` - Basic MCP workflow validation (2 minutes timeout)
+  - `npm run test:real-world` - Full system integration with performance monitoring
+  - `npm run chat` - Interactive terminal-based testing client
+- **HTML Generation Tests**:
+  - `npm run test:html` - Quick HTML generation (minimal LLM calls for fast testing)
+  - `npm run test:prompts` - LLM prompt analysis and debugging
 
 ### LLM Configuration (Optional)
 The system works without LLM configuration (using fallback templates), but LLM enables dynamic story generation:
@@ -61,116 +64,99 @@ Functions exceeding these limits should be refactored into smaller, more focused
 
 ## Architecture Overview
 
-This is a **Model Context Protocol (MCP) server** that gamifies code repository exploration through interactive storytelling. The server operates as a stdio-based MCP server using the `@modelcontextprotocol/sdk`.
+This is a **multi-package monorepo** that gamifies code repository exploration through AI-powered storytelling. The system operates as both an **MCP (Model Context Protocol) server** and a **standalone HTML generator**, using domain-driven architecture principles.
 
-### Core Architecture Pattern
+### Multi-Package Architecture
 
-The system follows a **modular domain-driven architecture**:
+The system is organized into three specialized packages with clear separation of concerns:
 
-1. **Analysis Domain** (`src/analyzer/`) - Project structure analysis and code understanding
-2. **Adventure Domain** (`src/adventure/`) - Story generation and user interaction management  
-3. **Shared Infrastructure** (`src/shared/`) - Configuration, error handling, and utilities
-4. **MCP Server Layer** (`src/server.ts`, `src/tools.ts`) - Protocol implementation and tool orchestration
+1. **MCP Server Package** (`packages/mcp/`) - Protocol implementation and user interface
+2. **Core Business Logic** (`packages/core/`) - Domain logic, LLM integration, and shared functionality  
+3. **HTML Generator** (`packages/generator/`) - Static site generation for standalone adventures
+
+### Core Architecture Patterns
+
+**Domain-Driven Design**: Each package represents a distinct domain with clear boundaries
+**Event-Driven Communication**: MCP protocol orchestrates tool interactions
+**Plugin-Based LLM Integration**: Unified interface supporting multiple AI providers
+**Template-Based Fallback**: Ensures functionality without LLM dependencies
 
 ### Key Architectural Components
 
-**`src/server.ts`** - Main MCP server that:
-- Dynamically loads and registers tools from `src/tools.ts`
-- Converts Zod schemas to JSON Schema for MCP tool registration
-- Provides centralized error handling with `McpError` types
-- Uses stdio transport for local file system access
-- Implements graceful shutdown with cache cleanup and signal handling
+#### MCP Server Package (`packages/mcp/`)
+**Protocol Layer**: Implements MCP specification with stdio transport
+- **`server.ts`**: Dynamic tool registration using Zod schemas, graceful shutdown handling
+- **`tools.ts`**: Tool orchestration with 4 main tools (`start_adventure`, `choose_theme`, `explore_path`, `view_progress`)
+- **`tools/`**: Individual tool implementations maintaining shared state through singleton pattern
 
-**`src/tools.ts`** - Tool orchestration layer:
-- Defines 4 main MCP tools: `start_adventure`, `choose_theme`, `explore_path`, `view_progress`
-- Uses Zod schemas for input validation and automatic JSON Schema generation
-- Maintains shared state through singleton `AdventureManager` instance
-- Provides user-friendly error formatting
-- Implements additional security through `InputValidator` whitelist-based validation
+#### Core Package (`packages/core/`)
+**Business Logic Layer**: Domain models and LLM integration
+- **`adventure/`**: Story generation and state management
+  - `AdventureManager`: Orchestrates adventure flow and user interactions
+  - `StoryGenerator`: LLM-powered content generation with template fallbacks
+- **`analyzer/`**: Repository analysis through repomix subprocess integration
+  - `RepoAnalyzer`: Intelligent caching and content analysis coordination
+- **`llm/`**: Multi-provider LLM abstraction (OpenAI, Azure OpenAI, GitHub Models, Ollama)
+  - `LLMClient`: Unified API with provider auto-detection and response caching
+- **`shared/`**: Cross-cutting concerns (configuration, themes, validation, error handling)
 
-### Analysis Domain (`src/analyzer/`)
-
-Modular analysis system with specialized components:
-- **`ProjectAnalyzer`** - Main orchestrator coordinating all analysis activities
-- **`FileSystemScanner`** - Directory traversal and technology detection via file patterns
-- **`CodeAnalyzer`** - Source code parsing for functions, classes, and patterns
-- **`DependencyParser`** - Package.json analysis and dependency mapping
-- **`LinguistAnalyzer`** - Language detection using linguist-js
-- **`CodeFlowAnalyzer`** - Execution flow and call relationship mapping
-
-### Adventure Domain (`src/adventure/`)
-
-Story generation and interaction management:
-- **`AdventureManager`** - Main orchestrator for adventure state and user interactions
-- **`StoryGenerator`** - Consolidated story generation with LLM support and fallback templates
-- **`ThemeManager`** - Manages 3 themes (space, mythical, ancient) with character mappings
-- **`FileContentManager`** - File reading and content preparation for adventures
-- **`AdventurePathGenerator`** - Generates exploration paths based on project structure
-
-### Shared Infrastructure (`src/shared/`)
-
-Centralized utilities and configuration:
-- **`config.ts`** - All timeouts, limits, and environment configuration
-- **`error-handling.ts`** - Standardized error types and context handling
-- **`theme.ts`** - Theme validation and formatting utilities
-- **`instances.ts`** - Singleton instances for state management
-- **`cache.ts`** - LRU cache implementation for performance optimization
-- **`input-validator.ts`** - Comprehensive input validation with whitelist-based security
+#### HTML Generator Package (`packages/generator/`)
+**Presentation Layer**: Static site generation with interactive CLI
+- **`html-generator.ts`**: Multi-theme site builder with parallel generation support
+- **`template-engine.ts`**: Variable substitution and markdown processing
+- **`templates/`**: Responsive HTML templates with mobile-first design
+- **`themes/`**: CSS theming system with animations and theme-specific visual elements
 
 ### Technology Detection System
 
 The `FileSystemScanner` detects technologies through file patterns and extensions. Technologies are returned in UPPERCASE format (e.g., 'TYPESCRIPT', 'JAVASCRIPT'). Each technology maps to themed characters in the adventure stories.
 
-### Configuration System (`src/shared/config.ts`)
+### Configuration and Prompt System
 
-All configuration is centralized for easy maintenance:
+#### Centralized Configuration (`packages/core/src/shared/config.ts`)
+All timeouts, limits, and environment variables are centralized:
 
-**Environment Variables** (`ENV_CONFIG`):
-- `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` - LLM provider configuration
-- `GITHUB_TOKEN` - For GitHub Models integration
+**Environment Variables**: `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `GITHUB_TOKEN`
+**Resource Limits**: File size (10MB), scan depth (3 levels), key files (10), functions/classes in summaries
+**Timeouts**: File operations (10s), analysis (30s), LLM requests (15s), cache TTL (5min)
 
-**Timeouts** (`TIMEOUTS`):
-- `FILE_READ`: 10000ms - Individual file read operations
-- `FILE_ANALYSIS`: 30000ms - Code analysis operations  
-- `LLM_REQUEST`: 15000ms - LLM API calls
-- `LLM_CACHE`: 300000ms - Response cache TTL
+#### Theme System (`packages/core/src/shared/theme.ts`) 
+Five built-in themes with extensible custom theme support:
+- **Space**: Cosmic exploration with starship terminology
+- **Mythical**: Enchanted kingdom with fantasy elements
+- **Ancient**: Archaeological exploration with historical themes
+- **Developer**: Modern coding environment with technical terminology
+- **Custom**: User-defined themes via configuration
 
-**Analysis Limits** (`ANALYSIS_LIMITS`):
-- `MAX_FILE_SIZE_MB`: 10 - Skip files larger than this
-- `MAX_SCAN_DEPTH`: 3 - Directory traversal depth
-- `KEY_SOURCE_FILES`: 10 - Number of key files to analyze
-- `TOP_FUNCTIONS`: 20 - Functions to include in summaries
-- `TOP_CLASSES`: 5 - Classes to include in summaries
+#### Prompt Engineering Architecture
+- **Modular Prompts**: Separate prompts for story generation, quest content, and completion messages
+- **Template-Based System**: Variable substitution with theme-specific guidelines and character mappings
+- **Adventure Configuration**: Project-specific quest definitions via `adventure.config.json`
 
-### State Management
+### Advanced Architecture Features
 
-The system uses singleton instances (`src/shared/instances.ts`):
-- `optimizedAnalyzer` - Shared `ProjectAnalyzer` instance with caching
-- `adventureManager` - Single instance maintaining adventure state across tool calls
+#### Multi-Level Caching Strategy
+- **Repomix Content**: 5-minute cache for repository analysis results
+- **LLM Responses**: SHA256-based caching with 5-minute TTL
+- **Singleton State**: Shared instances across tool calls (`packages/core/src/shared/instances.ts`)
 
-### Error Handling
+#### Security and Validation
+- **Input Sanitization**: Whitelist-based validation preventing injection attacks
+- **Path Traversal Protection**: Secure file system access with boundary checks  
+- **Resource Limits**: File size, processing time, and memory usage constraints
+- **Dual Validation**: Zod schemas + custom validators for comprehensive input validation
 
-Standardized error handling with custom error types:
-- `AnalysisError` - File system and code analysis failures
-- `StoryGenerationError` - LLM and story generation issues  
-- `AdventureError` - Adventure state and user interaction problems
-- All errors include context (theme, project type, file paths, etc.)
+#### Multi-Provider LLM Integration (`packages/core/src/llm/`)
+- **Provider Support**: OpenAI, Azure OpenAI, GitHub Models, Ollama with auto-detection
+- **Graceful Degradation**: Template-based fallbacks when LLM unavailable
+- **Response Caching**: SHA256-based caching reduces redundant API calls
+- **Error Recovery**: Intelligent retry logic and fallback content generation
 
-### Input Validation & Security
-
-The system implements comprehensive input validation:
-- **Whitelist-based validation** for all user inputs (adventure choices, themes, paths)
-- **`InputValidator` class** with methods for validating different input types
-- **Safe character patterns** to prevent injection attacks while allowing legitimate use cases
-- **Dual validation layers** using both Zod schemas and custom validators
-
-### LLM Integration
-
-The `LLMClient` (`src/llm/llm-client.ts`):
-- Supports multiple providers (OpenAI, Azure OpenAI, GitHub Models, Ollama)
-- Gracefully handles missing API keys (fallback to template-based stories)
-- Implements response caching with SHA256 hash keys
-- Provider auto-detection from base URL
+#### Performance Optimizations
+- **Background Processing**: Repomix pre-generation during server startup
+- **Parallel Generation**: Multi-theme HTML generation with concurrent processing
+- **Targeted Content**: Quest-specific file analysis vs full repository scanning
+- **Resource Monitoring**: Memory and CPU usage tracking in comprehensive tests
 
 ### MCP Tool Flow
 
@@ -192,11 +178,25 @@ The typical user interaction flow:
 - Integration tests gracefully skip when LLM unavailable
 - Simple/real-world tests require full MCP workflow (will fail without LLM)
 
-**File Organization After Recent Refactoring**:
-- `src/index.ts` renamed to `src/server.ts` for clarity
-- Story generation consolidated in `src/adventure/` (no separate `src/story/`)
-- All domains have `index.ts` files for clean imports
-- Configuration centralized in `src/shared/config.ts`
+### Build System and Toolchain
+
+#### Monorepo Management
+- **npm Workspaces**: Dependency hoisting and workspace isolation
+- **TypeScript Project References**: Efficient incremental compilation across packages
+- **Lerna Integration**: Independent versioning for published packages
+- **ESM Modules**: Modern module system with explicit `.js` imports in TypeScript
+
+#### Release and Publishing
+- **Conventional Commits**: Semantic versioning automation
+- **GitHub Actions**: Automated releases on main branch pushes  
+- **npm Publishing**: Public packages with proper access control
+- **Version Synchronization**: Coordinated releases across dependent packages
+
+#### Asset Management and Static Resources
+- **Responsive CSS System**: Mobile-first design with theme-specific visual elements
+- **Static Asset Pipeline**: Automatic copying of templates, themes, and images
+- **GitHub Integration**: Automatic logo and repository linking
+- **Theme-Specific Icons**: Visual differentiation for navigation elements
 
 ### Configuration for Claude Desktop
 
@@ -229,5 +229,10 @@ Key implications:
 - No fixed story templates
 - Everything scales based on the actual project being explored
 ```
-- When you need to test if HTML is generated correctly, run npm run generate-html -- --theme space --output ./docs --overwrite
-- Don't use npm run generate-html to recreate the HTML pages. Use npm run test:html -- --theme=mythical
+
+### HTML Generation Commands
+
+- **Interactive Generation**: `npm run generate-html` - CLI wizard for theme selection and output configuration
+- **Quick Testing**: `npm run test:html` - Fast HTML generation with minimal LLM calls
+- **Specific Theme**: `npm run test:html -- --theme=mythical` - Generate specific theme for testing
+- **All Themes**: `node packages/generator/bin/cli.js --theme all --output tests/public --overwrite --max-quests 1` - Generate all themes with parallel processing

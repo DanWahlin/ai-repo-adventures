@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Mystic Gatekeepers of Toolhaven - Repo Adventure</title>
+    <title>Quest 1: Unravel the Mystic Code (MCP Tool Interface) - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Enchanted Repository of Aetheria</a>
+                <a href="index.html">Enchanted Adventures of the Codebound Kingdom</a>
             </div>
             <div class="nav-middle">
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
@@ -45,29 +45,28 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Mystic Gatekeepers of Toolhaven</h1>
+    <h1>Quest 1: Unravel the Mystic Code</h1>
 <hr>
-<p>In the mystical land of Aetheria, your journey begins in Toolhaven – the enchanted workshop of the Repository of Codes. Here, the &quot;Mystic Gatekeepers&quot; guard the spells that bind Aetheria&#39;s knowledge. However, their balance has been disrupted by the Chaos of Bugs. To restore harmony, you must face the gatekeepers and decode the secrets behind their operation. Within the sacred scrolls, you’ll uncover the magical incantations that manage tools and their invocation. Brave apprentice, the fate of Aetheria lies in your hands!</p>
+<p>In the magical realm of Codethia, a grim shadow threatens the enchanted framework that keeps the kingdom thriving. Fragments of the Mystic Code, once unified by wisdom scrolls, are scattered across the land. Brave Knight of Syntax, your journey begins within the castle’s hidden archives. Using the MCP Tool Interface, you must uncover the sacred spells nested within its two mystical scrolls—the <code class="inline-code">server.ts</code> and <code class="inline-code">tools.ts</code>. Only by deciphering their secrets can you restore balance and set forth to the next heroic challenge.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Invocation Rituals</strong>: How does <code class="inline-code">setupHandlers</code> dynamically list tools and handle requests for tool execution?  </li>
-<li>⚡ <strong>Arcane Flows</strong>: What role does the <code class="inline-code">run</code> method play in initializing the enchanted server&#39;s operation?  </li>
-<li>🛡️ <strong>Safeguarding Spells</strong>: How are errors and interruptions handled during the server&#39;s lifecycle, especially in <code class="inline-code">main</code>?</li>
+<li>🔍 <strong>Tool Invocation Mysteries</strong>: How does <code class="inline-code">setupHandlers</code> dynamically register tools, and what validations ensure the knights choose correctly?</li>
+<li>⚡ <strong>Summoning Spells</strong>: How does <code class="inline-code">run</code> establish the magical transport, and what preemptive actions prepare the realm for exploration?</li>
+<li>🛡️ <strong>Guardians of Syntax</strong>: What strategies does the <code class="inline-code">main</code> function use to safeguard the magical code and ensure graceful shutdowns?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Core of the Mystic Gatekeepers</h3>
-<p>This file contains the implementation of the enchanted server responsible for managing Aetheria&#39;s tool invocations. It ensures smooth interaction with tools, including dynamic listing and secure execution. The methods included here also handle lifecycle management and error mitigation, aligning the system with the mystical values of order and safety.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Configuration and Tool Handler Setup</h3>
+<p>This file is the heart of MCP’s operation within Codethia, serving as the enchanted framework managing tools and interactions. It carefully constructs and connects the <code class="inline-code">Server</code> entity, empowering knights to journey through mystic quests. <code class="inline-code">setupHandlers</code> dynamically enlists powerful tools to the arsenal, ensuring alignment with Zod schemas for tool invocation safety. Meanwhile, <code class="inline-code">run</code> activates the transport system and pre-generates repomix content, preparing adventurers for smooth exploration. The <code class="inline-code">main</code> function ensures the safeguarding of operation while managing interruptions and errors.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: This method dynamically lists tools and sets up handlers for tool execution requests. It ensures that available tools and their parameters are validated before invocation.</li>
-<li><code class="inline-code">run</code>: The central function that connects the server to the mythical transport layer and prepares the enchanted cache for faster tool execution.</li>
-<li><code class="inline-code">main</code>: The entry point of the server, managing critical lifecycle flows, setting up signals for graceful shutdowns, and handling unhandled promise rejections to maintain system stability.</li>
+<li><code class="inline-code">setupHandlers</code>: Dynamically enlists tools and validates knight invocations through Zod schemas, preventing improper usage.</li>
+<li><code class="inline-code">run</code>: Establishes the server transport and pre-generates repomix content, creating a seamless exploration process.</li>
+<li><code class="inline-code">main</code>: Manages high-level control flow, integrating graceful shutdowns and error handling for uninterrupted adventures.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
 <pre><code class="language-typescript">private setupHandlers() {
-  // Dynamic tool listing
   this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
     const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
       name,
@@ -77,22 +76,16 @@
         $refStrategy: &#39;none&#39;
       })
     }));
-
     return { tools: toolList };
   });
 
-  // Dynamic tool execution
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
-
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-
       const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool&#39;s Zod schema
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) =&gt; 
@@ -100,10 +93,7 @@
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
-
-      // Execute the tool handler with validated arguments
       return await tool.handler(validationResult.data as any);
-
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -117,45 +107,38 @@
 }
 </code></pre>
 <ul>
-<li>Dynamically generates a list of tools with descriptions and input schemas by leveraging <code class="inline-code">zodToJsonSchema</code>.</li>
-<li>Validates tool arguments using Zod schemas, ensuring secure and error-resistant interactions.</li>
-<li>Maps tool execution requests to appropriate handlers, logging any exceptions as part of robust error management.</li>
-<li>Centralizes tool management, maintaining consistency and extensibility in handling tool invocation.</li>
+<li>Dynamically registers tools into the MCP server, building a scalable handler structure.</li>
+<li>Leverages Zod schemas for input validation, ensuring knights invoke tools properly.</li>
+<li>Provides robust error handling mechanisms using <code class="inline-code">McpError</code>, protecting the integrity of tool execution.</li>
+<li>Extracts tool details dynamically, simplifying future expansion of available tools.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
-  // Pre-generate repomix content for the current working directory to warm up the cache
-  // This happens in the background while waiting for user commands
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Establishes the server&#39;s transport layer using <code class="inline-code">StdioServerTransport</code> for interactive communication.</li>
-<li>Logs server status to ensure visibility during the tool&#39;s operation.</li>
-<li>Warm-up caching (<code class="inline-code">preGenerate</code>) enhances performance by preparing data in advance.</li>
+<li>Connects the server using <code class="inline-code">StdioServerTransport</code>, enabling seamless communication.</li>
+<li>Executes repomix content pre-generation to optimize the knights’ exploration experience.</li>
+<li>Utilizes asynchronous actions for improved responsiveness during initialization.</li>
+<li>Integrates project path retrieval and caching strategies for efficient content pipeline support.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
-    
-    // Handle graceful shutdown for both signals
     [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
-    
-    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
-    
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
@@ -164,20 +147,45 @@
 }
 </code></pre>
 <ul>
-<li>Registers graceful shutdowns via <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> signals to prevent unexpected data loss.</li>
-<li>Manages unhandled promise rejections with robust logging mechanisms.</li>
-<li>Includes lifecycle error handling to ensure a resilient operation during initialization failures.</li>
+<li>Implements signal handling for <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code>, ensuring graceful server shutdown.</li>
+<li>Captures unhandled promise rejections, logging them without disrupting ongoing operations.</li>
+<li>Uses high-level exception handling to prevent fatal errors, maintaining reliability under unexpected conditions.</li>
+<li>Integrates the <code class="inline-code">RepoAdventureServer</code>, establishing the primary quest execution environment.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Tool Definitions and MCP Integration</h3>
+<p>This file represents the mystical arsenal used by adventurers within Codethia. Each tool—such as <code class="inline-code">start_adventure</code> and <code class="inline-code">explore_quest</code>—is a manifest designed to support knights in their exploration. Organized and centrally exported within the <code class="inline-code">tools</code> object, they allow seamless registration into the server runtime, unifying their descriptions and schema enforcement so the MCP framework operates flawlessly.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code>: Analyzes the codebase and initializes themed adventures, setting the narrative foundation.</li>
+<li><code class="inline-code">choose_theme.handler</code>: Generates a custom story and quests based on selected themes, empowering knights to choose their path.</li>
+<li><code class="inline-code">explore_quest.handler</code>: Guides knights through individual challenges, enabling iterative exploration of the realm.</li>
+<li><code class="inline-code">view_progress.handler</code>: Provides completion updates, ensuring adventurers monitor their heroic journey.</li>
+</ul>
+<hr>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<ul>
+<li>Exports tools in a consolidated object, facilitating centralized management and streamlined registration.</li>
+<li>Ensures tight coupling of each tool’s functionality with its schema, maintaining system accuracy.</li>
+<li>Encourages modular addition or modification of tools with minimal impact on the overall MCP tool interface.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Consider <code class="inline-code">setupHandlers</code> the &quot;index of spells&quot; for aligning tools with their purpose. Investigate how Zod schemas enforce consistency.</li>
-<li>The <code class="inline-code">run</code> method functions as your server&#39;s heart – warm-up actions like <code class="inline-code">preGenerate</code> demonstrate performance optimization techniques.</li>
-<li><code class="inline-code">main</code> exemplifies harmony between broader lifecycle management and detailed error handling strategies.</li>
+<li>Review validation mechanisms in <code class="inline-code">setupHandlers</code> to understand correct invocation patterns for tools.</li>
+<li>Explore pre-generation strategies in <code class="inline-code">run</code> to discover how caching optimizes user experience.</li>
+<li>Study graceful shutdown techniques in <code class="inline-code">main</code> to adopt best practices for error handling and system stability.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>With the valor of a true hero, you have unlocked the ancient secrets of the Mystic Gatekeepers of Toolhaven—an epic first triumph on your legendary journey through the Kingdom of Five Quests! ⭐⚡🗺️</p>
+<p>Excellent work! Venture onward to reveal deeper mysteries and illuminate Codethia with the light of knowledge.</p>
+<p>By the radiant stars of the ever-knowing cosmos, noble hero, you have unlocked the ancient Mystic Code, forging the first triumph in your legendary quest—may your quill of wisdom glow ever brighter!</p>
 
 </div>
 

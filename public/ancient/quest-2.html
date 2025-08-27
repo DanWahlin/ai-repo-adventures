@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Scrolls of Creation - Repo Adventure</title>
+    <title>Quest 2: The Glyph of Adventure - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Temple of Code: Unraveling the Lost Algorithms</a>
+                <a href="index.html">Codebase Chronicles: The Temple of Digital Wisdom</a>
             </div>
             <div class="nav-middle">
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
@@ -45,157 +45,134 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Scrolls of Creation</h1>
+    <h1>Quest 2: The Glyph of Adventure</h1>
 <hr>
-<p>Through a partially uncovered corridor deep within the decayed ruins of the Temple of Code, you stumble upon a chamber lined with shelves of ancient scrolls etched in symbols that glow faintly in the dim light. These are the Scrolls of Creation, said to hold the fundamental patterns of generating adventures and inspiring quests. Only by deciphering the code etched here can you unravel the secrets behind the engine of these ancient adventures.</p>
+<p>Amid the dense jungle of ancient coding scripts lies the Glyph of Adventure, an elusive artifact guarded by the Temple of Digital Wisdom. Within its sacred inscriptions rests the wisdom to generate quests, validate themes, and transform raw code into an epic journey. To uncover these glyphs, you must traverse through layers of intricate logic, unveiling the sacred methods and rituals that give life to the adventure. Let your investigative prowess guide you through this sacred quest.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these sacred questions:</p>
+<p>As you explore the code below, investigate these key questions:  </p>
 <ul>
-<li>🔍 <strong>The Engine&#39;s Awakening</strong>: How is the quest generation initialized, and what essential parameters guide its operation?</li>
-<li>⚡ <strong>The Narrative Weaver</strong>: How does the system dynamically generate stories and quests, ensuring the quests align with the selected themes?</li>
-<li>🛡️ <strong>Sanctity of Configurations</strong>: What mechanisms are employed to validate, parse, and enforce configuration-based guidance for the generated adventures?</li>
+<li>🔍 <strong>Glyph Decoding</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> leverage project context and configuration to structure the journey&#39;s starting point?  </li>
+<li>⚡ <strong>Quest Mapping</strong>: What mechanisms in <code class="inline-code">AdventureManager.exploreQuest</code> ensure the correct quest is selected and executed?  </li>
+<li>🛡️ <strong>Content Rituals</strong>: How does <code class="inline-code">StoryGenerator.generateQuestContent</code> transform the raw codebase into themed quest content using external AI logic?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: The Heart of Adventure Management</h3>
-<p>The <code class="inline-code">adventure-manager.ts</code> file orchestrates the creation, exploration, and execution of quests. It acts as the central hub for state management and integrates ancillary components such as the story generator and configuration parser. By resetting the state, initializing adventures, enforcing configurations, and calculating progress, it ensures that every adventurer’s journey aligns with the ancient rituals embedded in its design.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Defining the Framework for Adventures</h3>
+<p>The <code class="inline-code">AdventureManager</code> acts as the curator of the journey, structuring adventures and ensuring each quest aligns with the sacred narrative. Its methods handle initialization, validation, and quest execution, forming the backbone of the temple&#39;s wisdom. Key highlights include logic for resetting adventures, merging contextual files, and transitional mechanics for quest exploration.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Initializes the adventure with the provided project context, theme, and optional customization, resetting all necessary state and generating a cohesive story with quests.</li>
-<li><code class="inline-code">exploreQuest</code>: Validates the adventurer&#39;s choice, identifies the selected quest, and executes it while caching results for later revisitation.</li>
-<li><code class="inline-code">mergeQuestFilesFromConfig</code>: Incorporates configuration-specified files into the automatically generated quests for alignment with the <code class="inline-code">adventure.config.json</code>.</li>
+<li><code class="inline-code">initializeAdventure</code>: Sets the stage for an adventure, applying the selected theme, project details, and merging configuration for crafted quests.  </li>
+<li><code class="inline-code">exploreQuest</code>: Validates and executes quests based on user selections, ensuring the adventure proceeds smoothly.  </li>
+<li><code class="inline-code">generateQuestContent</code>: Dynamically creates detailed, structured quest narratives from targeted code analysis.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
 <pre><code class="language-typescript">async initializeAdventure(
-    projectInfo: ProjectInfo, 
-    theme: AdventureTheme, 
-    projectPath?: string,
-    customThemeData?: CustomThemeData
-  ): Promise&lt;string&gt; {
-    // Reset state for new adventure
-    this.state.reset();
-    this.state.projectInfo = projectInfo;
-    this.state.currentTheme = theme;
-    this.state.projectPath = projectPath || process.cwd();
-    
-    // Set custom theme data if provided
-    if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-      this.storyGenerator.setCustomTheme(customThemeData);
-    }
-
-    // Generate the overall story and quests using LLM
-    const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-    
-    this.state.title = storyResponse.title;
-    this.state.story = storyResponse.story;
-    
-    // Merge files from adventure config into the generated quests
-    this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-    
-    // Enforce quest count from adventure.config.json if it exists
-    this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-    // Return the story with available quests
-    return this.formatStoryWithQuests({
-      ...storyResponse,
-      quests: this.state.quests
-    });
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string,
+  customThemeData?: CustomThemeData
+): Promise&lt;string&gt; {
+  // Resetting state for a fresh journey
+  this.state.reset();
+  this.state.projectInfo = projectInfo;
+  this.state.currentTheme = theme;
+  this.state.projectPath = projectPath || process.cwd();
+  
+  // Handling custom themes
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
   }
+
+  // Generating quests with AI assistance
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  this.state.title = storyResponse.title;
+  this.state.story = storyResponse.story;
+
+  // Integrating config files into quests
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
+  // Returning formatted story and quests
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests
+  });
+}
 </code></pre>
 <ul>
-<li>This function initializes the adventure by resetting the state and aligning it with the selected theme. </li>
-<li>Custom themes are supported using the <code class="inline-code">setCustomTheme</code> function.</li>
-<li>It integrates quests merged from both dynamically generated and configuration-specified files.</li>
+<li>This code resets the adventure state, initializes key details like project info and theme, and uses AI-driven story generation methods to transform technical input into meaningful quests.  </li>
+<li>It demonstrates dynamic merging of configuration files with pre-designed quests to ensure alignment with the project&#39;s scope.  </li>
+<li>Patterns like &quot;state clearing&quot; and &quot;conditional logic&quot; ensure a clean setup for every new adventure.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-    const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-    
-    // Check if this is a progress request
-    if (this.isProgressRequest(sanitizedChoice)) {
-      return this.getProgress();
-    }
-    
-    // Find the quest based on the choice
-    const quest = this.findQuest(sanitizedChoice);
-    if (!quest) {
-      return this.createNotFoundResult();
-    }
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
 
-    // Execute the quest
-    return await this.executeQuest(quest);
+  // Handling progress requests
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
   }
+
+  // Locating and executing the quest
+  const quest = this.findQuest(sanitizedChoice);
+  if (!quest) {
+    return this.createNotFoundResult();
+  }
+
+  // Performing the ritual of quest execution
+  return await this.executeQuest(quest);
+}
 </code></pre>
 <ul>
-<li>This function facilitates the exploration of quests.</li>
-<li>It dynamically validates user input, matches the choice with a quest based on its ID or title, and executes it.</li>
-<li>Results of completed quests are cached for efficient retrieval during revisit.</li>
+<li>The <code class="inline-code">exploreQuest</code> function ensures user selections are validated and queries handled seamlessly, whether for progress or specific quest exploration.  </li>
+<li>Error handling mechanisms (<code class="inline-code">createNotFoundResult</code>) and modular validation logic (<code class="inline-code">validateAndSanitizeChoice</code>) safeguard user interactions.  </li>
+<li>Mapping between user inputs and quests demonstrates clean and intuitive selection patterns.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
-    if (!projectPath) return quests;
-    
-    const config = parseAdventureConfig(projectPath);
-    if (!config || typeof config !== &#39;object&#39;) return quests;
-    
-    const adventure = (config as any).adventure;
-    if (!adventure || !Array.isArray(adventure.quests)) return quests;
-    
-    // Create a map of quest titles to their file paths from the config
-    const configQuestFiles = new Map&lt;string, string[]&gt;();
-    for (const configQuest of adventure.quests) {
-      if (configQuest.title &amp;&amp; Array.isArray(configQuest.files)) {
-        const filePaths = configQuest.files
-          .filter((f: any) =&gt; f.path)
-          .map((f: any) =&gt; f.path);
-        if (filePaths.length &gt; 0) {
-          configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
-        }
-      }
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateQuestContent(
+  quest: Quest,
+  theme: AdventureTheme,
+  codeContent: string,
+  questPosition?: number,
+  totalQuests?: number
+): Promise&lt;QuestContent&gt; {
+  let adventureGuidance = &#39;&#39;;
+  if (this.projectPath) {
+    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+    if (formattedConfig) {
+      adventureGuidance = formattedConfig;
     }
-    
-    // Merge the files into the generated quests
-    return quests.map((quest, index) =&gt; {
-      // Primary matching: by quest order (index)
-      const configQuests = adventure.quests;
-      if (index &lt; configQuests.length &amp;&amp; configQuests[index] &amp;&amp; configQuests[index].files) {
-        const files = configQuests[index].files
-          .filter((f: any) =&gt; f.path)
-          .map((f: any) =&gt; f.path);
-        if (files.length &gt; 0) {
-          // Successfully matched files from config
-          return { ...quest, codeFiles: files };
-        }
-      }
-      
-      // Fallback: try to match quest by title (case-insensitive partial match)
-      const questTitleLower = quest.title.toLowerCase();
-      for (const [configTitle, files] of configQuestFiles.entries()) {
-        if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
-          // Successfully matched files via fallback
-          return { ...quest, codeFiles: files };
-        }
-      }
-      
-      // No specific files found - quest will use general context
-      return quest;
-    });
   }
+
+  // Constructing the AI prompt
+  const prompt = loadQuestContentPrompt({
+    theme,
+    adventureTitle: quest.title,
+    codeContent,
+    storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
+    adventureGuidance: adventureGuidance || &#39;&#39;,
+    questPosition,
+    totalQuests,
+    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
+  });
+
+  const response = await this.withTimeout(
+    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+  );
+
+  if (!response.content || response.content.trim() === &#39;&#39;) {
+    throw new Error(&#39;LLM returned empty response for quest content&#39;);
+  }
+
+  let cleanContent = response.content.trim();
+  
+  // Formatting for final presentation
+  const beginMarker = &#39;---BEGIN MARKDOWN---&#39;;
+  const endMarker = &#39;
+
+Hark, valiant seeker, for thou hast traversed the sacred halls and unearthed the Glyph of Adventure with a spirit unyielding—let this triumph light thy path as a blazing star towards the ancient wisdom still to come! ⭐✨
 </code></pre>
-<ul>
-<li>This function integrates specific configuration-defined files into quests.</li>
-<li>Matching is first handled by quest order, and as a fallback, by quest title.</li>
-<li>Ensures that quests align with documented guidance within the Temple’s scrolls.</li>
-</ul>
-<hr>
-<h2>Helpful Hints</h2>
-<ul>
-<li>When initializing an adventure, ensure that all required parameters, such as <code class="inline-code">projectInfo</code> and <code class="inline-code">theme</code>, are carefully prepared.</li>
-<li>Pay attention to how configuration files influence the generated quests. Investigate the <code class="inline-code">adventure.config.json</code> file for further insights.</li>
-</ul>
-<hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>O brave seeker, thou hast unlocked the revered Scrolls of Creation, a beacon of ancient wisdom—step forth with valor, for thy divine odyssey is but at its genesis! ⚡⭐📜</p>
 
 </div>
 
