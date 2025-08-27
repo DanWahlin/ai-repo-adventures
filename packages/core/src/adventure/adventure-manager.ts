@@ -286,10 +286,16 @@ export class AdventureManager {
       codeContent = this.state.projectInfo!.repomixContent;
     }
 
+    // Calculate quest position for completion message guidance
+    const questPosition = this.state.quests.findIndex(q => q.id === quest.id) + 1;
+    const totalQuests = this.state.quests.length;
+
     return await this.storyGenerator.generateQuestContent(
       quest,
       this.state.currentTheme!,
-      codeContent
+      codeContent,
+      questPosition,
+      totalQuests
     );
   }
   

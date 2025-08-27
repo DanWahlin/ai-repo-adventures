@@ -101,7 +101,10 @@ As you explore the code below, investigate these key questions:
 - [Next steps]
 
 ---
-[Completion message]
+[Write a completion message based on quest position:
+- If this is the FINAL QUEST ({{questPosition}} == {{totalQuests}}), write: "You have mastered all the secrets of [project context]! Your adventure is complete."
+- If there are MORE QUESTS remaining, write: "Excellent work! Continue to the next quest to uncover more mysteries."
+- Use the theme-appropriate vocabulary and do NOT reference specific quest numbers]
 ```
 
 ## Input Sections
@@ -109,3 +112,6 @@ As you explore the code below, investigate these key questions:
 {{themeGuidelines}} 
 {{codeContent}}
 {{adventureGuidance}}
+
+## Quest Context
+Quest Position: {{questPosition}} of {{totalQuests}}

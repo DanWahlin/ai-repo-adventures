@@ -153,6 +153,8 @@ export function loadQuestContentPrompt(variables: {
   storyContent?: string;
   adventureGuidance?: string;
   customThemeData?: CustomThemeData;
+  questPosition?: number;
+  totalQuests?: number;
 }): string {
   const template = loadPromptFile(PROMPT_PATHS.QUEST_CONTENT);
   const themeGuidelines = getThemeGuidelines(variables.theme, variables.customThemeData);
@@ -163,7 +165,9 @@ export function loadQuestContentPrompt(variables: {
     codeContent: variables.codeContent,
     storyContent: variables.storyContent || 'No story context provided.',
     adventureGuidance: variables.adventureGuidance || '',
-    themeGuidelines
+    themeGuidelines,
+    questPosition: variables.questPosition?.toString() || '1',
+    totalQuests: variables.totalQuests?.toString() || '1'
   });
 }
 

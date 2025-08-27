@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Quest Generation Engine - Repo Adventure</title>
+    <title>Quest 2: Forge the Quest Generation Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository of Ancient Adventures</a>
+                <a href="index.html">The Repository Chronicles: Building Adventures Through Code</a>
             </div>
             <div class="nav-right">
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
@@ -41,27 +41,27 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: Quest Generation Engine</h1>
+    <h1>Quest 2: Forge the Quest Generation Engine</h1>
 <hr>
-<p>Within the heart of the ancient repository lies the &quot;Quest Generation Engine,&quot; a powerful epicenter of story alchemization designed to weave elaborate narrative threads from the source code itself. Adventurer, step into the labyrinth to uncover how the <code class="inline-code">AdventureManager</code> and <code class="inline-code">StoryGenerator</code> breathe life into quests. Tread carefully as you decode the secrets behind dynamic adventure creation, quest handling, and story-driven transformations within these critical systems.</p>
+<p>The mystical Repository of Adventures has granted you access to its core—a place where story and computational logic intertwine. However, its secrets remain locked behind the glyphs of knowledge inscribed in its code. Your task: unearth the components that power story crafting itself. Venture into the realm of adventure management, delve into the structuring of story generation, and decode the secret formula for prompt inspiration. Steel your mind, for the heart of creativity beats deep within these files.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>The Initialization Alchemy</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> structure an adventure with story and quests based on the project and theme?</li>
-<li>⚡ <strong>Dynamic Content Conjurations</strong>: How does <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> interact with project information to produce a cohesive story with actionable quests?</li>
-<li>🛡️ <strong>Progress Metrics Design</strong>: How does <code class="inline-code">AdventureState.progressPercentage</code> calculate and track quest progression dynamically?</li>
+<li>🔍 <strong>The Path of Initialization</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> lay the foundation for a project-themed adventure? What steps does it complete during initialization?  </li>
+<li>⚡ <strong>The Story Crafter&#39;s Blueprint</strong>: How does <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> transform project data and themes into adventures and quests? What is the role of themes in shaping the narrative?  </li>
+<li>🛡️ <strong>Arcane Configurations</strong>: Using <code class="inline-code">parseAdventureConfig</code>, what patterns are applied to load and validate adventure configurations? How are file paths and quest limits enforced?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: Adventure Management Core</h3>
-<p>This file houses the <code class="inline-code">AdventureManager</code>, which orchestrates the lifecycle of a coding quest. It coordinates adventure initialization, user interaction, and quest selection. The <code class="inline-code">AdventureState</code> tracks key metadata about the current journey, including quests, progress, and cache. Together, these components form the beating heart of the engine, enabling a dynamic and user-centric storytelling experience.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Unlocking the adventure&#39;s core</h3>
+<p>The <code class="inline-code">AdventureManager</code> directs high-level adventure execution and organizes the dynamic generation of story content. Key to its functionality is its ability to combine project context, user preferences, and modular story generation into cohesive quests and narratives.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Structures the adventure by resetting the state, generating stories and quests, and enforcing configuration rules. It utilizes the <code class="inline-code">StoryGenerator</code> to create unique content tailored to the project&#39;s context.</li>
-<li><code class="inline-code">exploreQuest</code>: Determines quest selection, validates user choices, and executes quests while utilizing cache optimizations for completed quests.</li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Dynamically computes the progress percentage based on completed quests compared to the total number of quests available.</li>
+<li><code class="inline-code">initializeAdventure</code>: Prepares the adventure by resetting the state and generating story with quests based on the given project and theme.</li>
+<li><code class="inline-code">exploreQuest</code>: Executes a quest while validating user choices, caches content, and updates the state.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code>: Tracks the percentage of quests completed in the current adventure.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
   theme: AdventureTheme, 
@@ -74,14 +74,23 @@
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
   
+  // Set custom theme data if provided
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
+
   // Generate the overall story and quests using LLM
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
   
   this.state.title = storyResponse.title;
   this.state.story = storyResponse.story;
   
-  this.state.quests = this.enforceConfigQuestCount(storyResponse.quests, this.state.projectPath);
+  // Merge files from adventure config into the generated quests
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
   
+  // Enforce quest count from adventure.config.json if it exists
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
   // Return the story with available quests
   return this.formatStoryWithQuests({
     ...storyResponse,
@@ -90,14 +99,29 @@
 }
 </code></pre>
 <ul>
-<li>Initializes a new adventure by resetting state, setting the theme, and generating the story/quests.</li>
-<li>Invokes the <code class="inline-code">StoryGenerator</code> to produce narrative content based on the project&#39;s context and theme.</li>
-<li>Enforces quest configurations by referencing <code class="inline-code">adventure.config.json</code>, guaranteeing alignment with predefined limits.</li>
-<li>Formats the result, combining the story and the list of quests into a structured output.</li>
+<li>Establishes the foundation for the adventure by resetting all prior state and integrating project-specific configurations.  </li>
+<li>Facilitates modular theme injection with dynamic support for custom data.  </li>
+<li>Integrates generated story and quests while enforcing file references and limits specified in <code class="inline-code">adventure.config.json</code>.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">get progressPercentage(): number {
+  return this.quests.length &gt; 0 
+    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
+    : 0;
+}
+</code></pre>
+<ul>
+<li>Provides a lightweight method to monitor quest completion progress.  </li>
+<li>Guarantees no division errors when no quests exist.  </li>
+<li>Enables dynamic updates for user feedback on adventure progression.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
   const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
   
   const quest = this.findQuest(sanitizedChoice);
   if (!quest) {
@@ -108,32 +132,147 @@
 }
 </code></pre>
 <ul>
-<li>Interprets user input for quest selection, sanitizing and mapping it to a specific quest object.</li>
-<li>Fallbacks are applied if the desired quest is not found to guide users back to valid choices.</li>
-<li>Calls <code class="inline-code">executeQuest</code> to load or generate quest content, enabling efficient exploration.</li>
+<li>Validates and sanitizes user input for consistent and safe commands.  </li>
+<li>Ensures content reusability by leveraging cached completions.  </li>
+<li>Handles edge cases like unexpected user input or unavailable quests gracefully.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
+<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Where stories come to life</h3>
+<p>The <code class="inline-code">StoryGenerator</code> encapsulates the themes, structures, and creativity needed for crafting interactive narratives from project insights.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateStoryAndQuests</code>: Converts project themes and context into structured stories and quests using LLM integration.  </li>
+<li><code class="inline-code">generateQuestContent</code>: Produces detailed content for an individual quest by extracting and utilizing relevant file information.  </li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Parses markdown content from the LLM to extract story narratives and quests.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+  this.currentProject = projectInfo;
+  this.projectPath = projectPath;
+
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
 }
 </code></pre>
 <ul>
-<li>Calculates progress as a percentage of completed quests relative to the total.</li>
-<li>Ensures real-time updates to progression metrics, supporting user motivation and adventure tracking.</li>
-<li>Prevents division errors when no quests exist (<code class="inline-code">length = 0</code>).</li>
+<li>Fuses project-relevant metadata with contextual thematic overlays.  </li>
+<li>Leverages <code class="inline-code">theme</code> data to differentiate adventure experiences (e.g., space, mythical).  </li>
+<li>Delegates LLM responses to ensure dynamic and contextually relevant narrative generation.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
+  const tokens = marked.lexer(markdownContent);
+  let title = &#39;&#39;;
+  let story = &#39;&#39;;
+  const quests: Quest[] = [];
+
+  // Implement structured extraction of story content
+  for (const token of tokens) {
+    if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 1) {
+      title = token.text;
+    } else if (token.type === &#39;paragraph&#39;) {
+      story += token.text + &#39;\n\n&#39;;
+    }
+  }
+
+  return { title, story, quests };
+}
+</code></pre>
+<ul>
+<li>Processes markdown-style LLM output and converts stories into a structured format.  </li>
+<li>Ensures a fallback mechanism in case of malformed responses or incomplete tokens.  </li>
+<li>Returns a simplified structure for easy story/quest integration.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> The keeper of configurations</h3>
+<p>This file serves as the intermediary to load, validate, and extract adventure configurations from a project&#39;s <code class="inline-code">adventure.config.json</code> file.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code>: Parses and validates the adventure configuration JSON file.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Recursively extracts file paths referenced in the configuration.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes config data for integration into LLM prompts.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+</code></pre>
+<ul>
+<li>Handles file loading errors gracefully to avoid breaking the entire application.  </li>
+<li>Centralizes JSON parsing logic with uniform error handling.  </li>
+<li>Guarantees minimal overhead when configurations are missing.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (node &amp;&amp; typeof node.path === &#39;string&#39;) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<ul>
+<li>Extracts all uniquely referenced file paths for targeted quest content generation.  </li>
+<li>Ensures non-existent files are ignored to minimize runtime errors.  </li>
+<li>Uses a recursive, stack-based approach to handle nested configuration structures.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return &#39;&#39;;
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\nFiles: ${quest.files.map(f =&gt; f.path).join(&#39;, &#39;)}\n`;
+  }
+
+  return formatted;
+}
+</code></pre>
+<ul>
+<li>Condenses verbose configuration into a compact format optimized for LLM context lengths.  </li>
+<li>Eliminates redundant descriptions for better clarity.  </li>
+<li>Maintains flexibility for describing adaptive, multi-file quest structures.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>🛠️ If debugging content formatting issues, explore <code class="inline-code">formatStoryWithQuests</code> for the final story and quest synthesis.</li>
-<li>📘 Study the interplay between <code class="inline-code">initializeAdventure</code> and <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> for insights into dynamic content creation.</li>
-<li>🚀 Use <code class="inline-code">progressPercentage</code> to verify that quest tracking operates accurately across state changes.</li>
+<li>Make sure to examine how default themes differ in content generation (<code class="inline-code">generateStoryAndQuests</code>) versus using <code class="inline-code">customThemeData</code>.  </li>
+<li>Cross-reference quest files and outputs between <code class="inline-code">AdventureManager</code> and <code class="inline-code">StoryGenerator</code> to follow the entire quest pipeline.  </li>
+<li>Test the resilience of <code class="inline-code">parseAdventureConfig</code> by providing diverse, malformed JSON files.</li>
 </ul>
 <hr>
-<p>Keep adventuring, and let your quest for knowledge guide you to mastery! 🌌</p>
-<p>🚀 Milestone unlocked: You&#39;ve successfully instantiated Quest 2&#39;s Quest Generation Engine with precision and ingenuity—a stellar commit to the legendary codebase of progress at 20%!</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>🎉 Congratulations, developer! You&#39;ve successfully instantiated the Quest Generation Engine class, methodically iterated through its logic loops, and synthesized actionable output—you&#39;re officially 20% closer to deploying the full-featured adventure system! 🚀⚡</p>
 
 </div>
 

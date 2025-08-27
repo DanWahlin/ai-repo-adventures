@@ -193,7 +193,9 @@ export class StoryGenerator {
   async generateQuestContent(
     quest: Quest,
     theme: AdventureTheme,
-    codeContent: string
+    codeContent: string,
+    questPosition?: number,
+    totalQuests?: number
   ): Promise<QuestContent> {
     // Include formatted adventure config as context if available
     let adventureGuidance = '';
@@ -210,6 +212,8 @@ export class StoryGenerator {
       codeContent,
       storyContent: this.currentStoryContent || 'No story context available.',
       adventureGuidance: adventureGuidance || '',
+      questPosition,
+      totalQuests,
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.';
 
