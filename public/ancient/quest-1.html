@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Codex of Ancient Systems</a>
+                <a href="index.html">The Sacred Repository of Wisdom</a>
             </div>
             <div class="nav-middle">
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
@@ -47,23 +47,22 @@
         <div class="quest-content">
     <h1>Quest 1: The Ritual of the MCP Interface</h1>
 <hr>
-<p>In the shadowed depths of the jungle, you stand before the Codex of Ancient Systems. One sacred plate bears the enigmatic inscriptions of the &quot;Ritual of the MCP Interface,&quot; where ancient scribes designed tools to weave tales, parse knowledge, and guide travelers through labyrinthine code repositories. With the wisdom of interconnected scripts and the flow of sacred commands, your mission is clear: decipher how the tools of old were validated, invoked, and sustained within the Codex&#39;s server temple.</p>
-<p>The secrets of the Codex await. Will you unlock its intricate wisdom or fall amidst its sacred complexity? Let the ritual begin.</p>
+<p>Amid the lush greenery of the ancient jungle, the Sacred Repository of Wisdom awaits discovery. Today, your journey begins with the Ritual of the MCP Interface, a rite that unveils the mystical systems driving the temple&#39;s repository. Crafted by an ancient, advanced civilization, this interface serves as the nexus for tools, quests, and the gamified secrets of the pyramid. By partaking in this sacred ritual, you will gain insight into how the temple&#39;s wisdom processes are communicated, validated, and executed. Prepare yourself to uncover the hallowed mechanics of this ancient codebase!</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>The Hierophant&#39;s List</strong>: How does <code class="inline-code">RepoAdventureServer.setupHandlers</code> dynamically list tools and validate their inputs for ritualistic use?</li>
-<li>⚡ <strong>Flow of Invocation</strong>: What is the role of <code class="inline-code">main</code> in initializing the server and handling signals during runtime?</li>
-<li>🛡️ <strong>The Fail-Safe Nexus</strong>: How does <code class="inline-code">setupHandlers</code> safeguard against invalid tools and parameter mismatches during tool invocation?</li>
+<li>🔍 <strong>Tool Manifest Creation</strong>: How are tools dynamically listed and formatted for the MCP system&#39;s interface layer?</li>
+<li>⚡ <strong>Sacred Command Flow</strong>: What are the steps involved in connecting the MCP interface to tool execution logic?</li>
+<li>🛡️ <strong>Error Safeguarding</strong>: How does the system handle invalid tool invocations, parameter errors, and runtime exceptions?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Server Temple</h3>
-<p>The <code class="inline-code">server.ts</code> file is the heart of the MCP Interface, hosting the <code class="inline-code">RepoAdventureServer</code> class and its rituals for managing tools. This file defines the server setup, tool execution, error handling, and the main function for initializing the interface. By exploring its methods, you will uncover the temple&#39;s core mechanics and learn how tools and commands are processed with precision.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Server lifecycle and handlers</h3>
+<p>This file constructs the server interface for the MCP repository adventure system. It combines initialization logic, request handlers, and runtime operations. The <code class="inline-code">RepoAdventureServer</code> class manages the registration of tools and ensures they are executed seamlessly. Notable in this file are mechanisms for listing tools, safely invoking tool handlers with validation, and handling shutdowns gracefully.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Establishes request handlers for listing and invoking rituals (tools), dynamically validating them using schema definitions.</li>
-<li><code class="inline-code">run</code>: Activates the server, connects it to the transport system, and pre-generates repository data using the <code class="inline-code">repoAnalyzer</code>.</li>
-<li><code class="inline-code">main</code>: Orchestrates server startup, signal handling, and graceful shutdown routines to maintain operational stability.</li>
+<li><code class="inline-code">setupHandlers</code> defines MCP request handlers to dynamically list tools and manage their execution, incorporating validation and error handling.</li>
+<li><code class="inline-code">run</code> initializes the server and kicks off the pre-generation of repository context, ensuring readiness for user interactions.</li>
+<li><code class="inline-code">main</code> serves as the entry point, orchestrating server startup and configuring graceful shutdowns for optimal reliability.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -78,6 +77,7 @@
         $refStrategy: &#39;none&#39;
       })
     }));
+
     return { tools: toolList };
   });
 
@@ -85,10 +85,14 @@
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
+
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
+
       const tool = tools[name as keyof typeof tools];
+      
+      // Validate arguments using the tool&#39;s Zod schema
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) =&gt; 
@@ -96,7 +100,10 @@
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
+
+      // Execute the tool handler with validated arguments
       return await tool.handler(validationResult.data as any);
+
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -110,37 +117,49 @@
 }
 </code></pre>
 <ul>
-<li>Dynamically registers requests for listing tools and executing them.</li>
-<li>Converts tool schemas into standardized JSON schemas for validation.</li>
-<li>Safeguards against invalid tool names and improper arguments, ensuring rituals are precise.</li>
-<li>Uses the <code class="inline-code">zod</code> library for schema validation, highlighting the role of robust input checking.</li>
+<li>Dynamically maps the available tools and formats them as JSON schemas for listing.</li>
+<li>Validates incoming tool invocation requests against schemas to prevent invalid usage.</li>
+<li>Errors are explicitly caught and categorized, ensuring proper feedback in all scenarios.</li>
+<li>Supports extensibility by dynamically resolving tools defined in a central registry.</li>
+<li>Ensures consistent error codes and messaging through <code class="inline-code">McpError</code>.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  
+  // Pre-generate repomix content for the current working directory to warm up the cache
+  // This happens in the background while waiting for user commands
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Initiates the MCP server and establishes connection with standard I/O transport.</li>
-<li>Pre-generates content for the repository to improve tool responsiveness during operation.</li>
-<li>Demonstrates a proactive approach to resource preparation, reducing latency for end-users.</li>
+<li>Establishes the server transport layer using standard I/O streams for communication.</li>
+<li>Outputs informative debug messages to aid in system diagnostics during execution.</li>
+<li>Initializes pre-computation for repository analysis, prioritizing performance and responsiveness.</li>
+<li>Demonstrates asynchronous handling and pre-warming techniques to optimize runtime behavior.</li>
+<li>The <code class="inline-code">repoAnalyzer</code> ensures the repository context is ready, minimizing user wait times.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async function main() {
   try {
     const server = new RepoAdventureServer();
+    
+    // Handle graceful shutdown for both signals
     [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
+    
+    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
     });
+    
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
@@ -149,24 +168,30 @@
 }
 </code></pre>
 <ul>
-<li>Coordinates server initialization and ties it to signal listeners for smooth termination.</li>
-<li>Implements defensive programming against unhandled promise rejections to ensure stability.</li>
-<li>Emphasizes graceful shutdown through the <code class="inline-code">gracefulShutdown</code> function invocation.</li>
+<li>Acts as the orchestration layer for initializing the entire server application lifecycle.</li>
+<li>Configures listeners for shutdown signals, enabling safe resource cleanup prior to exiting.</li>
+<li>Handles promise rejections globally, avoiding unintentional crashes caused by overlooked errors.</li>
+<li>Centralizes error reporting, improving overall reliability and maintainability.</li>
+<li>Balances robustness with developer-friendly error handling and diagnostic information.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>If a particular tool isn&#39;t listed, cross-reference its schema in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a>.</li>
-<li>Study the <code class="inline-code">setupHandlers</code> pattern for best practices in request validation and modular tool integration.</li>
-<li>When tracing errors, look into the <code class="inline-code">McpError</code> class to understand error code mapping.</li>
+<li>Simplify your understanding of tool registration by focusing on <code class="inline-code">setupHandlers</code> as the ritual&#39;s keystone.</li>
+<li>Trace the server&#39;s lifecycle from <code class="inline-code">main</code> to <code class="inline-code">run</code> to follow initialization, execution, and shutdown.</li>
+<li>Review <code class="inline-code">McpError</code> usage to recognize how error handling is standardized.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Thy victorious completion of Quest 1: The Ritual of the MCP Interface hath unlocked the sacred portal of wisdom; with steadfast resolve, thou shalt ascend the celestial path of enlightenment in thy noble journey! ⚡💎🗺️</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the Sacred Repository of Wisdom.</p>
+<p>Hail, seeker of sacred wisdom; thou hast triumphed in unlocking the Ritual of the MCP Interface, carving thy path through the ancient tapestry of knowledge—press onward, for the temple of five quests beckons thy valor! ⭐⚡📜</p>
 
 </div>
 
 
+      <div class="quest-navigation quest-navigation-bottom nav-next-only">
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
+      </div>
+    
     </div>
     
     <footer class="footer">
