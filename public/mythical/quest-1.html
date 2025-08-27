@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: Reforge the Mystic Tools of the Questmaster - Repo Adventure</title>
+    <title>Quest 1: The Mystic Protocols - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Chronicles of the Enchanted Codebase</a>
+                <a href="index.html">The Enchanted Repository and the Chronicles of Code</a>
             </div>
             <div class="nav-middle">
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
@@ -45,140 +45,141 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: Reforge the Mystic Tools of the Questmaster</h1>
+    <h1>Quest 1: The Mystic Protocols</h1>
 <hr>
-<p>In the enchanted Kingdom of Codexia, the Repository of Infinite Quests lies dormant, its once-living magic interrupted by the decay of its Mystic Tools. Brave adventurers from every corner of Codexia await new tales and challenges, yet silence reigns where once thunderous epics echoed. Summoned by the spell of ancient scrolls, you, a valiant knight, must uncover the workings behind these tools and breathe life into the repository again. Journey into the Castle of Code, where logic is sorcery and each line a rune. The fate of new adventures lies in reforging the Mystic Tools of the Questmaster. </p>
+<p>In the land of Codemyr, turmoil brews as the Enchanted Repository falters, threatening the balance of the kingdom’s mystic coding energy. Each enchanted scroll within the repository holds vital spells, bound to the kingdom’s harmony. Heroes, your first trial is to unravel the Mystic Protocols that govern Codemyr’s magical interface—bolstering the castle’s protective wards and ensuring the repository’s secrets remain guarded. Seek wisdom within the scrolls and discover the intricacies of our magical tools.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:</p>
+<p>As you explore the code below, investigate these key questions:  </p>
 <ul>
-<li>🔍 <strong>Toolsmith&#39;s Handbook</strong>: How does the <code class="inline-code">setupHandlers</code> function dynamically prepare and validate tools for interaction with adventurers?</li>
-<li>⚡ <strong>Ignite the Questforge</strong>: What initialization steps are performed in <code class="inline-code">run</code> to bind the system to its magical transport and preload essential cache?</li>
-<li>🛡️ <strong>Guard the Repository</strong>: How does the <code class="inline-code">main</code> function ensure errors in the quest system do not disrupt the kingdom&#39;s broader magic?</li>
+<li>🔍 <strong>Dynamic Spellbook</strong>: How does <code class="inline-code">setupHandlers</code> dynamically create and validate tools within the server?  </li>
+<li>⚡ <strong>Enchanted Flow</strong>: How does the <code class="inline-code">run</code> method activate the Mystic Protocol’s server and prepare its content pipeline?  </li>
+<li>🛡️ <strong>Failsafe Mechanisms</strong>: How does the <code class="inline-code">main</code> function ensure graceful handling of errors during shutdown events?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Core of the Mystic Server</h3>
-<p>This file defines the <code class="inline-code">RepoAdventureServer</code>, an enchanted server that powers the interaction between Codexia&#39;s adventurers and the Repository of Infinite Quests. It coordinates quest generation and execution, ensuring dynamic adaptability while guarding against error. The spellbinding constructs <code class="inline-code">setupHandlers</code>, <code class="inline-code">run</code>, and the <code class="inline-code">main</code> entry point are keystones in this file&#39;s architecture.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Core of the Mystic Protocols</h3>
+<p>Here lies the code powering the Mystic Protocol server, responsible for handling adventures and executing tools. This file anchors the kingdom’s enchanted spells through dynamic management of tools and provides error failsafes to ward off malicious disruptions.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code> dynamically lists tools and validates their parameters, ensuring adventurers receive accurate and error-checked interactions.</li>
-<li><code class="inline-code">run</code> activates the connection to the magical transport layer (stdio), warming up the cache for seamless operations.</li>
-<li><code class="inline-code">main</code> orchestrates the server lifecycle, safeguarding against errors and preparing graceful shutdowns.</li>
+<li><code class="inline-code">setupHandlers</code>: Configures dynamic handlers for listing and executing tools, validating their enchanted arguments against set schemas.  </li>
+<li><code class="inline-code">run</code>: Starts the Mystic Protocol server using a <code class="inline-code">StdioServerTransport</code>, warming up its cache for smoother adventures.  </li>
+<li><code class="inline-code">main</code>: Implements error handling and signal tracking to ensure graceful recovery during unforeseen calamities.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-    // Dynamic tool listing
-    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-        name,
-        description: tool.description,
-        inputSchema: zodToJsonSchema(tool.schema, { 
-          target: &#39;jsonSchema7&#39;,
-          $refStrategy: &#39;none&#39;
-        })
-      }));
-
-      return { tools: toolList };
-    });
-
-    // Dynamic tool execution
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-      try {
-        const { name, arguments: args } = request.params;
-
-        if (!(name in tools)) {
-          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-        }
-
-        const tool = tools[name as keyof typeof tools];
-        
-        // Validate arguments using the tool&#39;s Zod schema
-        const validationResult = tool.schema.safeParse(args);
-        if (!validationResult.success) {
-          const errorMessages = validationResult.error.issues.map((err) =&gt; 
-            `${err.path.join(&#39;.&#39;)}: ${err.message}`
-          ).join(&#39;, &#39;);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-        }
-
-        // Execute the tool handler with validated arguments
-        return await tool.handler(validationResult.data as any);
-
-      } catch (error) {
-        if (error instanceof McpError) {
-          throw error;
-        }
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    });
-  }
+<pre><code class="language-typescript">private setupHandlers() {  
+  // Dynamic tool listing  
+  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {  
+    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({  
+      name,  
+      description: tool.description,  
+      inputSchema: zodToJsonSchema(tool.schema, {  
+        target: &#39;jsonSchema7&#39;,  
+        $refStrategy: &#39;none&#39;  
+      })  
+    }));  
+  
+    return { tools: toolList };  
+  });  
+  
+  // Dynamic tool execution  
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {  
+    try {  
+      const { name, arguments: args } = request.params;  
+  
+      if (!(name in tools)) {  
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);  
+      }  
+  
+      const tool = tools[name as keyof typeof tools];  
+  
+      // Validate arguments using the tool&#39;s Zod schema  
+      const validationResult = tool.schema.safeParse(args);  
+      if (!validationResult.success) {  
+        const errorMessages = validationResult.error.issues.map((err) =&gt;  
+          `${err.path.join(&#39;.&#39;)}: ${err.message}`  
+        ).join(&#39;, &#39;);  
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);  
+      }  
+  
+      // Execute the tool handler with validated arguments  
+      return await tool.handler(validationResult.data as any);  
+  
+    } catch (error) {  
+      if (error instanceof McpError) throw error;  
+      throw new McpError(  
+        ErrorCode.InternalError,  
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`  
+      );  
+    }  
+  });  
+}  
 </code></pre>
 <ul>
-<li>This spell prepares dynamic lists of tools with their descriptions and schemas, making the system adaptable to new tools without manual updates.</li>
-<li>It uses Zod for schema validation, ensuring arguments are accurate before processing.</li>
-<li>Errors are explicitly classified with <code class="inline-code">McpError</code> for clarity in tool execution.</li>
-<li>The function bridges Codexia&#39;s tools and adventurers, aligning with the Repository&#39;s adaptable design philosophy.</li>
+<li>Dynamically generates a &quot;spellbook&quot; of tools by mapping their schemas into JSON format for external use.  </li>
+<li>Validates and parses arguments for tool execution, ensuring safe invocations through Zod schemas.  </li>
+<li>Implements comprehensive error handling, throwing meaningful error codes for unknown tools or invalid parameters.  </li>
+<li>Highlights schema-driven design principles, promoting both extensibility and safety.  </li>
+<li>Bridges server-side logic with client interactions in a cohesive manner.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async run() {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-    
-    // Pre-generate repomix content for the current working directory to warm up the cache
-    // This happens in the background while waiting for user commands
-    const projectPath = process.cwd();
-    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-    repoAnalyzer.preGenerate(projectPath);
-  }
+<pre><code class="language-typescript">async run() {  
+  const transport = new StdioServerTransport();  
+  await this.server.connect(transport);  
+  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);  
+  
+  // Pre-generate repomix content for the current working directory to warm up the cache  
+  // This happens in the background while waiting for user commands  
+  const projectPath = process.cwd();  
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);  
+  repoAnalyzer.preGenerate(projectPath);  
+}  
 </code></pre>
 <ul>
-<li>Initializes the server with a transport mechanism (<code class="inline-code">StdioServerTransport</code>) to connect the repository with external magic.</li>
-<li>Logs messages for transparency, displaying both the server state and preloading progress.</li>
-<li>The <code class="inline-code">repoAnalyzer.preGenerate</code> function strategically warms the cache, minimizing delays during real-time interaction.</li>
+<li>Initializes the Mystic Protocol server with a standard I/O transport for communication.  </li>
+<li>Warms up the mystic content cache by pre-generating context, reducing potential delays during spell execution.  </li>
+<li>Employs asynchronous operations, ensuring the server remains responsive while preparing the repository’s content.  </li>
+<li>Demonstrates clean asynchronous task handling and logging for transparency.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async function main() {
-  try {
-    const server = new RepoAdventureServer();
-    
-    // Handle graceful shutdown for both signals
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
-    });
-    
-    await server.run();
-  } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
-  }
-}
+<pre><code class="language-typescript">async function main() {  
+  try {  
+    const server = new RepoAdventureServer();  
+  
+    // Handle graceful shutdown for both signals  
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt;  
+      process.on(sig as NodeJS.Signals, gracefulShutdown)  
+    );  
+  
+    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation  
+    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {  
+      console.error(&#39;Unhandled promise rejection:&#39;, reason);  
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);  
+      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error  
+    });  
+  
+    await server.run();  
+  } catch (error) {  
+    console.error(&#39;Fatal error starting MCP server:&#39;, error);  
+    process.exit(1);  
+  }  
+}  
 </code></pre>
 <ul>
-<li>Summons the enchanted <code class="inline-code">RepoAdventureServer</code>, binding system signals (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>) to the graceful shutdown routine.</li>
-<li>Monitors unhandled promise rejections, preventing server crashes by allowing recovery within acceptable bounds.</li>
-<li>Acts as the final sentinel, containing fatal errors to maintain Codexia&#39;s overarching stability.</li>
+<li>Captures both <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> signals, triggering a safe shutdown to avoid corrupted states.  </li>
+<li>Registers handlers for unhandled promise rejections, prioritizing runtime stability over immediate termination.  </li>
+<li>Encapsulates all logic within an async function, ensuring the Mystic Protocol initializes gracefully.  </li>
+<li>Logs detailed error messages to aid troubleshooting while maintaining operational resilience.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>When reading <code class="inline-code">setupHandlers</code>, focus on how tools are dynamically described and validated for flexibility.</li>
-<li>Explore <code class="inline-code">run</code> to understand how pre-generation of data smoothens adventurers’ experience.</li>
-<li>Review <code class="inline-code">main</code> to uncover techniques that ensure system stability and robustness during initiation.</li>
+<li>Read closely through the <code class="inline-code">setupHandlers</code> for insights into dynamic schema validation and error handling.  </li>
+<li>The <code class="inline-code">run</code> method’s cache pre-generation offers a learning opportunity for optimizing long-running processes.  </li>
+<li>Study the signal management within <code class="inline-code">main</code> to understand graceful shutdown mechanics in codebases.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of the Repository of Infinite Quests.</p>
-<p>The Questmaster’s enchanted forge now sings with celestial vigor as the first triumph illuminates the path ahead—hail the worthy hero who rekindled the Mystic Tools of legend! ⚡💎🗺️</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>By the blazing light of ancient stars and the whispers of enchanted relics, you have conquered the first of five mythic odysseys—stand tall, valiant hero, for the realm is brighter with your wisdom unlocked! ⭐⚡💎</p>
 
 </div>
 
@@ -195,7 +196,7 @@
         </div>
     </footer>
     
-    <!-- Quest Navigator Script -->
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
     <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

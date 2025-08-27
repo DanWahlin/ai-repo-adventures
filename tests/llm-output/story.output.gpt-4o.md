@@ -1,13 +1,13 @@
-# Chronicles of the Enchanted Codebase
+# Secrets of the Lost Codebase
 
-In the magical Kingdom of Codexia, ancient scrolls of immense power dictate the workings of the mythical Land of Algorithms. These enchanted parchments guide knights and wizards (developers) to construct and maintain the Kingdom’s most mystical artifact: the Repository of Infinite Quests. The artifact, when activated, conjures adventures tailored to any hero's desires. You, a brave knight of Codexia, have been summoned to repair and master this mystical repository, ensuring adventurers can embark on quests to unlock boundless potential. 
+In the heart of a vast digital jungle, you stumble upon the "Temple of Lost Logic," an ancient repository of knowledge guarded by cryptic glyphs and forgotten algorithms. This sacred trove contains wisdom to harness the power of the Machine Oracle, enabling adventurers to generate dynamic tales and analyze content with precision. The temple, however, is shrouded in layers of puzzles—each requiring you to explore relics of configuration, computational rituals, and powerful tools to unveil the codebase’s purpose.
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: Reforge the Mystic Tools of the Questmaster** - You explore the enchanted files (`server.ts`, `tools.ts`) to craft a harmony of spells connecting adventurers to quests through the MCP Interface.
-**Quest 2: Awaken the Eternal Adventure Scrolls** - You uncover the secrets of (`adventure-manager.ts`, `story-generator.ts`, `adventure-config.ts`) to breathe life into quests through the mystical art of narrative generation.
-**Quest 3: Harness the Power of the Codexian Seer** - You investigate the wizardry of (`repo-analyzer.ts`, `llm-client.ts`) to command the wisdom of the Seer, summoning insights from the enchanted codes.
-**Quest 4: Decode the Ancient Runes of Configurations** - You study the ancient runes of (`config.ts`, `theme.ts`, `input-validator.ts`) to master the binding spells of themes, rules, and validations in Codexia.
-**Quest 5: Unearth the Foundations of Heroic Lore** - You inspect the foundational parchments (`adventure-config.ts`) to uncover ways to decipher and empower the unique paths of adventurers.
+**Quest 1: Unveiling the Oracle's Voice** - Explore the MCP tool interface housed in `packages/mcp/src/server.ts` and `packages/mcp/src/tools.ts` to unlock the rituals for initializing adventures and managing your journey.
+**Quest 2: Forging the Threads of Story** - Decipher the secrets in `packages/core/src/adventure/adventure-manager.ts`, `packages/core/src/adventure/story-generator.ts`, and `packages/core/src/shared/adventure-config.ts` to learn the rituals for generating and structuring intricate quests.
+**Quest 3: Analyzing the Hidden Glyphs** - Uncover ancient analysis techniques within `packages/core/src/analyzer/repo-analyzer.ts` and `packages/core/src/llm/llm-client.ts` to train your understanding of the Machine Oracle and extract its wisdom.
+**Quest 4: Configuring the Path of Knowledge** - Study the eternal scripts in `packages/core/src/shared/config.ts`, `packages/core/src/shared/theme.ts`, and `packages/core/src/shared/input-validator.ts` to master the foundation of themes, validate inputs, and set up your journey.
+**Quest 5: Mapping the Sacred Blueprints** - Unlock the mysteries in `packages/core/src/shared/adventure-config.ts` to understand the layouts of ancient configuration and the pathways for formatting content.

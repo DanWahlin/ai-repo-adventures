@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Cosmic Story Forge - Repo Adventure</title>
+    <title>Quest 2: Generating Galactic Missions - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Chronicles of the Cosmic Codebase</a>
+                <a href="index.html">Cosmic Codex: The Tales of the Starship Codexia</a>
             </div>
             <div class="nav-middle">
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
@@ -45,33 +45,34 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Cosmic Story Forge</h1>
+    <h1>Quest 2: Generating Galactic Missions</h1>
 <hr>
-<p>The <strong>Starship Repomix</strong> is navigating the cosmic seas of its internal systems to establish harmony between its advanced neural pathways and galactic data banks. In this mission, you must activate the <strong>Cosmic Story Forge</strong> to generate themed quests and propel your adventure into the stellar unknown. Brace yourself for insights into how the narrative and quest systems are programmed for thematic exploration.</p>
+<p>As the Codexia crew ventures deeper into the Repository Nebula, turbulent waves of cosmic data disrupt their systems. They&#39;ve uncovered fragments of ancient algorithms within the nebula’s data streams. Your quest is to decode these stellar patterns, analyze interstellar configurations, and design thematic star charts that map the core adventures within the repository. The nebula guards its mysteries with fragmented data nodes, requiring precision calibration and relentless exploration to uncover hidden quests.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:  </p>
+<p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Structural Orbit</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> process thematic input to generate quests?  </li>
-<li>⚡ <strong>Data Parsing Pulse</strong>: What role does <code class="inline-code">parseAdventureConfig</code> play in validating and structuring quest data?  </li>
-<li>🛡️ <strong>Validation Shield</strong>: How does <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> ensure safe integration of data and themes?</li>
+<li>🔍 <strong>Celestial Calibration</strong>: How does the <code class="inline-code">AdventureManager.initializeAdventure</code> create and configure the adventure story based on the repository&#39;s blueprints and theme?</li>
+<li>⚡ <strong>Quest Synchronization</strong>: What mechanisms are in place to merge adventure quest files with the generated story configuration using <code class="inline-code">mergeQuestFilesFromConfig</code>?</li>
+<li>🛡️ <strong>Mission Validation</strong>: What safeguards ensure the integrity and validity of user choices in <code class="inline-code">AdventureManager.exploreQuest</code>?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: Quest Generation Processes</h3>
-<p>This file orchestrates the dynamic generation of quests and storylines. It formulates the interaction between input validation, quest creation, and progress tracking. Look for how the code constructs adventures by integrating project-specific details and thematic contexts.  </p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Manage and execute the galactic adventures.</h3>
+<p>The <code class="inline-code">AdventureManager</code> class within this file acts as the central command interface for creating, managing, and executing quests. It dynamically integrates project context, themes, and quest configurations, channeling the vast expanses of the Repository Nebula into structured adventures. By using utilities like <code class="inline-code">initializeAdventure</code> and <code class="inline-code">mergeQuestFilesFromConfig</code>, this manager ensures seamless alignment between user selections and galactic narratives. It also validates user input to protect the mission against error-prone disruptions.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Establishes state for new adventures, integrates project data, and generates quests. Critical for thematic story initialization.  </li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Tracks completion metrics dynamically, calculating precise percentages reflecting the user&#39;s journey.  </li>
-<li><code class="inline-code">AdventureManager.exploreQuest</code>: Executes specific quests, leveraging cached content or generating fresh narratives.</li>
+<li><code class="inline-code">initializeAdventure</code>: Configures the celestial adventure by resetting the state, applying themes, and generating quests from the repository’s cosmic data streams.</li>
+<li><code class="inline-code">mergeQuestFilesFromConfig</code>: Aligns quests with specific data nodes from the nebula based on the adventure configuration file.</li>
+<li><code class="inline-code">exploreQuest</code>: Validates user inputs, selects a specific quest, and executes it—navigating through the tumultuous nebula while caching quest results for efficiency.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
   theme: AdventureTheme, 
   projectPath?: string,
   customThemeData?: CustomThemeData
 ): Promise&lt;string&gt; {
+  // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
@@ -80,12 +81,15 @@
   if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
     this.storyGenerator.setCustomTheme(customThemeData);
   }
-  
+
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  
   this.state.title = storyResponse.title;
   this.state.story = storyResponse.story;
+  
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
   this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
   return this.formatStoryWithQuests({
     ...storyResponse,
     quests: this.state.quests
@@ -93,23 +97,60 @@
 }
 </code></pre>
 <ul>
-<li><strong>Functionality</strong>: Resets state and initializes adventure context based on project and theme inputs. Handles custom themes and integrates quests dynamically.  </li>
-<li><strong>Pattern Use</strong>: Utilizes modular theme configuration and state management techniques to maintain flexibility across projects.  </li>
-<li><strong>Challenges Solved</strong>: Aligns story and quest generation with user-defined themes while maintaining compatibility with project data.  </li>
-<li><strong>Connection</strong>: Interacts with <code class="inline-code">StoryGenerator</code> to produce cohesive narrative outputs.</li>
+<li>This code initializes the adventure by consolidating key project information, setting themes, and resetting the state for the new mission.</li>
+<li>Complex logic separates theme-specific customization, demonstrating versatility in configuration for both standard and custom quests.</li>
+<li>Quest alignment ensures results from the <code class="inline-code">repository</code> are seamlessly incorporated into the nebula&#39;s adventure.</li>
+<li>Strategies such as caching and validation contribute to high-performance operations, enabling quick exploration across sectors.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
+<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
+  if (!projectPath) return quests;
+  
+  const config = parseAdventureConfig(projectPath);
+  if (!config || typeof config !== &#39;object&#39;) return quests;
+
+  const adventure = (config as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) return quests;
+
+  const configQuestFiles = new Map&lt;string, string[]&gt;();
+  for (const configQuest of adventure.quests) {
+    if (configQuest.title &amp;&amp; Array.isArray(configQuest.files)) {
+      const filePaths = configQuest.files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (filePaths.length &gt; 0) {
+        configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
+      }
+    }
+  }
+
+  return quests.map((quest, index) =&gt; {
+    const configQuests = adventure.quests;
+    if (index &lt; configQuests.length &amp;&amp; configQuests[index] &amp;&amp; configQuests[index].files) {
+      const files = configQuests[index].files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (files.length &gt; 0) {
+        return { ...quest, codeFiles: files };
+      }
+    }
+    
+    const questTitleLower = quest.title.toLowerCase();
+    for (const [configTitle, files] of configQuestFiles.entries()) {
+      if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
+        return { ...quest, codeFiles: files };
+      }
+    }
+    
+    return quest;
+  });
 }
 </code></pre>
 <ul>
-<li><strong>Core Role</strong>: Calculates user&#39;s progress as a percentage based on completed versus total quests. Essential for ongoing feedback and engagement.  </li>
-<li><strong>Techniques</strong>: Leverages mathematical operations on dynamic data structures (<code class="inline-code">Set</code>, <code class="inline-code">Array</code>) for real-time calculation.  </li>
-<li><strong>Benefits</strong>: Enables the creation of a consistent, progress-driven user experience.  </li>
-<li><strong>Interaction</strong>: Supports <code class="inline-code">AdventureManager.exploreQuest</code> by reflecting updated completion metrics during quest branching.</li>
+<li>Important logic maps adventure configurations from the nebula’s galactic archives into active quests.</li>
+<li>Functions cater to both direct-order file matching and fallback mechanisms ensuring flexible adaptation to fragmented configurations.</li>
+<li>Patterns illustrate robust scope management for maintaining integrity when syncing adventure files with pre-generated quests.</li>
+<li>The merging behavior ensures consistent alignment of user selections with data available in the configuration.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
@@ -128,119 +169,21 @@
 }
 </code></pre>
 <ul>
-<li><strong>Utility</strong>: Executes quests based on user input, creating narrative results while leveraging cached content for revisited adventures.  </li>
-<li><strong>Validation</strong>: Integrates input sanitization methods to safeguard against invalid commands.  </li>
-<li><strong>Impact</strong>: Provides a flexible mechanism for quest selection, maintaining streamlined statefulness across multiple entries.  </li>
-<li><strong>Edge Cases</strong>: Hands errors gracefully when a quest is not found, returning informative messages.</li>
-</ul>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Adventure Configuration Interpretation</h3>
-<p>This file serves as the bridge between raw configuration data and structured quest generation. Its functions enrich the quests by extracting meaningful details, folding them into usable formats, and validating inputs.  </p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Transforms raw JSON data into structured objects. Fundamental for ensuring quests align with external configurations.  </li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies and validates file references within configuration data, connecting quests to specific code files for analysis.  </li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Condenses configuration data for efficient use in narrative generation prompts.</li>
-</ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-</code></pre>
-<ul>
-<li><strong>Purpose</strong>: Reads and parses adventure configuration files, handling input errors gracefully.  </li>
-<li><strong>Patterns Used</strong>: Safeguards JSON parsing via error trapping for robust input validation.  </li>
-<li><strong>Challenges Addressed</strong>: Protects against malformed configuration files potentially disrupting quest generation.  </li>
-<li><strong>Integration Points</strong>: Directly consumed by <code class="inline-code">initializeAdventure</code>.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
-  
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== &#39;object&#39;) continue;
-
-    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
-      const rel = node.path.trim();
-      if (fs.existsSync(path.resolve(projectPath, rel))) {
-        unique.add(rel);
-      }
-    }
-
-    const children = Array.isArray(node) ? node : Object.values(node);
-    children.forEach(child =&gt; {
-      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
-    });
-  }
-
-  return Array.from(unique);
-}
-</code></pre>
-<ul>
-<li><strong>Functional Scope</strong>: Extracts all valid file paths from the configuration, ensuring quests can reference only existing files.  </li>
-<li><strong>Implementation Elegance</strong>: Uses iterative validation and path resolution for efficient discovery of dependencies.  </li>
-<li><strong>Enhancements</strong>: Guarantees that quests have their contextual code files linked explicitly.  </li>
-<li><strong>Cross-File Interaction</strong>: Supports targeted exploration by <code class="inline-code">initializeAdventure</code> methods.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) {
-    return &#39;&#39;;
-  }
-
-  const adventure = (parsed as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) {
-    return &#39;&#39;;
-  }
-
-  let formatted = `## Quest Structure\n`;
-
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
-    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
-    
-    const functions = quest.files
-      .flatMap((f: any) =&gt; f.highlights || [])
-      .map((h: any) =&gt; h.name)
-      .filter(Boolean);
-    formatted += `Functions: ${functions.join(&#39;, &#39;)}\n\n`;
-  }
-
-  return formatted;
-}
-</code></pre>
-<ul>
-<li><strong>Design Goal</strong>: Formats adventure configurations into concise, LLM-friendly prompts for improving story generation clarity.  </li>
-<li><strong>Optimized Output</strong>: Reduces verbosity, focusing on function and file references essential for quest design.  </li>
-<li><strong>Impacts</strong>: Enhances narrative relevance and accuracy during thematic integration.  </li>
-<li><strong>Thematic Alignment</strong>: Facilitates alignment between Repomix content and quest exploration requirements.</li>
+<li>This feature guarantees the navigation fidelity of nebulous missions, implementing validation to protect users from invalid choices.</li>
+<li>Segmented logical checks differentiate between progress-view requests and explicit quest exploration.</li>
+<li>Error mechanisms handle missing quests gracefully, ensuring uninterrupted user interactions.</li>
+<li>The modular structure highlights scalability, enabling direct quest-based operations with minimal compute overhead.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>🌌 <strong>System Map</strong>: Begin with <code class="inline-code">initializeAdventure</code> to observe how themes interact with configuration structs.  </li>
-<li>🪐 <strong>File Trails</strong>: Trace <code class="inline-code">formatAdventureConfigForPrompt</code> to see patterns in linking files and functions to quests.  </li>
-<li>🛰️ <strong>Validation Radar</strong>: Focus on error handling in <code class="inline-code">parseAdventureConfig</code> to ensure robust input parsing.</li>
+<li>Always trace the flow of the <code class="inline-code">initializeAdventure</code> function to visualize how state resets precede story and quest generation.</li>
+<li>Dive into the merging logic to understand how the file configuration safeguards fragmented data exploration.</li>
+<li>Revisit <code class="inline-code">exploreQuest</code> interactions to between choice validation and efficient quest caching.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of the starship&#39;s codebase.</p>
-<p>Quest 2: The Cosmic Story Forge is complete—your starship has charted its first stellar path through the cosmos at warp speed, igniting a brilliant supernova of creativity on this epic mission! 🚀 ⭐ ⚡</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries hidden in the Repository Nebula.</p>
+<p>Mission accomplished, star voyager! 🚀 You’ve charted the uncharted and launched into a new galaxy of knowledge—Quest 2 complete and your interstellar journey is powered to 20% brilliance! ⭐</p>
 
 </div>
 
@@ -258,7 +201,7 @@
         </div>
     </footer>
     
-    <!-- Quest Navigator Script -->
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
     <script src="assets/quest-navigator.js"></script>
 </body>
 </html>
