@@ -131,15 +131,21 @@ export function loadStoryGenerationPrompt(variables: {
   repomixContent: string;
   adventureGuidance?: string;
   customThemeData?: CustomThemeData;
+  customInstructions?: string;
 }): string {
   const template = loadPromptFile(PROMPT_PATHS.STORY_GENERATION);
   const themeGuidelines = getThemeGuidelines(variables.theme, variables.customThemeData);
   
+  const customInstructionsSection = variables.customInstructions 
+    ? `\n## Custom Instructions\n${variables.customInstructions}\n`
+    : '';
+
   return replaceTemplateVariables(template, {
     theme: variables.theme,
     repomixContent: variables.repomixContent,
     adventureGuidance: variables.adventureGuidance || '',
-    themeGuidelines
+    themeGuidelines,
+    customInstructions: customInstructionsSection
   });
 }
 
@@ -153,12 +159,17 @@ export function loadQuestContentPrompt(variables: {
   storyContent?: string;
   adventureGuidance?: string;
   customThemeData?: CustomThemeData;
+  customInstructions?: string;
   questPosition?: number;
   totalQuests?: number;
 }): string {
   const template = loadPromptFile(PROMPT_PATHS.QUEST_CONTENT);
   const themeGuidelines = getThemeGuidelines(variables.theme, variables.customThemeData);
   
+  const customInstructionsSection = variables.customInstructions 
+    ? `\n## Custom Instructions\n${variables.customInstructions}\n`
+    : '';
+
   return replaceTemplateVariables(template, {
     theme: variables.theme,
     adventureTitle: variables.adventureTitle,
@@ -166,6 +177,7 @@ export function loadQuestContentPrompt(variables: {
     storyContent: variables.storyContent || 'No story context provided.',
     adventureGuidance: variables.adventureGuidance || '',
     themeGuidelines,
+    customInstructions: customInstructionsSection,
     questPosition: variables.questPosition?.toString() || '1',
     totalQuests: variables.totalQuests?.toString() || '1'
   });

@@ -56,7 +56,7 @@ class HTMLAdventureGenerator {
 
   async start(): Promise<void> {
     console.clear();
-    console.log(chalk.bgBlue.white.bold(' 🌟 Repo Adventure HTML Generator 🌟 '));
+    console.log(chalk.bgBlue.white.bold(' 🌟 AI Repo Adventures HTML Generator 🌟 '));
     console.log(chalk.dim('─'.repeat(50)));
     console.log();
     console.log(chalk.yellow('Generate a complete HTML adventure website from your codebase!'));
@@ -83,7 +83,7 @@ class HTMLAdventureGenerator {
   }
 
   async startWithArgs(args: Map<string, string>): Promise<void> {
-    console.log(chalk.bgBlue.white.bold(' 🌟 Repo Adventure HTML Generator 🌟 '));
+    console.log(chalk.bgBlue.white.bold(' 🌟 AI Repo Adventures HTML Generator 🌟 '));
     console.log(chalk.dim('─'.repeat(50)));
     console.log();
 
@@ -1231,8 +1231,7 @@ async function main() {
   // Check for help flag
   if (argMap.has('help') || argMap.has('h')) {
     console.log(`
-${chalk.bgBlue.white.bold(' Repo Adventure HTML Generator ')}
-
+${chalk.bgBlue.white.bold(' AI Repo Adventures HTML Generator ')}
 Generate a complete HTML adventure website from your codebase!
 
 Usage:
@@ -1250,6 +1249,7 @@ Options:
 Examples:
   npm run generate-html --theme space --output ./docs --overwrite
   npm run generate-html --theme mythical
+  npm run generate-html --theme all --output public --overwrite
   npm run generate-html (interactive mode)
 `);
     return;

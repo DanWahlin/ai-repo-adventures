@@ -3,7 +3,7 @@ import { AdventureTheme, CustomThemeData } from '../shared/theme.js';
 import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKENS_QUEST } from '../shared/config.js';
 import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
-import { formatAdventureConfigForPrompt } from '../shared/adventure-config.js';
+import { formatAdventureConfigForPrompt, extractCustomInstructions } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
 import { marked } from 'marked';
 import { z } from 'zod';
@@ -199,10 +199,17 @@ export class StoryGenerator {
   ): Promise<QuestContent> {
     // Include formatted adventure config as context if available
     let adventureGuidance = '';
+    let customInstructions = '';
+    
     if (this.projectPath) {
       const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
       if (formattedConfig) {
         adventureGuidance = formattedConfig;
+      }
+      
+      const customInstructionsFromConfig = extractCustomInstructions(this.projectPath);
+      if (customInstructionsFromConfig) {
+        customInstructions = customInstructionsFromConfig;
       }
     }
 
@@ -212,6 +219,7 @@ export class StoryGenerator {
       codeContent,
       storyContent: this.currentStoryContent || 'No story context available.',
       adventureGuidance: adventureGuidance || '',
+      ...(customInstructions && { customInstructions }),
       questPosition,
       totalQuests,
       ...(this.customThemeData && { customThemeData: this.customThemeData })
@@ -313,10 +321,17 @@ export class StoryGenerator {
     
     // Use formatted adventure config instead of raw JSON
     let adventureGuidance = '';
+    let customInstructions = '';
+    
     if (this.projectPath) {
       const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
       if (formattedConfig) {
         adventureGuidance = formattedConfig;
+      }
+      
+      const customInstructionsFromConfig = extractCustomInstructions(this.projectPath);
+      if (customInstructionsFromConfig) {
+        customInstructions = customInstructionsFromConfig;
       }
     }
 
@@ -324,6 +339,7 @@ export class StoryGenerator {
       theme,
       repomixContent,
       ...(adventureGuidance && { adventureGuidance }),
+      ...(customInstructions && { customInstructions }),
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     });
 

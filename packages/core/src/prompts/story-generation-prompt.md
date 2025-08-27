@@ -48,3 +48,4 @@ Create a {{theme}}-themed story that explains what the codebase does through nar
 {{repomixContent}}
 {{adventureGuidance}}
 {{themeGuidelines}}
+{{customInstructions}}

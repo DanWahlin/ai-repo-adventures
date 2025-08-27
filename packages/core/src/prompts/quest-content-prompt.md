@@ -112,6 +112,7 @@ As you explore the code below, investigate these key questions:
 {{themeGuidelines}} 
 {{codeContent}}
 {{adventureGuidance}}
+{{customInstructions}}
 
 ## Quest Context
 Quest Position: {{questPosition}} of {{totalQuests}}

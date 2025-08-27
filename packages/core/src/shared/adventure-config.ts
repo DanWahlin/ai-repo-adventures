@@ -104,3 +104,20 @@ export function formatAdventureConfigForPrompt(projectPath: string): string {
 
   return formatted;
 }
+
+/**
+ * Extracts customInstructions from adventure config for LLM prompts
+ */
+export function extractCustomInstructions(projectPath: string): string | null {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') {
+    return null;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || typeof adventure.customInstructions !== 'string') {
+    return null;
+  }
+
+  return adventure.customInstructions.trim() || null;
+}
