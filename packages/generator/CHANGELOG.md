@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.21](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.0.20...@codewithdan/ai-repo-adventure-generator@1.0.21) (2025-08-27)
+
+
+### Bug Fixes
+
+* standardize quest prefix terminology across themes and clean up title parsing ([dde3a7a](https://github.com/danwahlin/ai-repo-adventures/commit/dde3a7a16c7f1cae9ce3644fc2b27675738dcdcc))
+
+
+
+
+
 ## [1.0.20](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.0.19...@codewithdan/ai-repo-adventure-generator@1.0.20) (2025-08-27)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventure-generator
