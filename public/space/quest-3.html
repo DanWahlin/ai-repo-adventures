@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: Probing the Analysis Core - Repo Adventure</title>
+    <title>Quest 3: Chart the Analysis Trajectory - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Stellar Chronicles: The Codebase Odyssey</a>
+                <a href="index.html">Starship Aurora: Navigating the Repository Constellation</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,182 +45,318 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: Probing the Analysis Core</h1>
+    <h1>Quest 3: Chart the Analysis Trajectory</h1>
 <hr>
-<p>The <em>Code Voyager</em> approaches the swirling clouds of the Data Nebula, where ancient signals from the LLM Nexus echo through the void. This sector holds the Analysis Core - a powerful system that deciphers the most complex codebases for galactic adventures. To progress toward unlocking the secrets of collaborative programming, your mission is to investigate how the Analysis Core processes data and generates responses. This will require delving into the mechanized scripts responsible for content generation and error handling. Ready your scanners; the mysteries of this system await.</p>
+<p>The Aurora glides along the codeway, her scanners tilting toward the Analysis Nebula. Your crew needs precise telemetry to turn raw repositories into navigable star charts. This chapter focuses on the content pipeline that fuels your LLM reactor and the repomix thrusters that extract structured context from the void. Calibrate your arrays, trace request vectors, and validate coordinates before you fire. These objectives are exploration guides as you read the code below. Adventure awaits in the data lanes between prompts and output. Plot the course and keep the engines stable.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:  </p>
+<p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Signal Clarity</strong>: How does <code class="inline-code">generateRepomixContext</code> validate the input and prepare the environment for analysis?  </li>
-<li>⚡ <strong>Pulse Response</strong>: What mechanisms does <code class="inline-code">generateResponse</code> use to adapt and process LLM prompts with user-defined options?  </li>
-<li>🛡️ <strong>Subsystem Stability</strong>: What safeguards are in place within <code class="inline-code">captureRepomixStdout</code> and <code class="inline-code">validateResponse</code> to handle timeouts and unexpected input?</li>
+<li>🔍 Scanner Calibration: How does <code class="inline-code">RepoAnalyzer.validateProjectPath</code> guard the analyzer against invalid coordinates and what minimal checks are chosen over heavier validation?</li>
+<li>⚡ Thrust Vectoring: In <code class="inline-code">RepoAnalyzer.generateTargetedContent</code>, where are repomix CLI parameters assembled and how are target files normalized and cached to stabilize repeated burns?</li>
+<li>🛡️ Hull Safeguards: What timeout, size limits, and error surfacing patterns does <code class="inline-code">RepoAnalyzer.captureRepomixStdout</code> use to prevent runaway subprocesses?</li>
+<li>🔍 Reactor Input Shaping: How does <code class="inline-code">LLMClient.constructor</code> decide between <code class="inline-code">OpenAI</code> and <code class="inline-code">AzureOpenAI</code> clients, and what role does <code class="inline-code">LLMClient.isAzureOpenAI</code> play in endpoint formation?</li>
+<li>🛡️ Fuel Gatekeeping: Under which conditions does <code class="inline-code">LLMClient.getApiKey</code> select <code class="inline-code">GITHUB_TOKEN</code> versus <code class="inline-code">LLM_API_KEY</code>, and how do errors guide operators toward proper configuration?</li>
+<li>⚡ Response Telemetry: In <code class="inline-code">LLMClient.generateResponse</code>, where are model-specific params applied, how is JSON content cleaned, and how are usage stats surfaced for mission logs?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Analysis Core Processor</h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> module handles the core data analysis for extracting meaningful content from repositories. It ensures only the relevant parts are included in the output, optimizing token efficiency for further processing. Key functions cover input validation, cache management, and invoking subprocesses.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Repomix-driven analyzer and content optimizer</h3>
+<p>This analyzer is the Aurora’s sensor suite, converting repositories into structured star maps. <code class="inline-code">RepoAnalyzer.validateProjectPath</code> enforces a minimal, fast validation layer that rejects null bytes and empty inputs, ensuring navigation commands never point outside known space. <code class="inline-code">RepoAnalyzer.generateTargetedContent</code> is your directed scan: it validates and normalizes target files, constructs a deterministic cache key, and then configures repomix CLI flags to extract only approved sectors. It leverages compression and comment stripping to conserve tokens, caches outputs for repeat missions, and falls back with clear error envelopes when subprocesses falter. At the core of propulsion is <code class="inline-code">RepoAnalyzer.captureRepomixStdout</code>, which orchestrates a subprocess with strict timeouts and memory ceilings. It aggregates stdout safely, truncates error output exposure, and uses a graceful-then-forceful shutdown pattern to protect the ship from runaway burns. Together, these functions form a stable acquisition pipeline that feeds upstream generators while maintaining resource discipline. Observe how arguments like <code class="inline-code">--include</code>, <code class="inline-code">--ignore</code>, and <code class="inline-code">--no-directory-structure</code> are synthesized, how buffer limits (<code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code>) are enforced mid-flight, and how error paths include exit codes and snippets of <code class="inline-code">stderr</code> for actionable debugging. This is mission-grade instrumentation for reliable context capture.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateRepomixContext</code>: This function orchestrates the analysis process, including fallback logic for different configurations, and handles caching to optimize repeated requests.  </li>
-<li><code class="inline-code">generateTargetedContent</code>: Creates optimized content for specific files, ensuring that analysis focuses on the most relevant portions.  </li>
-<li><code class="inline-code">captureRepomixStdout</code>: Executes the <code class="inline-code">repomix</code> tool as a subprocess, with built-in timeout and memory usage safeguards. It protects the system from runaway processes.</li>
+<li><code class="inline-code">validateProjectPath</code> validates mission coordinates with minimal checks, rejecting empty or null-byte paths to avoid filesystem anomalies and unintended orbits.</li>
+<li><code class="inline-code">generateTargetedContent</code> normalizes and deduplicates target files, constructs cache keys, and configures repomix CLI options to run precise, resource-aware scans.</li>
+<li><code class="inline-code">captureRepomixStdout</code> runs repomix with timeouts, buffer safeguards, and controlled termination to ensure subprocesses cannot jeopardize the mission.</li>
 </ul>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> LLM Nexus Communicator</h3>
-<p>This module facilitates communication with the LLM models, translating user prompts into detailed responses. It includes mechanisms for handling different providers and model parameters, ensuring adaptability to various platforms.</p>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> LLM reactor configuration and response handling</h3>
+<p>This module boots the LLM reactor and controls its fuel valves. <code class="inline-code">LLMClient.constructor</code> selects an engine based on the base URL, building an <code class="inline-code">AzureOpenAI</code> route when the endpoint indicates Azure and defaulting to <code class="inline-code">OpenAI</code> otherwise. It validates presence of the base URL and the correct key. <code class="inline-code">LLMClient.getApiKey</code> decides whether to use <code class="inline-code">GITHUB_TOKEN</code> for GitHub Models endpoints or <code class="inline-code">LLM_API_KEY</code> for other providers, emitting targeted errors if required credentials are missing. <code class="inline-code">LLMClient.isAzureOpenAI</code> gates construction logic, identifying Azure footprints in the base URL. At runtime, <code class="inline-code">LLMClient.generateResponse</code> shapes model-specific parameters, including GPT-5 routing via <code class="inline-code">verbosity</code> and <code class="inline-code">reasoning_effort</code>, executes with a strict timeout, validates the response structure, optionally cleans JSON fenced outputs, and logs token usage to mission telemetry. These components together ensure consistent thrust from prompts to completions, with guardrails on timeout, format normalization, and diagnostic clarity across providers.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateResponse</code>: Constructs and executes requests to the LLM, providing flexibility for adaptable outputs while handling errors gracefully.  </li>
-<li><code class="inline-code">constructor</code>: Initializes the client with the correct provider configuration and credentials, ensuring compatibility with Azure and OpenAI models.  </li>
-<li><code class="inline-code">validateResponse</code>: Inspects and verifies the LLM outputs, effectively handling missing or incomplete responses through detailed error analysis.</li>
+<li><code class="inline-code">LLMClient.constructor</code> initializes the correct client variant, validates configuration, and sets deployment semantics for Azure.</li>
+<li><code class="inline-code">LLMClient.getApiKey</code> selects the proper credential channel based on the base URL and emits actionable error messages when misconfigured.</li>
+<li><code class="inline-code">LLMClient.isAzureOpenAI</code> detects Azure footprints in endpoints to steer initialization paths.</li>
+<li><code class="inline-code">LLMClient.generateResponse</code> constructs request params, executes with timeout, validates content, cleans JSON, and logs usage for mission observability.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-
-  const configuredFiles = extractUniqueFilePaths(projectPath);
-
-  if (configuredFiles.length &gt; 0) {
-    try {
-      return await this.generateOptimizedContent(projectPath, configuredFiles);
-    } catch (error) {
-      try {
-        return await this.generateTargetedContent(projectPath, configuredFiles);
-      } catch {
-        // Fallback to full content generation
-      }
-    }
+<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
+  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
 
-  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
+  const trimmedPath = projectPath.trim();
+  if (!trimmedPath) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
 
-  try {
-    const cliOptions: CliOptions = {
-      style: options.style || &#39;markdown&#39;,
-      stdout: true,
-      compress: options.compress !== false,
-      ignore: [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;].join(&#39;,&#39;),
-      removeComments: true,
-      removeEmptyLines: true,
-      noDirectoryStructure: true
-    };
-
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Repomix execution failed: ${error.message || String(error)}`);
+  // Basic safety check for null bytes (can break file system operations)
+  if (trimmedPath.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid null bytes&#39;);
   }
 }
 </code></pre>
 <ul>
-<li>Ensures smooth fallback processes based on the presence of <code class="inline-code">adventure.config.json</code>.  </li>
-<li>Implements comprehensive caching for performance, reducing redundant processing during analysis.  </li>
-<li>Customizes subprocess behavior with options such as compression and directory exclusion.</li>
+<li>Ensures mission coordinates are sane before launching a scan.</li>
+<li>Uses minimal synchronous checks to avoid I/O overhead during parameter validation.</li>
+<li>Targets high-value pitfalls: empty strings and null-byte injections.</li>
+<li>Prevents ambiguous or hazardous filesystem calls later in the pipeline.</li>
+<li>Serves as a first line of defense before repomix subprocess orchestration.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
+<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+  this.validateProjectPath(projectPath);
+  
+  if (!targetFiles || targetFiles.length === 0) {
+    throw new Error(&#39;Target files array cannot be empty&#39;);
+  }
+  
+  // Harden and validate target files
+  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+  if (safeFiles.length === 0) {
+    throw new Error(&#39;No valid target files found after validation&#39;);
+  }
+  
+  // Create stable cache key from normalized files
+  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
+  
+  // Check cache first
+  const cached = this.cache.get(cacheKey);
+  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+    return cached.content;
+  }
+  
+  
+  try {
+    // Configure repomix options for targeted extraction
+    const cliOptions: CliOptions = {
+      style: &#39;markdown&#39;,
+      stdout: true,
+      compress: compress, // Configurable compression
+      include: safeFiles.join(&#39;,&#39;), // Only include validated files
+      removeComments: compress, // Remove comments if compressing
+      removeEmptyLines: compress, // Remove empty lines if compressing
+      noDirectoryStructure: true
+    };
+
+    // Capture stdout during repomix execution
+    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+    
+    // Cache the result
+    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+    
+    return context;
+  } catch (error) {
+    throw new Error(`Targeted repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+</code></pre>
+<ul>
+<li>Performs targeted scans with deduplicated, validated file lists to reduce blast radius.</li>
+<li>Builds deterministic cache keys for stable re-use under <code class="inline-code">REPOMIX_CACHE_TTL</code>.</li>
+<li>Tunes repomix flags to compress, strip comments, and minimize token footprint.</li>
+<li>Uses a single capture point to keep subprocess interaction centralized.</li>
+<li>Wraps failures with explicit context for actionable diagnostics.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
   return new Promise((resolve, reject) =&gt; {
-    const args = [&#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
+    // Build repomix CLI arguments
+    const args = [
+      ...directories,
+      &#39;--stdout&#39;,
+      &#39;--style&#39;, options.style || &#39;markdown&#39;
+    ];
+    
     if (options.compress) args.push(&#39;--compress&#39;);
+    if (options.removeComments) args.push(&#39;--remove-comments&#39;);
+    if (options.removeEmptyLines) args.push(&#39;--remove-empty-lines&#39;);
+    if (options.noDirectoryStructure) args.push(&#39;--no-directory-structure&#39;);
     if (options.ignore) args.push(&#39;--ignore&#39;, options.ignore);
-
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
-
+    if (options.include) args.push(&#39;--include&#39;, options.include);
+    
+    // Spawn repomix as subprocess
+    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], {
+      cwd,
+      stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;]
+    });
+    
     let stdout = &#39;&#39;;
     let stderr = &#39;&#39;;
+    let stdoutSize = 0;
     let isResolved = false;
-
+    
+    // Set up timeout with graceful then force kill
     const timeout = setTimeout(() =&gt; {
       if (!isResolved) {
+        console.warn(`Repomix subprocess timeout (${REPOMIX_SUBPROCESS_TIMEOUT}ms), killing process...`);
         repomix.kill(&#39;SIGTERM&#39;);
+        setTimeout(() =&gt; repomix.kill(&#39;SIGKILL&#39;), REPOMIX_GRACEFUL_TIMEOUT);
         isResolved = true;
-        reject(new Error(`Repomix subprocess timed out`));
+        reject(new Error(`Repomix subprocess timed out after ${REPOMIX_SUBPROCESS_TIMEOUT}ms (${cwd})`));
       }
     }, REPOMIX_SUBPROCESS_TIMEOUT);
-
+    
     repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      stdout += data.toString();
+      const chunk = data.toString();
+      stdoutSize += chunk.length;
+      
+      // Memory protection
+      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(timeout);
+          repomix.kill(&#39;SIGKILL&#39;);
+          reject(new Error(`Repomix output too large (${stdoutSize} bytes) for ${cwd}`));
+        }
+        return;
+      }
+      
+      stdout += chunk;
     });
-
+    
     repomix.stderr.on(&#39;data&#39;, (data) =&gt; {
       stderr += data.toString();
     });
-
+    
     repomix.on(&#39;close&#39;, (code) =&gt; {
-      clearTimeout(timeout);
-      if (code === 0) resolve(stdout);
-      else reject(new Error(`Repomix failed: ${stderr}`));
+      if (!isResolved) {
+        isResolved = true;
+        clearTimeout(timeout);
+        
+        if (code === 0 &amp;&amp; stdout.trim().length &gt; 0) {
+          resolve(stdout);
+        } else {
+          reject(new Error(`Repomix failed (exit ${code}): ${stderr.substring(0, 200)}`));
+        }
+      }
+    });
+    
+    repomix.on(&#39;error&#39;, (error) =&gt; {
+      if (!isResolved) {
+        isResolved = true;
+        clearTimeout(timeout);
+        reject(new Error(`Repomix spawn failed: ${error.message}`));
+      }
     });
   });
 }
 </code></pre>
 <ul>
-<li>Implements multiple fail-safes, such as a timeout mechanism, to maintain operation stability.  </li>
-<li>Leverages asynchronous patterns to process stdout streams efficiently.  </li>
-<li>Provides insight into command-line tooling integration within a modern application workflow.</li>
+<li>Constructs a robust CLI invocation with explicit flags for controlled output.</li>
+<li>Enforces <code class="inline-code">REPOMIX_SUBPROCESS_TIMEOUT</code> and <code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code> to guard resources.</li>
+<li>Uses graceful termination with <code class="inline-code">SIGTERM</code> and escalation to <code class="inline-code">SIGKILL</code> to protect stability.</li>
+<li>Truncates <code class="inline-code">stderr</code> in errors to avoid log overflow while preserving context.</li>
+<li>Centralizes subprocess lifecycle, simplifying future telemetry and retries.</li>
 </ul>
 <hr>
 <h3>packages/core/src/llm/llm-client.ts</h3>
+<pre><code class="language-typescript">constructor() {
+  this.model = LLM_MODEL;
+  
+  // Determine API key based on provider
+  const apiKey = this.getApiKey();
+  if (!apiKey || !LLM_BASE_URL) {
+    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
+  }
+
+  if (this.isAzureOpenAI()) {
+    // Azure OpenAI requires endpoint without the path
+    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
+    this.client = new AzureOpenAI({
+      endpoint: azureEndpoint,
+      apiKey,
+      apiVersion: LLM_API_VERSION,
+      deployment: this.model
+    });
+  } else {
+    this.client = new OpenAI({
+      apiKey,
+      baseURL: LLM_BASE_URL
+    });
+  }
+}
+</code></pre>
+<ul>
+<li>Initializes the correct engine architecture for the reactor based on provider traits.</li>
+<li>Validates presence of both the base URL and a compatible API key before ignition.</li>
+<li>Applies Azure-specific endpoint shaping by trimming deployment paths.</li>
+<li>Encapsulates client instantiation details behind a simple constructor flow.</li>
+<li>Enables deployment-by-name for Azure while defaulting to baseURL for other providers.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private getApiKey(): string {
+  // GitHub Models (hosted on Azure) uses GITHUB_TOKEN
+  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+    if (!GITHUB_TOKEN) {
+      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN environment variable.&#39;);
+    }
+    return GITHUB_TOKEN;
+  }
+  // All other providers (OpenAI, Azure OpenAI, Ollama, etc.) use LLM_API_KEY
+  if (!LLM_API_KEY) {
+    throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY environment variable.&#39;);
+  }
+  return LLM_API_KEY;
+}
+</code></pre>
+<ul>
+<li>Chooses the correct fuel key for the given flight corridor.</li>
+<li>Distinguishes GitHub Models usage with explicit endpoint detection.</li>
+<li>Emits clear, action-oriented errors when credentials are missing.</li>
+<li>Keeps decision logic isolated and testable for future expansion.</li>
+<li>Simplifies the constructor by delegating provider-based credential logic.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private isAzureOpenAI(): boolean {
+  return LLM_BASE_URL.includes(&#39;.openai.azure.com&#39;) || LLM_BASE_URL.includes(&#39;cognitiveservices.azure.com&#39;);
+}
+</code></pre>
+<ul>
+<li>Detects Azure corridors via recognizable endpoint substrings.</li>
+<li>Keeps branching logic simple and explicit to reduce misconfiguration risk.</li>
+<li>Supports future branching in constructor without scattering conditions.</li>
+<li>Enhances readability of provider-specific code paths.</li>
+<li>Encourages clear separation of concerns between detection and initialization.</li>
+</ul>
+<hr>
 <pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   try {
     const requestParams = this.buildRequestParams(prompt, options);
     const completion = await this.executeRequest(requestParams);
     let content = this.validateResponse(completion);
-
+    
+    // Post-process JSON responses that might be wrapped in markdown
     if (options?.responseFormat === &#39;json_object&#39;) {
       content = this.cleanJsonResponse(content);
     }
-
+    
     this.logTokenUsage(completion);
-
+    
     return { content };
   } catch (error) {
+    // Enhanced error logging for debugging
+    this.logDetailedError(error, prompt);
+    
     const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
     throw new Error(`LLM request failed: ${message}`);
   }
 }
 </code></pre>
 <ul>
-<li>Processes LLM requests dynamically, accounting for various formats and options.  </li>
-<li>Includes built-in logging for tracking token consumption and debugging efficiency.  </li>
-<li>Adds resilience through structured error handling and output validation.</li>
+<li>Orchestrates the entire request cycle: build, execute with timeout, validate, and post-process.</li>
+<li>Cleans fenced JSON blocks to ensure parsable outputs for downstream systems.</li>
+<li>Emits token usage metrics to mission logs for cost and performance analysis.</li>
+<li>Wraps failures with structured diagnostics via <code class="inline-code">logDetailedError</code>.</li>
+<li>Centers responsibility for handling options and response hygiene in one place.</li>
 </ul>
-<hr>
-<pre><code class="language-typescript">private validateResponse(completion: any): string {
-  const choice = completion.choices[0];
-  const content = choice?.message?.content;
-
-  if (!choice) {
-    throw new Error(&#39;LLM returned no choices&#39;);
-  }
-  
-  if (!content || content.trim() === &#39;&#39;) {
-    this.handleEmptyResponse(choice);
-  }
-
-  return content;
-}
-</code></pre>
-<ul>
-<li>Safeguards against incomplete or malformed responses with validation.  </li>
-<li>Invokes detailed error handling for empty responses or undefined parameters.  </li>
-<li>Ensures robust output by verifying essential response fields.</li>
-</ul>
-<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Tip</strong>: Use the <code class="inline-code">generateResponse</code> error logging to identify improvements in LLM prompt structure.  </li>
-<li><strong>Recommendation</strong>: Study how <code class="inline-code">captureRepomixStdout</code> enforces system-level protections for process management.  </li>
-<li><strong>Next Steps</strong>: Proceed to uncover deeper integrations and collaborative coding pathways in the next quest.</li>
+<li>Trace the cache keys in <code class="inline-code">generateTargetedContent</code> to predict when the analyzer will reuse prior results.</li>
+<li>Compare <code class="inline-code">isAzureOpenAI</code> detection with <code class="inline-code">getApiKey</code> endpoint checks to understand provider routing.</li>
+<li>Inspect timeout and buffer constants in configuration to tune performance for large repositories.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Stellar work on completing Quest 3: Probing the Analysis Core—your cosmic curiosity has ignited like a supernova, propelling you to 40% mission success; keep charting those stars! ⭐🚀📡</p>
+<p>Mission log update: ⭐ With Quest 3—Chart the Analysis Trajectory—successfully completed, your starship’s course is locked and your analytics thrusters are firing true, propelling you to 40% completion as you rocket toward the next waypoint—keep that vector steady and prepare for the next burn! 🚀📡⚡</p>
 
 </div>
 

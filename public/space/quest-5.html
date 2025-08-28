@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Charting Configuration Nebulae - Repo Adventure</title>
+    <title>Quest 5: Plot the Adventure Flight Plan - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Stellar Chronicles: The Codebase Odyssey</a>
+                <a href="index.html">Starship Aurora: Navigating the Repository Constellation</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,51 +45,29 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Charting Configuration Nebulae</h1>
+    <h1>Quest 5: Plot the Adventure Flight Plan</h1>
 <hr>
-<p>Far beyond the spiral arms of the Milky Way lies the Configuration Nebula, a vast and intricate cloud of data streams and JSON fragments illuminated by the glow of automated processing. Your mission, brave captain, is to chart this perplexing region, decipher its configuration patterns, and unlock its secrets. Aboard the starship <em>Code Voyager</em>, your crew must explore the core methods responsible for mapping and managing adventure setups, parsing their intricacies to ensure reliable operability for the galaxy’s most challenging programming quests.</p>
-<p>The nebula is dense with overlapping paths and interconnected nodes, but with precision and curiosity, you shall illuminate the paths hidden within its cosmic chaos.</p>
+<p>Your helm glows with starmaps as the Aurora prepares to plot the Adventure Flight Plan. The crew needs a compact, navigable briefing distilled from raw mission charts. You align scanners toward configuration nebulae, where paths to code constellations await extraction and formatting. With the LLM reactor humming, your task is to parse the mission config, chart unique file trajectories, and compress the plan into a prompt-friendly star chart. Stay sharp: one misread path could throw the expedition off orbit.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>📁 <strong>Path Discovery Protocol</strong>: How are configuration file paths extracted and validated within the nebula&#39;s dense data structures?</li>
-<li>💡 <strong>Translation Nexus</strong>: How does the system format raw configuration data for optimized use in automated storytelling and prompts?</li>
-<li>🛠️ <strong>Error Avoidance Systems</strong>: What mechanisms prevent system crashes when encountering missing or invalid configuration files?</li>
+<li>🔍 Scanner Calibration: How does <code class="inline-code">parseAdventureConfig</code> centralize JSON parsing so other systems avoid duplicating parsing logic?</li>
+<li>⚡ Chart Compression: In <code class="inline-code">formatAdventureConfigForPrompt</code>, what techniques trim verbose config into a minimal, prompt-ready flight plan?</li>
+<li>🛡️ Path Integrity Shields: How does <code class="inline-code">extractUniqueFilePaths</code> validate referenced <code class="inline-code">path</code> entries and avoid false positives or missing files?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Managing Cosmic Configurations</h3>
-<p>This file is the starship’s compass for navigating the Configuration Nebula. It handles the critical processes of loading, parsing, and managing the core adventure configuration files. Each method plays a unique role in ensuring that the system can reliably understand and process its instructions, even in the face of galactic anomalies like missing files or malformed data.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Core navigational instruments for loading, parsing, distilling, and extracting adventure configuration</h3>
+<p>This module equips the Aurora with precise instruments for mission configuration handling. At launch, <code class="inline-code">loadAdventureConfig</code> performs a pure file read of <code class="inline-code">adventure.config.json</code>, delegating all parsing to <code class="inline-code">parseAdventureConfig</code>. That separation prevents accidental coupling between I/O and validation while allowing upstream systems to treat missing or malformed data as non-fatal. The <code class="inline-code">parseAdventureConfig</code> function is the single waypoint for JSON interpretation, returning <code class="inline-code">null</code> on any anomaly, which simplifies flow control for callers that just need a yes/no readiness signal.</p>
+<p>For route plotting, <code class="inline-code">extractUniqueFilePaths</code> traverses the entire parsed config graph iteratively, looking for any <code class="inline-code">path</code> fields. Each candidate is trimmed, resolved relative to the project root, and verified with <code class="inline-code">fs.existsSync</code> before inclusion. This ensures only physically valid routes are placed on the star map, eliminating phantom references. Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> compresses adventures into a concise format capturing just quest titles, file paths, and function names. This compression aligns with LLM prompt constraints, minimizing noise while preserving essential navigation cues for downstream generators. Together, these instruments transform raw configuration dust into actionable star charts that the crew can follow across the code galaxy.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">loadAdventureConfig</code>: Reads the raw configuration file’s content from the specified directory. Essential for accessing base data.</li>
-<li><code class="inline-code">parseAdventureConfig</code>: Converts JSON configuration files into usable objects, while safeguarding against errors. Central for initializing missions.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies and validates all file paths mentioned in the configuration. Vital for ensuring data completeness.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Transforms configurations into a compact, optimized format suitable for command-prompt-based execution. Crucial for LLM interoperability.</li>
-<li><code class="inline-code">extractCustomInstructions</code>: Retrieves additional instructions embedded in the configuration, allowing for greater mission customizability.</li>
+<li><code class="inline-code">parseAdventureConfig</code> centralizes JSON parsing and validation, returning <code class="inline-code">null</code> on errors so callers can fail gracefully without throwing.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code> performs a graph walk to find all <code class="inline-code">path</code> fields, resolves and validates them with the filesystem, and returns de-duplicated routes.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code> converts rich config into a minimal, LLM-optimized briefing listing quest titles, file paths, and function names.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">/**
- * Loads the raw adventure config text if present.
- * Pure file read - no parsing here.
- */
-export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
-</code></pre>
-<ul>
-<li>This function reads the raw JSON configuration file without parsing its content, ensuring the file’s data is accessible as-is.</li>
-<li>It uses <code class="inline-code">readFileIfExists</code>, a helper that gracefully handles missing files, avoiding crashes.</li>
-<li>The output is a string or <code class="inline-code">null</code>, allowing downstream functions to make decisions about next steps.</li>
-<li>This approach separates file handling from processing logic, reducing complexity in higher-level functions.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">/**
- * Parses the adventure config into an object (or null on error/missing).
- * Single point of JSON parsing and validation.
- */
-export function parseAdventureConfig(projectPath: string): unknown | null {
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
   try {
@@ -100,16 +78,14 @@ export function parseAdventureConfig(projectPath: string): unknown | null {
 }
 </code></pre>
 <ul>
-<li>This function wraps <code class="inline-code">JSON.parse</code> to convert raw configuration data into an object while guarding against malformed JSON errors.</li>
-<li>It checks if the raw configuration data exists before attempting to parse, ensuring safe operations.</li>
-<li>Errors in parsing are caught and handled cleanly, returning <code class="inline-code">null</code> rather than disrupting the system.</li>
-<li>Acting as the system’s single point for parsing, it ensures consistent handling of all configuration data.</li>
+<li>Establishes a single point for JSON parsing, ensuring consistent error handling by returning <code class="inline-code">null</code> instead of throwing.</li>
+<li>Separates concerns: file reading happens in <code class="inline-code">loadAdventureConfig</code>, while parsing and validation live here.</li>
+<li>Encourages defensive calling patterns, allowing higher layers to branch on presence/absence without try/catch.</li>
+<li>Simplifies integration with other modules that expect a clean <code class="inline-code">object | null</code> result for system flow decisions.</li>
+<li>Avoids leaky abstractions by not exposing parsing exceptions to the rest of the navigation stack.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">/**
- * Extracts all unique, existing file paths referenced by &quot;path&quot; fields anywhere in the config.
- */
-export function extractUniqueFilePaths(projectPath: string): string[] {
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) return [];
 
@@ -139,18 +115,14 @@ export function extractUniqueFilePaths(projectPath: string): string[] {
 }
 </code></pre>
 <ul>
-<li>This method uses a depth-first traversal to extract all file paths from nested configuration data.</li>
-<li>Paths are normalized, validated, and deduplicated using a <code class="inline-code">Set</code> to prevent duplicates.</li>
-<li>The <code class="inline-code">fs.existsSync</code> check ensures paths point to actual files, improving reliability.</li>
-<li>A dynamic structure analysis handles arbitrarily complex JSON, making the system adaptable to a wide variety of configurations.</li>
+<li>Iteratively walks the entire config graph to find <code class="inline-code">path</code> occurrences, preventing missed references nested in arrays or objects.</li>
+<li>Validates each discovered path with <code class="inline-code">fs.existsSync</code> after resolving to an absolute path, ensuring only real files are charted.</li>
+<li>Uses a <code class="inline-code">Set</code> to de-duplicate routes, keeping the flight plan concise and free of redundant waypoints.</li>
+<li>Employs a stack-based traversal to avoid recursion depth issues, providing robustness for large configs.</li>
+<li>Returns a stable array of unique, validated file paths ready for downstream analyzers and mission planners.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">/**
- * Formats adventure config into a minimal format for LLM prompts
- * OPTIMIZED: Reduced from 7,279 to ~2,000 characters (72% reduction)
- * Eliminates redundant descriptions since LLM can infer from actual code
- */
-export function formatAdventureConfigForPrompt(projectPath: string): string {
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) {
     return &#39;&#39;;
@@ -184,21 +156,21 @@ export function formatAdventureConfigForPrompt(projectPath: string): string {
 }
 </code></pre>
 <ul>
-<li>This function compacts configuration data into a lean format optimized for inclusion in prompts to LLM systems.</li>
-<li>Information such as file paths and function names is prioritized, while redundant details are removed to improve clarity.</li>
-<li>Strategic formatting makes the data easier to parse programmatically, enhancing compatibility with AI-driven workflows.</li>
-<li>The design balances detail and brevity, making it a powerful tool for large-scale automated tasks.</li>
+<li>Produces a compact, LLM-friendly overview by listing quest titles, file paths, and function names without verbose prose.</li>
+<li>Validates structure at each step, returning an empty string for missing or malformed data to prevent noisy prompts.</li>
+<li>Applies a clear separation between data extraction and presentation, aiding maintainability and testability.</li>
+<li>Uses <code class="inline-code">flatMap</code> on highlights to collect function names efficiently, ensuring coverage of all file-level highlights.</li>
+<li>Aligns with prompt token budgets, improving reliability of downstream generation within resource constraints.</li>
 </ul>
-<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Leverage <code class="inline-code">parseAdventureConfig</code> to understand how JSON data drives quest initialization workflows.</li>
-<li>Experiment with invalid JSON files to appreciate the system’s ability to recover gracefully.</li>
-<li>Use <code class="inline-code">formatAdventureConfigForPrompt</code> as a guide to design extensible, lightweight formats for structured data.</li>
+<li>Start by checking <code class="inline-code">parseAdventureConfig</code> results before invoking path extraction or formatting to avoid null flows.</li>
+<li>Compare the output of <code class="inline-code">extractUniqueFilePaths</code> against your workspace to verify the navigator’s integrity.</li>
+<li>Use <code class="inline-code">formatAdventureConfigForPrompt</code> to preview your mission brief and ensure it lists only essential coordinates.</li>
 </ul>
 <hr>
-<p>You have mastered all the secrets of automated coding adventures! Your journey through the Configuration Nebula has illuminated the path for all who follow. Congratulations on completing your stellar adventure, Captain of the <em>Code Voyager</em>!</p>
-<p>Stellar navigators, you&#39;ve masterfully charted the Configuration Nebula, propelling your cosmic expedition to 80% completion—brilliance like yours powers the starlight that guides the fleet forward! ⭐🚀📡</p>
+<p>You have mastered all the secrets of this project! Your adventure is complete.</p>
+<p>Mission accomplished, cadet—your stellar success in Quest 5: Plot the Adventure Flight Plan has locked in a precise trajectory for our starship’s next burn, pushing you to 80% mission completion and priming your cosmic instruments for a triumphant final orbit—keep those thrusters hot and sensors aligned! 🚀⭐📡</p>
 
 </div>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Glyph of Creation - Repo Adventure</title>
+    <title>Quest 2: Quest Generation Engine - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Codebase of the Hidden Pyramid</a>
+                <a href="index.html">Chronicles of the Code Pyramid</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,123 +45,257 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Glyph of Creation</h1>
+    <h1>Quest 2: Quest Generation Engine</h1>
 <hr>
-<p>In the unexplored depths of the Pyramid of Wisdom lies the Glyph of Creation, an artifact rumored to transcribe ideas from mere whispers of thought into structured codes carved into reality. Your mission, brave explorer, is to uncover the ancient mechanisms hidden within these codified chambers. Decipher their patterns, unveil their secrets, and reclaim the profound methodologies this civilization once used to analyze knowledge and craft eternal legends.</p>
-<p>Your journey will lead you through corridors of complex adventure systems and sacred configurations, forged with meticulous precision. Choose carefully, for the Glyph demands clarity and wisdom to reveal its sacred truth.</p>
-<p><strong>Adventure Awaits</strong> – Proceed with vigilance, seeker of knowledge!</p>
+<p>Within the pyramid’s second chamber, chisels and glyphs hum with coded intent. Here the generation engine carves tales and trials from prompts, guided by config stones and guarded by time-keeping sand. The MCP antechamber has opened the way; now the inner halls call the scribe to shape narrative threads into structured quests. Study the stele inscribed in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>, <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>, and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>. Trace how scrolls are selected, how themes steer the style, and how validators judge each step like seasoned archaeologists.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Glyph Decoder</strong>: How does <code class="inline-code">AdventureManager</code> merge quest files into configurations based on ancient rules, ensuring alignment with contextual patterns and user inputs?</li>
-<li>⚡ <strong>Ritual Structure</strong>: What techniques are used by <code class="inline-code">StoryGenerator</code> to generate the story and quests themes dynamically, balancing predefined and custom contexts?</li>
-<li>🛡️ <strong>Sacred Boundaries</strong>: What safeguards and validation mechanisms are employed by <code class="inline-code">AdventureState</code> and <code class="inline-code">AdventureConfig</code> to prevent corruption of ancient records?</li>
+<li>🔍 Glyph Pairing: How does <code class="inline-code">initializeAdventure</code> merge config-bound files into generated quests, and where is quest count enforced to match the config stones?</li>
+<li>⚡ Chamber Sequencing: In <code class="inline-code">generateStoryAndQuests</code>, how is the theme validated and how do formatted config inscriptions influence LLM prompts and resulting quest structures?</li>
+<li>🛡️ Sand-Trap Safeguards: When <code class="inline-code">exploreQuest</code> runs, how do <code class="inline-code">validateAndSanitizeChoice</code> and cache paths prevent missteps, and what fallback patterns are used if targeted content collection fails?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> The Master Architect’s Tool</h3>
-<p>This file encapsulates the logic for managing the flow of adventures, linking the civilization&#39;s overarching glyph-based narratives into individual quests. The <code class="inline-code">AdventureManager</code> oversees initialization, user input validation, and dynamic quest execution that form the backbone of your journey through its chambers.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Orchestrates adventure state, merges config-guided files into LLM-made quests, and executes selected quests with caching and summaries</h3>
+<p>This chamber manages the expedition’s path. <code class="inline-code">AdventureState</code> holds titles, stories, quest arrays, completion marks, and the current theme. <code class="inline-code">progressPercentage</code> measures how far the expedition has advanced. <code class="inline-code">AdventureManager.initializeAdventure</code> resets the state, injects project context and theme, and asks the scribe to produce story and quests. It then performs two important rituals: <code class="inline-code">mergeQuestFilesFromConfig</code> embeds file paths from <code class="inline-code">adventure.config.json</code> into each quest, and <code class="inline-code">enforceConfigQuestCount</code> trims quests to match the config’s declared count, preserving alignment with external guidance stones. When an explorer chooses a quest, <code class="inline-code">exploreQuest</code> validates the choice, resolves the quest by number, id, or title, and calls <code class="inline-code">executeQuest</code>. That method fetches targeted repository scrolls when <code class="inline-code">codeFiles</code> are present using the analyzer passage; on failure, it falls back to the full repomix scroll. The engine caches completed quest content to allow revisits without summoning the scribe again, and produces a completion summary. The result formatter returns narrative plus choices, while progress can be viewed at any time, showing checkmarked titles and an expedition gauge. Taken together, these patterns ensure reliable sequencing: configuration informs selection, LLMs craft the narrative, and the manager guarantees stable outcomes and safe retries.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code> initializes the narrative with project information, themes, and quests; merging sacred configurations with generated quests.</li>
-<li><code class="inline-code">mergeQuestFilesFromConfig</code> integrates quest-related files from external configurations into dynamically generated adventures.</li>
-<li><code class="inline-code">validateAndSanitizeChoice</code> ensures sacred input from adventurers adheres to ancient validation standards, purifying erroneous entries.</li>
-</ul>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> The Configuration Glyph</h3>
-<p>This file acts as the keystone for loading and parsing adventure-specific configurations. Its runes guide the extraction of file paths and the formatting of content for streamlined exploration. The adventurers rely on its methods to align their journey with the Pyramid&#39;s ancient wisdom.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">parseAdventureConfig</code> decodes the adventure config files into structured entities, supporting dynamic alignment with contextual quests.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code> searches for and validates file paths hidden within nested structures, ensuring their sacred legitimacy.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code> condenses configuration data into optimized input for further processing, leveraging context without redundancy.</li>
+<li><code class="inline-code">initializeAdventure</code> initializes state, invokes the scribe to craft story and quests, merges config-guided files, and enforces quest counts to match inscriptions</li>
+<li><code class="inline-code">exploreQuest</code> validates a seeker’s choice, resolves the intended quest, and delegates execution with caching and progress awareness</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code> calculates expedition advancement as completed over total quests, rounding for clear progress indicators</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
-  
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
+<pre><code class="language-typescript">export class AdventureState {
+  title: string | undefined = undefined;
+  story: string | undefined = undefined;
+  quests: Quest[] = [];
+  completedQuests: Set&lt;string&gt; = new Set();
+  questContentCache: Map&lt;string, { content: QuestContent; summary: string }&gt; = new Map();
+  currentTheme: AdventureTheme | null = null;
+  projectInfo: ProjectInfo | undefined = undefined;
+  projectPath: string | undefined = undefined;
+
+
+  get progressPercentage(): number {
+    return this.quests.length &gt; 0 
+      ? Math.round((this.completedQuests.size / this.quests.length) * 100)
+      : 0;
   }
-
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  
-  this.state.title = storyResponse.title;
-  this.state.story = storyResponse.story;
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
 }
 </code></pre>
 <ul>
-<li>Resets <code class="inline-code">AdventureState</code> to prepare for a new glyph configuration, clearing residual data.</li>
-<li>Dynamically merges generated quests with sacred configurations, ensuring alignment between ancient logic and current user contexts.</li>
-<li>Enforces constraints like quest count, based on external and predefined glyph rules.</li>
+<li>Computes progress from completed quest ids against total quests, yielding a rounded percentage for the expedition gauge</li>
+<li>Uses <code class="inline-code">Set</code> and <code class="inline-code">Map</code> to track completion and cached content, a pattern that favors fast lookups and revisit efficiency</li>
+<li>Encapsulates core journey metrics inside state rather than scattering calculations throughout the manager</li>
+<li>Protects against division by zero by returning 0 when no quests exist</li>
+<li>Establishes shared data for rendering menus and progress narratives</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
-  if (!projectPath) return quests;
-  
-  const config = parseAdventureConfig(projectPath);
-  if (!config || typeof config !== &#39;object&#39;) return quests;
-  
-  const adventure = (config as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) return quests;
-  
-  return quests.map((quest, index) =&gt; {
-    if (index &lt; adventure.quests.length &amp;&amp; adventure.quests[index].files) {
-      const files = adventure.quests[index].files
-        .filter((f: any) =&gt; f.path)
-        .map((f: any) =&gt; f.path);
-      if (files.length &gt; 0) {
-        return { ...quest, codeFiles: files };
+<pre><code class="language-typescript">export class AdventureManager {
+  async initializeAdventure(
+    projectInfo: ProjectInfo, 
+    theme: AdventureTheme, 
+    projectPath?: string,
+    customThemeData?: CustomThemeData
+  ): Promise&lt;string&gt; {
+    // Reset state for new adventure
+    this.state.reset();
+    this.state.projectInfo = projectInfo;
+    this.state.currentTheme = theme;
+    this.state.projectPath = projectPath || process.cwd();
+    
+    // Set custom theme data if provided
+    if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+      this.storyGenerator.setCustomTheme(customThemeData);
+    }
+
+    // Generate the overall story and quests using LLM
+    const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+    
+    this.state.title = storyResponse.title;
+    this.state.story = storyResponse.story;
+    
+    // Merge files from adventure config into the generated quests
+    this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+    
+    // Enforce quest count from adventure.config.json if it exists
+    this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
+    // Return the story with available quests
+    return this.formatStoryWithQuests({
+      ...storyResponse,
+      quests: this.state.quests
+    });
+  }
+}
+</code></pre>
+<ul>
+<li>Orchestrates initial expedition setup: resets state, stores project context, and handles theme/custom data</li>
+<li>Delegates narrative creation to the scribe, then reconciles with config guidance by merging files and enforcing quest count</li>
+<li>Uses <code class="inline-code">projectPath</code> to ground file lookups and prompt formatting downstream</li>
+<li>Returns a formatted narrative with a map of available quests for the explorer’s choice</li>
+<li>Clearly sequences generation then reconciliation, a robust pattern for external constraints</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export class AdventureManager {
+  async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
+    const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+    
+    if (this.isProgressRequest(sanitizedChoice)) {
+      return this.getProgress();
+    }
+    
+    const quest = this.findQuest(sanitizedChoice);
+    if (!quest) {
+      return this.createNotFoundResult();
+    }
+
+    return await this.executeQuest(quest);
+  }
+}
+</code></pre>
+<ul>
+<li>Validates user input before resolution, preventing invalid navigation in the chamber</li>
+<li>Supports both textual and numeric progress requests, adding a clear ritual for expedition status</li>
+<li>Resolves quests by number, id, or title, accommodating varied explorer inputs</li>
+<li>Centralizes execution and caching behavior in <code class="inline-code">executeQuest</code>, keeping selection logic small and readable</li>
+<li>Returns a structured <code class="inline-code">AdventureResult</code> for consistent presentation</li>
+</ul>
+<hr>
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">export class StoryGenerator {
+  async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+    this.currentProject = projectInfo;
+    this.projectPath = projectPath;
+    
+    const validatedTheme = this.validateTheme(theme);
+    return await this.generateWithLLM(projectInfo, validatedTheme);
+  }
+}
+</code></pre>
+<ul>
+<li>Anchors project and path context for later prompt construction and config extraction</li>
+<li>Validates theme using internal guardrails before contacting the scribe</li>
+<li>Delegates LLM interaction to a focused method for clarity and testability</li>
+<li>Keeps inputs minimal: project info, theme, and optional path</li>
+<li>Establishes deterministic sequencing from validation to generation</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export class StoryGenerator {
+  private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise&lt;StoryResponse&gt; {
+    const repomixContent = projectInfo.repomixContent || &#39;No repomix content available&#39;;
+    
+    let adventureGuidance = &#39;&#39;;
+    let customInstructions = &#39;&#39;;
+    
+    if (this.projectPath) {
+      const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+      if (formattedConfig) {
+        adventureGuidance = formattedConfig;
+      }
+      
+      const customInstructionsFromConfig = extractCustomInstructions(this.projectPath);
+      if (customInstructionsFromConfig) {
+        customInstructions = customInstructionsFromConfig;
       }
     }
-    return quest;
-  });
-}
-</code></pre>
-<ul>
-<li>Adds external file paths from sacred configurations to dynamically generated quests.</li>
-<li>Utilizes fallback mechanisms to avoid corruptions stemming from mismatched nodes or invalid configurations.</li>
-<li>Ensures the journey&#39;s contexts align with the structural needs of adventuring.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private validateAndSanitizeChoice(input: string): string {
-  try {
-    return validateAdventureChoice(input);
-  } catch (error) {
-    throw new Error(`Invalid adventure choice: ${error instanceof Error ? error.message : &#39;Unknown error&#39;}`);
+
+    const prompt = loadStoryGenerationPrompt({
+      theme,
+      repomixContent,
+      ...(adventureGuidance &amp;&amp; { adventureGuidance }),
+      ...(customInstructions &amp;&amp; { customInstructions }),
+      ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
+    });
+
+    const response = await this.withTimeout(
+      this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
+    );
+    
+    if (!response.content || response.content.trim() === &#39;&#39;) {
+      throw new Error(&#39;LLM returned empty response&#39;);
+    }
+    
+    let parsed;
+    try {
+      let cleanContent = response.content.trim();
+      if (cleanContent.startsWith(&#39;```markdown&#39;)) {
+        cleanContent = cleanContent.replace(/^```markdown\s*/, &#39;&#39;).replace(/\s*```$/, &#39;&#39;);
+      }
+      
+      parsed = parseMarkdownToStoryResponse(cleanContent);
+      StoryResponseSchema.parse(parsed);
+      
+      this.currentStoryContent = parsed.story;
+    } catch (error) {
+      console.error(&#39;💥 Parsing error:&#39;, error instanceof Error ? error.message : &#39;Unknown error&#39;);
+      console.error(&#39;💥 Full response:&#39;, response.content);
+      throw new Error(`Invalid LLM response for story: ${error instanceof Error ? error.message : &#39;Unknown error&#39;}. Response: ${response.content.substring(0, 200)}...`);
+    }
+    return parsed;
   }
 }
 </code></pre>
 <ul>
-<li>Validates user input with safeguards against corruption or errors, preserving thematic glyph consistency.</li>
-<li>Purifies inputs to ensure the structural integrity of chosen quests.</li>
+<li>Builds prompts from repomix scrolls, plus formatted config and custom inscriptions to steer structure</li>
+<li>Wraps the LLM call with a timeout to avoid endless wandering in the labyrinth</li>
+<li>Parses markdown responses into structured quests, then validates with <code class="inline-code">zod</code> to ensure faithful shapes</li>
+<li>Stores the resulting story for continuity in later quest content generation</li>
+<li>Uses defensive parsing and clear error reporting to aid archaeological debugging</li>
 </ul>
 <hr>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
 }
 </code></pre>
 <ul>
-<li>Decodes <code class="inline-code">adventure.config.json</code> files into useable objects, providing foundational glyph configuration data.</li>
-<li>Includes safety mechanisms to handle invalid or unreadable glyphs without disrupting flow.</li>
+<li>Reads the config stone without parsing, separating IO concerns from validation</li>
+<li>Relies on a safe helper that treats missing files as non-fatal</li>
+<li>Keeps file naming centralized via <code class="inline-code">ADVENTURE_CONFIG_FILE</code></li>
+<li>Forms the base for both parsing and prompt-oriented formatting</li>
+<li>Encourages testability by isolating raw reads</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    
+    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
+    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
+    
+    const functions = quest.files
+      .flatMap((f: any) =&gt; f.highlights || [])
+      .map((h: any) =&gt; h.name)
+      .filter(Boolean);
+    formatted += `Functions: ${functions.join(&#39;, &#39;)}\n\n`;
+  }
+
+  return formatted;
+}
+</code></pre>
+<ul>
+<li>Distills the config into a compact inscription that the scribe can follow without clutter</li>
+<li>Focuses on titles, file paths, and highlight names to guide LLM structure</li>
+<li>Returns an empty string if config is absent or malformed, preserving graceful fallbacks</li>
+<li>Encourages consistency by using the same structure across quests</li>
+<li>Reduces token load while preserving intent</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
@@ -192,44 +326,21 @@
 }
 </code></pre>
 <ul>
-<li>Traverses nested nodes to uncover hidden paths referenced in configuration data, ensuring their authenticity.</li>
-<li>Integrates validated sacred paths into the overall glyph exploration journey.</li>
+<li>Walks the entire config structure, collecting valid <code class="inline-code">path</code> fields while avoiding duplicates</li>
+<li>Validates file existence relative to <code class="inline-code">projectPath</code>, protecting the expedition from phantom scrolls</li>
+<li>Uses a stack-based traversal to handle arbitrary nesting in the config</li>
+<li>Returns a stable, deterministic list suitable for targeted analysis</li>
+<li>Encapsulates path hygiene to keep higher-level logic clean</li>
 </ul>
-<hr>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) {
-    return &#39;&#39;;
-  }
-
-  const adventure = (parsed as any).adventure;
-  let formatted = `## Quest Structure\n`;
-
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
-    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
-  }
-
-  return formatted;
-}
-</code></pre>
-<ul>
-<li>Streamlines configuration content for efficient interfacing with dynamic systems during exploration.</li>
-<li>Focuses on code files and quest titles without redundant verbosity.</li>
-</ul>
-<hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Focus your investigation on how external configurations blend dynamically with generated quests and themes.</li>
-<li>Notice the emphasis placed on validation and error handling, ensuring glyph integrity.</li>
-<li>Observe how ancient structures like JSON configurations are optimized for seamless transformations.</li>
+<li>Trace the path: from <code class="inline-code">initializeAdventure</code> to <code class="inline-code">mergeQuestFilesFromConfig</code> and <code class="inline-code">enforceConfigQuestCount</code> to see how external guidance shapes the expedition</li>
+<li>Compare <code class="inline-code">generateWithLLM</code> prompt assembly with and without formatted config to understand influence on quest carving</li>
+<li>Test failure paths by simulating missing files to observe targeted-content fallback behavior</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Lo, seeker of sacred truths, thou hast unlocked the venerable Glyph of Creation, forging thy path with might akin to the ancients—press onward, for the celestial halls await thy triumphant ascension! ⚡⭐🗺️</p>
+<p>Hail, seeker of wisdom—within the sacred halls of the temple, thy Quest 2: Quest Generation Engine is forged and consecrated, a triumphant milestone marking 1 of 5 sacred labors (20%) inscribed upon the tablets of learning, go forth with exalted purpose and let thy craft shine like a consecrated flame ⭐.</p>
 
 </div>
 
