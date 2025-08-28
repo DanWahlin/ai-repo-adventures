@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 4: Codex of Themes and Seals - Repo Adventure</title>
+    <title>Quest 4: The Hall of Configurations - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Starship Codex: Navigating the Repository Constellation</a>
+                <a href="index.html">The Codex of Digital Journeys</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -37,7 +37,7 @@
                 <a href="../index.html" class="nav-link">Change Theme</a>
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/images/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                    <img src="assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
             </div>
         </div>
@@ -45,85 +45,163 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: Codex of Themes and Seals</h1>
+    <h1>Quest 4: The Hall of Configurations</h1>
 <hr>
-<p>This guide continues your configuration and validation expedition on the MPC bridge. Your task: calibrate the Codex of Themes and Seals that governs developer-focused itineraries. You will verify time constants, scan limits, and cache windows, then confirm theme registry integrity and safety of user inputs. Treat the following objectives as exploration guides while reading the actual code, focusing on architecture, patterns, and implementation details that determine how your command deck validates themes, protects inputs, and enforces operational limits.</p>
+<p>In the sacred halls of the digital realms, configurations are the mysterious tomes that encode world truths. The Hall of Configurations is the foundation of balance, where the elements of themes, inputs, and system directives converge. Here, brave adventurers unravel the structure of <code class="inline-code">ThemeDefinition</code>, validate critical choices, and safeguard the harmony of interactive design. Journey into the interconnected paths of <code class="inline-code">config</code>, <code class="inline-code">theme</code>, and <code class="inline-code">input-validator</code>, where the power of adaptive control awaits those who dare explore.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:</p>
+<p>As you explore the code below, investigate these key questions:  </p>
 <ul>
-<li>🔍 Scanner Calibration: How do <code class="inline-code">MAX_FILE_SIZE_MB</code> and related limits in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/config.ts</code></a> constrain analysis scope, and where are they intended to be consumed downstream?</li>
-<li>⚡ Theme Resolution Flow: How do <code class="inline-code">THEMES</code>, <code class="inline-code">getAllThemes</code>, and <code class="inline-code">parseTheme</code> interact to resolve user input into a canonical theme key within <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a>?</li>
-<li>🛡️ Input Safeguards: What sequence of checks in <code class="inline-code">validateTheme</code>, <code class="inline-code">validateAdventureChoice</code>, and <code class="inline-code">validateProjectPath</code> ensures safe, normalized, and actionable inputs in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/input-validator.ts</code></a>?</li>
+<li>🔍 <strong>Theme Forge</strong>: How does the <code class="inline-code">THEMES</code> data structure organize and define adventure themes, and what roles do its utility functions like <code class="inline-code">getAllThemes</code> play?  </li>
+<li>⚡ <strong>Validation Nexus</strong>: How do the <code class="inline-code">validateTheme</code> and <code class="inline-code">validateAdventureChoice</code> functions ensure valid input while maintaining adaptability and user safety?  </li>
+<li>🛡️ <strong>Configuration Font</strong>: What patterns in <code class="inline-code">config.ts</code> centralize settings like timeouts and environment variables, and how do these patterns enforce system-wide consistency?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> Centralized configuration and operational constraints</h3>
-<p>This module defines environment-driven configuration and operational limits for the system. It uses <code class="inline-code">dotenv</code> initialization with <code class="inline-code">config({ quiet: true })</code> to load environment variables. Critical LLM parameters like <code class="inline-code">LLM_API_KEY</code>, <code class="inline-code">LLM_BASE_URL</code>, <code class="inline-code">LLM_MODEL</code>, and <code class="inline-code">LLM_REQUEST_TIMEOUT</code> establish defaults for service availability and performance boundaries. Analysis constraints such as <code class="inline-code">FILE_READ_TIMEOUT</code>, <code class="inline-code">FILE_ANALYSIS_TIMEOUT</code>, <code class="inline-code">MAX_SCAN_DEPTH</code>, and <code class="inline-code">MAX_FILE_SIZE_MB</code> provide upper bounds that downstream analyzers and generators should respect. Cache and buffer settings including <code class="inline-code">LLM_CACHE_TTL</code>, <code class="inline-code">REPOMIX_CACHE_TTL</code>, and <code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code> protect stability during heavy operations. The constants prefer environment overrides but fall back to safe defaults, forming a predictable baseline. Error messaging via <code class="inline-code">ERROR_MESSAGES</code> standardizes user-facing responses, while <code class="inline-code">IGNORE_PATTERNS</code> enumerates directories and files to exclude during scans. <code class="inline-code">PROMPT_PATHS</code> centralizes prompt file locations to support prompt engineering workflows. Together, these constants function as a single source of truth for timeouts, limits, and paths, enabling other modules to remain focused on logic rather than configuration plumbing.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/input-validator.ts</code></a>: Input validation utilities</h3>
+<p>This file implements simpler, function-driven methods to validate input choices, ensuring that data passed into the system adheres to required formats. The validation scope spans adventure themes, project paths, and safe display formatting, which ensures both functional correctness and user safety.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code> sets the upper bound for LLM calls to prevent stalled requests and aligns latency expectations across the system.</li>
-<li><code class="inline-code">REPOMIX_CACHE_TTL</code> defines cache freshness for repository context generation, balancing accuracy and performance.</li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code> caps analyzed file size, ensuring memory safety and focusing the pipeline on source code most relevant to documentation.</li>
+<li><code class="inline-code">validateAdventureChoice</code>: Ensures a user’s adventure choice is non-empty, trimmed, and within appropriate length constraints. Critical to maintaining input hygiene.</li>
+<li><code class="inline-code">validateTheme</code>: Validates and parses user-provided themes by matching them against the official <code class="inline-code">THEMES</code> array, safeguarding against invalid configurations.  </li>
+<li><code class="inline-code">sanitizeForDisplay</code>: Protects system integrity by sanitizing user inputs, removing risky characters and truncating overly long strings.</li>
 </ul>
+<hr>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a>: Centralized theme definitions</h3>
+<p>This file acts as a single source of truth for all theme-related configurations. Theme data includes metadata such as IDs, keys, emojis, and descriptions, with associated helpers enabling quick access, validation, and formatting. The design emphasizes simplicity with straightforward object and array structures.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">THEMES</code>: A definitive object map of supported themes, including metadata and keywords for matching. Ensures consistency in theme representations throughout the system.  </li>
+<li><code class="inline-code">getAllThemes</code>: Consolidates the extraction of all theme definitions into a reusable utility. Simplifies iteration and retrieval.  </li>
+<li><code class="inline-code">isValidTheme</code>: Type-safe validation for input keys, preventing invalid values from infiltrating the theme system.</li>
+</ul>
+<hr>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/config.ts</code></a>: Configuration constants and environment loading</h3>
+<p>This file centralizes essential configuration variables for the system, including API information, timeouts, and default values. By loading these settings dynamically through environment variables, it ensures both flexibility and consistent behavior across environments.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Defines a critical system timeout threshold for integration with external language models like GPT-based APIs. Key to balancing user experience with backend constraints.  </li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: A safeguard against processing unreasonably large files, which maintains operational stability.  </li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Refresh interval for caching in the system. Enables high efficiency during repetitive operations.</li>
+</ul>
+<hr>
 <h2>Code</h2>
-<h3>packages/core/src/shared/config.ts</h3>
-<pre><code class="language-typescript">// Timeouts in milliseconds
-export const FILE_READ_TIMEOUT = 10000;
-export const FILE_ANALYSIS_TIMEOUT = 30000;
-export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
-export const LLM_CACHE_TTL = 300000; // 5 minutes
-export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;60000&#39;); // 60 seconds, configurable via env
-export const REPOMIX_SUBPROCESS_TIMEOUT = parseInt(process.env.REPOMIX_SUBPROCESS_TIMEOUT || &#39;120000&#39;); // 2 minutes, configurable via env
-export const REPOMIX_GRACEFUL_TIMEOUT = 5000; // 5 seconds for graceful shutdown before SIGKILL
-export const REPOMIX_MAX_BUFFER_SIZE = 100 * 1024 * 1024; // 100MB max buffer to prevent memory exhaustion
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/input-validator.ts</code></a></h3>
+<pre><code class="language-typescript">export function validateAdventureChoice(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Choice is required&#39;);
+  }
+  
+  if (input.length &gt; 200) {
+    throw new Error(&#39;Choice too long (max 200 characters)&#39;);
+  }
+  
+  return input.trim();
+}
 </code></pre>
 <ul>
-<li>Establishes consistent time budgets for file IO, analysis, and LLM requests to prevent resource starvation.</li>
-<li>Uses environment overrides where appropriate, enabling tuning without code changes.</li>
-<li>Introduces a separate TTL for LLM cache vs. RepoMix cache, clarifying distinct lifecycle policies.</li>
-<li>Buffer cap prevents unbounded memory usage during subprocess capture.</li>
-<li>Patterns emphasize explicit numeric defaults plus env-driven configurability.</li>
+<li>Ensures the provided <code class="inline-code">input</code> is non-empty and appropriately constrained for length.  </li>
+<li>Uses built-in trimming and validation to sanitize user data.  </li>
+<li>Safeguards against errors caused by empty or excessively long values, protecting downstream processes.</li>
+</ul>
+<pre><code class="language-typescript">export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Theme is required&#39;);
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
+</code></pre>
+<ul>
+<li>Builds on the <code class="inline-code">parseTheme</code> utility to normalize and validate user theme input.  </li>
+<li>Captures edge cases with user feedback, offering a list of valid options upon error.  </li>
+<li>Ties into reusable theme-related utilities <code class="inline-code">parseTheme</code>, <code class="inline-code">isValidTheme</code>, and <code class="inline-code">getAllThemes</code>, ensuring modular design.</li>
+</ul>
+<pre><code class="language-typescript">export function sanitizeForDisplay(input: string, maxLength = 1000): string {
+  if (!input) return &#39;&#39;;
+  
+  return input
+    .replace(/[&lt;&gt;{}&quot;`]/g, &#39;&#39;)
+    .replace(/\s+/g, &#39; &#39;)
+    .trim()
+    .slice(0, maxLength);
+}
+</code></pre>
+<ul>
+<li>Provides a safety net for user-provided strings by removing risky characters.  </li>
+<li>Uses regular expressions to target potentially unsafe elements in a controlled manner.  </li>
+<li>Reassures an end-user interface free of dangerous, overly long, or malformed content.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">// Analysis limits
-export const MAX_SCAN_DEPTH = 3; // Maximum directory depth to prevent infinite recursion and keep analysis focused
-export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
-export const KEY_SOURCE_FILES = 10; // Number of key files to highlight in adventure generation
-export const TOP_FUNCTIONS = 20; // Maximum functions to include in code analysis summaries
-export const TOP_CLASSES = 5; // Maximum classes to include in analysis to keep stories focused
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a></h3>
+<pre><code class="language-typescript">export const THEMES = {
+  SPACE: {
+    id: 1,
+    key: &#39;space&#39;,
+    displayName: &#39;Space Exploration&#39;,
+    emoji: &#39;🚀&#39;,
+    description: &#39;Journey through cosmic codebases...&#39;,
+    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;]
+  },
+  MYTHICAL: {
+    id: 2,
+    key: &#39;mythical&#39;,
+    displayName: &#39;Enchanted Kingdom&#39;,
+    emoji: &#39;🏰&#39;,
+    description: &#39;Explore magical and mythical realms...&#39;,
+    keywords: [&#39;mythical&#39;, &#39;magic&#39;, &#39;enchanted&#39;]
+  }
+} as const;
 </code></pre>
 <ul>
-<li>Defines guardrails for repository scanning and summarization scope.</li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code> directly influences which files are considered, improving performance and relevance.</li>
-<li>Summary caps (<code class="inline-code">KEY_SOURCE_FILES</code>, <code class="inline-code">TOP_FUNCTIONS</code>, <code class="inline-code">TOP_CLASSES</code>) keep generated content concise and actionable.</li>
-<li>Separation of scanning depth and summarization counts supports efficient and targeted analysis.</li>
-<li>Encourages downstream code to reference these constants rather than hardcoding values.</li>
+<li>Defines a static, mutable object structure that is central to configuring themes.  </li>
+<li>Each theme includes human-readable and internal properties (<code class="inline-code">id</code>, <code class="inline-code">key</code>, and <code class="inline-code">keywords</code>).  </li>
+<li>Keywords enable flexible, semi-fuzzy user inputs to map correctly to their corresponding themes.</li>
+</ul>
+<pre><code class="language-typescript">export function getAllThemes(): ThemeDefinition[] {
+  return THEMES_ARRAY;
+}
+</code></pre>
+<ul>
+<li>Exposes a consistent interface for accessing all defined themes dynamically.  </li>
+<li>Ensures clear, safe traversal of stored theme data for reusable functionality.  </li>
+<li>Keeps theme initialization restricted to a solitary source, avoiding redundancy.</li>
+</ul>
+<pre><code class="language-typescript">export function isValidTheme(theme: string): theme is AdventureTheme {
+  return THEMES_ARRAY.some(t =&gt; t.key === theme);
+}
+</code></pre>
+<ul>
+<li>Safeguards against unsafe or unnamed theme interpretation by ensuring type visibility.  </li>
+<li>Both simplifies and formalizes evaluation of user-defined, external, or programmatic theme keys.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">// LLM settings
-export const LLM_CACHE_SIZE = parseInt(process.env.LLM_CACHE_SIZE || &#39;100&#39;);
-export const LLM_TEMPERATURE = parseFloat(process.env.LLM_TEMPERATURE || &#39;0.7&#39;);
-export const LLM_MAX_TOKENS = parseInt(process.env.LLM_MAX_TOKENS || &#39;4000&#39;);
-export const LLM_MAX_TOKENS_STORY = Math.max(LLM_MAX_TOKENS, 8000); // Maximum tokens for story generation (use env var if higher)
-export const LLM_MAX_TOKENS_QUEST = Math.max(LLM_MAX_TOKENS, 6000); // Maximum tokens for individual quest exploration content (use env var if higher)
-export const LLM_MAX_TOKENS_DEFAULT = LLM_MAX_TOKENS; // Use env var or default to 4000
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/config.ts</code></a></h3>
+<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 60000;
+export const MAX_FILE_SIZE_MB = 10;
+export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;60000&#39;);
 </code></pre>
 <ul>
-<li>Centralizes LLM tunables with sane defaults and environment overrides for deployment flexibility.</li>
-<li>Separates token budgets for story vs. quest generation to align with content size profiles.</li>
-<li>Uses <code class="inline-code">Math.max</code> to guarantee minimum token ceilings even if env values are lower.</li>
-<li>Highlights temperature as a configurable creativity control.</li>
-<li>Reinforces the pattern of centralized config for consistency across the pipeline.</li>
+<li>Integrates default configurations, such as timeouts or cache validity, to ensure operational consistency.  </li>
+<li>Combines constants (<code class="inline-code">LLM_REQUEST_TIMEOUT</code>) and environment-controlled variables (<code class="inline-code">REPOMIX_CACHE_TTL</code>) flexibly.  </li>
+<li>Prevents misuse or guesswork by encapsulating configurations centrally.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Align downstream analyzers to honor <code class="inline-code">MAX_SCAN_DEPTH</code> and <code class="inline-code">MAX_FILE_SIZE_MB</code> to prevent runaway processing.</li>
-<li>Prefer referencing <code class="inline-code">ERROR_MESSAGES</code> for consistency in user feedback across modules.</li>
-<li>Use <code class="inline-code">PROMPT_PATHS</code> to decouple prompt content from code and enable iterative prompt improvements.</li>
+<li>If modifying themes, ensure the <code class="inline-code">THEMES</code> object is consistent with utility functions such as <code class="inline-code">isValidTheme</code>.  </li>
+<li>Review <code class="inline-code">sanitizeForDisplay</code> output rigorously when working with untrusted input.  </li>
+<li>To tweak performance, prioritize configuring timeouts directly within <code class="inline-code">config.ts</code>.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Quest 4: Codex of Themes and Seals successfully merged into main—excellent implementation of modular UI theming and secure seal validation, achieving 60% mission completion; keep iterating, ship confidently, and maintain velocity toward full release 🚀⚡💎.</p>
+<p>Congratulations, developer! You&#39;ve successfully refactored the intricate configurations of Quest 4, achieving a 60% completion milestone—your codebase of knowledge is scaling with precision and 🚀 efficiency toward deployment-ready mastery!</p>
 
 </div>
 

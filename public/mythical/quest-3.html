@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Oracle of Mirrors - Repo Adventure</title>
+    <title>Quest 3: The Oracle’s Analysis - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Chronicles of the Enchanted Repository</a>
+                <a href="index.html">Chronicles of the Enchanted Codebase</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -37,7 +37,7 @@
                 <a href="../index.html" class="nav-link">Change Theme</a>
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/images/github-mark.svg" alt="GitHub" width="24" height="24">
+                    <img src="assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
             </div>
         </div>
@@ -45,360 +45,198 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Oracle of Mirrors</h1>
+    <h1>Quest 3: The Oracle’s Analysis</h1>
 <hr>
-<p>In the glasswork hall of the coded kingdom, you approach the Oracle of Mirrors, where reflections reveal the workings behind enchanted whispers. Here, servers gossip with wizards and analyzers scribe what the repositories truly say. The oracle bids you study the twin mirrors: <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a> and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>. Through these panes you shall witness spells of gathering lore and summoning counsel. Heed the runes <code class="inline-code">llm-client.ts</code> and <code class="inline-code">input-validator.ts</code> hinted earlier in your journey, for their echoes shape the visions you now behold. Seek patterns, trace flows, and learn the limits of magic.</p>
+<p>In the Kingdom of Codemyr, Queen Syntaxia has directed you to embark on a critical mission. The Repository Scroll, the enigmatic artifact that fuels the kingdom&#39;s magical infrastructure, grows restless. To comprehend its evolving intricacies, you must consult the Oracle of Constructs. She resides within the enchanted networks of Codemyr&#39;s analytical hub. The Oracle&#39;s wisdom lies within her spellbook–two sacred tomes: the <code class="inline-code">repo-analyzer.ts</code> manuscript and the <code class="inline-code">llm-client.ts</code> grimoire. These tomes detail how Codemyr&#39;s mystical tools analyze repositories and communicate with highly intelligent constructs beyond the kingdom. Your task is to decipher these scrolls and retrieve the essence of their magical workings to stabilize Codemyr.</p>
+<p>Prepare yourself, Code Knight, for this shall test both your analytical prowess and your understanding of the surrounding enchantments! May your journey reveal the Oracle&#39;s intricate designs.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Mirror Alignment: How does <code class="inline-code">generateTargetedContent</code> constrain and normalize file paths before invoking <code class="inline-code">repomix</code>, and what patterns ensure safe inclusion?</li>
-<li>⚡ Summoner’s Binding: In <code class="inline-code">LLMClient.constructor</code>, how does provider detection influence client setup, and when does the path split logic for Azure endpoints take effect?</li>
-<li>🛡️ Ward of Time: Where do <code class="inline-code">LLM_REQUEST_TIMEOUT</code> and timeout guards surface in <code class="inline-code">LLMClient</code> and <code class="inline-code">RepoAnalyzer</code>, and how do they enforce graceful failure when calls exceed limits?</li>
+<li>🔍 <strong>Path Validation Riddles</strong>: How does <code class="inline-code">RepoAnalyzer</code> ensure paths remain valid and secure during its operations?</li>
+<li>⚡ <strong>Invocation of Constructs</strong>: What patterns or methods does <code class="inline-code">LLMClient</code> use to summon and communicate with intelligent constructs, and how are requests dynamically shaped?</li>
+<li>🛡️ <strong>Safeguards of Execution</strong>: What techniques are employed in both <code class="inline-code">RepoAnalyzer</code> and <code class="inline-code">LLMClient</code> to handle errors, timeouts, or unexpected conditions?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> The Scribe’s Lens over the Repository</h3>
-<p>This scroll crafts controlled visions of your project using Repomix. The <code class="inline-code">RepoAnalyzer</code> maintains a cache of conjured contexts, validates paths, and summons repomix as a subprocess. Begin with <code class="inline-code">validateProjectPath</code>, a simple but crucial ward that rejects empty strings and null bytes, ensuring the scribe never reads from cursed paths. Next, <code class="inline-code">generateTargetedContent</code> is the careful ritual that filters and normalizes a set of target files. It uses an inner talisman <code class="inline-code">validateAndNormalizeTargetFiles</code> to deduplicate, reject traversal hints like <code class="inline-code">..</code>, enforce project-root containment, verify existence, and produce stable cache keys. With this purified list, it constructs strict CLI options, captures stdout through <code class="inline-code">captureRepomixStdout</code>, and caches results. The capture spell sets memory and time wards using <code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code>, <code class="inline-code">REPOMIX_SUBPROCESS_TIMEOUT</code>, and <code class="inline-code">REPOMIX_GRACEFUL_TIMEOUT</code>. Errors are wrapped with clear causes. Finally, <code class="inline-code">generateRepomixContext</code> provides an adaptive path: if <code class="inline-code">adventure.config.json</code> yields configured files, it favors optimized or targeted routes, else falls back to a compressed full sweep. Together, these functions illustrate a thoughtful balance of safety, performance, and deterministic outputs, so the oracle’s mirror reflects only what is intended, within limits that protect the kingdom’s resources.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Repository Analysis Spellbook</h3>
+<p>This file encapsulates the process of analyzing repository structures and generating optimized content for further consumption. At its core, the <code class="inline-code">RepoAnalyzer</code> Class acts as the kingdom&#39;s guide for traversing and preparing essential information. Methods within this class perform validations on paths, manage caching of results, and invoke external processes for generating repository context using the enchanted tool &quot;Repomix.&quot;</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateRepomixContext</code> orchestrates adaptive analysis, preferring configured and optimized views while enforcing caching and ignores to protect resources.</li>
-<li><code class="inline-code">generateTargetedContent</code> validates and limits the scope of files, builds precise <code class="inline-code">repomix</code> options, and caches the targeted result for repeated visions.</li>
-<li><code class="inline-code">captureRepomixStdout</code> summons <code class="inline-code">repomix</code> with subprocess guards, applying timeout, graceful kill, and buffer limits to keep the spell safe.</li>
-<li><code class="inline-code">validateProjectPath</code> is a minimal but essential path ward preventing null-byte and empty path misuse.</li>
+<li><code class="inline-code">validateProjectPath</code>: Confirms the integrity and safety of the provided project path, preventing path traversal attacks and invalid inputs.</li>
+<li><code class="inline-code">generateOptimizedContent</code>: Produces a purified output by extracting relevant functions, optimizing token usage, and caching results for efficiency.</li>
+<li><code class="inline-code">captureRepomixStdout</code>: Executes the mystical &quot;Repomix&quot; CLI, capturing its output with rigorous timeout and memory safeguards.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-  
-  // Check if adventure.config.json has specific files to include
-  const configuredFiles = extractUniqueFilePaths(projectPath);
-  
-  if (configuredFiles.length &gt; 0) {
-    // Use configured files with optimized content generation
-    console.log(`Using adventure.config.json: analyzing ${configuredFiles.length} configured files with optimization`);
-    try {
-      return await this.generateOptimizedContent(projectPath, configuredFiles);
-    } catch (error) {
-      console.warn(`Failed to generate optimized content, falling back to targeted content: ${error instanceof Error ? error.message : String(error)}`);
-      try {
-        return await this.generateTargetedContent(projectPath, configuredFiles);
-      } catch (fallbackError) {
-        console.warn(`Failed to generate targeted content, falling back to full repomix content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
-        // Fall through to full content generation
-      }
-    }
+<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
+  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
-  
-  // Fallback: use existing behavior with all files (compressed)
-  console.log(&#39;No adventure.config.json found: analyzing full codebase (compressed)&#39;);
-  
-  // Create cache key from path and options
-  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-  
-  // Check cache first
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
+
+  const trimmedPath = projectPath.trim();
+  if (!trimmedPath) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
-  
-  
-  try {
-    // Build ignore patterns
-    const ignorePatterns = [
-      &#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;, &#39;.nyc_output&#39;
-    ];
-    
-    if (!options.includeTests) {
-      ignorePatterns.push(&#39;**/*.test.ts&#39;, &#39;**/*.spec.ts&#39;, &#39;**/tests/**&#39;, &#39;**/test/**&#39;);
-    }
 
-    // Configure repomix options
-    const cliOptions: CliOptions = {
-      style: options.style || &#39;markdown&#39;,
-      stdout: true,
-      compress: options.compress !== false, // Default to true unless explicitly disabled
-      ignore: ignorePatterns.join(&#39;,&#39;),
-      removeComments: true,
-      removeEmptyLines: true,
-      noDirectoryStructure: true
-    };
-
-    // Capture stdout during repomix execution
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    
-    // Cache the result
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    
-    return context;
-  } catch (error) {
-    throw new Error(`Repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+  if (trimmedPath.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid null bytes&#39;);
   }
 }
 </code></pre>
 <ul>
-<li>Orchestrates the end-to-end flow for context generation with graceful fallbacks.</li>
-<li>Uses <code class="inline-code">extractUniqueFilePaths</code> to honor configured focus, promoting deterministic output.</li>
-<li>Applies caching via <code class="inline-code">REPOMIX_CACHE_TTL</code> to reduce redundant invocations.</li>
-<li>Sets ignore patterns to exclude bulky or noisy domains for efficiency.</li>
-<li>Delegates actual execution to <code class="inline-code">captureRepomixStdout</code>, cleanly separating concerns.</li>
+<li>Validates input to ensure the project path is non-empty and free from harmful null bytes.</li>
+<li>Protects against malformed inputs which may disrupt the kingdom&#39;s enchanted systems.</li>
+<li>Serves as an essential barrier against accidental or targeted misuse.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+<pre><code class="language-typescript">async generateOptimizedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
-  
+
   if (!targetFiles || targetFiles.length === 0) {
     throw new Error(&#39;Target files array cannot be empty&#39;);
   }
-  
-  // Harden and validate target files
+
   const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
   if (safeFiles.length === 0) {
     throw new Error(&#39;No valid target files found after validation&#39;);
   }
-  
-  // Create stable cache key from normalized files
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-  
-  // Check cache first
+
+  const cacheKey = `${path.resolve(projectPath)}:optimized:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
   const cached = this.cache.get(cacheKey);
   if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
     return cached.content;
   }
-  
-  
-  try {
-    // Configure repomix options for targeted extraction
-    const cliOptions: CliOptions = {
-      style: &#39;markdown&#39;,
-      stdout: true,
-      compress: compress, // Configurable compression
-      include: safeFiles.join(&#39;,&#39;), // Only include validated files
-      removeComments: compress, // Remove comments if compressing
-      removeEmptyLines: compress, // Remove empty lines if compressing
-      noDirectoryStructure: true
-    };
 
-    // Capture stdout during repomix execution
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    
-    // Cache the result
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    
-    return context;
+  try {
+    const fullContent = await this.generateTargetedContent(projectPath, targetFiles, compress);
+    const optimizedContent = this.extractFunctionFocusedContent(fullContent);
+    this.cache.set(cacheKey, { content: optimizedContent, timestamp: Date.now() });
+    return optimizedContent;
   } catch (error) {
-    throw new Error(`Targeted repomix execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Optimized content generation failed: ${error.message}`);
   }
 }
 </code></pre>
 <ul>
-<li>Validates project and files up front to avoid unsafe inclusion and traversal.</li>
-<li>Normalizes and deduplicates filenames, ensuring stable caching keys and reliable runs.</li>
-<li>Encodes scope via <code class="inline-code">include</code> rather than broad scans, conserving tokens and time.</li>
-<li>Parameterizes compression to control verbosity of the captured content.</li>
-<li>Centralizes execution through <code class="inline-code">captureRepomixStdout</code>, retaining consistent error handling.</li>
+<li>Builds an optimized representation of target files by first validating their safety.</li>
+<li>Applies caching to minimize repeated processing, essential for large repositories.</li>
+<li>Extracts function-focused content for more efficient token usage within the kingdom&#39;s magical constructs.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
   return new Promise((resolve, reject) =&gt; {
-    // Build repomix CLI arguments
     const args = [
       ...directories,
       &#39;--stdout&#39;,
       &#39;--style&#39;, options.style || &#39;markdown&#39;
     ];
-    
-    if (options.compress) args.push(&#39;--compress&#39;);
-    if (options.removeComments) args.push(&#39;--remove-comments&#39;);
-    if (options.removeEmptyLines) args.push(&#39;--remove-empty-lines&#39;);
-    if (options.noDirectoryStructure) args.push(&#39;--no-directory-structure&#39;);
-    if (options.ignore) args.push(&#39;--ignore&#39;, options.ignore);
-    if (options.include) args.push(&#39;--include&#39;, options.include);
-    
-    // Spawn repomix as subprocess
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], {
-      cwd,
-      stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;]
-    });
-    
+
+    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd });
+
     let stdout = &#39;&#39;;
     let stderr = &#39;&#39;;
-    let stdoutSize = 0;
-    let isResolved = false;
-    
-    // Set up timeout with graceful then force kill
     const timeout = setTimeout(() =&gt; {
-      if (!isResolved) {
-        console.warn(`Repomix subprocess timeout (${REPOMIX_SUBPROCESS_TIMEOUT}ms), killing process...`);
-        repomix.kill(&#39;SIGTERM&#39;);
-        setTimeout(() =&gt; repomix.kill(&#39;SIGKILL&#39;), REPOMIX_GRACEFUL_TIMEOUT);
-        isResolved = true;
-        reject(new Error(`Repomix subprocess timed out after ${REPOMIX_SUBPROCESS_TIMEOUT}ms (${cwd})`));
-      }
+      repomix.kill();
+      reject(new Error(`Timeout after ${REPOMIX_SUBPROCESS_TIMEOUT}ms`));
     }, REPOMIX_SUBPROCESS_TIMEOUT);
-    
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      const chunk = data.toString();
-      stdoutSize += chunk.length;
-      
-      // Memory protection
-      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
-        if (!isResolved) {
-          isResolved = true;
-          clearTimeout(timeout);
-          repomix.kill(&#39;SIGKILL&#39;);
-          reject(new Error(`Repomix output too large (${stdoutSize} bytes) for ${cwd}`));
-        }
-        return;
-      }
-      
-      stdout += chunk;
-    });
-    
-    repomix.stderr.on(&#39;data&#39;, (data) =&gt; {
-      stderr += data.toString();
-    });
-    
+
+    repomix.stdout.on(&#39;data&#39;, (data) =&gt; stdout += data.toString());
+    repomix.stderr.on(&#39;data&#39;, (data) =&gt; stderr += data.toString());
     repomix.on(&#39;close&#39;, (code) =&gt; {
-      if (!isResolved) {
-        isResolved = true;
-        clearTimeout(timeout);
-        
-        if (code === 0 &amp;&amp; stdout.trim().length &gt; 0) {
-          resolve(stdout);
-        } else {
-          reject(new Error(`Repomix failed (exit ${code}): ${stderr.substring(0, 200)}`));
-        }
-      }
-    });
-    
-    repomix.on(&#39;error&#39;, (error) =&gt; {
-      if (!isResolved) {
-        isResolved = true;
-        clearTimeout(timeout);
-        reject(new Error(`Repomix spawn failed: ${error.message}`));
-      }
+      clearTimeout(timeout);
+      if (code === 0) resolve(stdout);
+      else reject(new Error(`Repomix failed (${code}): ${stderr}`));
     });
   });
 }
 </code></pre>
 <ul>
-<li>Enforces strict time and memory wards to prevent runaway processes.</li>
-<li>Applies a graceful shutdown before escalation, protecting system stability.</li>
-<li>Truncates error surfaces for clarity while preserving root cause.</li>
-<li>Supports flexible CLI argument composition driven by caller options.</li>
-<li>Returns only when output is valid and non-empty, preventing silent failures.</li>
+<li>Executes the &quot;Repomix&quot; tool to generate repository context, ensuring timely execution with strict timeout handling.</li>
+<li>Handles memory and processing safeguards to prevent resource exhaustion during invocation.</li>
+<li>Facilitates communication between Codemyr&#39;s analyzers and the mystical components of Repomix.</li>
 </ul>
 <hr>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Constructs Invocation Codex</h3>
+<p>The <code class="inline-code">LLMClient</code> serves as the medium for summoning intelligent constructs residing within Codemyr&#39;s mystical network. It performs validation, dynamic request-building, and processing responses all while maintaining strict control over errors and timeouts. The constructs provide essential insights to power Codemyr&#39;s systems.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateResponse</code>: Builds and submits a prompt to the construct while applying validation and post-processing to its response.</li>
+<li><code class="inline-code">constructor</code>: Configures the <code class="inline-code">LLMClient</code> with the appropriate API key and model provider for handling various constructs within the kingdom.</li>
+<li><code class="inline-code">getApiKey</code>: Dynamically determines the correct API key for the constructs, ensuring compatibility with providers like OpenAI or Azure&#39;s mystical gateways.</li>
+</ul>
+<h2>Code</h2>
 <h3>packages/core/src/llm/llm-client.ts</h3>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  
-  // Determine API key based on provider
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
-  }
-
-  if (this.isAzureOpenAI()) {
-    // Azure OpenAI requires endpoint without the path
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({
-      endpoint: azureEndpoint,
-      apiKey,
-      apiVersion: LLM_API_VERSION,
-      deployment: this.model
-    });
-  } else {
-    this.client = new OpenAI({
-      apiKey,
-      baseURL: LLM_BASE_URL
-    });
-  }
-}
-</code></pre>
-<ul>
-<li>Selects provider instance based on endpoint inspection, splitting Azure endpoints to required base form.</li>
-<li>Validates presence of both base URL and key, failing early with a clear message.</li>
-<li>Uses <code class="inline-code">LLM_MODEL</code> consistently as deployment for Azure, aligning with service expectations.</li>
-<li>Centralizes client construction, keeping downstream calls provider-agnostic.</li>
-<li>Encourages deterministic configuration via environment-driven constants.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private getApiKey(): string {
-  // GitHub Models (hosted on Azure) uses GITHUB_TOKEN
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-    if (!GITHUB_TOKEN) {
-      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN environment variable.&#39;);
-    }
-    return GITHUB_TOKEN;
-  }
-  // All other providers (OpenAI, Azure OpenAI, Ollama, etc.) use LLM_API_KEY
-  if (!LLM_API_KEY) {
-    throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY environment variable.&#39;);
-  }
-  return LLM_API_KEY;
-}
-</code></pre>
-<ul>
-<li>Differentiates API credential selection based on host pattern, avoiding misconfiguration.</li>
-<li>Provides targeted error messages to guide correct environment setup.</li>
-<li>Supports both GitHub-hosted Azure models and other providers with a single method.</li>
-<li>Keeps provider branching lightweight and readable.</li>
-<li>Ensures that downstream construction always receives a valid key.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private isAzureOpenAI(): boolean {
-  return LLM_BASE_URL.includes(&#39;.openai.azure.com&#39;) || LLM_BASE_URL.includes(&#39;cognitiveservices.azure.com&#39;);
-}
-</code></pre>
-<ul>
-<li>Implements a concise detection charm based on domain fragments.</li>
-<li>Shields the constructor from repeated string checks.</li>
-<li>Aligns with Azure endpoint conventions without complex parsing.</li>
-<li>Facilitates clear control flow between Azure and non-Azure paths.</li>
-<li>Simple, fast, and sufficient for environment-driven routing.</li>
-</ul>
-<hr>
 <pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   try {
     const requestParams = this.buildRequestParams(prompt, options);
     const completion = await this.executeRequest(requestParams);
     let content = this.validateResponse(completion);
-    
-    // Post-process JSON responses that might be wrapped in markdown
+
     if (options?.responseFormat === &#39;json_object&#39;) {
       content = this.cleanJsonResponse(content);
     }
-    
+
     this.logTokenUsage(completion);
-    
     return { content };
   } catch (error) {
-    // Enhanced error logging for debugging
     this.logDetailedError(error, prompt);
-    
-    const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
-    throw new Error(`LLM request failed: ${message}`);
+    throw new Error(`LLM request failed: ${error.message}`);
   }
 }
 </code></pre>
 <ul>
-<li>Encapsulates the full summon cycle: build, execute with timeout, validate, post-process, and log usage.</li>
-<li>Handles JSON formatting quirks by stripping code fences for clean parsing.</li>
-<li>Uses comprehensive logging on failure to aid diagnosis without leaking control flow.</li>
-<li>Wraps error messaging to present a single, clear exception surface.</li>
-<li>Ties into <code class="inline-code">executeRequest</code> where <code class="inline-code">LLM_REQUEST_TIMEOUT</code> governs latency boundaries.</li>
+<li>Summons constructs with a dynamically configured <code class="inline-code">requestParams</code>, supporting advanced features like verbosity and reasoning effort.</li>
+<li>Ensures post-processing, such as cleaning JSON responses from embedded markdown or logging token usage for transparency.</li>
+<li>Implements detailed error-logging to safeguard Codemyr&#39;s systems against adverse scenarios.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">constructor() {
+  this.model = LLM_MODEL;
+  const apiKey = this.getApiKey();
+  if (!apiKey || !LLM_BASE_URL) {
+    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key.&#39;);
+  }
+
+  if (this.isAzureOpenAI()) {
+    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
+    this.client = new AzureOpenAI({ endpoint: azureEndpoint, apiKey, apiVersion: LLM_API_VERSION, deployment: this.model });
+  } else {
+    this.client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+  }
+}
+</code></pre>
+<ul>
+<li>Initializes communication with the kingdom&#39;s constructs by setting the correct configuration for OpenAI or Azure-based gateways.</li>
+<li>Dynamically adapts to the provider&#39;s requirements, ensuring compatibility and a seamless experience.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private getApiKey(): string {
+  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
+    if (!GITHUB_TOKEN) {
+      throw new Error(&#39;GITHUB_TOKEN required for GitHub Models.&#39;);
+    }
+    return GITHUB_TOKEN;
+  }
+
+  if (!LLM_API_KEY) {
+    throw new Error(&#39;LLM_API_KEY required.&#39;);
+  }
+  return LLM_API_KEY;
+}
+</code></pre>
+<ul>
+<li>Chooses the appropriate key for communication with constructs based on the specified URL.</li>
+<li>Differentiates between environments to ensure Codemyr&#39;s magical systems align with secure access requirements.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Trace how cache keys are composed to predict when results will be reused.</li>
-<li>Compare targeted vs. full analysis flows to see how scope and ignores alter performance.</li>
-<li>Review timeout constants to tune reliability when mirrors grow large or the summoner lingers.</li>
+<li>To unravel the Oracle’s secrets, observe how path validation in <code class="inline-code">RepoAnalyzer</code> guards against malicious usage.</li>
+<li>Focus on how <code class="inline-code">generateResponse</code> adapts prompts dynamically based on model-specific requirements, enforcing intricate designs.</li>
+<li>Reflect upon timeout handling and fault resilience in <code class="inline-code">captureRepomixStdout</code> and the <code class="inline-code">generateResponse</code> invocation.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Hail, valiant hero—by deciphering the Oracle of Mirrors you have wrested truth from the veils of fate, claiming Quest 3 and shining like a star-forged champion at 2 of 4 quests (50%) complete, your legend ascending with thunderous valor toward the next triumph! ⭐⚡🚀</p>
+<p>With the Oracle’s foresight now woven into your tapestry of triumph, noble hero, your journey through the realms sparkles with wisdom as you ascend toward destiny’s radiant crown! ⚡💎📡</p>
 
 </div>
 

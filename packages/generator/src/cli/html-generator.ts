@@ -17,6 +17,8 @@ import { AdventureManager } from '@ai-repo-adventures/core/adventure';
 import { getAllThemes, getThemeByKey, AdventureTheme, parseAdventureConfig, LLM_MODEL } from '@ai-repo-adventures/core/shared';
 import { createProjectInfo } from '@ai-repo-adventures/core';
 import { TemplateEngine } from './template-engine.js';
+import { AssetManager } from './asset-manager.js';
+import { ThemeManager } from './theme-manager.js';
 
 interface CustomThemeData {
   name: string;
@@ -391,8 +393,8 @@ class HTMLAdventureGenerator {
    */
   private getGitHubLogo(): string {
     return this.isLightTheme(this.selectedTheme) 
-      ? 'assets/images/github-mark.svg'          // Dark logo for light themes
-      : 'assets/images/github-mark-white.svg';   // White logo for dark themes
+      ? 'assets/shared/github-mark.svg'          // Dark logo for light themes
+      : 'assets/shared/github-mark-white.svg';   // White logo for dark themes
   }
 
   /**
@@ -600,17 +602,29 @@ class HTMLAdventureGenerator {
   private copyImages(): void {
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
     const sourceImagesDir = path.join(__dirname, 'assets', 'images');
-    const targetImagesDir = path.join(this.outputDir, 'assets','images');
+    const sourceSharedDir = path.join(__dirname, 'assets', 'shared');
+    const targetImagesDir = path.join(this.outputDir, 'assets', 'images');
+    const targetSharedDir = path.join(this.outputDir, 'assets', 'shared');
 
     try {
+      // Copy theme-specific images
       if (fs.existsSync(sourceImagesDir)) {
-        // Ensure target directory exists
         fs.mkdirSync(targetImagesDir, { recursive: true });
-        
         const imageFiles = fs.readdirSync(sourceImagesDir);
         imageFiles.forEach(file => {
           const sourcePath = path.join(sourceImagesDir, file);
           const targetPath = path.join(targetImagesDir, file);
+          fs.copyFileSync(sourcePath, targetPath);
+        });
+      }
+
+      // Copy shared images 
+      if (fs.existsSync(sourceSharedDir)) {
+        fs.mkdirSync(targetSharedDir, { recursive: true });
+        const sharedFiles = fs.readdirSync(sourceSharedDir);
+        sharedFiles.forEach(file => {
+          const sourcePath = path.join(sourceSharedDir, file);
+          const targetPath = path.join(targetSharedDir, file);
           fs.copyFileSync(sourcePath, targetPath);
         });
       }
@@ -1086,7 +1100,7 @@ class HTMLAdventureGenerator {
             </div>
             <div class="nav-right">
                 <a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/images/github-mark.svg" alt="GitHub" width="24" height="24">
+                    <img src="assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
             </div>
         </div>
@@ -1185,15 +1199,25 @@ class HTMLAdventureGenerator {
         // Ensure target directory exists
         fs.mkdirSync(targetImagesDir, { recursive: true });
         
-        // Copy specific global images
-        const globalImages = ['ai-adventures.png', 'github-mark.svg', 'github-mark-white.svg'];
+        // Copy global shared images to shared directory  
+        const globalSharedDir = path.join(this.outputDir, 'assets', 'shared');
+        fs.mkdirSync(globalSharedDir, { recursive: true });
+        
+        const globalImages = ['github-mark.svg', 'github-mark-white.svg'];
         globalImages.forEach(file => {
-          const sourcePath = path.join(sourceImagesDir, file);
-          const targetPath = path.join(targetImagesDir, file);
+          const sourcePath = path.join(__dirname, 'assets', 'shared', file);
           if (fs.existsSync(sourcePath)) {
+            const targetPath = path.join(globalSharedDir, file);
             fs.copyFileSync(sourcePath, targetPath);
           }
         });
+
+        // Copy header image for theme selection page
+        const headerImageSource = path.join(__dirname, 'assets', 'images', 'ai-adventures.png');
+        if (fs.existsSync(headerImageSource)) {
+          const headerImageTarget = path.join(targetImagesDir, 'ai-adventures.png');
+          fs.copyFileSync(headerImageSource, headerImageTarget);
+        }
       }
     } catch (error) {
       console.log(chalk.yellow('⚠️ Warning: Could not copy global images'));

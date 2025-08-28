@@ -194,7 +194,6 @@
     }
 
     init() {
-      this.createFloatingButton();
       this.createNavigationOverlay();
       this.enhanceQuestNavigation();
       this.attachEventListeners();
@@ -376,11 +375,9 @@
     }
 
     attachEventListeners() {
-      const button = document.getElementById('quest-navigator-btn');
       const overlay = document.getElementById('quest-navigator-overlay');
       const closeBtn = overlay.querySelector('.quest-nav-close');
 
-      button.addEventListener('click', () => this.openNavigator());
       closeBtn.addEventListener('click', () => this.closeNavigator());
       
       overlay.addEventListener('click', (e) => {
