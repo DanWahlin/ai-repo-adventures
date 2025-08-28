@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 2: The Cosmic Storygen Engine - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader for syntax highlighting
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Trigger Prism highlighting after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="nav-left">
+                <a href="index.html">Galactic Repository Chronicles</a>
+            </div>
+            <div class="nav-middle">
+            </div>
+            <div class="nav-right">
+                
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <img src="assets/images/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 2: The Cosmic Storygen Engine</h1>
+<hr>
+<p>The starship <em>Code Voyager</em> has ventured deeper into the spiraling repository folds of the Repository Nebula. As your brave crew surveys this realm of infinite branching paths and dense data star clusters, a glimmering system is detected—a long-dormant artifact known as the <em>Cosmic Storygen Engine</em>. This legendary computational forge is said to design brilliant quests from disorder, translating rivers of code into cohesive adventures. However, its intricate mechanisms demand calibration and understanding. Now, your task is to decode the processes that breathe life into galactic storytelling.</p>
+<p>Prepare to unveil the secrets hidden in the mechanisms of <em>Cosmic Storygen Engine</em>. Will you align the stars of logic, or will the engine’s cosmic story unravel into entropy?</p>
+<p><strong>Adventure Commences</strong> – Investigate and conquer the mysteries of these celestial files.</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Storygen Alignment</strong>: How does <code class="inline-code">generateStoryAndQuests</code> coordinate project information, themes, and the generation of quests?</li>
+<li>⚡ <strong>Calibration Protocols</strong>: What role does <code class="inline-code">generateQuestContent</code> play in crafting targeted narratives, and how does it integrate repository data for quest creation?</li>
+<li>🛡️ <strong>Config Orbital Mappings</strong>: How does <code class="inline-code">parseAdventureConfig</code> ensure safe loading and integration of external configuration files for quest generation?</li>
+</ul>
+<h2>File Exploration</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>: Story generation logic</h3>
+<p>The <em>Cosmic Storygen Engine’s</em> core directive lies here. This file is responsible for generating overarching narratives and precise quests. It dynamically pulls repository contexts, applies themes, and constructs galactic adventures through logical pipelines.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateStoryAndQuests</code> synthesizes themes, project information, and repository data to produce a cohesive storyline while mapping out quests.</li>
+<li><code class="inline-code">generateQuestContent</code> focuses on creating in-depth content for specific quests, tailoring experiences to match selected files, themes, and positions.</li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code> processes responses from an external LLM, aligning its output with the engine’s structured expectations for consistency.</li>
+</ul>
+<h2>Code</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a></h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+    this.currentProject = projectInfo;
+    this.projectPath = projectPath;
+
+    const validatedTheme = this.validateTheme(theme);
+    return await this.generateWithLLM(projectInfo, validatedTheme);
+}
+</code></pre>
+<ul>
+<li>Synthesizes project context (<code class="inline-code">projectInfo</code>) with user-selected themes.</li>
+<li>Introduces dynamic path handling (<code class="inline-code">projectPath</code>) to align repository data.</li>
+<li>Utilizes <code class="inline-code">generateWithLLM</code> for generating actual stories through a structured pipeline.</li>
+<li>Validates themes to ensure supported aesthetic consistency, reducing potential errors.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async generateQuestContent(
+    quest: Quest,
+    theme: AdventureTheme,
+    codeContent: string,
+    questPosition?: number,
+    totalQuests?: number
+): Promise&lt;QuestContent&gt; {
+    const prompt = loadQuestContentPrompt({
+        theme,
+        adventureTitle: quest.title,
+        codeContent,
+        storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
+        questPosition,
+        totalQuests
+      });
+
+    const response = await this.withTimeout(
+      this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+    );
+
+    return {
+      adventure: response.content.trim(),
+      fileExploration: &#39;&#39;,
+      codeSnippets: [],
+      hints: []
+    };
+}
+</code></pre>
+<ul>
+<li>Constructs focused content prompts enabling tailored responses for quests.</li>
+<li>Leverages position arguments (<code class="inline-code">questPosition</code>, <code class="inline-code">totalQuests</code>) for adaptive storytelling.</li>
+<li>Employs LLM calls effectively while enforcing timeout boundaries.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
+    const tokens = marked.lexer(markdownContent);
+    let title = &#39;&#39;;
+    let story = &#39;&#39;;
+    const quests: Quest[] = [];
+    for (const token of tokens) {
+        if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 1) {
+            title = token.text;
+        } else if (token.type === &#39;paragraph&#39;) {
+            story += token.text + &#39;\n\n&#39;;
+        } else if (token.type === &#39;list&#39;) {
+            for (const item of token.items) {
+                quests.push({ id: `quest-${quests.length + 1}`, ...item });
+            }
+        }
+    }
+    return { title, story, quests };
+}
+</code></pre>
+<ul>
+<li>Converts unstructured markdown input into a usable <code class="inline-code">StoryResponse</code> format.</li>
+<li>Processes headers, paragraphs, and lists to identify distinct story elements.</li>
+<li>Delivers a reliable mechanism for extracting actionable metadata while enforcing schema with <code class="inline-code">zod</code>.</li>
+</ul>
+<hr>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Configuration utility</h3>
+<p>This file ensures correct setup and integration of the adventure configuration files by extracting, validating, and parsing external data for the quest engine.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code> loads and parses the shared adventure configuration data into usable structures.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code> sifts through all nested paths in the adventure configuration to gather file references.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code> optimizes the parsed configuration data for minimalistic guidance.</li>
+</ul>
+<h2>Code</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+    const raw = loadAdventureConfig(projectPath);
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+</code></pre>
+<ul>
+<li>Reads external configuration content through <code class="inline-code">loadAdventureConfig</code>.</li>
+<li>Ensures safety with JSON parsing and provides fallback mechanisms for invalid formats.</li>
+<li>Delivers reusable structures to be incorporated into quest generation.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+    const parsed = parseAdventureConfig(projectPath);
+    if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+    const unique = new Set&lt;string&gt;();
+    const stack: any[] = [parsed];
+    while (stack.length) {
+        const node = stack.pop();
+        if (node.path &amp;&amp; fs.existsSync(path.resolve(projectPath, node.path.trim()))) {
+            unique.add(node.path.trim());
+        }
+        Object.values(node).forEach(child =&gt; stack.push(child));
+    }
+    return Array.from(unique);
+}
+</code></pre>
+<ul>
+<li>Traverses deeply nested configuration structures to extract all unique file paths.</li>
+<li>Validates paths with <code class="inline-code">fs.existsSync</code> to ensure files exist.</li>
+<li>Mitigates redundancy by leveraging <code class="inline-code">Set</code> for unique data collection.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+    const parsed = parseAdventureConfig(projectPath);
+    if (!parsed || typeof parsed !== &#39;object&#39;) return &#39;&#39;;
+
+    const adventure = (parsed as any).adventure;
+    if (!adventure || !Array.isArray(adventure.quests)) return &#39;&#39;;
+    return adventure.quests
+        .map(q =&gt; `### ${q.title}\nFiles: ${q.files.map((f: any) =&gt; f.path).join(&#39;, &#39;)}\n`)
+        .join(&#39;\n&#39;);
+}
+</code></pre>
+<ul>
+<li>Formats adventure configuration into a concise structure for LLM prompts.</li>
+<li>Strips redundant data while highlighting critical details such as file paths and quest titles.</li>
+<li>Prepares adaptive content for context-sensitive quest crafting.</li>
+</ul>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>🚀 <strong>Begin Analysis Tip</strong>: Start by observing how <code class="inline-code">generateStoryAndQuests</code> divides responsibilities between the LLM, themes, and project context.</li>
+<li>🌌 <strong>Explore Metadata</strong>: Use <code class="inline-code">parseAdventureConfig</code> to trace how configuration data is validated and fed into the quest generation engine.</li>
+<li>🛰️ <strong>Focus on Integration</strong>: Watch how story elements from <code class="inline-code">StoryGenerator</code> connect to external files referenced in the configuration utilities.</li>
+</ul>
+<hr>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Stellar work, Cadet! You&#39;ve successfully fired up the Cosmic Storygen Engine and launched 20% into your epic quest journey—keep that momentum blazing like a supernova! ⭐🚀⚡</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1</a>
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
+        </div>
+    </footer>
+    
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
+    <script src="assets/quest-navigator.js"></script>
+</body>
+</html>

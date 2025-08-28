@@ -1,13 +1,13 @@
-# Secrets of the Lost Codebase
+# Stellar Chronicles: The Codebase Odyssey
 
-In the heart of a vast digital jungle, you stumble upon the "Temple of Lost Logic," an ancient repository of knowledge guarded by cryptic glyphs and forgotten algorithms. This sacred trove contains wisdom to harness the power of the Machine Oracle, enabling adventurers to generate dynamic tales and analyze content with precision. The temple, however, is shrouded in layers of puzzles—each requiring you to explore relics of configuration, computational rituals, and powerful tools to unveil the codebase’s purpose.
+In a distant galaxy, the starship *Code Voyager* embarks on an interstellar mission to unlock the secrets of automated coding adventures. Equipped with the latest AI-powered engines and an eclectic crew of explorers, your mission is to map new cosmic realms of collaborative programming. From the ship’s central AI reactor to its vast data archives, every system on board is a vital piece of solving the ultimate enigma: transforming codebases into thrilling, interactive quests for developers across the galaxy.
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: Unveiling the Oracle's Voice** - Explore the MCP tool interface housed in `packages/mcp/src/server.ts` and `packages/mcp/src/tools.ts` to unlock the rituals for initializing adventures and managing your journey.
-**Quest 2: Forging the Threads of Story** - Decipher the secrets in `packages/core/src/adventure/adventure-manager.ts`, `packages/core/src/adventure/story-generator.ts`, and `packages/core/src/shared/adventure-config.ts` to learn the rituals for generating and structuring intricate quests.
-**Quest 3: Analyzing the Hidden Glyphs** - Uncover ancient analysis techniques within `packages/core/src/analyzer/repo-analyzer.ts` and `packages/core/src/llm/llm-client.ts` to train your understanding of the Machine Oracle and extract its wisdom.
-**Quest 4: Configuring the Path of Knowledge** - Study the eternal scripts in `packages/core/src/shared/config.ts`, `packages/core/src/shared/theme.ts`, and `packages/core/src/shared/input-validator.ts` to master the foundation of themes, validate inputs, and set up your journey.
-**Quest 5: Mapping the Sacred Blueprints** - Unlock the mysteries in `packages/core/src/shared/adventure-config.ts` to understand the layouts of ancient configuration and the pathways for formatting content.
+**Quest 1: Navigating the MCP Command Interface** - Explore the *MCP Terminal*, where the **server.ts** and **tools.ts** files power starship operations, hosting vital commands for mission orchestration and quest management.
+**Quest 2: Forging Galactic Narratives** - Journey to the *Quest Forge*, where the **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** files work together to generate new adventures and synthesize stories from mission data.
+**Quest 3: Probing the Analysis Core** - Investigate the *Cosmic Analyzers*, where the **repo-analyzer.ts** and **llm-client.ts** files process galactic data pipelines and interface with the computational brain of starship intelligence.
+**Quest 4: Calibrating Mission Systems** - Run diagnostics on *Mission Control*, focusing on the **config.ts**, **theme.ts**, and **input-validator.ts** files to configure stellar systems, validate exploration data, and enable thematic adventures.
+**Quest 5: Charting Configuration Nebulae** - Survey the *Configuration Nebula*, diving into the **adventure-config.ts** file to parse and map mission directives that guide the *Code Voyager*’s path through unknown galaxies.
