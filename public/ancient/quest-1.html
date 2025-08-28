@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: MCP Tool Interface - Repo Adventure</title>
+    <title>Quest 1: Gatekeepers of the Outer Temple - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Chronicles of the Code Pyramid</a>
+                <a href="index.html">The Codex of the Repository Pyramid</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,28 +45,57 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: MCP Tool Interface</h1>
+    <h1>Quest 1: Gatekeepers of the Outer Temple</h1>
 <hr>
-<p>Beneath the sand, you open the antechamber of the code pyramid. Obsidian panels hum with the Model Context Protocol, while bronze conduits whisper to tool idols. These gates coordinate the expedition: one panel lists sacred implements, another validates offerings, a third awakens transports to carry messages through the chamber’s breath. Carved beside them, a final tablet commands orderly closure of the site. Study these inscriptions to learn how the MCP antechamber marshals tools and breathes life into your journey through the repository’s buried wisdom.</p>
+<p>Beneath the stepped pyramid, you approach the gatekeepers who usher seekers into the archive’s outer halls. Torches flicker over etched runes that speak of <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a> invoking ceremonial patterns and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a> arranging sacred implements. As the sand settles, you witness <code class="inline-code">RepoAdventureServer</code> prepare invocations, listing and calling tools through ritual schemas, while the tool registry catalogs quests awaiting brave minds. The air thrums with initialization chants and safe passage wards. You step forward, ready to read the carvings and discern how the gates open to adventures within.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Catalog Stones: How does <code class="inline-code">setupHandlers</code> transform Zod schemas into JSON Schemas for dynamic tool listing, and what pattern is used to map tool registry entries to protocol responses?</li>
-<li>⚡ Antechamber Awakening: In <code class="inline-code">run</code>, why is <code class="inline-code">repoAnalyzer.preGenerate</code> called after establishing the <code class="inline-code">StdioServerTransport</code>, and how does this background step change the expedition’s readiness?</li>
-<li>🛡️ Guardian Seals: How do <code class="inline-code">setupHandlers</code> and <code class="inline-code">main</code> divide responsibility for parameter validation, error normalization with <code class="inline-code">McpError</code>, and safe shutdown during unexpected signals and rejections?</li>
+<li>🔍 Gate Sigils Mapping: How does <code class="inline-code">setupHandlers</code> transform Zod schemas into JSON Schema and assemble the dynamic tool list used by the gate?</li>
+<li>⚡ Invocation Pathways: When a tool is invoked, how does the flow in <code class="inline-code">setupHandlers</code> validate inputs and route execution to the correct <code class="inline-code">handler</code>?</li>
+<li>🛡️ Ward of Continuance: How does <code class="inline-code">main</code> arrange signal handling and rejection logging to ensure the temple remains stable, and how does <code class="inline-code">run</code> warm the cache through <code class="inline-code">repoAnalyzer.preGenerate</code>?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP antechamber that lists, validates, executes tools, then opens the transport and prepares repository caches</h3>
-<p>This chamber initializes a <code class="inline-code">Server</code> from the MCP SDK and equips it with handlers to both list tools and execute them securely. Within <code class="inline-code">setupHandlers</code>, the code dynamically enumerates all available tools from <code class="inline-code">tools</code>, converting each tool’s Zod <code class="inline-code">schema</code> into a JSON Schema using <code class="inline-code">zodToJsonSchema</code>. This ensures MCP clients receive precise <code class="inline-code">inputSchema</code> definitions at runtime. For execution, it validates incoming arguments via <code class="inline-code">schema.safeParse</code>, gathers all validation issues into a single <code class="inline-code">McpError</code> with <code class="inline-code">ErrorCode.InvalidParams</code>, and otherwise dispatches to the tool’s <code class="inline-code">handler</code>. Unknown tools are guarded with <code class="inline-code">ErrorCode.MethodNotFound</code>, and any unexpected exceptions are normalized into <code class="inline-code">ErrorCode.InternalError</code>, preserving a consistent protocol surface. The <code class="inline-code">run</code> method constructs a <code class="inline-code">StdioServerTransport</code> and connects, then triggers <code class="inline-code">repoAnalyzer.preGenerate(process.cwd())</code> to warm caches in the background, reducing future latency for repository analysis while not blocking the server. The <code class="inline-code">main</code> function sets signal traps for <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> that perform <code class="inline-code">repoAnalyzer.cleanup()</code> before exit, and logs unhandled promise rejections without forcing shutdown, favoring resilience. Together, these inscriptions form a robust entryway: capability discovery, strict parameter validation, safe execution, transport binding, precomputation for performance, and graceful lifecycle control.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The ceremonial gate server that lists tools, validates invocations, executes handlers, and initializes the transport with warm-up rites</h3>
+<p>Within this hall, <code class="inline-code">RepoAdventureServer</code> crafts a <code class="inline-code">Server</code> instance that bears its name and a clear purpose. The private <code class="inline-code">setupHandlers</code> binds two rituals: one for listing the available implements and another for calling a tool by name with guarded correctness. For listing, each entry in <code class="inline-code">tools</code> is shaped into a record with <code class="inline-code">name</code>, <code class="inline-code">description</code>, and an <code class="inline-code">inputSchema</code> forged using <code class="inline-code">zodToJsonSchema</code> with <code class="inline-code">target</code> set to <code class="inline-code">jsonSchema7</code> and <code class="inline-code">$refStrategy</code> set to <code class="inline-code">none</code>, ensuring clear schematics without nested references. For invocation, <code class="inline-code">setupHandlers</code> checks the tool’s presence, employs <code class="inline-code">tool.schema.safeParse</code> to validate the parameters, aggregates Zod issue paths into readable error messages, and invokes <code class="inline-code">tool.handler</code> with trusted data. Errors are wrapped in <code class="inline-code">McpError</code> with precise <code class="inline-code">ErrorCode</code> selections, distinguishing unknown methods, invalid parameters, and internal failures. The <code class="inline-code">run</code> rite summons a <code class="inline-code">StdioServerTransport</code>, connects the server, and triggers <code class="inline-code">repoAnalyzer.preGenerate(process.cwd())</code> to prime the cache while the gate waits. The <code class="inline-code">main</code> ceremony registers graceful shutdown via signals and a watcher for <code class="inline-code">unhandledRejection</code> to log and continue, preventing collapse during recoverable turbulence, then starts the server.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code> builds dynamic tool discovery and safe execution, converting Zod schemas to JSON Schema and enforcing strict parameter validation with unified MCP errors.</li>
-<li><code class="inline-code">run</code> activates the stdio transport and warms repository analysis caches via <code class="inline-code">repoAnalyzer.preGenerate</code>, improving responsiveness without blocking the gate.</li>
-<li><code class="inline-code">main</code> orchestrates lifecycle: constructs the server, attaches graceful shutdown on signals, logs unhandled rejections, and boots the antechamber with resilience.</li>
+<li><code class="inline-code">setupHandlers</code> registers dynamic listing and invocation handlers, converting Zod schemas to JSON Schema and enforcing strict validation before executing <code class="inline-code">handler</code>.</li>
+<li><code class="inline-code">run</code> activates <code class="inline-code">StdioServerTransport</code>, connects the server, and performs cache warm-up with <code class="inline-code">repoAnalyzer.preGenerate</code> for smoother early journeys.</li>
+<li><code class="inline-code">main</code> orchestrates startup with graceful shutdown on signals and logs unhandled rejections without halting the server, preserving stability.</li>
+</ul>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The registry chamber cataloging quest implements for discovery by the gate server</h3>
+<p>This vault organizes the implements of exploration. It imports <code class="inline-code">adventureManager</code> from <code class="inline-code">@ai-repo-adventures/core/adventure</code> for shared state and orchestrations used by tools in deeper corridors, then collects four implements from local tool modules: <code class="inline-code">startAdventure</code>, <code class="inline-code">chooseTheme</code>, <code class="inline-code">exploreQuest</code>, and <code class="inline-code">viewProgress</code>. To match the ceremonial names expected by the gate, it re-exports them as <code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, and <code class="inline-code">view_progress</code>. Finally, it assembles these exports into a single <code class="inline-code">tools</code> object that the server consumes. This registry provides the authoritative listing for <code class="inline-code">setupHandlers</code> to announce to travelers through <code class="inline-code">ListToolsRequestSchema</code> and to execute via <code class="inline-code">CallToolRequestSchema</code>. Each tool exposes a <code class="inline-code">description</code>, a Zod <code class="inline-code">schema</code>, and a <code class="inline-code">handler</code> that the server depends upon for proper validation and execution. The file’s structure ensures clarity of ownership, simplifies discovery, and prevents drift between naming in exports and the server’s dynamic enumeration. The result is a clean, predictable interface: a single source of truth describing what can be summoned, how its inputs must be shaped, and where execution should be directed when the gatekeepers approve passage.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code> the handler behind <code class="inline-code">start_adventure</code>, relied upon by the server to kick off analysis and initial narrative setup.</li>
+<li><code class="inline-code">choose_theme.handler</code> the handler behind <code class="inline-code">choose_theme</code>, invoked after adventure start to fix a theme and refine generated content.</li>
+<li><code class="inline-code">explore_quest.handler</code> the handler behind <code class="inline-code">explore_quest</code>, enabling repeated, focused exploration of specific challenges.</li>
+<li><code class="inline-code">view_progress.handler</code> the handler behind <code class="inline-code">view_progress</code>, returning status and remaining paths to traverse.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">  private setupHandlers() {
+<pre><code class="language-typescript">class RepoAdventureServer {
+  private server: Server;
+
+  constructor() {
+    this.server = new Server(
+      {
+        name: &#39;repo-adventure&#39;,
+        version: &#39;1.0.0&#39;,
+        description: &#39;A gamified MCP server for exploring code repositories through interactive storytelling&#39;
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.setupHandlers();
+  }
+
+  private setupHandlers() {
     // Dynamic tool listing
     this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
       const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
@@ -115,16 +144,8 @@
       }
     });
   }
-</code></pre>
-<ul>
-<li>This code enumerates <code class="inline-code">tools</code> to construct protocol-compliant tool listings, translating each Zod <code class="inline-code">schema</code> via <code class="inline-code">zodToJsonSchema</code> for accurate <code class="inline-code">inputSchema</code>.</li>
-<li>It validates inputs with <code class="inline-code">schema.safeParse</code>, aggregating all Zod issues into a single <code class="inline-code">McpError</code> for clear client feedback.</li>
-<li>It normalizes errors using MCP <code class="inline-code">ErrorCode</code> values, ensuring consistent error semantics across unknown tools, invalid parameters, and internal failures.</li>
-<li>The handlers are registered with <code class="inline-code">this.server.setRequestHandler</code>, binding MCP request schemas to logic for discovery and execution.</li>
-<li>The approach centralizes validation and error handling in one chamber, reducing duplication and improving reliability.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">  async run() {
+
+  async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
@@ -135,16 +156,27 @@
     console.error(`Pre-generating repomix content for project at ${projectPath}...`);
     repoAnalyzer.preGenerate(projectPath);
   }
+}
 </code></pre>
 <ul>
-<li>Core function that activates the stdio transport and connects the MCP server, making the antechamber responsive.</li>
-<li>Uses <code class="inline-code">repoAnalyzer.preGenerate</code> after connection to warm caches without blocking initial readiness, improving later tool performance.</li>
-<li>Logs status to <code class="inline-code">stderr</code>, suitable for keeping protocol stdout channels clean.</li>
-<li>Separates transport activation from background preparation, clarifying responsibilities.</li>
-<li>Illustrates a performance-conscious design: non-blocking precomputation that benefits subsequent operations.</li>
+<li>This code defines the gate server and its handlers, listing tools via <code class="inline-code">ListToolsRequestSchema</code> and executing them via <code class="inline-code">CallToolRequestSchema</code>.</li>
+<li>It converts Zod schemas to JSON Schema with <code class="inline-code">zodToJsonSchema</code> using <code class="inline-code">jsonSchema7</code> and no <code class="inline-code">$ref</code>, ensuring portable schema payloads.</li>
+<li>It validates inputs using <code class="inline-code">tool.schema.safeParse</code>, aggregating human-readable error messages for <code class="inline-code">InvalidParams</code>.</li>
+<li>It distinguishes <code class="inline-code">MethodNotFound</code>, <code class="inline-code">InvalidParams</code>, and <code class="inline-code">InternalError</code> through <code class="inline-code">McpError</code> for precise client-facing feedback.</li>
+<li>The <code class="inline-code">run</code> method wires <code class="inline-code">StdioServerTransport</code> and warms caches using <code class="inline-code">repoAnalyzer.preGenerate</code> to reduce first-run latency.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async function main() {
+<pre><code class="language-typescript">function gracefulShutdown() {
+  console.error(&#39;\nShutting down MCP server...&#39;);
+  try {
+    repoAnalyzer.cleanup();
+  } catch (e) {
+    console.error(&#39;Cleanup error:&#39;, e);
+  }
+  process.exit(0);
+}
+
+async function main() {
   try {
     const server = new RepoAdventureServer();
     
@@ -173,11 +205,11 @@ main().catch((error) =&gt; {
 });
 </code></pre>
 <ul>
-<li>Entrypoint that constructs the server, attaches signal-based shutdown hooks, and begins execution with <code class="inline-code">server.run()</code>.</li>
-<li>Uses <code class="inline-code">gracefulShutdown</code> to ensure <code class="inline-code">repoAnalyzer.cleanup()</code> is called, preserving the site’s order when the chamber closes.</li>
-<li>Logs unhandled rejections without stopping the process, favoring uptime unless truly fatal errors occur.</li>
-<li>Double guards failures with both try/catch and a trailing <code class="inline-code">.catch</code>, ensuring no silent startup errors.</li>
-<li>Demonstrates operational resilience patterns common to long-running protocol servers.</li>
+<li><code class="inline-code">main</code> creates the server, registers signal traps for <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code>, and logs unhandled rejections while keeping the process alive.</li>
+<li><code class="inline-code">gracefulShutdown</code> attempts <code class="inline-code">repoAnalyzer.cleanup()</code> and exits cleanly, preventing resource leaks during sudden exits.</li>
+<li>The separation ensures startup errors trigger a non-zero exit, while runtime promise rejections are observable yet non-fatal.</li>
+<li>This pattern balances resilience with transparency, aiding operators while preserving service continuity.</li>
+<li>The final <code class="inline-code">main().catch(...)</code> provides a second layer of failure reporting for unexpected top-level errors.</li>
 </ul>
 <hr>
 <h3>packages/mcp/src/tools.ts</h3>
@@ -206,22 +238,22 @@ export const tools = {
 };
 </code></pre>
 <ul>
-<li>This code serves as the registry tablet for the antechamber, re-exporting tool entries with MCP-safe names (<code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>, <code class="inline-code">explore_quest</code>, <code class="inline-code">view_progress</code>).</li>
-<li>The <code class="inline-code">tools</code> object is the single source for discovery and execution in <code class="inline-code">setupHandlers</code>, enabling dynamic listing and invocation.</li>
-<li>By exporting <code class="inline-code">adventureManager</code>, tool handlers share a common expedition context, avoiding duplication.</li>
-<li>The modular imports (<code class="inline-code">./tools/*.js</code>) allow each tool to maintain its own schema and handler logic while remaining easy to register centrally.</li>
-<li>The registry pattern decouples transport-level logic from tool definitions, keeping the chamber maintainable.</li>
+<li>This registry gathers tool modules and renames them to match the MCP-facing identifiers used by the server.</li>
+<li><code class="inline-code">tools</code> is the single source consumed by <code class="inline-code">setupHandlers</code> for both listing and invocation routing.</li>
+<li>The shared <code class="inline-code">adventureManager</code> is exposed for tools that coordinate stateful exploration across calls.</li>
+<li>The pattern enforces clear separation of concerns: server mechanics vs. tool implementation details.</li>
+<li>Consistent naming ensures stable client contracts and reduces risk of mismatches between exports and server enumeration.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Trace the tool lifecycle: listing via <code class="inline-code">ListToolsRequestSchema</code>, validation through Zod, then execution with consistent MCP errors.</li>
-<li>Compare how errors are surfaced to clients: <code class="inline-code">MethodNotFound</code>, <code class="inline-code">InvalidParams</code>, and <code class="inline-code">InternalError</code> reflect distinct fault lines.</li>
-<li>Notice how cache warming in <code class="inline-code">run</code> can improve the first-use experience without delaying server readiness.</li>
+<li>Trace the path from <code class="inline-code">CallToolRequestSchema</code> to <code class="inline-code">tool.handler</code> to see where validation occurs and how errors are surfaced.</li>
+<li>Compare the generated <code class="inline-code">inputSchema</code> with the underlying Zod schema to understand why <code class="inline-code">$refStrategy: &#39;none&#39;</code> matters for clients.</li>
+<li>Observe how <code class="inline-code">repoAnalyzer.preGenerate</code> in <code class="inline-code">run</code> improves responsiveness for early interactions.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Hail, seeker of wisdom—within the sanctum of learning, thou hast unveiled the sacred workings of the MCP Tool Interface, a triumph worthy of temple annals, and though the great odyssey counts 0/5 quests complete, let this first illumined mystery be thy shining obelisk, a portent of greater victories to come ⭐⚡.</p>
+<p>Hail, seeker of wisdom—by vanquishing the Gatekeepers of the Outer Temple, thou hast unlocked the first sacred seal and set thy feet upon the hallowed path of gnosis, a triumphant augury for the long pilgrimage ahead ⚡💎.</p>
 
 </div>
 

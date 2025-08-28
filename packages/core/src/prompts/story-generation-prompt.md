@@ -27,7 +27,9 @@ Create a {{theme}}-themed story that explains what the codebase does through nar
 ```
 
 **CRITICAL FORMAT RULES:**
-- Each quest description must be EXACTLY 1 sentence
+- Each quest description must be EXACTLY 1 sentence  
+- **ALWAYS wrap filenames in double asterisks for bold formatting: **filename.ts**
+- Use short filenames only (server.ts, not packages/mcp/src/server.ts)
 - NO additional explanations, code snippets, or extra content
 - NO "Hints:", "Key Area:", or other subsections
 - Clean, simple quest descriptions only
@@ -38,6 +40,10 @@ Create a {{theme}}-themed story that explains what the codebase does through nar
 - **Ensure ALL files from Adventure Guidance are systematically covered**
 - Each quest MUST focus on its specified files - no additions or omissions
 - Apply theme to existing quest structure without changing file scope
+
+**FORMATTING EXAMPLE**:
+✅ CORRECT: "Explore the *Command Bridge*, where **server.ts** and **tools.ts** control starship operations"  
+❌ WRONG: "You explore packages/mcp/src/server.ts and packages/mcp/src/tools.ts, orchestrating RepoAdventureServer.setupHandlers"
 
 ## Theme Examples
 - **Space**: starships, reactors, cosmic streams, navigation systems

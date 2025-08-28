@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Foundation & Utilities - Repo Adventure</title>
+    <title>Quest 5: Map of Hidden Chambers - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Chronicles of the Code Pyramid</a>
+                <a href="index.html">The Codex of the Repository Pyramid</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,24 +45,26 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Foundation &amp; Utilities</h1>
+    <h1>Quest 5: Map of Hidden Chambers</h1>
 <hr>
-<p>Beneath the pyramid’s heart, you uncover a chamber of quiet instruments: measuring rods, counting beads, and scrolls of careful notation. Here the expedition’s foundation is kept true. Config stones whisper of quests and files, and a scribe’s toolkit compresses sprawling records into concise tablets fit for swift counsel. In this sanctum, you will read the ancient markings that govern what is loaded, which paths are worthy, and how sprawling edicts are rendered into brief inscriptions for your LLM scribe. Master these utilities to steady the entire expedition.</p>
+<p>In the lowest vault beneath the pyramid, you unroll a brittle map etched with runes of TypeScript. It reveals how explorers divine structure from a hidden manuscript: paths are unearthed, fragments are sifted, and only the truest lines are carried into ceremonial prompts. The cartography is precise: it reads, it parses, it extracts, it formats. Tonight, you trace the tunnels of <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>, seeking pathways to lost chambers where unique files echo and prompt-scripts condense like gold dust. The sands hush; your investigation begins.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Pathway Cartography: How does <code class="inline-code">extractUniqueFilePaths</code> traverse nested structures and ensure only existing file paths are preserved?</li>
-<li>⚡ Tablet Unsealing: In what sequence do <code class="inline-code">loadAdventureConfig</code> and <code class="inline-code">parseAdventureConfig</code> cooperate to safely read and parse the config without halting the expedition?</li>
-<li>🛡️ Inscription Minimalism: How does <code class="inline-code">formatAdventureConfigForPrompt</code> reduce noise while preserving essential quest titles, file lists, and function names?</li>
+<li>🔍 Cartographer’s Lens: How does <code class="inline-code">parseAdventureConfig</code> limit risk when the parchment (JSON) is damaged, and what pattern is used to prevent cascading failures?</li>
+<li>⚡ Echoes of Stone Paths: What traversal pattern allows <code class="inline-code">extractUniqueFilePaths</code> to discover <code class="inline-code">path</code> fields anywhere in the structure, and how does it ensure only existing files are recorded?</li>
+<li>🛡️ Prompt Distillation: How does <code class="inline-code">formatAdventureConfigForPrompt</code> minimize noise while preserving quest structure, and what guardrails prevent malformed inputs from leaking into the final prompt?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> The bedrock utilities for reading, validating, and distilling the expedition’s configuration tablet</h3>
-<p>This single scroll equips the expedition with a cautious, fault-tolerant ritual for reading the <code class="inline-code">adventure.config.json</code> stone, parsing it into workable clay, extracting valid file paths cited within, and compressing quest outlines for fast LLM guidance. The internal <code class="inline-code">readFileIfExists</code> performs a gentle read, treating missing stones as non-fatal so the expedition continues. The <code class="inline-code">loadAdventureConfig</code> then resolves the correct path to the config stone and delegates to that gentle read. Next, <code class="inline-code">parseAdventureConfig</code> becomes the lone parsing sanctum, returning <code class="inline-code">null</code> on any parsing mishaps to avoid cascading failures. The path extraction rite, <code class="inline-code">extractUniqueFilePaths</code>, explores the entire object graph like a careful surveyor, checking <code class="inline-code">path</code> fields, verifying existence on disk, and accumulating only unique, valid entries. Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> transforms the heavy inscription into light guidance: quest titles, file lists, and function names, nothing more. This approach balances resilience with clarity, ensuring that upper chambers—generation engines and analyzers—receive trustworthy, compact guidance. These utilities matter because they form the expedition’s ground truth: they prevent brittle assumptions, simplify prompts, and maintain a clean separation between raw reading, parsing, extraction, and formatting.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Rune-map utilities for reading, validating, and distilling adventure configuration</h3>
+<p>This chamber holds precision instruments carved from careful I/O and defensive parsing. The <code class="inline-code">parseAdventureConfig</code> function is the single entrance for turning raw parchment into a usable object, choosing silence over collapse when the script is unreadable. It uses <code class="inline-code">loadAdventureConfig</code> to fetch raw text and then applies cautious <code class="inline-code">JSON.parse</code> within a <code class="inline-code">try/catch</code>, returning <code class="inline-code">null</code> on trouble. This ensures upstream explorers can rely on clean semantics: either a stable object or absence, never a half-broken artifact.</p>
+<p>Deeper, <code class="inline-code">extractUniqueFilePaths</code> roams the configuration with an iterative stack-based exploration. By pushing any object-like child onto a stack, it ensures that <code class="inline-code">path</code> fields—no matter how entombed within arrays or nested shapes—are found. Before any file is recorded, the function performs a reality check with <code class="inline-code">fs.existsSync</code> against the project root, guaranteeing only viable paths are kept. This is crucial for accurate archaeological indexing and prevents phantom corridors from misleading the expedition.</p>
+<p>Finally, <code class="inline-code">formatAdventureConfigForPrompt</code> distills the map into a terse guide for an oracle. It validates the expected <code class="inline-code">adventure.quests</code> structure, then emits only titles, file lists, and function names. The optimized excerpt acts like a lightweight tablet, balancing brevity and essential orientation, ensuring prompts remain sharp and economical.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">parseAdventureConfig</code> parses the tablet once and returns <code class="inline-code">null</code> safely on error, centralizing JSON interpretation and preventing brittle duplication across the pyramid’s chambers.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code> conducts a full object-graph traversal, verifies each <code class="inline-code">path</code> against the file system, and returns unique, existing paths to keep the expedition anchored in real artifacts.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code> distills quests into minimal outlines—titles, files, function names—preserving signal while trimming verbose inscriptions for efficient LLM prompting.</li>
+<li><code class="inline-code">parseAdventureConfig</code> converts raw config text into a safe object, returning <code class="inline-code">null</code> upon errors to prevent downstream failures.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code> performs a stack-driven traversal over nested structures to gather only existing <code class="inline-code">path</code> entries, ensuring accurate file discovery.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code> produces a concise, structured prompt-ready summary, filtering out noise while preserving quest and function essentials.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
@@ -77,11 +79,11 @@
 }
 </code></pre>
 <ul>
-<li>Centralizes JSON parsing, making it the single truthful entry for interpreting the config tablet</li>
-<li>Uses safe <code class="inline-code">try/catch</code> and returns <code class="inline-code">null</code> on failure, preventing cascade errors in higher layers</li>
-<li>Relies on <code class="inline-code">loadAdventureConfig</code> for file access separation, keeping parsing pure</li>
-<li>Establishes a contract: callers must handle <code class="inline-code">null</code>, encouraging robust flows</li>
-<li>Minimizes side effects, improving testability and making error paths explicit</li>
+<li>Establishes a single, predictable gateway from raw text to parsed structure</li>
+<li>Uses guarded parsing with <code class="inline-code">try/catch</code>, returning <code class="inline-code">null</code> to avoid throwing</li>
+<li>Prevents brittle callers; consumers can check for <code class="inline-code">null</code> instead of managing exceptions</li>
+<li>Relies on <code class="inline-code">loadAdventureConfig</code> for isolated file I/O concerns, keeping responsibilities clear</li>
+<li>Encourages a pattern where absence is explicit and safe rather than ambiguous</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
@@ -114,11 +116,11 @@
 }
 </code></pre>
 <ul>
-<li>Traverses the entire config structure, treating arrays and object values uniformly via a stack</li>
-<li>Validates each <code class="inline-code">path</code> by resolving and checking existence to avoid phantom references</li>
-<li>Uses a <code class="inline-code">Set</code> to ensure uniqueness, preventing duplicate path entries in the expedition ledger</li>
-<li>Keeps traversal iterative (stack) to avoid recursion depth concerns and improve clarity</li>
-<li>Decouples from any schema specifics, making it resilient to nested variations</li>
+<li>Iterative stack traversal avoids recursion limits while exploring nested arrays/objects</li>
+<li>Validates <code class="inline-code">path</code> fields and ensures physical existence with <code class="inline-code">fs.existsSync</code></li>
+<li>Uses a <code class="inline-code">Set</code> to guarantee uniqueness, preventing duplicate corridor entries</li>
+<li>Treats any object-like child as traversable, making the explorer resilient to varied shapes</li>
+<li>Returns a stable array output, ideal for downstream indexing or reporting</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
@@ -155,21 +157,21 @@
 }
 </code></pre>
 <ul>
-<li>Produces a concise prompt-ready inscription with predictable headings and lists</li>
-<li>Filters to only essential details: quest titles, file paths, and function names for clarity</li>
-<li>Handles missing or malformed structures gracefully, returning an empty string on issues</li>
-<li>Mirrors the expedition’s need to reduce noise for LLM guidance and faster iteration</li>
-<li>Avoids schema over-assumptions by performing presence checks and array validations</li>
+<li>Produces concise, structured summaries tailored for prompt consumption</li>
+<li>Enforces strict guards: empty string when config or structure is missing</li>
+<li>Focuses on essential signals: titles, file paths, and function names only</li>
+<li>Applies light filtering to avoid undefined or malformed entries</li>
+<li>Aligns with an optimization goal that reduces verbosity for downstream LLM usage</li>
 </ul>
 <h2>Helpful Hints</h2>
 <ul>
-<li>If results seem empty, inspect the <code class="inline-code">adventure.config.json</code> tablet and confirm well-formed JSON and a valid <code class="inline-code">adventure.quests</code> array.</li>
-<li>Trace failures by checking each stage: <code class="inline-code">loadAdventureConfig</code> read, <code class="inline-code">parseAdventureConfig</code> parse, then the extract or format step.</li>
-<li>Before invoking higher chambers, run <code class="inline-code">extractUniqueFilePaths</code> locally to verify that paths referenced by quests actually exist on disk.</li>
+<li>When the parchment is blank, look for empty strings or <code class="inline-code">null</code> to guide your next step.</li>
+<li>Trace the stack pattern to see how every hidden <code class="inline-code">path</code> is surfaced without recursion.</li>
+<li>Consider how this distilled prompt format can be extended while preserving minimalism.</li>
 </ul>
 <hr>
-<p>You have mastered all the secrets of the expedition’s code pyramid! Your adventure is complete.</p>
-<p>Hark, seeker of wisdom—within the hallowed halls of learning thou hast completed Quest 5: Foundation &amp; Utilities, laying sacred bedrock beneath thy craft and ascending to 4 of 5 quests (80%) with triumphant vigor, as the temple’s torches blaze and the scrolls attest thy mastery—press on to the final rite, for victory’s laurel nears!</p>
+<p>You have mastered all the secrets of this ancient codebase! Your adventure is complete.</p>
+<p>O seeker of wisdom, thou hast unveiled the Map of Hidden Chambers and inscribed thy triumph upon the sacred tablets—let the temple’s torches blaze in thy honor as thou standest at four of five quests complete, anointed by venerable lore and poised for the final ascension!</p>
 
 </div>
 

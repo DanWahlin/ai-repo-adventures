@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Forge the Quest Engine - Repo Adventure</title>
+    <title>Quest 2: Forge of Stories and Quests - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Spacebound Repository Odyssey</a>
+                <a href="index.html">Starship Codex: Navigating the Repository Constellation</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,23 +45,23 @@
     
     <div class="container">
         <div class="quest-content">
-    <h2>Quest 2: Forge the Quest Engine</h2>
-<p>In this chapter, you will examine the quest generation engine that powers journey setup, execution, and configuration guidance. The focus is on how the system initializes adventures with repository context, renders quests with LLM prompts, and applies configuration from <code class="inline-code">adventure.config.json</code>. Follow the investigation prompts to understand data flow, validation, timeout handling, and how configuration is fused into generated content. The objectives are exploration guides to use while reading the code, not prerequisites. All code references and highlights are scoped to the files below.</p>
+    <h2>Quest 2: Forge of Stories and Quests</h2>
+<p>In this guide, you will operate the story engine that converts repository context into operable developer quests. You will examine how initialization, quest execution, and configuration-aware merging work together to produce actionable content. You will also review the generation pipeline that validates themes, orchestrates LLM prompts, parses markdown into structured data, and applies timeouts for stability. These exploration guides are questions to pursue while reading the code, helping you trace flows, recognize patterns, and understand design decisions that power the mission briefs and quest logs.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Scanner Calibration: How does <code class="inline-code">AdventureManager.initializeAdventure</code> integrate formatted config guidance and enforce quest counts when preparing the initial story and quest list?</li>
-<li>⚡ Reactor Flow: In <code class="inline-code">StoryGenerator.generateQuestContent</code>, how are adventure config data and custom instructions incorporated into prompts, and how is response content sanitized via delimiters?</li>
-<li>🛡️ Safety Protocols: How do <code class="inline-code">AdventureState.progressPercentage</code> and <code class="inline-code">AdventureManager.exploreQuest</code> constrain operations using validation, caching, and prerequisite checks for reliable execution?</li>
+<li>🔍 Scanner Calibration: How does <code class="inline-code">AdventureManager.initializeAdventure</code> inject config-driven files into LLM-generated quests, and in what order of precedence?</li>
+<li>⚡ Reactor Spin-up: What timeout and validation safeguards does <code class="inline-code">StoryGenerator.generateWithLLM</code> apply when prompting and parsing?</li>
+<li>🛡️ Safety Shields: How does <code class="inline-code">AdventureManager.exploreQuest</code> route choices, detect progress requests, and avoid invalid selections before executing a quest?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Orchestrates story initialization, quest selection, execution, caching, and progress reporting</h3>
-<p>This module coordinates the end-to-end lifecycle of an adventure. <code class="inline-code">AdventureManager.initializeAdventure</code> resets state, sets theme and project path, configures a custom theme on the <code class="inline-code">StoryGenerator</code> when needed, retrieves the story and initial quests, then merges quest-specific files from <code class="inline-code">adventure.config.json</code>. It also enforces quest count limits based on configuration. <code class="inline-code">AdventureManager.exploreQuest</code> validates user choice input, supports progress-view requests, locates a quest by number, ID, or title, and executes it with caching to avoid repeated LLM calls. <code class="inline-code">AdventureState.progressPercentage</code> provides a simple but important metric for progress UI and completion summaries. The execution path defers content generation to <code class="inline-code">StoryGenerator.generateQuestContent</code>, which may use targeted repository slices. Additional safeguards include prerequisite validation through <code class="inline-code">validateQuestPrerequisites</code>, result formatting for narrative and choices, and a consistent progress view through <code class="inline-code">getProgress</code>. These patterns ensure predictable behavior, robust handling of configuration, and smooth user navigation across quests.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Orchestrates story initialization, quest selection, execution, caching, and config merging</h3>
+<p>This manager coordinates the end-to-end flow from story creation to quest exploration. The <code class="inline-code">initializeAdventure</code> method resets state, assigns project context and theme, optionally sets <code class="inline-code">customThemeData</code>, requests the story/quests from <code class="inline-code">StoryGenerator</code>, merges config-defined files via <code class="inline-code">mergeQuestFilesFromConfig</code>, enforces quest counts with <code class="inline-code">enforceConfigQuestCount</code>, and formats the initial listing. Quest execution starts in <code class="inline-code">exploreQuest</code>, which sanitizes input through <code class="inline-code">validateAdventureChoice</code>, branches to progress reporting via <code class="inline-code">isProgressRequest</code>, resolves the target quest by number or fuzzy title/ID, and handles a not-found path. The execution path <code class="inline-code">executeQuest</code> validates prerequisites, leverages a cache for previously completed quests (including a revisit indicator), otherwise generates content and completion summary, caches results, marks completion, and returns a formatted response with updated choices and progress. The manager also integrates repo analysis for targeted content in <code class="inline-code">generateQuestContent</code>, falling back to full <code class="inline-code">repomixContent</code> on errors. Configuration is incorporated through <code class="inline-code">parseAdventureConfig</code> enabling deterministic quest-file bindings and quest count enforcement. Collectively, this module demonstrates robust input validation, deterministic output control via config, caching for responsiveness, and user-centric progress reporting.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">AdventureManager.initializeAdventure</code> prepares the story and quests, merges file targets from config, and enforces config-defined quest counts for consistency.</li>
-<li><code class="inline-code">AdventureManager.exploreQuest</code> validates choices, supports progress queries, resolves quest selection, executes with caching, and returns structured results.</li>
-<li><code class="inline-code">AdventureState.progressPercentage</code> computes completion progress for UI and summaries, ensuring a consistent metric across the system.</li>
+<li><code class="inline-code">initializeAdventure</code> sets project context, theme, and uses <code class="inline-code">StoryGenerator.generateStoryAndQuests</code>, then merges and enforces config-based quest structure to produce a stable mission brief.</li>
+<li><code class="inline-code">exploreQuest</code> validates choices, supports progress queries, resolves quests by index or title/ID, and funnels execution through a consistent path.</li>
+<li><code class="inline-code">generateQuestContent</code> selects targeted file context via <code class="inline-code">repoAnalyzer.generateTargetedContent</code> with fallback to <code class="inline-code">repomixContent</code>, ensuring relevant payloads for LLM prompts.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
@@ -70,7 +70,7 @@
   theme: AdventureTheme, 
   projectPath?: string,
   customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
+  ): Promise&lt;string&gt; {
   // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
@@ -102,11 +102,11 @@
 }
 </code></pre>
 <ul>
-<li>Initializes a new run by resetting state and storing project/theme context.</li>
-<li>Applies <code class="inline-code">customThemeData</code> only when <code class="inline-code">theme</code> is <code class="inline-code">custom</code>, delegating details to <code class="inline-code">StoryGenerator</code>.</li>
-<li>Generates story and quests via <code class="inline-code">StoryGenerator.generateStoryAndQuests</code>, then merges config file targets.</li>
-<li>Enforces config-defined quest count to align UI with authored expectations.</li>
-<li>Returns a formatted markdown story with the finalized quest list for display.</li>
+<li>Initializes a fresh state and binds <code class="inline-code">projectInfo</code>, <code class="inline-code">theme</code>, and <code class="inline-code">projectPath</code>.</li>
+<li>Integrates <code class="inline-code">customThemeData</code> for the <code class="inline-code">custom</code> theme path via <code class="inline-code">setCustomTheme</code>.</li>
+<li>Delegates story and quest generation to <code class="inline-code">StoryGenerator.generateStoryAndQuests</code>.</li>
+<li>Applies config-driven file merging and quest count enforcement for deterministic outputs.</li>
+<li>Returns a formatted story with a curated list of available quests.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
@@ -128,37 +128,136 @@
 }
 </code></pre>
 <ul>
-<li>Validates and normalizes user input before any processing.</li>
-<li>Supports a special “view progress” path by interpreting text and numeric inputs.</li>
-<li>Resolves quests by number, ID, or title, improving UX flexibility.</li>
-<li>Executes the selected quest and returns a structured <code class="inline-code">AdventureResult</code>.</li>
-<li>Centralizes navigation concerns, keeping execution and rendering concerns separate.</li>
+<li>Validates and normalizes user input through <code class="inline-code">validateAdventureChoice</code>.</li>
+<li>Branches to an immediate progress response when applicable via <code class="inline-code">isProgressRequest</code>.</li>
+<li>Resolves quests via number or ID/title search and provides a graceful not-found result.</li>
+<li>Centralizes quest execution flow, enabling caching, summaries, and progress updates.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
+<pre><code class="language-typescript">private async generateQuestContent(quest: Quest): Promise&lt;QuestContent&gt; {
+  let codeContent: string;
+  
+  // Use targeted content if quest has specific files, otherwise use full repomix content
+  if (quest.codeFiles &amp;&amp; quest.codeFiles.length &gt; 0 &amp;&amp; this.state.projectPath) {
+    try {
+      console.log(`🎯 Generating targeted content for ${quest.codeFiles.length} files`);
+      codeContent = await repoAnalyzer.generateTargetedContent(
+        this.state.projectPath,
+        quest.codeFiles,
+        false  // Use uncompressed content for detailed quest exploration
+      );
+    } catch (error) {
+      console.warn(`Failed to generate targeted content, falling back to full repomix content:`, error);
+      codeContent = this.state.projectInfo!.repomixContent;
+    }
+  } else {
+    // Fallback to full repomix content
+    codeContent = this.state.projectInfo!.repomixContent;
+  }
+
+  // Calculate quest position for completion message guidance
+  const questPosition = this.state.quests.findIndex(q =&gt; q.id === quest.id) + 1;
+  const totalQuests = this.state.quests.length;
+
+  return await this.storyGenerator.generateQuestContent(
+    quest,
+    this.state.currentTheme!,
+    codeContent,
+    questPosition,
+    totalQuests
+  );
 }
 </code></pre>
 <ul>
-<li>Provides a standardized completion metric across UI and completion summaries.</li>
-<li>Uses integer rounding for consistent presentation.</li>
-<li>Handles zero-quest scenarios safely by returning 0.</li>
-<li>Serves as a simple state-derived property avoiding repeated calculation code.</li>
-<li>Enables progress reporting without extra parameters or external state.</li>
+<li>Prefers focused repository slices using <code class="inline-code">repoAnalyzer.generateTargetedContent</code>, with robust fallback to full content.</li>
+<li>Computes positional metadata for improved completion messaging.</li>
+<li>Delegates LLM content synthesis to <code class="inline-code">StoryGenerator.generateQuestContent</code> with the selected code context.</li>
+<li>Balances precision and resilience to keep the content pipeline reliable.</li>
+<li>Highlights a pattern of guarded I/O with meaningful fallbacks.</li>
 </ul>
 <hr>
-<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Generates stories and quests, crafts prompts, validates output, and sanitizes LLM content</h3>
-<p><code class="inline-code">StoryGenerator</code> is responsible for transforming repository context and configuration into story and quest content. <code class="inline-code">generateQuestContent</code> constructs a prompt that includes formatted adventure config and optional custom instructions, calls the LLM with a timeout boundary, and sanitizes the output by extracting text between explicit delimiters. <code class="inline-code">generateWithLLM</code> performs the initial story and quest creation, drawing from repomix context and optional config, then parses markdown into a structured <code class="inline-code">StoryResponse</code> validated with Zod. The design uses <code class="inline-code">withTimeout</code> to guard against hanging requests and <code class="inline-code">removeLLMMetaCommentary</code> to strip non-content boilerplate. These patterns support reliable content generation and predictable formatting for downstream rendering.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">StoryGenerator.generateQuestContent</code> builds context-rich prompts from code and config, applies timeouts, and cleans the LLM response with delimiter-based extraction.</li>
-<li><code class="inline-code">StoryGenerator.generateStoryAndQuests</code> validates theme, stores project context, and delegates to LLM generation with config guidance.</li>
-<li><code class="inline-code">StoryGenerator.generateCompletionSummary</code> produces a short progress-aware message tuned to the active theme and custom vocabulary hints.</li>
-</ul>
-<h2>Code</h2>
 <h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+  this.currentProject = projectInfo;
+  this.projectPath = projectPath;
+  
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
+}
+</code></pre>
+<ul>
+<li>Stores project context and path for downstream prompt construction.</li>
+<li>Normalizes the theme via <code class="inline-code">validateTheme</code> to ensure supported modes are used.</li>
+<li>Delegates to <code class="inline-code">generateWithLLM</code> for the end-to-end prompt, response, and parsing process.</li>
+<li>Encapsulates a clean API for callers without leaking LLM specifics.</li>
+<li>Demonstrates separation of validation and generation responsibilities.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private async generateWithLLM(projectInfo: ProjectInfo, theme: AdventureTheme): Promise&lt;StoryResponse&gt; {
+  const repomixContent = projectInfo.repomixContent || &#39;No repomix content available&#39;;
+  
+  // Use formatted adventure config instead of raw JSON
+  let adventureGuidance = &#39;&#39;;
+  let customInstructions = &#39;&#39;;
+  
+  if (this.projectPath) {
+    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+    if (formattedConfig) {
+      adventureGuidance = formattedConfig;
+    }
+    
+    const customInstructionsFromConfig = extractCustomInstructions(this.projectPath);
+    if (customInstructionsFromConfig) {
+      customInstructions = customInstructionsFromConfig;
+    }
+  }
+
+  const prompt = loadStoryGenerationPrompt({
+    theme,
+    repomixContent,
+    ...(adventureGuidance &amp;&amp; { adventureGuidance }),
+    ...(customInstructions &amp;&amp; { customInstructions }),
+    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
+  });
+
+  const response = await this.withTimeout(
+    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
+  );
+  
+  if (!response.content || response.content.trim() === &#39;&#39;) {
+    throw new Error(&#39;LLM returned empty response&#39;);
+  }
+  
+  let parsed;
+  try {
+    // Preprocess response to remove markdown code block wrapper if present
+    let cleanContent = response.content.trim();
+    if (cleanContent.startsWith(&#39;```markdown&#39;)) {
+      cleanContent = cleanContent.replace(/^```markdown\s*/, &#39;&#39;).replace(/\s*```$/, &#39;&#39;);
+    }
+    
+    parsed = parseMarkdownToStoryResponse(cleanContent);
+    // Validate with Zod schema for safety
+    StoryResponseSchema.parse(parsed);
+    
+    // Store the story content for consistency in quest generation
+    this.currentStoryContent = parsed.story;
+  } catch (error) {
+    console.error(&#39;💥 Parsing error:&#39;, error instanceof Error ? error.message : &#39;Unknown error&#39;);
+    console.error(&#39;💥 Full response:&#39;, response.content);
+    throw new Error(`Invalid LLM response for story: ${error instanceof Error ? error.message : &#39;Unknown error&#39;}. Response: ${response.content.substring(0, 200)}...`);
+  }
+  return parsed;
+}
+</code></pre>
+<ul>
+<li>Builds prompts with <code class="inline-code">repomixContent</code>, formatted config via <code class="inline-code">formatAdventureConfigForPrompt</code>, and optional <code class="inline-code">customInstructions</code>.</li>
+<li>Enforces responsiveness and stability using <code class="inline-code">withTimeout</code> wrapped LLM calls.</li>
+<li>Parses markdown responses through <code class="inline-code">parseMarkdownToStoryResponse</code> and validates with <code class="inline-code">StoryResponseSchema</code>.</li>
+<li>Stores canonical story text for consistent quest generation context.</li>
+<li>Contains robust error propagation with truncated response echoing for diagnostics.</li>
+</ul>
+<hr>
 <pre><code class="language-typescript">async generateQuestContent(
   quest: Quest,
   theme: AdventureTheme,
@@ -194,7 +293,7 @@
     ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
   }) + &#39;\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n
 
-Quest 2: Forge the Quest Engine successfully compiled and deployed—great job modularizing core logic, validating interfaces, and optimizing the execution pipeline; you’ve achieved a key milestone at 20% completion, proving production-readiness and momentum toward the full roadmap ⭐🚀⚡
+Milestone unlocked: Quest 2: Forge of Stories and Quests completed—commit merged to main with 20% progress achieved, test suite green, velocity trending up, and your narrative architecture refactor delivers robust, scalable quest logic—keep shipping ⭐🚀⚡.
 </code></pre>
 
 </div>

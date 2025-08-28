@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Chart the Adventure Map - Repo Adventure</title>
+    <title>Quest 5: Cartographer’s Toolkit - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Spacebound Repository Odyssey</a>
+                <a href="index.html">Starship Codex: Navigating the Repository Constellation</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,28 +45,32 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Chart the Adventure Map</h1>
+    <h1>Quest 5: Cartographer’s Toolkit</h1>
 <hr>
-<p>This guide focuses your bridge crew on the foundation utilities that map project galaxies into navigable charts. The goal is to understand how configuration text is loaded, parsed, and compacted into prompts that the LLM reactor can safely consume. Use this as an exploration guide while reading the code; these are not prerequisites. You will analyze how configuration faults are handled gracefully, how file references are discovered reliably, and how the mission computer formats minimal, high-signal summaries for downstream systems.</p>
+<p>In this final mission brief, you consolidate the command deck that turns raw configuration into an actionable itinerary. Your role is to verify how configuration text is loaded, parsed, sifted for valid file paths, and compacted into LLM-ready prompts. Treat the following objectives as exploration guides while reviewing the code sections. You will trace the pipeline from file reads to structured prompt formatting, ensuring stable behavior under missing files, invalid JSON, and sparse configs. By completing this, you finalize the scan-synthesize-present loop across your operable command deck.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 Scanner Calibration: How does <code class="inline-code">parseAdventureConfig</code> ensure that failures in loading or parsing are non-fatal and return <code class="inline-code">null</code> consistently?</li>
-<li>⚡ Navigation Plotting: In <code class="inline-code">extractUniqueFilePaths</code>, what traversal strategy is used to collect <code class="inline-code">path</code> fields, and how does it validate file existence relative to <code class="inline-code">projectPath</code>?</li>
-<li>🛡️ Safety Shields: How does <code class="inline-code">formatAdventureConfigForPrompt</code> guard against malformed structures and produce a minimal, stable output without throwing?</li>
+<li>🔍 Scanner Calibration: How does <code class="inline-code">parseAdventureConfig</code> centralize JSON parsing and gracefully handle malformed or missing configs without throwing?</li>
+<li>⚡ Route Plotter: In <code class="inline-code">extractUniqueFilePaths</code>, what traversal strategy collects <code class="inline-code">path</code> fields anywhere in the config, and how does it verify actual file existence against <code class="inline-code">projectPath</code>?</li>
+<li>🛡️ Reactor Safeguards: How does <code class="inline-code">formatAdventureConfigForPrompt</code> validate shape (adventure, quests, files, highlights) and minimize output while avoiding unsafe assumptions?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Foundation utilities for configuration loading, parsing, path extraction, and prompt formatting</h3>
-<p>This module provides read and parse functions that gracefully handle missing or invalid configuration without interrupting the mission flow. <code class="inline-code">parseAdventureConfig</code> is the single point of JSON parsing and returns <code class="inline-code">null</code> on any failure, establishing a predictable contract for callers. <code class="inline-code">extractUniqueFilePaths</code> performs a stack-based traversal over the configuration object graph to find all <code class="inline-code">path</code> fields, filtering out non-existent files using <code class="inline-code">fs.existsSync</code> against <code class="inline-code">path.resolve(projectPath, rel)</code>. It returns a de-duplicated array via <code class="inline-code">Set</code>, ensuring the scanner only processes valid targets once. <code class="inline-code">formatAdventureConfigForPrompt</code> constructs a minimal prompt section by extracting quest titles, file paths, and function names when present, while defensively handling missing structures. This reduces verbosity and aligns with prompt budget constraints, delivering consistent structure even when optional fields are absent. The design emphasizes resilience: helpers return empty strings or arrays on invalid input, avoiding exceptions and supporting safer pipeline composition across the analyzer and story generator. Observing how input is validated, normalized, and compacted will help you calibrate the scanner, tune safety checks, and confirm predictable outputs for downstream LLM usage.</p>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration loading, parsing, file path extraction, and prompt formatting utilities</h3>
+<p>This module supplies a cohesive set of utilities for reading <code class="inline-code">adventure.config.json</code>, parsing it safely, extracting valid file paths referenced by <code class="inline-code">path</code> fields embedded anywhere in the configuration, and producing a compact prompt-friendly representation. The design separates concerns: <code class="inline-code">loadAdventureConfig</code> performs a pure file read with non-fatal handling; <code class="inline-code">parseAdventureConfig</code> is the single entry for JSON parsing, ensuring errors yield <code class="inline-code">null</code> instead of exceptions; <code class="inline-code">extractUniqueFilePaths</code> crawls the parsed object via an explicit stack to find any <code class="inline-code">path</code> fields, deduplicates with a <code class="inline-code">Set</code>, and includes only paths that exist on disk relative to <code class="inline-code">projectPath</code>; <code class="inline-code">formatAdventureConfigForPrompt</code> transforms the high-level <code class="inline-code">adventure</code> structure into a minimal text format that lists quest titles, file paths, and function names. This approach reduces coupling, improves resilience under missing or malformed config, and aligns with prompt-size constraints. Input validation is defensive: both parsing and formatting return empty outputs when preconditions are not met, which prevents upstream failures. The stack-based traversal avoids recursion pitfalls and handles arbitrary nested shapes. Together, these functions provide a stable foundation for higher-level systems to calibrate themes, validate inputs, manage timeouts, and produce consistent mission briefs.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">parseAdventureConfig</code> centralizes JSON parsing and returns <code class="inline-code">null</code> for any error, simplifying error handling across the system.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code> traverses the entire config graph, collects <code class="inline-code">path</code> fields, validates existence, and returns a unique set, ensuring accurate scanning targets.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code> emits minimal structured text with quest titles, files, and functions, protecting prompt budgets and resisting malformed configs.</li>
+<li><code class="inline-code">parseAdventureConfig</code> centralizes JSON parsing and returns <code class="inline-code">null</code> on failure, ensuring downstream callers can rely on a safe tri-state: valid object, empty, or invalid.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code> scans nested structures using a stack, checks <code class="inline-code">path</code> fields for non-empty strings, resolves them against <code class="inline-code">projectPath</code>, and includes only existing files, guaranteeing actionable references.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code> emits a compact representation of quests, files, and functions by validating structure step by step, minimizing token usage for LLM prompts and avoiding noisy descriptions.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+<pre><code class="language-typescript">/**
+ * Parses the adventure config into an object (or null on error/missing).
+ * Single point of JSON parsing and validation.
+ */
+export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
   try {
@@ -77,14 +81,17 @@
 }
 </code></pre>
 <ul>
-<li>Centralized parser: All JSON parsing occurs here, standardizing error behavior across consumers.</li>
-<li>Defensive programming: Returns <code class="inline-code">null</code> for missing file or parse error, avoiding thrown exceptions.</li>
-<li>Clear contract: Callers can branch on <code class="inline-code">null</code> to apply defaults or skip optional features.</li>
-<li>Decoupling: Relies on <code class="inline-code">loadAdventureConfig</code> for I/O, keeping parsing logic isolated.</li>
-<li>Maintains stability for downstream steps like extraction and prompt formatting.</li>
+<li>Centralizes parsing to one function, simplifying error handling across the codebase.</li>
+<li>Uses <code class="inline-code">loadAdventureConfig</code> for the raw read, then wraps <code class="inline-code">JSON.parse</code> in a <code class="inline-code">try/catch</code> to avoid thrown errors.</li>
+<li>Returns <code class="inline-code">null</code> for missing or malformed inputs, enforcing a predictable contract for callers.</li>
+<li>Encourages callers to check for falsy values before use, preventing runtime exceptions.</li>
+<li>Supports progressive enhancement: validation can be extended here without changing callers.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+<pre><code class="language-typescript">/**
+ * Extracts all unique, existing file paths referenced by &quot;path&quot; fields anywhere in the config.
+ */
+export function extractUniqueFilePaths(projectPath: string): string[] {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) return [];
 
@@ -114,14 +121,19 @@
 }
 </code></pre>
 <ul>
-<li>Stack-based traversal: Iteratively walks arrays and objects without recursion, preventing stack overflow on large configs.</li>
-<li>Validation: Uses <code class="inline-code">fs.existsSync</code> with <code class="inline-code">path.resolve</code> to ensure reported files exist relative to <code class="inline-code">projectPath</code>.</li>
-<li>De-duplication: <code class="inline-code">Set</code> guarantees unique results, removing repeated references across the graph.</li>
-<li>Robust against shape variance: Treats both arrays and objects uniformly via <code class="inline-code">Object.values</code>.</li>
-<li>Safe defaults: Returns an empty array if config is missing or not an object.</li>
+<li>Implements non-recursive DFS with a stack to traverse arbitrary nested object and array structures.</li>
+<li>Validates <code class="inline-code">path</code> fields as non-empty strings, resolves relative paths against <code class="inline-code">projectPath</code>, and includes only existing files via <code class="inline-code">fs.existsSync</code>.</li>
+<li>Uses a <code class="inline-code">Set</code> to deduplicate references discovered in multiple locations.</li>
+<li>Returns an empty array for invalid or missing configs, preserving safety and simplicity for callers.</li>
+<li>Decouples path extraction from schema specifics, making it robust to shape changes.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+<pre><code class="language-typescript">/**
+ * Formats adventure config into a minimal format for LLM prompts
+ * OPTIMIZED: Reduced from 7,279 to ~2,000 characters (72% reduction)
+ * Eliminates redundant descriptions since LLM can infer from actual code
+ */
+export function formatAdventureConfigForPrompt(projectPath: string): string {
   const parsed = parseAdventureConfig(projectPath);
   if (!parsed || typeof parsed !== &#39;object&#39;) {
     return &#39;&#39;;
@@ -155,21 +167,21 @@
 }
 </code></pre>
 <ul>
-<li>Minimal prompt shaping: Outputs only key structure to conserve tokens and reduce redundancy.</li>
-<li>Defensive guards: Early returns on invalid or incomplete structures maintain stability.</li>
-<li>Iteration pattern: Filters for presence of <code class="inline-code">title</code>, <code class="inline-code">files</code>, and <code class="inline-code">highlights</code> before emitting lines.</li>
-<li>Separation of concerns: Formatting depends on <code class="inline-code">parseAdventureConfig</code> contracts, not raw I/O.</li>
-<li>Predictable structure: Consistent headings and lists aid deterministic downstream parsing.</li>
+<li>Produces a concise string representation that lists quests, file paths, and function names only.</li>
+<li>Validates each structural layer before accessing properties, preventing runtime errors.</li>
+<li>Reduces token usage for LLM prompts by excluding verbose descriptions, focusing on essentials.</li>
+<li>Uses functional array patterns (<code class="inline-code">map</code>, <code class="inline-code">flatMap</code>, <code class="inline-code">filter</code>, <code class="inline-code">join</code>) for clear data shaping.</li>
+<li>Returns an empty string for non-conforming configs, keeping upstream prompt assembly predictable.</li>
 </ul>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Validate assumptions: Always check for <code class="inline-code">null</code> from <code class="inline-code">parseAdventureConfig</code> before accessing properties.</li>
-<li>Confirm coverage: Use <code class="inline-code">extractUniqueFilePaths</code> to verify that referenced files exist before scanning.</li>
-<li>Optimize prompts: Prefer <code class="inline-code">formatAdventureConfigForPrompt</code> output to keep LLM inputs concise and consistent.</li>
+<li>Prefer calling <code class="inline-code">parseAdventureConfig</code> before any deeper access to ensure robust error handling.</li>
+<li>When extending structure, keep <code class="inline-code">extractUniqueFilePaths</code> schema-agnostic by maintaining object/array traversal via the stack.</li>
+<li>To add fields to prompt output, extend <code class="inline-code">formatAdventureConfigForPrompt</code> after validating shapes to avoid unexpected exceptions.</li>
 </ul>
 <hr>
-<p>You have mastered all the secrets of project navigation and configuration! Your adventure is complete.</p>
-<p>Quest 5: Chart the Adventure Map successfully integrated into your sprint backlog with a validated feature branch and merged deliverables, elevating your progress to 4/5 quests (80%)—stellar execution of mapping logic and data flow orchestration, keep shipping with confidence! 🚀🗺️⚡</p>
+<p>You have mastered all the secrets of this project context! Your adventure is complete.</p>
+<p>Quest 5: Cartographer’s Toolkit successfully merged into main—stellar geospatial mapping patterns, precise coordinate handling, and data-layer abstractions achieved; progress at 80% with clean commits, passing tests, and robust docs—keep shipping with this momentum 🚀🗺️⚡</p>
 
 </div>
 
