@@ -767,10 +767,13 @@ class HTMLAdventureGenerator {
         description = description.replace(/\*?\*?Code Files:.*$/si, '').trim();
       }
       
-      return `<a href="${quest.filename}" class="quest-link">
-        <h3>${this.formatInlineMarkdown(quest.title)}</h3>
-        ${description ? `<p>${this.formatInlineMarkdown(description)}</p>` : ''}
-      </a>`;
+      const questLinkVariables = {
+        QUEST_FILENAME: quest.filename,
+        QUEST_TITLE: this.formatInlineMarkdown(quest.title),
+        QUEST_DESCRIPTION: description ? `<p>${this.formatInlineMarkdown(description)}</p>` : ''
+      };
+      
+      return this.templateEngine.renderTemplate('quest-link.html', questLinkVariables);
     }).join('\n');
 
     const cleanStoryContent = this.adventureManager.getStoryContent();
@@ -1084,97 +1087,58 @@ class HTMLAdventureGenerator {
       }
     }
 
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${repoName} - Repository Adventure</title>
-    <link rel="stylesheet" href="assets/theme.css">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <div class="nav-left">
-                <a href="index.html">${repoName}</a>
-            </div>
-            <div class="nav-right">
-                <a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
-                </a>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="container">
-        <div class="hero-section">
-            <div class="hero-background"></div>
-            <div class="hero-content">
-                <h1>${repoName}<br><span class="subtitle">Repository Adventure</span></h1>
-            </div>
-        </div>
-        
-        <div class="story-content">
-            <div class="welcome-section">
-                <p>Welcome to Repository Adventure! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the <a href="${repoUrl}" target="_blank" rel="noopener noreferrer">${repoName}</a> repo's code, transforming technical exploration into fun and engaging code exploration.</p>
-            </div>
-            
-            <div class="theme-selector">
-                <h2>Choose Your Adventure Theme</h2>
-                <div class="theme-grid">
+    // Define theme data
+    const themes = [
+      {
+        dir: 'space',
+        image: 'space.png',
+        title: 'Space Explorer',
+        altText: 'Space Explorer Preview',
+        description: 'Embark on cosmic adventures through code galaxies and starship protocols.'
+      },
+      {
+        dir: 'mythical',
+        image: 'mythical.png',
+        title: 'Enchanted Kingdom',
+        altText: 'Enchanted Kingdom Preview',
+        description: 'Journey through ancient codebases in a realm of parchment and magic.'
+      },
+      {
+        dir: 'ancient',
+        image: 'ancient.png',
+        title: 'Ancient Explorer',
+        altText: 'Ancient Explorer Preview',
+        description: 'Discover sacred coding wisdom in mystical temples and ancient halls.'
+      },
+      {
+        dir: 'developer',
+        image: 'developer.png',
+        title: 'Developer',
+        altText: 'Developer Preview',
+        description: 'Navigate modern development workflows with professional precision.'
+      }
+    ];
 
-            <div class="theme-card" onclick="window.location.href='space/index.html'">
-                <div class="theme-preview">
-                    <img src="space/assets/images/space.png" alt="Space Explorer Preview" loading="lazy">
-                </div>
-                <div class="theme-info">
-                    <h3>Space Explorer</h3>
-                    <p>Embark on cosmic adventures through code galaxies and starship protocols.</p>
-                </div>
-            </div>
+    // Generate theme cards using template
+    const themeCards = themes.map(theme => {
+      const themeCardVariables = {
+        THEME_DIR: theme.dir,
+        THEME_IMAGE: theme.image,
+        THEME_TITLE: theme.title,
+        THEME_ALT_TEXT: theme.altText,
+        THEME_DESCRIPTION: theme.description
+      };
+      return this.templateEngine.renderTemplate('theme-card.html', themeCardVariables);
+    }).join('\n');
 
-            <div class="theme-card" onclick="window.location.href='mythical/index.html'">
-                <div class="theme-preview">
-                    <img src="mythical/assets/images/mythical.png" alt="Enchanted Kingdom Preview" loading="lazy">
-                </div>
-                <div class="theme-info">
-                    <h3>Enchanted Kingdom</h3>
-                    <p>Journey through ancient codebases in a realm of parchment and magic.</p>
-                </div>
-            </div>
+    // Generate homepage using template
+    const variables = {
+      REPO_NAME: repoName,
+      REPO_URL: repoUrl,
+      THEME_CARDS: themeCards
+    };
 
-            <div class="theme-card" onclick="window.location.href='ancient/index.html'">
-                <div class="theme-preview">
-                    <img src="ancient/assets/images/ancient.png" alt="Ancient Explorer Preview" loading="lazy">
-                </div>
-                <div class="theme-info">
-                    <h3>Ancient Explorer</h3>
-                    <p>Discover sacred coding wisdom in mystical temples and ancient halls.</p>
-                </div>
-            </div>
-
-            <div class="theme-card" onclick="window.location.href='developer/index.html'">
-                <div class="theme-preview">
-                    <img src="developer/assets/images/developer.png" alt="Developer Preview" loading="lazy">
-                </div>
-                <div class="theme-info">
-                    <h3>Developer</h3>
-                    <p>Navigate modern development workflows with professional precision.</p>
-                </div>
-            </div>
-            </div>
-            </div>
-        </div>
-    </div>
-    
-    <footer class="footer">
-        <div class="footer-content">
-            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
-        </div>
-    </footer>
-</body>
-</html>`;
-
+    const html = this.templateEngine.renderTemplate('homepage-template.html', variables);
     const indexPath = path.join(this.outputDir, 'index.html');
     fs.writeFileSync(indexPath, html);
     console.log(chalk.green('✅ Homepage index.html created'));
