@@ -1,121 +1,130 @@
-# Quest 5: The Foundation of Structured Power
+# Quest 1: The Archive Simulator
 ---
-In the enchanted halls of the **Codebase of Adventures**, a great challenge awaits. To unlock the secret of adaptive narrative generation, you must wield the tools of robust configuration and dynamic utility. The **Foundation of Structured Power** lies deep within the realm of adventure configuration, where every parameter and file transforms into functional magic. Your mission is to decode its foundations and use its structured design to elevate your mastery of the repository. The fate of the kingdom hinges on the power you harness here.
+In the realm of Endless Journeys, brave adventurers encounter the Archive, a mythical repository that breathes life into explorations. From its depths, dynamic tools materialize, enabling explorers to decode, analyze, and uncover its mysteries. Today, your mission guides you to the Archive Simulator, an MCP-powered interface that bridges adventurers with the tools needed to decipher coded scrolls and generate immersive stories from repositories.
 
 ## Quest Objectives
 As you explore the code below, investigate these key questions:
-- 🔍 **Path Weaver**: How does the `extractUniqueFilePaths` function ensure all file paths referenced in the configuration are both unique and valid?
-- ⚡ **Architect’s Blueprint**: What steps does `formatAdventureConfigForPrompt` take to optimize configuration data for use in LLM prompts, and what design principles are evident in its formatting process?
-- 🛡️ **Error Sage**: How does `parseAdventureConfig` handle errors during the JSON parsing process, and why is its approach significant for system resilience?
+- 🔍 **Handler Integration**: How does `RepoAdventureServer.setupHandlers` dynamically manage tools and their schemas?
+- ⚡ **Transport Mechanics**: What role does `RepoAdventureServer.run` play in establishing the server connection and preloading content pipelines?
+- 🛡️ **Graceful Exit**: How does `main` implement clean shutdown processes to ensure error-free termination?
 
 ## File Exploration
-### packages/core/src/shared/adventure-config.ts: Core Adventure Configuration Utilities
-This file is the beating heart of the configuration system, providing critical utilities to load, parse, and format adventure configuration data. It handles reading raw files, parsing JSON content, extracting paths, and optimizing data for prompts. These functions ensure the adventure system has a reliable and streamlined configuration foundation.
+### packages/mcp/src/server.ts: MCP Server Implementation
+This file provides the backbone for the Archive Simulator, orchestrating dynamic tools and the MCP server environment. It includes a `RepoAdventureServer` class and key methods like `setupHandlers` for registering tools dynamically and `run` for server execution with graceful shutdown procedures.
 
 #### Highlights
-- `parseAdventureConfig`: Parses the raw configuration file into a structured object or returns `null` on error. It centralizes JSON parsing and validation, ensuring resilience against malformed files.
-- `extractUniqueFilePaths`: Traverses the parsed configuration to extract all unique, existing file paths referenced in "path" fields. It validates these paths dynamically, ensuring only valid and accessible files are included.
-- `formatAdventureConfigForPrompt`: Reformats the adventure configuration into a minimal format suitable for LLM prompts. It eliminates verbosity, preserving only essential quest details like file paths and function names.
+- `RepoAdventureServer.setupHandlers` dynamically lists available tools, validates their parameters, and executes tool-specific handlers, enabling modular tool expansion. 
+- `RepoAdventureServer.run` initializes the server on standard I/O transport, pre-generating repository analysis to optimize performance while awaiting user commands.
+- `main` establishes the server lifecycle, handling startup errors and ensuring clean exit routines upon termination signals.
 
 ## Code
-### packages/core/src/shared/adventure-config.ts
+### packages/mcp/src/server.ts
 ```typescript
-export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-```
-- This function attempts to load the adventure configuration file and parses its JSON content into an object.
-- It uses error handling to safely return `null` if the file is missing or contains malformed JSON.
-- Centralizing the parsing process here ensures the system can handle failures gracefully without polluting higher-level logic with error management.
+private setupHandlers() {
+  // Dynamic tool listing
+  this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+    const toolList = Object.entries(tools).map(([name, tool]) => ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: 'jsonSchema7',
+        $refStrategy: 'none'
+      })
+    }));
 
----
+    return { tools: toolList };
+  });
 
-```typescript
-export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== 'object') return [];
+  // Dynamic tool execution
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      const { name, arguments: args } = request.params;
 
-  const unique = new Set<string>();
-  const stack: any[] = [parsed];
-
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== 'object') continue;
-
-    if (typeof node.path === 'string' && node.path.trim()) {
-      const rel = node.path.trim();
-      if (fs.existsSync(path.resolve(projectPath, rel))) {
-        unique.add(rel);
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
+
+      const tool = tools[name as keyof typeof tools];
+      
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) => 
+          `${err.path.join('.')}: ${err.message}`
+        ).join(', ');
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
+
+      return await tool.handler(validationResult.data as any);
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
-
-    const children = Array.isArray(node) ? node : Object.values(node);
-    children.forEach(child => {
-      if (child && typeof child === 'object') stack.push(child);
-    });
-  }
-
-  return Array.from(unique);
+  });
 }
 ```
-- This function collects all unique file paths from the parsed configuration.
-- It employs a depth-first traversal to navigate nested objects and arrays.
-- File paths are validated dynamically using `fs.existsSync`, ensuring only existing files are included.
-- The use of a `Set` prevents duplicate paths from being added, maintaining uniqueness automatically.
+- Dynamically lists available tools by iterating over the `tools` module, creating schema-driven definitions compatible with MCP standards.
+- Validates user inputs using Zod schemas, ensuring safe and predictable tool execution.
+- Modularizes error handling with `McpError`, aligning with MCP error codes for improved debugging and user feedback.
 
 ---
 
 ```typescript
-export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== 'object') {
-    return '';
-  }
-
-  const adventure = (parsed as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) {
-    return '';
-  }
-
-  let formatted = `## Quest Structure\n`;
-
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    
-    const filePaths = quest.files.map((f: any) => f.path).filter(Boolean);
-    formatted += `Files: ${filePaths.join(', ')}\n`;
-    
-    const functions = quest.files
-      .flatMap((f: any) => f.highlights || [])
-      .map((h: any) => h.name)
-      .filter(Boolean);
-    formatted += `Functions: ${functions.join(', ')}\n\n`;
-  }
-
-  return formatted;
+async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error('Repo Adventure MCP server running on stdio');
+  
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
 }
 ```
-- This function generates a lean, specialized format of the adventure configuration suitable for LLM prompts.
-- It focuses on quest titles, file paths, and function names, discarding verbose descriptions.
-- The design ensures compactness, reducing character count to optimize LLM token usage.
-- Its iterative approach with nested quest parsing demonstrates careful handling of hierarchical data structures.
+- Establishes MCP server environment by connecting through the `StdioServerTransport`.
+- Pre-generates repository analysis content to streamline user interactions by caching metadata upfront.
+- Incorporates asynchronous workflows to optimize tool initialization before user commands.
+
+---
+
+```typescript
+async function main() {
+  try {
+    const server = new RepoAdventureServer();
+    
+    ['SIGINT', 'SIGTERM'].forEach(sig => 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    
+    process.on('unhandledRejection', (reason) => {
+      console.error('Unhandled promise rejection:', reason);
+      console.error('MCP server continuing to run. Please report this error.');
+    });
+    
+    await server.run();
+  } catch (error) {
+    console.error('Fatal error starting MCP server:', error);
+    process.exit(1);
+  }
+}
+```
+- Implements robust error handling during server lifecycle management to prevent unexpected crashes.
+- Registers signal handlers (`SIGINT` and `SIGTERM`) for clean shutdown, preserving the system's integrity on termination.
+- Logs unhandled promise rejections without halting the server, promoting resilience.
 
 ---
 
 ## Helpful Hints
-- While exploring the functions, note how validation and error handling are centralized for robustness.
-- Compare the design of `extractUniqueFilePaths` to traditional recursive navigation. Why might this iterative depth-first approach be chosen?
-- Consider how compact formatting affects both human readers and automated systems like LLMs.
+- Use the `ListToolsRequestSchema` handler to explore registered tools and their schemas.
+- Investigate the caching mechanism within `repoAnalyzer.preGenerate` for insights on pre-optimization techniques.
+- Study the lifecycle management in `main` for best practices in error handling and graceful shutdowns.
 
 ---
-You have mastered all the secrets of adaptive narrative generation and the structure of the **Codebase of Adventures**! Your adventure is complete.
 
-Congratulations on successfully refactoring Quest 5: The Foundation of Structured Power into your skillset repository—you're now 80% deployed toward mastering the system architecture pipeline! 🚀⚡💎 Keep pushing toward the final implementation!
+Excellent work! Continue to the next quest to uncover more mysteries.
+
+Console.log('🎉 Success! Quest 1: The Archive Simulator has been fully committed—your codebase of skills is initializing at lightning speed 🚀✨ onto the roadmap of mastery!')

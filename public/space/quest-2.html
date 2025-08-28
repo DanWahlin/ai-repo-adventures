@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 2: Ignite the Cosmic Generator - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader for syntax highlighting
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Trigger Prism highlighting after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="nav-left">
+                <a href="index.html">Cosmic Chronicles of the Repo Explorer</a>
+            </div>
+            <div class="nav-middle">
+            </div>
+            <div class="nav-right">
+                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <img src="assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 2: Ignite the Cosmic Generator</h1>
+<hr>
+<p>As the <strong>Repo Explorer</strong> glides into the velvety expanse of the coding nebula, a sudden alert ripples through the starship&#39;s control deck. The Cosmic Generator—an awe-inspiring engine responsible for synthesizing the starship’s narrative power—has powered down. Without its luminous energy, the mission to illuminate hidden patterns in the coding universe is at risk of failure. You, the starship&#39;s pilot, must reignite this essential engine by deciphering quest blueprints, scavenging critical data paths, and ensuring compatibility between themes and prompts to restore the cosmic flow.</p>
+<p>Will you calibrate the generator and bring the <strong>Repo Explorer</strong> back to full operational status?</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the files below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Generator Alignment</strong>: How does the <code class="inline-code">initializeAdventure</code> function structure an adventure’s storytelling flow and ensure theme integration?</li>
+<li>⚡ <strong>Narrative Power</strong>: In what ways does the <code class="inline-code">generateStoryAndQuests</code> function utilize project data to build robust adventures?</li>
+<li>🛡️ <strong>System Fail-Safes</strong>: How do <code class="inline-code">parseAdventureConfig</code> and <code class="inline-code">validateChoice</code> maintain system reliability amid erroneous input or missing data?</li>
+</ul>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> The Adventure Conductor</h3>
+<p>The <code class="inline-code">adventure-manager.ts</code> file orchestrates the core mechanics of initiating and executing <strong>Repo Explorer</strong> adventures. It governs adventure configurations, validates user choices, and collaborates with the <code class="inline-code">StoryGenerator</code> to craft narrative arcs. The file introduces stateful components like <code class="inline-code">AdventureState</code>, storing progress and ensuring seamless user navigation.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">initializeAdventure</code>: Sets up the coding adventure, integrating project context, applying themes, and generating quests using the story generator.</li>
+<li><code class="inline-code">exploreQuest</code>: Engages a specific quest from a user’s choice, leveraging progress tracking and retrieval of cached content.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code>: Dynamically calculates the user’s completion percentage, offering a visual update for quest progress.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
+<pre><code class="language-typescript">async initializeAdventure(
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string,
+  customThemeData?: CustomThemeData
+): Promise&lt;string&gt; {
+  this.state.reset();
+  this.state.projectInfo = projectInfo;
+  this.state.currentTheme = theme;
+  this.state.projectPath = projectPath || process.cwd();
+
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
+
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(
+    projectInfo,
+    theme,
+    this.state.projectPath
+  );
+
+  this.state.title = storyResponse.title;
+  this.state.story = storyResponse.story;
+  this.state.quests = this.enforceConfigQuestCount(
+    this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath),
+    this.state.projectPath
+  );
+
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests,
+  });
+}
+</code></pre>
+<ul>
+<li>This function resets the adventure state to ensure a clean slate for each new mission.</li>
+<li>Injects project metadata, navigates to the correct path, and dynamically applies custom themes.</li>
+<li>Generates a cohesive narrative by combining external configurations and procedurally generated quests.</li>
+<li>Prioritizes flexibility with error handling mechanisms for missing or malformed configuration files.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
+
+  const quest = this.findQuest(sanitizedChoice);
+  if (!quest) {
+    return this.createNotFoundResult();
+  }
+
+  return await this.executeQuest(quest);
+}
+</code></pre>
+<ul>
+<li>Bridges user interaction with code-based quests by validating their inputs and matching them with numerical or textual identifiers.</li>
+<li>Offers crucial error feedback and fallback mechanisms in cases of invalid choices.</li>
+<li>Supports a cached retrieval mechanism to prevent redundant processing of completed quests.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">get progressPercentage(): number {
+  return this.quests.length &gt; 0
+    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
+    : 0;
+}
+</code></pre>
+<ul>
+<li>Provides real-time updates on quest completion, ensuring user engagement is tracked through percentage-based progress.</li>
+<li>Demonstrates efficient calculations that scale dynamically with the list of completed quests.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> The Configuration Nexus</h3>
+<p>This file provides functions for reading and parsing the <strong>Repo Explorer’s</strong> <code class="inline-code">adventure.config.json</code>. By managing structured input, it shapes the starship’s quests and file path guidance.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code>: Transforms raw JSON configuration data into structured objects used for procedural storytelling.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Produces a validated list of distinct file paths gleaned from the adventure configuration.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Converts configuration into a concise format suitable for analysis or generation prompts.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+</code></pre>
+<ul>
+<li>Converts a configuration file into usable JSON structure, ensuring graceful error handling for missing or malformed data.</li>
+<li>Enables dynamic quest generation by providing flexible compatibility with external configurations.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (typeof node.path === &#39;string&#39; &amp;&amp; fs.existsSync(path.resolve(projectPath, node.path.trim()))) {
+      unique.add(node.path.trim());
+    }
+    (Array.isArray(node) ? node : Object.values(node)).forEach(child =&gt; {
+      if (typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<ul>
+<li>Uses a stack-based traversal mechanism to uncover and validate file paths referenced within the configuration.</li>
+<li>Ensures paths exist in the filesystem to reduce runtime errors during quest exploration.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = parsed.adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  return adventure.quests.map(quest =&gt; `
+### ${quest.title}
+Files: ${quest.files.map(f =&gt; f.path).join(&#39;, &#39;)}
+Functions: ${quest.files.flatMap(f =&gt; f.highlights).join(&#39;, &#39;)}
+`).join(&#39;\n&#39;);
+}
+</code></pre>
+<ul>
+<li>Streamlines configuration into a format optimized for LLM-based reports.</li>
+<li>Focuses on essentials such as titles, function highlights, and file listings for effective narrative alignment.</li>
+</ul>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>🛠️ Before you attempt modifications, ensure that your <code class="inline-code">adventure.config.json</code> conforms to valid JSON formatting to avoid initialization errors.</li>
+<li>🗺️ Pay attention to how dynamically applied themes shape narrative constructs in <code class="inline-code">initializeAdventure</code>.</li>
+<li>🌌 Use the <code class="inline-code">progressPercentage</code> logic to build engaging user-facing feedback systems in your own projects.</li>
+</ul>
+<hr>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the <strong>Repo Explorer’s</strong> cosmic potential.</p>
+<p>🌟 Stellar achievement, cadet—Quest 2 complete! The Cosmic Generator blazes with newfound energy, propelling your intergalactic mission to the stars at warp speed—keep orbiting greatness! 🚀⚡✨</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3 →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
+        </div>
+    </footer>
+    
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
+    <script src="assets/quest-navigator.js"></script>
+</body>
+</html>

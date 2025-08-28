@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 1: Master the Command Deck - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="assets/quest-navigator.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader for syntax highlighting
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Trigger Prism highlighting after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="nav-left">
+                <a href="index.html">Cosmic Chronicles of the Repo Explorer</a>
+            </div>
+            <div class="nav-middle">
+            </div>
+            <div class="nav-right">
+                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <img src="assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 1: Master the Command Deck</h1>
+<hr>
+<p>Aboard the <strong>Repo Explorer</strong>, the hum of advanced systems fills the air as the ship drifts through the luminous Repository Nebula. Your mission begins with mastering the <strong>Command Deck</strong>, the beating heart of the ship where missions are directed and intelligence is processed. The crew works tirelessly to ensure each starline of code is understood. With its vast capabilities, the Deck requires a skilled hand to orchestrate its tools and ensure seamless operations. Ready your scanners, Commander—it&#39;s time to decode the secrets of the <strong>Command Deck</strong>.</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Tool Scanner</strong>: How does <code class="inline-code">setupHandlers</code> dynamically register and validate tools for operation?</li>
+<li>⚡ <strong>Warp System Execution</strong>: How does the <code class="inline-code">run</code> method engage the transport system and perform pre-flight preparations?</li>
+<li>🛡️ <strong>Failure Containment</strong>: How does the <code class="inline-code">gracefulShutdown</code> mechanism ensure stable operations during unexpected events?</li>
+</ul>
+<h2>File Exploration</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a>: Core command deck initialization and runtime</h3>
+<p>This file defines the <strong>RepoAdventureServer</strong>, a backbone structure for managing tools and serving requests dynamically. With actions like tool registration and MCP (Model Context Protocol) communication, it represents the operating bridge of the <strong>Repo Explorer</strong>. Central methods to understand include <code class="inline-code">setupHandlers</code>, responsible for dynamically exposing tools and validating inputs, and <code class="inline-code">run</code>, which connects the server to the communication protocol and pre-generates cache content for efficiency. <code class="inline-code">gracefulShutdown</code> handles unexpected interruptions and ensures clean exits without leaving cosmic debris.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">setupHandlers</code> maps tools dynamically, guaranteeing their schemas are validated and exposed for use.</li>
+<li><code class="inline-code">run</code> initializes communication through the transport layer and pre-caches project data for smoother user interaction.</li>
+<li><code class="inline-code">gracefulShutdown</code> ensures safe shutdown procedures, protecting ongoing operations from abrupt interruptions.</li>
+</ul>
+<h2>Code</h2>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
+<pre><code class="language-typescript">private setupHandlers() {
+  // Dynamic tool listing
+  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: &#39;jsonSchema7&#39;,
+        $refStrategy: &#39;none&#39;
+      })
+    }));
+
+    return { tools: toolList };
+  });
+
+  // Dynamic tool execution
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+    try {
+      const { name, arguments: args } = request.params;
+
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+
+      const tool = tools[name as keyof typeof tools];
+      
+      // Validate arguments using the tool&#39;s Zod schema
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) =&gt; 
+          `${err.path.join(&#39;.&#39;)}: ${err.message}`
+        ).join(&#39;, &#39;);
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
+
+      // Execute the tool handler with validated arguments
+      return await tool.handler(validationResult.data as any);
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  });
+}
+</code></pre>
+<ul>
+<li>Dynamically lists all tools available using <code class="inline-code">zodToJsonSchema</code> for structured validation, ensuring interoperability.</li>
+<li>Converts Zod schemas into JSON-Schema, a key step for standardizing input definitions across tools.</li>
+<li>Validates user inputs pre-execution, preventing invalid or malformed data from causing runtime issues.</li>
+<li>Demonstrates centralized error handling for robust response mechanisms.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  
+  // Pre-generate repomix content for the current working directory to warm up the cache
+  // This happens in the background while waiting for user commands
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
+}
+</code></pre>
+<ul>
+<li>Engages the communication transport system through <code class="inline-code">StdioServerTransport</code>, enabling high-level connectivity.</li>
+<li>Prints informative status logs, helping operators monitor the readiness of the system.</li>
+<li>Pre-generates cache content using <code class="inline-code">repoAnalyzer.preGenerate</code>, a performance optimization to enhance runtime efficiency.</li>
+<li>Demonstrates background operations running parallel to user request processing.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">function gracefulShutdown() {
+  console.error(&#39;\nShutting down MCP server...&#39;);
+  try {
+    repoAnalyzer.cleanup();
+  } catch (e) {
+    console.error(&#39;Cleanup error:&#39;, e);
+  }
+  process.exit(0);
+}
+</code></pre>
+<ul>
+<li>Initiates cleanup routines using <code class="inline-code">repoAnalyzer.cleanup</code>, preventing resource leaks.</li>
+<li>Logs shutdown messages to ensure clarity during offline incidents.</li>
+<li>Uses <code class="inline-code">process.exit(0)</code> to terminate operations cleanly without leaving unresolved tasks that might corrupt data.</li>
+<li>Ensures predictable behavior during shutdown signals such as <code class="inline-code">SIGINT</code> or <code class="inline-code">SIGTERM</code>.</li>
+</ul>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Familiarize yourself with the <code class="inline-code">zodToJsonSchema</code> utility to see how schemas are translated for client use.</li>
+<li>Explore the <code class="inline-code">repoAnalyzer</code> module to understand pre-generation workflows and their impact.</li>
+<li>Investigate how error handling flows via <code class="inline-code">McpError</code> to build a reliable tool execution environment.</li>
+</ul>
+<hr>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Mission success! You&#39;ve expertly navigated the nebula of knowledge and claimed victory over Quest 1: Master the Command Deck—your cosmic journey is now powered by stardust and ambition! 🚀⭐⚡</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom nav-next-only">
+        <a href="quest-2.html" class="next-quest-btn">Next: Quest 2 →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
+        </div>
+    </footer>
+    
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
+    <script src="assets/quest-navigator.js"></script>
+</body>
+</html>
