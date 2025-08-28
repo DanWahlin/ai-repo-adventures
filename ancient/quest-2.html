@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Pyramid of Narrative Crafting - Repo Adventure</title>
+    <title>Quest 2: The Chamber of Eternal Tales - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,11 +29,15 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Codex: Adventures in the Repository of Lost Wisdom</a>
+                <a href="index.html">The Sacred Repository of Lost Codes</a>
+            </div>
+            <div class="nav-middle">
             </div>
             <div class="nav-right">
+                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/images/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                    <img src="assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
             </div>
         </div>
@@ -41,26 +45,27 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Pyramid of Narrative Crafting</h1>
+    <h1>Quest 2: The Chamber of Eternal Tales</h1>
 <hr>
-<p>Ancient pathways twist and turn through the labyrinthine Repository of Lost Wisdom, leading you deeper into the temple. You find yourself at the foot of the fabled Pyramid of Narrative Crafting. Engraved on the pyramid&#39;s surface are intricate glyphs pulsating with light, promising the secrets of dynamic quest generation. As shadows play tricks on your eyes, an ethereal voice whispers, &quot;Decode the layers of narrative creation to shape the adventures of tomorrow.&quot; Your path is illuminated – climb the pyramid and unveil its mysteries.</p>
+<p>As the vines part and sunlight pierces through the dense canopy, you stand before the Chamber of Eternal Tales. Encased within its stone walls lies the legendary mechanism that once powered the creative endeavors of the ancient civilization of Codara. Known as the Quest Generation Engine, its gears lie dormant, its secrets waiting to be reignited. To unlock this treasure of storytelling mastery, you must traverse the mechanisms that dictate the generation of quests and their stories. Beware, traveler – the ancients encoded these paths with complexity to guard their wisdom.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Crafting Clarity</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> organize and generate the adventure setup using project context and theme?  </li>
-<li>⚡ <strong>Quest Execution Mechanism</strong>: What steps does <code class="inline-code">AdventureManager.exploreQuest</code> perform to identify, validate, and execute a chosen quest?  </li>
-<li>🛡️ <strong>LLM Invocation</strong>: How does <code class="inline-code">StoryGenerator.generateQuestContent</code> utilize the LLM and manage its outputs in the quest context?</li>
+<li>🔍 <strong>Symbol of Beginnings</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> reset the system and prepare it for a new quest, and what role does the project context play?</li>
+<li>⚡ <strong>Path of Choices</strong>: How does <code class="inline-code">AdventureManager.exploreQuest</code> validate a user’s choice and resolve the execution process of a specific quest?</li>
+<li>🛡️ <strong>Gears of Protection</strong>: How is project configuration validated and incorporated into the quest generation process in <code class="inline-code">parseAdventureConfig</code> from the adventure config system?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Responsible for managing the overarching adventure lifecycle, including initialization, quest selection, and execution.</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: The Quest Generation Engine</h3>
+<p><code class="inline-code">AdventureManager</code> serves as the heart of the quest creation system. From initializing new adventures to selecting and validating user choices, it orchestrates the entire storytelling process. This intricate system relies on dynamic user inputs and predefined project contexts to generate interactive narratives.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Establishes the full adventure context, integrating quests and overarching story with provided project details and themes.</li>
-<li><code class="inline-code">exploreQuest</code>: Processes user inputs to identify, validate, and execute specific quests, even handling cached content for revisited quests.</li>
-<li><code class="inline-code">executeQuest</code>: Executes a given quest, fetches or generates content as needed, and caches results for efficient reuse.</li>
+<li><code class="inline-code">initializeAdventure</code>: Resets the adventure context, integrates the selected theme, and generates quests and a corresponding storyline using project-related data.</li>
+<li><code class="inline-code">exploreQuest</code>: Handles user choices by validating input, determining the appropriate quest, and executing it with detailed content exploration.</li>
+<li><code class="inline-code">mergeQuestFilesFromConfig</code>: Integrates file paths from the configuration to ensure that quests align with user-defined or project-specific parameters.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/adventure/adventure-manager.ts</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
   theme: AdventureTheme, 
@@ -82,7 +87,7 @@
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
   
   this.state.title = storyResponse.title;
-  this.state.story = typeof storyResponse.story === &#39;string&#39; ? storyResponse.story : storyResponse.story.content;
+  this.state.story = storyResponse.story;
   
   // Merge files from adventure config into the generated quests
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
@@ -98,10 +103,9 @@
 }
 </code></pre>
 <ul>
-<li>Establishes the adventure&#39;s context by resetting the state and incorporating project, theme, and optional configs.</li>
-<li>Employs LLM-powered generation (<code class="inline-code">StoryGenerator</code>) to dynamically create the narrative and quest structure.</li>
-<li>Integrates external inputs like <code class="inline-code">adventure.config.json</code> to ensure adaptability in quest configuration and file inclusion.</li>
-<li>Returns formatted adventure content with quest listings, preparing the user for exploration.</li>
+<li>This method clears the current state, ensuring no remnants of previous adventures interfere with the new one.</li>
+<li>It configures the theme and optional custom settings, allowing a tailored experience.</li>
+<li>Dynamic quest generation uses live project information to create rich, interactive narratives while integrating configurations for file-specific focus.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
@@ -123,71 +127,155 @@
 }
 </code></pre>
 <ul>
-<li>Validates and sanitizes user-provided choices to ensure input integrity.</li>
-<li>Detects both progress-view requests and specific quest selections through <code class="inline-code">validateAndSanitizeChoice</code> and <code class="inline-code">findQuest</code>.</li>
-<li>Provides a fallback mechanism for invalid inputs, returning choices for correction.</li>
-<li>Centralizes exploration logic while delegating to <code class="inline-code">executeQuest</code> for task-specific operations.</li>
+<li>This method uses validation mechanisms to ensure that user input is safe and appropriate for the quest context.</li>
+<li>It dynamically resolves the selected quest through either numerical identifiers or user-friendly titles.</li>
+<li>By decoupling choice handling, it integrates seamlessly with the quest execution pipeline.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private async executeQuest(quest: Quest): Promise&lt;AdventureResult&gt; {
-  // Validate prerequisites
-  this.validateQuestPrerequisites();
-
-  let content: QuestContent;
-  let summary: string;
-
-  // Check if quest content is already cached (completed quest)
-  const cached = this.state.questContentCache.get(quest.id);
-  if (cached) {
-    // Use cached content - no LLM calls needed  
-    console.log(`🔄 Retrieving completed quest from cache...`);
-    
-    // Add a small delay to make the loading feel more natural
-    await new Promise(resolve =&gt; setTimeout(resolve, 500));
-    
-    content = cached.content;
-    summary = cached.summary;
-    
-    // Add visual indicator that this is cached content
-    content = {
-      ...content,
-      adventure: `🔄 **[REVISITING COMPLETED QUEST]**\n\n${content.adventure}`
-    };
-  } else {
-    // Generate new quest content (LLM call)
-    console.log(`🎯 Generating new content for quest: ${quest.title}`);
-    content = await this.generateQuestContent(quest);
-    
-    // Generate completion summary (LLM call)
-    summary = await this.generateCompletionSummary(quest);
-    
-    // Cache the content for future access
-    this.state.questContentCache.set(quest.id, { content, summary });
+<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
+  if (!projectPath) return quests;
+  
+  const config = parseAdventureConfig(projectPath);
+  if (!config || typeof config !== &#39;object&#39;) return quests;
+  
+  const adventure = (config as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) return quests;
+  
+  // Create a map of quest titles to their file paths from the config
+  const configQuestFiles = new Map&lt;string, string[]&gt;();
+  for (const configQuest of adventure.quests) {
+    if (configQuest.title &amp;&amp; Array.isArray(configQuest.files)) {
+      const filePaths = configQuest.files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (filePaths.length &gt; 0) {
+        configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
+      }
+    }
   }
   
-  // Mark as completed (or update completion if revisiting)
-  this.markQuestCompleted(quest);
-
-  // Return formatted result
-  return this.createQuestResult(content, summary);
+  // Merge the files into the generated quests
+  return quests.map((quest) =&gt; {
+    const questTitleLower = quest.title.toLowerCase();
+    for (const [configTitle, files] of configQuestFiles.entries()) {
+      if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
+        return { ...quest, codeFiles: files };
+      }
+    }
+    return quest;
+  });
 }
 </code></pre>
 <ul>
-<li>Manages LLM-backed quest execution while avoiding redundant calls with efficient caching mechanisms.</li>
-<li>Ensures robust validation by verifying prerequisites and checks like <code class="inline-code">validateQuestPrerequisites</code>.</li>
-<li>Differentiates between new and revisited quests, enriching user experience with unique handling for each.</li>
-<li>Creates structured results combining content and progress updates, completing the exploration cycle.</li>
+<li>This function aligns generated quests with user-defined configurations, ensuring relevance and specificity.</li>
+<li>Configuration data is matched by title or order, enabling flexible yet precise integration.</li>
+<li>By handling edge cases gracefully, it ensures quest files are consistently incorporated without breaking the narrative flow.</li>
+</ul>
+<hr>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
+<p>This file enables the system to parse and validate configurations provided by users through the <code class="inline-code">adventure.config.json</code> file. It extracts meaningful paths and data structures, ensuring the quest generation respects the intended parameters.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code>: Parses the JSON configuration file into a structured data object, enabling safe and predictable operations.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies and validates file paths referenced in the configuration, ensuring quests have tangible code exploration elements.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes configuration data for integration with the story-generation process.</li>
+</ul>
+<h2>Code</h2>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+</code></pre>
+<ul>
+<li>This function reads the adventure configuration and converts it into a usable format by validating JSON formatting.</li>
+<li>Handling errors elegantly, it avoids crashing the entire quest generation process due to corrupt or missing files.</li>
+<li>By centralizing the parsing logic, it minimizes redundancy across the codebase.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<ul>
+<li>This function ensures only valid file paths are included in the quest configurations, protecting the system from invalid references.</li>
+<li>It uses recursion to explore nested structures within the configuration, which is critical for complex projects.</li>
+<li>By utilizing a <code class="inline-code">Set</code>, it guarantees that no file paths are duplicated.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    
+    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
+    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
+    
+    const functions = quest.files
+      .flatMap((f: any) =&gt; f.highlights || [])
+      .map((h: any) =&gt; h.name)
+      .filter(Boolean);
+    formatted += `Functions: ${functions.join(&#39;, &#39;)}\n\n`;
+  }
+
+  return formatted;
+}
+</code></pre>
+<ul>
+<li>This function optimizes the adventure configuration for easier use with external systems, such as machine learning models.</li>
+<li>By stripping redundant data, it ensures compactness while preserving necessary details.</li>
+<li>It enables seamless integration with story generation pipelines by converting structured data to a digestible format.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>🗺️ Use <code class="inline-code">adventure.config.json</code> as a blueprint for aligning quests with project files.</li>
-<li>🧩 Notice how caching minimizes re-computation, revealing insights into performance optimization.</li>
-<li>✍️ Observe how LLM responses transform narratives dynamically, aiding adaptable system design.</li>
+<li>🧭 <em>Navigation Tip</em>: Track how <code class="inline-code">initializeAdventure</code> integrates project-specific configurations for a seamless user experience.</li>
+<li>⚙️ <em>Mechanism Insight</em>: Observe how the file paths extracted in <code class="inline-code">extractUniqueFilePaths</code> are validated for each quest’s integrity.</li>
+<li>📂 <em>Exploration Tip</em>: Use <code class="inline-code">parseAdventureConfig</code> to trace how JSON is transformed into operational data structures for adventures.</li>
 </ul>
 <hr>
-<p><strong>Tremendous wisdom lies uncovered at the pyramid&#39;s peak, adventurer! Proceed to unravel the next secret of the Repository.</strong></p>
-<p>O seeker of wisdom, thou hast ascended the sacred Pyramid of Narrative Crafting and unlocked its ancient lore—may thy storytelling journey shine eternal like the jeweled stars above! ⭐💎</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the Sacred Repository. May your path be illuminated with ancient wisdom!</p>
+<p>Hark, valiant seeker—thou hast unraveled the sacred riddles of the Chamber of Eternal Tales, etching thy name into the annals of wisdom’s starry vaults; onward, for the path to glory yet unfolds! ⭐📜⚡</p>
 
 </div>
 
@@ -205,7 +293,7 @@
         </div>
     </footer>
     
-    <!-- Quest Navigator Script -->
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
     <script src="assets/quest-navigator.js"></script>
 </body>
 </html>

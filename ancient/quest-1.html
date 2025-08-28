@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Chamber of Ancient Interfaces - Repo Adventure</title>
+    <title>Quest 1: The Sacred Toolforge - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,11 +29,15 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Sacred Codex: Adventures in the Repository of Lost Wisdom</a>
+                <a href="index.html">The Sacred Repository of Lost Codes</a>
+            </div>
+            <div class="nav-middle">
             </div>
             <div class="nav-right">
+                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/images/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                    <img src="assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
             </div>
         </div>
@@ -41,29 +45,28 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Chamber of Ancient Interfaces</h1>
+    <h1>Quest 1: The Sacred Toolforge</h1>
 <hr>
-<p>In the heart of a forgotten digital temple, you step into the fabled Chamber of Ancient Interfaces. Pillars adorned with cryptic carvings of function signatures rise from the floor like sentinels of wisdom. Before you lies the Sacred Codex, its pages whispered to describe the structure of the temple&#39;s mighty tools and the secrets of their guardianship. To retrieve the artifacts within, you must unearth the inner workings of an enigmatic server, its purpose preserved by ritualistic handlers and flows of data. Go forth, adventurer, and decode the ancient wisdom that awaits.</p>
+<p>Through the tangled vines and moss-covered ruins of the Codepanion Archipelago, your journey leads you to the entrance of the Sacred Repository. Etched upon ancient stone tablets are diagrams describing the &quot;Sacred Toolforge&quot; – the beating heart of this vault&#39;s wisdom. This forge holds the power to dynamically craft tools and validate their usage, enabling civilizations to build intricate adventures in days long gone. You must uncover the secrets hidden within its mechanisms to understand its power and piece together the ancient repository&#39;s lost legacy.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Ritual of Handlers</strong>: How does <code class="inline-code">setupHandlers</code> enable dynamic functionality for tool listing and execution on the server?</li>
-<li>⚡ <strong>Server&#39;s Incantation</strong>: What role does the <code class="inline-code">run</code> function play in preparing and starting the code exploration journey?</li>
-<li>🛡️ <strong>Graceful Demise</strong>: How does the <code class="inline-code">main</code> function handle unexpected errors or shutdown signals to ensure stability?</li>
+<li>🔍 <strong>Forge Blueprint</strong>: How does <code class="inline-code">setupHandlers</code> dynamically list and validate tools in the system?</li>
+<li>⚡ <strong>Energizing the Forge</strong>: What role does <code class="inline-code">run</code> play in initializing and maintaining the system&#39;s functionality?</li>
+<li>🛡️ <strong>Safety Protocols</strong>: How does <code class="inline-code">main</code> handle graceful shutdowns and error resilience?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Ancient Server Logic</h3>
-<p>This file houses the <code class="inline-code">RepoAdventureServer</code>, the central orchestrator that ensures tools are properly registered and server operations remain robust. It integrates core guardians of wisdom (tools) with dynamic response handling. Structures like <code class="inline-code">setupHandlers</code> enable precise rituals for validating and invoking these tools, while <code class="inline-code">run</code> oversees initiation ceremonies for adventurers. The <code class="inline-code">main</code> function is the temple&#39;s guardian, prepared for disruptive intrusions yet ensuring continuity in the face of uncertainty.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Core MCP Server Implementation</h3>
+<p>The <code class="inline-code">server.ts</code> file acts as the central lifeline for the &quot;Sacred Toolforge,&quot; managing the dynamic initialization and execution of tools within the system. It reveals how tools are discovered, validated, and operated, ensuring adaptability and resilience. Through the establishment of handlers and execution protocols, the forge maintains the intricate balance of inputs and outputs that ancient creators perfected. Its significance lies in the way it empowers adventurers to interact with the repository in safe and structured ways.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code> establishes foundational rituals for dynamically listing and executing tools. This ensures the system remains adaptable and extensible.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code> initializes the server, connects transports, and primes the repomix content cache, setting the stage for seamless code adventures.</li>
-<li><code class="inline-code">main</code> acts as the vigilant overseer, managing server lifecycle events like unexpected shutdowns or unhandled promise rejections, ensuring stability and user safety.</li>
+<li><code class="inline-code">setupHandlers</code>: Configures dynamic tool listing and execution, ensuring validated inputs and robust error handling.</li>
+<li><code class="inline-code">run</code>: Boots up the MCP server, pre-generates content for efficiency, and establishes transport mechanisms for client communication.</li>
+<li><code class="inline-code">main</code>: Safeguards the system against unexpected crashes, implementing graceful shutdowns and handling unhandled promise rejections.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
 <pre><code class="language-typescript">private setupHandlers() {
-    // Dynamic tool listing
     this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
       const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
         name,
@@ -77,7 +80,6 @@
       return { tools: toolList };
     });
 
-    // Dynamic tool execution
     this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
       try {
         const { name, arguments: args } = request.params;
@@ -88,7 +90,6 @@
 
         const tool = tools[name as keyof typeof tools];
         
-        // Validate arguments using the tool&#39;s Zod schema
         const validationResult = tool.schema.safeParse(args);
         if (!validationResult.success) {
           const errorMessages = validationResult.error.issues.map((err) =&gt; 
@@ -97,7 +98,6 @@
           throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
         }
 
-        // Execute the tool handler with validated arguments
         return await tool.handler(validationResult.data as any);
 
       } catch (error) {
@@ -110,14 +110,14 @@
         );
       }
     });
-  }
+}
 </code></pre>
 <ul>
-<li>This routine dynamically manages the listing and execution of tools, exemplifying modern extensibility in ancient patterns of modular wisdom.</li>
-<li>The <code class="inline-code">ListToolsRequestSchema</code> handler ensures all available tools are documented, facilitating easy integration.</li>
-<li>Validation via <code class="inline-code">zod</code> emphasizes spiritual purity of input, preventing misuse of sacred mechanisms.</li>
-<li>Error codes and exceptions act as ritual safeguards to ensure that perpetrators of invalid requests are appropriately admonished.</li>
-<li>The reliance on handlers and schemas reflects robust design principles found in adaptable systems.</li>
+<li>Ensures tools are dynamically listed with detailed descriptions and validation schemas.</li>
+<li>Handles validation and execution for tools using <code class="inline-code">zod</code> schemas to enforce structured inputs.</li>
+<li>Implements custom error handling using <code class="inline-code">McpError</code> for precise feedback.</li>
+<li>Supports dynamic extensibility, allowing new tools to be seamlessly integrated.</li>
+<li>Encourages robust error reporting for smoother user interaction.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
@@ -125,61 +125,56 @@
     await this.server.connect(transport);
     console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
     
-    // Pre-generate repomix content for the current working directory to warm up the cache
-    // This happens in the background while waiting for user commands
     const projectPath = process.cwd();
     console.error(`Pre-generating repomix content for project at ${projectPath}...`);
     repoAnalyzer.preGenerate(projectPath);
-  }
-</code></pre>
-<ul>
-<li>This function provides the incantation to awaken the server and establish its connection over <code class="inline-code">stdio</code>, symbolizing readiness for exploration.</li>
-<li>The invocation of <code class="inline-code">repoAnalyzer.preGenerate</code> serves as a cache-priming ritual, ensuring the temple is ready to offer its wisdom immediately.</li>
-<li>Background execution ensures responsiveness, reflecting an architectural balance between foresight and immediacy.</li>
-<li>The reuse of <code class="inline-code">process.cwd()</code> integrates context awareness, anchoring the adventure server in the explorer&#39;s current realm.</li>
-<li>This function bridges server preparation and user interactivity, connecting the ritual to its practical application.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async function main() {
-  try {
-    const server = new RepoAdventureServer();
-    
-    // Handle graceful shutdown for both signals
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-      // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
-    });
-    
-    await server.run();
-  } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
-  }
 }
 </code></pre>
 <ul>
-<li>This central function coordinates the startup sequence and ensures the server is prepared for both expected and unexpected challenges.</li>
-<li>The <code class="inline-code">gracefulShutdown</code> function binds to system signals (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>), echoing rituals that prepare the temple for closure.</li>
-<li>Error trapping and logging (<code class="inline-code">unhandledRejection</code>) reinforce stability without interrupting ongoing operations.</li>
-<li>The invocation of <code class="inline-code">RepoAdventureServer</code> encapsulates server logic in a neatly contained ritual object.</li>
-<li>The blend of robust preparation (<code class="inline-code">try-catch</code>) with ongoing error handling exemplifies fault-tolerant design principles.</li>
+<li>Establishes <code class="inline-code">StdioServerTransport</code> for communication.</li>
+<li>Pre-generates content using <code class="inline-code">repoAnalyzer</code> to improve performance and interactivity.</li>
+<li>Logs crucial messages for monitoring the server&#39;s operational status.</li>
+<li>Provides a foundation for initializing client-server workflows.</li>
+<li>Ensures readiness for interactive repository exploration.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async function main() {
+    try {
+        const server = new RepoAdventureServer();
+        
+        [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+          process.on(sig as NodeJS.Signals, gracefulShutdown)
+        );
+        
+        process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+          console.error(&#39;Unhandled promise rejection:&#39;, reason);
+          console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+        });
+        
+        await server.run();
+    } catch (error) {
+        console.error(&#39;Fatal error starting MCP server:&#39;, error);
+        process.exit(1);
+    }
+}
+</code></pre>
+<ul>
+<li>Implements signal handlers for graceful shutdown on termination events (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>).</li>
+<li>Logs unhandled promise rejections and allows recovery without server downtime.</li>
+<li>Prevents crashes on initialization through comprehensive error reporting.</li>
+<li>Ensures stability, a crucial element for live operations.</li>
+<li>Establishes structured error handling to guarantee minimal disruption during unexpected events.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Pay close attention to how schemas (<code class="inline-code">zod</code>) validate inputs and prevent misuse of tool handlers.</li>
-<li>Reflect on how modular design (tools re-exported in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a>) creates an extensible and maintainable system.</li>
-<li>Investigate the relationship between <code class="inline-code">setupHandlers</code> and tool configuration for evolving code exploration rituals.</li>
+<li>Familiarize yourself with <code class="inline-code">Zod</code> schemas used for validation.</li>
+<li>Investigate how <code class="inline-code">tools.ts</code> integrates with <code class="inline-code">setupHandlers</code> for dynamic tool generation.</li>
+<li>Explore context pre-generation mechanisms in <code class="inline-code">repoAnalyzer</code> to understand performance strategies.</li>
 </ul>
 <hr>
-<p>The chamber hums as you absorb its wisdom. You feel the pull of another deeper mystery beyond this interface. Will you continue your exploration?</p>
-<p>By the sacred fires of enlightenment, thou hast unlocked the wisdom of the ancients within the Chamber of Ancient Interfaces—press on, for thy journey through the tapestry of quests hath but begun! ⭐⚡💎</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Hark, noble seeker, with wisdom as thy guide and the anvil of sacred resolve, thou hast forged triumph upon the Toolforge’s altar—rise now, a beacon of ancient valor! ⚡⭐🗺️</p>
 
 </div>
 
@@ -196,7 +191,7 @@
         </div>
     </footer>
     
-    <!-- Quest Navigator Script -->
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
     <script src="assets/quest-navigator.js"></script>
 </body>
 </html>
