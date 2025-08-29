@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Code Analysis Forge - Repo Adventure</title>
+    <title>Quest 3: The Seer’s Lens - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="assets/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository of Forgotten Codes: An Adventure Awaits</a>
+                <a href="index.html">The Codekeeper's Chronicles</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,144 +45,119 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Code Analysis Forge</h1>
+    <h1>Quest 3: The Seer&#39;s Lens</h1>
 <hr>
-<p>Amid the labyrinth of ancient files and nested directories within the Repository of Forgotten Codes lies the fabled Code Analysis Forge. This intricate device, now dormant, is the heart of dynamic code comprehension and optimization. Tasked with reviving its flame, you must understand its components—an analyzer that processes repository context and a mysterious client that interfaces with the depths of language models. Only by deciphering these mechanisms can the Code Analysis Forge be powered, ready to shape paths for future codecrafting explorers.</p>
+<p>Troubling whispers echo through the enchanted repository as The Codekeeper uncovers a critical artifact: the Seer’s Lens. This magical tool sharpens the adventurer&#39;s vision, enabling them to peer into the heart of the code, separating signal from noise. With its guidance, brave developers can distill sprawling complexity into clarity, analyzing only what is essential to their quest. Two critical scrolls are presented, each bursting with layered secrets of optimization and response generation.</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:</p>
+<p>As you explore the code below, investigate these key questions:  </p>
 <ul>
-<li>🔍 <strong>Repository Validation Runes</strong>: How does <code class="inline-code">RepoAnalyzer</code> ensure the path and target files are secure and valid?  </li>
-<li>⚡ <strong>Invoking the Language Oracle</strong>: What is the process <code class="inline-code">LLMClient</code> follows to set up and execute a language model prompt?  </li>
-<li>🛡️ <strong>Error Shielding Techniques</strong>: How does the system handle errors during code analysis and language model responses, ensuring resilience?</li>
+<li>🔍 <strong>Lens of Focus</strong>: How does the analyzer optimize function-focused content from sprawling codebases, and what techniques are employed to safely process file paths?  </li>
+<li>⚡ <strong>Threads of Inquiry</strong>: How does the LLM client dynamically validate its configuration and construct requests for different AI providers?  </li>
+<li>🛡️ <strong>The Shield of Integrity</strong>: What mechanisms are in place for handling invalid configurations, error scenarios, and lengthy timeouts?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Code Analysis Manager</h3>
-<p>As a central tool for repository processing, the <code class="inline-code">RepoAnalyzer</code> coordinates validation, content optimization, and the generation of context for further analysis. Here, we examine its functionality for path validation, optimized content generation, and its subprocess interface.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Code optimization and path validation</h3>
+<p>The <code class="inline-code">RepoAnalyzer</code> class serves as a critical tool for managing code complexity. It validates, normalizes, and filters target file paths to ensure only valid, secure, and necessary files are included. Furthermore, it optimizes extracted content for functions and patterns central to an adventure, conserving resources while maintaining focus on the core story.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">validateProjectPath</code>: Performs safety checks on repository paths to ensure they are valid and secure.</li>
-<li><code class="inline-code">generateTargetedContent</code>: Produces a focused representation of repository files while leveraging caching for efficiency.</li>
-<li><code class="inline-code">captureRepomixStdout</code>: Spawns a subprocess to execute the <code class="inline-code">repomix</code> tool, capturing its output systematically.</li>
+<li><code class="inline-code">validateProjectPath</code>: Ensures the project path is correctly formatted and safe to use, preventing unexpected behavior.  </li>
+<li><code class="inline-code">validateAndNormalizeTargetFiles</code>: Deduplicates file paths, prevents path traversal attacks, and limits the number of files processed for security and efficiency.  </li>
+<li><code class="inline-code">generateOptimizedContent</code>: Applies function-focused optimization, improving token usage by filtering and extracting only the most relevant code blocks.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Querying and interacting with large language models</h3>
+<p>The <code class="inline-code">LLMClient</code> class enables seamless interactions with LLM APIs, dynamically adapting to specific configurations like OpenAI or Azure OpenAI. This class is critical to initiating requests, managing responses, and handling errors when engaging with external AI systems.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateResponse</code>: Constructs the proper request parameters to communicate with LLMs and handles response validation and error scenarios.  </li>
+<li><code class="inline-code">constructor</code>: Initializes the client and determines the correct API provider and key to use based on the configuration.  </li>
+<li><code class="inline-code">getApiKey</code>: Retrieves the appropriate API key, ensuring configurations for either standard OpenAI models or Azure-hosted GitHub models.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
+<pre><code class="language-typescript">/**
+ * Validate project path to ensure it&#39;s a valid string
+ */
+private validateProjectPath(projectPath: string): void {
   if (!projectPath || typeof projectPath !== &#39;string&#39;) {
     throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
-
   const trimmedPath = projectPath.trim();
-  if (!trimmedPath) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-
-  if (trimmedPath.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid null bytes&#39;);
+  if (!trimmedPath || trimmedPath.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid data&#39;);
   }
 }
 </code></pre>
 <ul>
-<li>This code safeguards against invalid or malicious paths by enforcing strict validation rules.  </li>
-<li>Null byte checks prevent filesystem exploits, while trimming ensures no accidental blanks.  </li>
-<li>Provides reliable foundations for downstream operations involving file paths.</li>
+<li>Validates the project path for expected types and format.  </li>
+<li>Prevents invalid paths containing null bytes or other unsafe content.  </li>
+<li>Protects filesystem operations by failing early on bad input.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+<pre><code class="language-typescript">/**
+ * Deduplicate paths and validate they are secure and exist
+ */
+private validateAndNormalizeTargetFiles(projectPath: string, targetFiles: string[]): string[] {
+  const MAX_TARGET_FILES = 50; // Limit for efficiency
+  const projectRoot = path.resolve(projectPath);
+
+  // Deduplication and security checks
+  const safeFiles = [...new Set(targetFiles)].slice(0, MAX_TARGET_FILES).map(file =&gt; {
+    const trimmed = file.trim();
+    if (trimmed.includes(&#39;\0&#39;) || trimmed.includes(&#39;..&#39;)) return null;
+    const fullPath = path.resolve(projectPath, file);
+    if (!fullPath.startsWith(projectRoot + path.sep) || !fs.existsSync(fullPath)) return null;
+    return path.relative(projectPath, fullPath);
+  }).filter(Boolean);
+
+  return safeFiles.sort(); // Consistent order
+}
+</code></pre>
+<ul>
+<li>Deduplicates and validates file paths for safety and consistency.  </li>
+<li>Rejects entries outside the project directory or paths with traversal symbols.  </li>
+<li>Limits the number of files processed, ensuring predictable performance.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">/**
+ * Generate optimized content by focusing on critical functions
+ */
+async generateOptimizedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
 
-  if (!targetFiles || targetFiles.length === 0) {
-    throw new Error(&#39;Target files array cannot be empty&#39;);
-  }
-  
   const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  if (safeFiles.length === 0) {
-    throw new Error(&#39;No valid target files found after validation&#39;);
-  }
-  
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-  const cached = this.cache.get(cacheKey);
-  
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-  
-  try {
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Targeted repomix execution failed: ${error}`);
-  }
-}
-</code></pre>
-<ul>
-<li>Efficiently retrieves targeted content by validating inputs, leveraging caching, and invoking subprocesses.  </li>
-<li>Prevents redundant work by smartly caching results keyed to inputs and options.  </li>
-<li>Errors are captured gracefully, providing clear feedback when subprocess operations fail.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
-    if (options.compress) args.push(&#39;--compress&#39;);
-    if (options.ignore) args.push(&#39;--ignore&#39;, options.ignore);
-  
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
-    let stdout = &#39;&#39;, stderr = &#39;&#39;, stdoutSize = 0, isResolved = false;
-    const timeout = setTimeout(() =&gt; { repomix.kill(&#39;SIGKILL&#39;); reject(new Error(&#39;Timeout&#39;)); }, REPOMIX_SUBPROCESS_TIMEOUT);
-  
-    repomix.stdout.on(&#39;data&#39;, data =&gt; { stdout += data; });
-    repomix.stderr.on(&#39;data&#39;, data =&gt; { stderr += data; });
-    repomix.on(&#39;close&#39;, code =&gt; {
-      clearTimeout(timeout);
-      if (code === 0) resolve(stdout);
-      else reject(new Error(stderr.trim()));
-    });
-  });
-}
-</code></pre>
-<ul>
-<li>Manages subprocesses for generating repository context, handling timeouts and memory constraints.  </li>
-<li>Introduces fine-grained control with CLI arguments and handles large output sizes securely.  </li>
-<li>Asynchronous structure ensures responsiveness, even for blocking operations.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Language Model Client</h3>
-<p>The <code class="inline-code">LLMClient</code> serves as the bridge to a language model API, managing authentication, request formation, and response validation. We focus here on its setup and handling of responses.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">constructor</code>: Initializes the client with appropriate configuration for OpenAI or Azure-based endpoints.</li>
-<li><code class="inline-code">generateResponse</code>: Prepares requests, sends them to the model, and processes the responses into actionable results.</li>
-<li><code class="inline-code">getApiKey</code>: Dynamically fetches the correct API key based on the operating environment.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/core/src/llm/llm-client.ts</h3>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
-  }
+  if (!safeFiles.length) throw new Error(&#39;No valid target files found&#39;);
 
-  this.client = this.isAzureOpenAI() 
-    ? new AzureOpenAI({ endpoint: LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0], apiKey, apiVersion: LLM_API_VERSION, deployment: this.model })
-    : new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+  const cacheKey = `${path.resolve(projectPath)}:optimized:${safeFiles.join(&#39;,&#39;)}`;
+  const cached = this.cache.get(cacheKey);
+
+  const fullContent = cached ? cached.content : await this.generateTargetedContent(projectPath, safeFiles, compress);
+  const optimizedContent = this.extractFunctionFocusedContent(fullContent);
+
+  this.cache.set(cacheKey, { content: optimizedContent, timestamp: Date.now() });
+  return optimizedContent;
 }
 </code></pre>
 <ul>
-<li>Dynamically switches between OpenAI and Azure services, ensuring flexibility for various deployment environments.  </li>
-<li>Validates critical configuration options early, preventing runtime failures.  </li>
-<li>Supports specific deployment features, such as Azure OpenAI&#39;s custom endpoint requirements.</li>
+<li>Integrates validation and content processing seamlessly.  </li>
+<li>Caches optimized results for efficiency and reusability.  </li>
+<li>Focuses on extracting only essential functions to reduce unnecessary data.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+<h3>packages/core/src/llm/llm-client.ts</h3>
+<pre><code class="language-typescript">/**
+ * Generate a response using the selected LLM API and model
+ */
+async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   try {
     const requestParams = this.buildRequestParams(prompt, options);
     const completion = await this.executeRequest(requestParams);
     let content = this.validateResponse(completion);
+
     if (options?.responseFormat === &#39;json_object&#39;) {
       content = this.cleanJsonResponse(content);
     }
+
     this.logTokenUsage(completion);
     return { content };
   } catch (error) {
@@ -192,35 +167,64 @@
 }
 </code></pre>
 <ul>
-<li>Encapsulates request handling—from prompt to result—while embedding validation and error logging.  </li>
-<li>Includes optional post-processing for JSON results and runtime feedback on token usage.  </li>
-<li>Wraps execution in a <code class="inline-code">try-catch</code> block to enhance error traceability, aiding debugging.</li>
+<li>Constructs requests dynamically to fit diverse options and models.  </li>
+<li>Handles JSON response cleaning, logging tokens, and error reports.  </li>
+<li>Offers robust pre- and post-processing for clarity and reliability.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-    if (!GITHUB_TOKEN) throw new Error(&#39;GITHUB_TOKEN required for GitHub Models. Set GITHUB_TOKEN.&#39;);
+<pre><code class="language-typescript">/**
+ * Client constructor - initialize dynamic configuration
+ */
+constructor() {
+  this.model = LLM_MODEL;
+  const apiKey = this.getApiKey();
+  if (!apiKey || !LLM_BASE_URL) {
+    throw new Error(&#39;Configuration for LLM is incomplete&#39;);
+  }
+
+  this.client = this.isAzureOpenAI()
+    ? new AzureOpenAI({ endpoint: LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0], apiKey, apiVersion: LLM_API_VERSION })
+    : new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+}
+</code></pre>
+<ul>
+<li>Dynamically selects the API provider configuration based on the environment.  </li>
+<li>Validates critical configuration values early to avoid runtime issues.  </li>
+<li>Supports multi-provider architecture with Azure-specific setup as needed.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">/**
+ * Retrieve the API key for the appropriate LLM provider
+ */
+private getApiKey(): string {
+  if (LLM_BASE_URL.includes(&#39;ai.azure.com&#39;)) {
+    if (!GITHUB_TOKEN) {
+      throw new Error(&#39;GITHUB_TOKEN is required for Azure-hosted models&#39;);
+    }
     return GITHUB_TOKEN;
   }
-  if (!LLM_API_KEY) throw new Error(&#39;LLM_API_KEY required. Set LLM_API_KEY.&#39;);
+
+  if (!LLM_API_KEY) {
+    throw new Error(&#39;LLM_API_KEY is required for general providers&#39;);
+  }
   return LLM_API_KEY;
 }
 </code></pre>
 <ul>
-<li>Dynamically retrieves and validates the appropriate API key based on the service provider.  </li>
-<li>Ensures the presence of required environment variables to prevent misconfiguration at runtime.  </li>
-<li>Distinguishes between GitHub-hosted Azure models and other OpenAI services.</li>
+<li>Differentiates between standard providers and Azure-hosted GitHub models.  </li>
+<li>Retrieves appropriate keys based on configuration context.  </li>
+<li>Ensures errors are caught early if keys are missing.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>When analyzing the <code class="inline-code">RepoAnalyzer</code>, focus on how caching mechanisms are implemented to avoid redundant operations.  </li>
-<li>Study the <code class="inline-code">generateResponse</code> method in <code class="inline-code">LLMClient</code> to understand the interaction between prompt-building and result validation.  </li>
-<li>Pay attention to error handling patterns in both files to see how they contribute to system reliability.</li>
+<li><strong>Master Code Optimization</strong>: Study how functions focus optimization in <code class="inline-code">repo-analyzer.ts</code> to design efficient content filters.  </li>
+<li><strong>Dynamic LLM Queries</strong>: Review <code class="inline-code">llm-client.ts</code> to learn how to adapt APIs for multiple formats and providers.  </li>
+<li><strong>Error Investigation</strong>: Pay special attention to logging and fallback methods to enhance debugging in unknown scenarios.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Congratulations on refactoring your skillset and debugging the complexities of Quest 3: The Code Analysis Forge—you&#39;re deploying excellence at 40% completion, keep compiling your success! 🚀⭐⚡</p>
+<p>Congrats, dev! You’ve successfully debugged the Seer’s Lens module, refactored your skills, and deployed a 40% progress milestone—keep optimizing towards the final build! 🚀👁️💎</p>
 
 </div>
 
