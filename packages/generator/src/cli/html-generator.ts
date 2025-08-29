@@ -15,6 +15,7 @@ import { marked } from 'marked';
 import { repoAnalyzer } from '@ai-repo-adventures/core/analyzer';
 import { AdventureManager } from '@ai-repo-adventures/core/adventure';
 import { getAllThemes, getThemeByKey, AdventureTheme, parseAdventureConfig, LLM_MODEL } from '@ai-repo-adventures/core/shared';
+import { LLMClient } from '@ai-repo-adventures/core/llm';
 import { createProjectInfo } from '@ai-repo-adventures/core';
 import { TemplateEngine } from './template-engine.js';
 import { AssetManager } from './asset-manager.js';
@@ -402,7 +403,7 @@ class HTMLAdventureGenerator {
     await this.generateQuestPages();
 
     console.log(chalk.dim('🎉 Creating adventure summary page...'));
-    this.generateSummaryHTML();
+    await this.generateSummaryHTML();
   }
 
   private extractQuestInfo(): void {
@@ -733,8 +734,8 @@ class HTMLAdventureGenerator {
     fs.writeFileSync(indexPath, html);
   }
 
-  private generateSummaryHTML(): void {
-    const html = this.buildSummaryHTML();
+  private async generateSummaryHTML(): Promise<void> {
+    const html = await this.buildSummaryHTML();
     const summaryPath = path.join(this.outputDir, 'summary.html');
     fs.writeFileSync(summaryPath, html);
   }
@@ -871,39 +872,162 @@ class HTMLAdventureGenerator {
     return this.templateEngine.renderPage('quest-template.html', variables);
   }
 
-  private buildSummaryHTML(): string {
+  private async buildSummaryHTML(): Promise<string> {
     const lastQuest = this.quests[this.quests.length - 1];
-    const lastQuestNumber = this.quests.length;
+    const questCount = this.quests.length;
     
-    // Generate quest summary list from existing quest data
-    const questSummaryItems = this.quests.map((quest, index) => 
-      `<li><strong>Quest ${index + 1}</strong>: ${this.stripHTML(this.formatInlineMarkdown(quest.title))}</li>`
-    ).join('\n');
+    // Get theme-specific data
+    const themeData = this.getThemeData();
     
-    const questSummaryList = `<ul>\n${questSummaryItems}\n</ul>`;
-
-    // Get theme-specific completion message
-    const themeData = this.selectedTheme === 'developer' ? 
-      { name: 'Developer', emoji: '💻', description: 'Clean, technical documentation focused on code architecture and patterns' } :
-      this.selectedTheme === 'space' ?
-      { name: 'Space', emoji: '🚀', description: 'Cosmic exploration through starships and galactic adventures' } :
-      this.selectedTheme === 'mythical' ?
-      { name: 'Mythical', emoji: '🏰', description: 'Enchanted kingdom with magical quests and legendary artifacts' } :
-      this.selectedTheme === 'ancient' ?
-      { name: 'Ancient', emoji: '🏛️', description: 'Archaeological exploration through ancient civilizations and lost knowledge' } :
-      { name: 'Adventure', emoji: '⚔️', description: 'Epic journey through code exploration and discovery' };
+    // Generate meaningful journey summary
+    const journeySummary = this.generateJourneySummary(questCount, themeData);
+    
+    // Generate key concepts from quest content
+    const keyConcepts = await this.generateKeyConcepts();
 
     const variables = {
       ...this.getCommonTemplateVariables(),
       PAGE_TITLE: `${themeData.name} Adventure - Complete!`,
-      THEME_COMPLETION_MESSAGE: `You have successfully completed the ${themeData.name} adventure! ${themeData.emoji}`,
-      JOURNEY_SUMMARY: `Through ${lastQuestNumber} challenging quests, you've explored the depths of this codebase and uncovered its architectural secrets. You've navigated through ${themeData.description.toLowerCase()}, gaining valuable insights into the system's design and implementation.`,
-      QUEST_SUMMARY_LIST: questSummaryList,
+      JOURNEY_SUMMARY: journeySummary,
+      QUEST_SUMMARY_LIST: keyConcepts,
       LAST_QUEST_FILENAME: lastQuest.filename,
-      LAST_QUEST_TITLE: `Quest ${lastQuestNumber}`
+      LAST_QUEST_TITLE: `Quest ${questCount}`
     };
     
-    return this.templateEngine.renderPage('summary-template.html', variables);
+    return this.templateEngine.renderTemplate('summary-template.html', variables);
+  }
+
+  private getThemeData() {
+    return this.selectedTheme === 'developer' ? 
+      { 
+        name: 'Developer', 
+        emoji: '💻', 
+        context: 'technical documentation and modern development practices',
+        journey: 'development workflow'
+      } :
+      this.selectedTheme === 'space' ?
+      { 
+        name: 'Space', 
+        emoji: '🚀', 
+        context: 'cosmic starship operations and galactic exploration systems',
+        journey: 'interstellar mission'
+      } :
+      this.selectedTheme === 'mythical' ?
+      { 
+        name: 'Mythical', 
+        emoji: '🏰', 
+        context: 'enchanted kingdoms and magical code artifacts',
+        journey: 'mystical quest'
+      } :
+      this.selectedTheme === 'ancient' ?
+      { 
+        name: 'Ancient', 
+        emoji: '🏛️', 
+        context: 'archaeological discoveries and ancient coding wisdom',
+        journey: 'archaeological expedition'
+      } :
+      { 
+        name: 'Adventure', 
+        emoji: '⚔️', 
+        context: 'epic code exploration and discovery',
+        journey: 'heroic adventure'
+      };
+  }
+
+  private generateJourneySummary(questCount: number, themeData: any): string {
+    // Fix grammar for quest count
+    const questText = questCount === 1 ? 'quest' : 'quests';
+    const questCountText = questCount === 1 ? 'one challenging quest' : `${questCount} challenging quests`;
+    
+    if (this.selectedTheme === 'developer') {
+      return `Through ${questCountText}, you've analyzed the MCP (Model Context Protocol) architecture and learned how this repository powers AI-driven code exploration. You've examined server implementation, tool orchestration, and request handling patterns that enable dynamic storytelling from codebases.`;
+    } else {
+      return `Through ${questCountText}, you've journeyed through ${themeData.context} to uncover the secrets of the MCP architecture. Your ${themeData.journey} revealed the intricate systems that power AI-driven code exploration and transform repositories into interactive adventures.`;
+    }
+  }
+
+  private async generateKeyConcepts(): Promise<string> {
+    try {
+      // Load adventure configuration to understand project structure
+      const config = parseAdventureConfig(this.projectPath);
+      
+      if (!config || typeof config !== 'object' || !('adventure' in config)) {
+        // Fallback to hardcoded concepts if no config available
+        return this.generateFallbackKeyConcepts();
+      }
+
+      const adventure = (config as any).adventure;
+      if (!adventure || !adventure.quests) {
+        return this.generateFallbackKeyConcepts();
+      }
+
+      // Extract quest titles and descriptions for analysis
+      const questInfo = adventure.quests.map((quest: any) => ({
+        title: quest.title,
+        description: quest.description,
+        files: quest.files?.map((file: any) => ({
+          path: file.path,
+          description: file.description
+        })) || []
+      }));
+
+      const projectName = adventure.name || 'Project';
+      const projectDescription = adventure.description || '';
+
+      // Create prompt for LLM to generate key concepts
+      const prompt = `Based on the following project information, generate 4-5 key architectural or technical concepts that users would learn from exploring this codebase. Focus on the most important technical aspects and patterns.
+
+Project: ${projectName}
+Description: ${projectDescription}
+
+Quest Information:
+${questInfo.map((quest: any) => 
+  `- ${quest.title}: ${quest.description}\n  Files: ${quest.files.map((f: any) => `${f.path} (${f.description})`).join(', ')}`
+).join('\n')}
+
+Format your response as a JSON object with a "concepts" array:
+{
+  "concepts": [
+    {"name": "Concept Name", "description": "Brief description of what was learned"},
+    {"name": "Another Concept", "description": "Another brief description"}
+  ]
+}
+
+Focus on architectural patterns, technical systems, frameworks, and development practices actually present in the codebase.`;
+
+      // Generate concepts using LLM
+      const llmClient = new LLMClient();
+      const llmResponse = await llmClient.generateResponse(prompt, { responseFormat: 'json_object' });
+      const parsed = JSON.parse(llmResponse.content);
+      const concepts = parsed.concepts;
+
+      if (Array.isArray(concepts) && concepts.length > 0) {
+        return `<ul>\n${concepts.map((concept: any) => 
+          `<li><strong>${concept.name}</strong>: ${concept.description}</li>`
+        ).join('\n')}\n</ul>`;
+      }
+    } catch (error) {
+      console.log(chalk.yellow('⚠️  LLM concept generation failed, using fallback concepts'));
+      console.log(chalk.dim(`Error: ${error}`));
+    }
+    
+    // Fallback to original hardcoded concepts
+    return this.generateFallbackKeyConcepts();
+  }
+
+  private generateFallbackKeyConcepts(): string {
+    const concepts = [
+      '<strong>MCP Server Architecture</strong>: Dynamic tool registration, schema validation, and request handling patterns',
+      '<strong>Tool Orchestration</strong>: How individual tools are dynamically loaded, validated, and executed safely',
+      '<strong>Error Handling & Reliability</strong>: Graceful shutdown procedures, signal handling, and promise rejection management',
+      '<strong>Performance Optimization</strong>: Content pre-generation and caching strategies for responsive user experiences'
+    ];
+    
+    if (this.quests.length > 1) {
+      concepts.push('<strong>Adventure Generation</strong>: Story creation, theme management, and quest progression systems');
+    }
+    
+    return `<ul>\n${concepts.map(concept => `<li>${concept}</li>`).join('\n')}\n</ul>`;
   }
 
   private formatInlineMarkdown(text: string): string {

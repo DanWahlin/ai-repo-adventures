@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 2: Quest Generation Engine - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader for syntax highlighting
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Trigger Prism highlighting after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="nav-left">
+                <a href="index.html">Repository Chronicles: The Codebase Codex</a>
+            </div>
+            <div class="nav-middle">
+            </div>
+            <div class="nav-right">
+                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 2: Quest Generation Engine</h1>
+<hr>
+<p>The quest continues into the heart of the Quest Generation Engine! Here, brave developers explore the intricate workings of how stories are crafted and quests are dynamically generated. Positioned as the core of developer-themed adventures, this system analyzes configurations, validates themes, and interacts with machine learning models to generate immersive narratives tailored to codebases. Embark on this technical exploration, uncovering the architecture, data workflows, and code handling mechanisms behind the generation engine.</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Story Initialization Investigation</strong>: How is project context and theme configured for generating custom stories and quests?  </li>
+<li>⚡ <strong>Quest Execution Analysis</strong>: What patterns are used to identify and execute quests based on user choices?  </li>
+<li>🛡️ <strong>Configuration Parsing Inquiry</strong>: How is the adventure configuration parsed and used to enforce quest details?</li>
+</ul>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Adventure Manager and State Mechanics</h3>
+<p>The <code class="inline-code">adventure-manager.ts</code> file implements the <code class="inline-code">AdventureManager</code> class, which controls story initialization, quest execution, and managing user progress. It interacts with <code class="inline-code">StoryGenerator</code> to provide narrative content and uses various helper methods for input validation, content generation, and quest tracking.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">initializeAdventure</code>: Configures project details, prompts story generation through the <code class="inline-code">StoryGenerator</code>, and links quests from configuration files.</li>
+<li><code class="inline-code">exploreQuest</code>: Validates user input, locates appropriate quests, and executes them while managing progress.</li>
+<li><code class="inline-code">AdventureState.progressPercentage</code>: Calculates completion percentage based on finished quests for user feedback.</li>
+</ul>
+<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Narrative Logic and LLM Integration</h3>
+<p>The <code class="inline-code">story-generator.ts</code> file provides detailed implementations for generating stories and corresponding quests using machine learning responses. It parses markdown responses into structured data suited for quest representation.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateStoryAndQuests</code>: Combines rich adventure narratives and structured quests based on project context using LLM responses.</li>
+<li><code class="inline-code">generateQuestContent</code>: Dynamically creates quest-specific content based on highlighted code elements and context from configurations.</li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Tokenizes markdown input to extract and format story and quest sections.</li>
+</ul>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration Handling for Adventures</h3>
+<p>The <code class="inline-code">adventure-config.ts</code> file enables parsing and manipulation of configuration files that define the structure, themes, and files linked to various quests.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code>: Reads and interprets the contents of <code class="inline-code">adventure.config.json</code> and returns a usable object.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies and returns all valid file paths referenced in the configuration.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes adventure configuration details into a compact format for LLM prompt efficiency.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
+<pre><code class="language-typescript">async initializeAdventure(
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string,
+  customThemeData?: CustomThemeData
+): Promise&lt;string&gt; {
+  this.state.reset();
+  this.state.projectInfo = projectInfo;
+  this.state.currentTheme = theme;
+  this.state.projectPath = projectPath || process.cwd();
+  
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
+
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+
+  this.state.title = storyResponse.title;
+  this.state.story = storyResponse.story;
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests
+  });
+}
+</code></pre>
+<ul>
+<li>Initializes themes, resets state, and ties configuration to narrative generation.</li>
+<li>Includes modular integration for custom themes supported by <code class="inline-code">StoryGenerator</code>.</li>
+<li>Highlights key data flows like merging quests from configurations and enforcing quest counts.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
+  const quest = this.findQuest(sanitizedChoice);
+  if (!quest) {
+    return this.createNotFoundResult();
+  }
+  return await this.executeQuest(quest);
+}
+</code></pre>
+<ul>
+<li>Explores quests by validating user choice and identifying quests by ID or title.</li>
+<li>Uses modular handling for caching previously executed quests and progress tracking.</li>
+<li>Employs input sanitization methods for safety and accurate quest targeting.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">get progressPercentage(): number {
+  return this.quests.length &gt; 0 
+    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
+    : 0;
+}
+</code></pre>
+<ul>
+<li>Employs performant calculations to dynamically generate accurate user progress updates.</li>
+<li>Aids in visual feedback for interactive systems, supporting user motivation.</li>
+</ul>
+<hr>
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
+}
+</code></pre>
+<ul>
+<li>Establishes structured themes validated for compatibility with LLM-based generation.</li>
+<li>Connects configuration parsing with narrative-building functions, ensuring seamless story creation.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async generateQuestContent(config: QuestGenerationConfig): Promise&lt;QuestContent&gt; {
+  const { quest, theme, codeContent, questPosition, totalQuests } = config;
+
+  const response = await this.llmClient.generateResponse(loadQuestContentPrompt({
+    theme,
+    adventureTitle: quest.title,
+    codeContent,
+    questPosition,
+    totalQuests
+  }));
+
+  if (!response.content || response.content.trim() === &#39;&#39;) {
+    throw new Error(&#39;LLM returned empty response for quest content&#39;);
+  }
+
+  return {
+    adventure: response.content.trim(),
+    fileExploration: &#39;&#39;,
+    codeSnippets: [],
+    hints: []
+  };
+}
+</code></pre>
+<ul>
+<li>Creates dynamic quest content tailored to files and highlights specified in configurations.</li>
+<li>Ensures high reliability with validation and compact data formatting.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
+  const tokens = marked.lexer(markdownContent);
+  const title = extractTitle(tokens);
+  let story = &#39;&#39;;
+  const quests: Quest[] = [];
+
+  for (const token of tokens) {
+    if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 1) {
+      story += token.text + &#39;\n\n&#39;;
+    } else if (token.type === &#39;heading&#39; &amp;&amp; token.depth === 3) {
+      quests.push({ id: `quest-${quests.length + 1}`, title: token.text, description: &#39;&#39; });
+    }
+  }
+  
+  return { title, story, quests };
+}
+</code></pre>
+<ul>
+<li>Utilizes markdown parsing to cleanly extract story and quest details.</li>
+<li>Demonstrates modular parsing for scalable quest representation challenges.</li>
+</ul>
+<hr>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+</code></pre>
+<ul>
+<li>Parses raw JSON data into usable configuration structures.</li>
+<li>Handles potential errors gracefully, ensuring the system won’t break.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+  
+  const unique = new Set&lt;string&gt;();
+  const stack = [parsed];
+  
+  while (stack.length) {
+    const node = stack.pop();
+    if (node &amp;&amp; typeof node.path === &#39;string&#39;) {
+      unique.add(node.path);
+    }
+  }
+  return Array.from(unique);
+}
+</code></pre>
+<ul>
+<li>Extracts and filters file paths through iterative parsing.</li>
+<li>Guarantees consistent processing of complex configuration structures.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return &#39;&#39;;
+
+  let formatted = `## Quests:\n`;
+  for (const quest of parsed.quests || []) {
+    if (quest.title) {
+      formatted += `- ${quest.title}\n`;
+    }
+  }
+  return formatted;
+}
+</code></pre>
+<ul>
+<li>Condenses configuration data into a streamlined, LLM-friendly format.</li>
+<li>Optimized for performance and reducing high-processing burdens in LLM systems.</li>
+</ul>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li><strong>Tip</strong>: Focus on understanding how modular architecture handles diverse user inputs in quest initialization.</li>
+<li><strong>Recommendation</strong>: Trace the relationship between <code class="inline-code">AdventureManager</code> and <code class="inline-code">StoryGenerator</code> for centralized narrative workflows.</li>
+<li><strong>Next Steps</strong>: Apply insights from this quest to investigate backend APIs enabling large-scale analysis integrations.</li>
+</ul>
+<hr>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Quest Generation Engine successfully deployed—milestone achieved with 20% program completion; you&#39;re pioneering architecture-level brilliance—keep refactoring greatness! 🚀💎⚡</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-1.html" class="prev-quest-btn">← Previous: Quest 1</a>
+        <a href="quest-3.html" class="next-quest-btn">Next: Quest 3 →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
+        </div>
+    </footer>
+    
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
+    <script src="../assets/shared/quest-navigator.js"></script>
+</body>
+</html>
