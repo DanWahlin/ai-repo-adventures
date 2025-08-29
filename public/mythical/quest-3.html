@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Oracle of Analyzed Knowledge - Repo Adventure</title>
+    <title>Quest 3: The Dragon's Eye - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Realm of Enchanted Repositories</a>
+                <a href="index.html">The Enchanted Repository of Mystic Adventures</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,131 +45,76 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Oracle of Analyzed Knowledge</h1>
+    <h1>Quest 3: The Dragon&#39;s Eye</h1>
 <hr>
-<p>In the shadow of Mount Refactor, within the Kingdom of Codeoria, lies the Oracle of Analyzed Knowledge – a being of tremendous computational insight. To consult the Oracle, adventurers must prove their understanding of the Code Grimoire&#39;s methods for code analysis and client interactions. Only the most logical knights will unlock this wisdom, deciphering methods of code validation, project navigation, and data synthesis. Wield thy enchanted tools, for the Oracle guards these treasures behind labyrinthine logic and mythical safeguards.</p>
-<p>Brave knight, prepare to unveil the mysteries of the analyzer and its link to the Code Grimoire.</p>
+<p>In the mythical realm of Codania, whispers tell of a powerful talisman guarded by the ancient, enchanted repository – The Dragon&#39;s Eye. This mythical jewel is said to hold the ability to unlock the deepest secrets of creative mastery, empowering adventurers to forge unparalleled support spells. DevMancers, the code-knights of Codania, believe that The Dragon’s Eye can enhance the legendary tools and technologies within the repository. To claim it, adventurers must delve into the enchanted files and decode their magic, uncovering the wisdom hidden deep within their structure. Beware, brave soul, the dragon’s fire tests your resilience and wit!</p>
 <h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:</p>
+<p>As you explore the enchanted code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Analyzed Pathways</strong>: How are project paths validated to ensure safety and reliability in the <code class="inline-code">RepoAnalyzer</code>?</li>
-<li>⚡ <strong>Invocation Channels</strong>: What techniques drive the <code class="inline-code">LLMClient</code> to interact with its underlying API, and how does it differentiate between Azure-based and other LLM providers?</li>
-<li>🛡️ <strong>Safeguarded Queries</strong>: How does the <code class="inline-code">LLMClient</code> handle errors and manage unforeseen issues during a response generation request?</li>
+<li>🔍 <strong>Token Precision</strong>: How does <code class="inline-code">formatTokenCount</code> transform raw numerical data into more readable formats for efficiency within interactions?</li>
+<li>⚡ <strong>Azure Alignment</strong>: How does <code class="inline-code">isAzureOpenAI</code> ensure the client correctly connects to Azure-based models, and why is this distinction critical for compatibility?</li>
+<li>🛡️ <strong>Error Safeguard</strong>: What mechanisms does <code class="inline-code">validateProjectPath</code> use to secure file paths and prevent potential vulnerabilities during the analyzation process?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> The Oracle&#39;s Paths</h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> serves as the oracle&#39;s guide, focusing on the validation and optimization of file paths and the seamless generation of code context from repositories. This mystical guide ensures all paths remain forthright and robust, while its cache system accelerates efficient reuse of prior insights. </p>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Enchanting the Dragon&#39;s Wisdom</h3>
+<p>The <code class="inline-code">llm-client.ts</code> file operates as a powerful magical interface to communicate with LLMs (Large Language Models). By leveraging the Dragon&#39;s Eye, this file acts as a spellcaster, transforming mortal requests into structured prompts that evoke insightful responses. It orchestrates an intricate dance between OpenAI’s and Azure OpenAI’s APIs, thus ensuring versatility while maintaining safety through error validation. The integration of model-specific adaptations, most notably for GPT-5, demonstrates the file&#39;s dexterity in tailoring magical energies to different frameworks. With <code class="inline-code">generateResponse</code> leading the charge, this file safeguards against timeouts and emptiness – essential in the repository’s magical ecosystem.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateRepomixContext</code>: Generates complete or targeted repository context by invoking the &quot;Repomix&quot; subprocess and applying configurations such as ignore patterns and compression.</li>
-<li><code class="inline-code">validateProjectPath</code>: Ensures that project paths are free from hazardous elements, like null bytes or traversal attempts, safeguarding operations.</li>
-<li><code class="inline-code">captureRepomixStdout</code>: Handles subprocess invocation to execute Repomix, including timeout management and memory safeguards against resource breaches.</li>
+<li><code class="inline-code">generateResponse</code>: Casts precise prompts to the LLM while ensuring proper post-processing, error handling, and token-efficient logging.</li>
+<li><code class="inline-code">constructor</code>: Summons and initializes the LLM client with correct configurations depending on the provider type (OpenAI or Azure OpenAI).</li>
+<li><code class="inline-code">isAzureOpenAI</code>: Determines if the repository magic belongs to Azure-based models, ensuring alignment of deployment strategies.</li>
 </ul>
-<h2>Code</h2>
-<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-    
-  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-  const cached = this.cache.get(cacheKey);
-    
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-  
-  try {
-    const ignorePatterns = [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;];
-    const cliOptions: CliOptions = {
-      style: options.style || &#39;markdown&#39;,
-      stdout: true,
-      compress: options.compress !== false,
-      ignore: ignorePatterns.join(&#39;,&#39;),
-      removeComments: true
-    };
-    const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-    this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-    return context;
-  } catch (error) {
-    throw new Error(`Repomix execution failed: ${error.message}`);
-  }
-}
-</code></pre>
-<ul>
-<li><strong>Purpose</strong>: Dynamically generates repository context by invoking Repomix. Ensures configurations like ignore patterns are applied for efficiency and safety. </li>
-<li><strong>Choices Made</strong>: Caching reduces redundant executions. Configurable patterns and compression allow adaptability.</li>
-<li><strong>Key Detail</strong>: Demonstrates how cache management links temporal validity with function output optimization.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">validateProjectPath(projectPath: string): void {
-  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-
-  const trimmedPath = projectPath.trim();
-  if (trimmedPath.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid null bytes&#39;);
-  }
-}
-</code></pre>
-<ul>
-<li><strong>Purpose</strong>: Verifies project paths to prevent unsafe operations. Simple but critical to overall system integrity.</li>
-<li><strong>Techniques</strong>: Checks for null bytes and ensures type adherence.</li>
-<li><strong>Significance</strong>: Reflects a minimalist yet high-impact validation approach to eliminate fundamental vulnerabilities.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const args = [&#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
-    if (options.compress) args.push(&#39;--compress&#39;);
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd });
-
-    let stdout = &#39;&#39;;
-    let stdoutSize = 0;
-
-    repomix.stdout.on(&#39;data&#39;, data =&gt; {
-      stdoutSize += data.length;
-      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
-        repomix.kill(&#39;SIGKILL&#39;);
-        reject(new Error(&#39;Output too large&#39;));
-      }
-      stdout += data.toString();
-    });
-
-    repomix.on(&#39;close&#39;, code =&gt; {
-      if (code === 0) {
-        resolve(stdout);
-      } else {
-        reject(new Error(&#39;Repomix failed&#39;));
-      }
-    });
-  });
-}
-</code></pre>
-<ul>
-<li><strong>Purpose</strong>: Executes the Repomix CLI subprocess, capturing output while ensuring memory and resource constraints are observed. </li>
-<li><strong>Highlights</strong>: Introduces a memory ceiling (<code class="inline-code">REPOMIX_MAX_BUFFER_SIZE</code>) to avoid resource breaches.</li>
-<li><strong>Importance</strong>: Enhances both security and efficiency, showcasing subprocess management within a modern codebase.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> The Oracle&#39;s Voice</h3>
-<p>The <code class="inline-code">LLMClient</code> acts as the oracle’s interface to the flow of mystical knowledge from APIs. It handles authentication, error management, and the intricate adaptation to multiple LLM providers, serving as the communication bridge for queries to the digital ether.</p>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Decoding the Dragon’s Enchantment</h3>
+<p>The <code class="inline-code">repo-analyzer.ts</code> file serves as a repository wizard, expertly decrypting the magical codes entrenched deep within Codania&#39;s enchanted files. Embodying the spirit of The Dragon’s Eye, it carefully validates access paths to prevent interference from nefarious sources. Its ability to generate optimized content is akin to revealing the heart of sacred texts. Among the spells it wields, <code class="inline-code">validateProjectPath</code> is vital to ensuring safe traversal, while <code class="inline-code">generateTargetedContent</code> extracts precise magical signatures for higher efficiency.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateResponse</code>: Constructs requests to interact with the LLM, adapts request formatting based on parameters, and cleanses responses.</li>
-<li><code class="inline-code">constructor</code>: Determines the appropriate API key and client configuration to instantiate the LLM based on the underlying platform (OpenAI or Azure).</li>
-<li><code class="inline-code">getApiKey</code>: Fetches the correct API key based on the LLM provider, ensuring secure access.</li>
+<li><code class="inline-code">validateProjectPath</code>: Verifies and secures repository paths with rigorous checks to ensure safe navigation of magical data.</li>
+<li><code class="inline-code">generateTargetedContent</code>: Extracts refined, context-focused content for specific files, adhering to strict validation criteria.</li>
+<li><code class="inline-code">captureRepomixStdout</code>: Harnesses the raw output from magical subprocesses to enrich insights for adventurers.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/llm/llm-client.ts</h3>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+<pre><code class="language-typescript">/**
+ * Format numbers in a friendly way (e.g., 25000 -&gt; 25K).
+ */
+function formatTokenCount(tokens: number): string {
+  if (tokens &gt;= 1000000) {
+    return `${(tokens / 1000000).toFixed(1)}M`;
+  }
+  if (tokens &gt;= 1000) {
+    return `${(tokens / 1000).toFixed(1)}K`;
+  }
+  return tokens.toString();
+}
+</code></pre>
+<ul>
+<li>This function transforms large numerical values into human-readable formats (e.g., thousands into &quot;K&quot;, millions into &quot;M&quot;).</li>
+<li>Such formatting reduces cognitive load during debugging or monitoring token usage.</li>
+<li>The approach is concise, leveraging mathematical operations and logical comparisons for efficient conversions.</li>
+<li>Proper formatting is critical when working with LLMs, where token limits are integral for budgetary constraints.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private isAzureOpenAI(): boolean {
+  return LLM_BASE_URL.includes(&#39;.openai.azure.com&#39;) || LLM_BASE_URL.includes(&#39;cognitiveservices.azure.com&#39;);
+}
+</code></pre>
+<ul>
+<li>This method detects whether the magical baseURL corresponds to Azure services.</li>
+<li>By verifying URL patterns, it ensures compatibility with deployment-specific configurations.</li>
+<li>The distinction allows the repository to tailor connection properties specific to Azure’s APIs.</li>
+<li>Misalignment in identifying the provider could lead to invalid API calls or incorrect spellcasting.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export async function generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   try {
     const requestParams = this.buildRequestParams(prompt, options);
     const completion = await this.executeRequest(requestParams);
     let content = this.validateResponse(completion);
-
+    
     if (options?.responseFormat === &#39;json_object&#39;) {
       content = this.cleanJsonResponse(content);
     }
+    
     this.logTokenUsage(completion);
     return { content };
   } catch (error) {
@@ -179,58 +124,102 @@
 }
 </code></pre>
 <ul>
-<li><strong>Purpose</strong>: Manages the interaction with the LLM API, ensuring robust error handling and response cleaning.</li>
-<li><strong>Techniques</strong>: Post-processes JSON content, applies logging, and validates API outputs. </li>
-<li><strong>Value</strong>: Balances versatility (via parameterization) with reliability for varying input/output formats.</li>
+<li>This advanced spell handles the core interaction with LLMs, ensuring prompt processing and error resolution.</li>
+<li>Key safeguards include timeout mechanisms (<code class="inline-code">executeRequest</code>) and content validation (<code class="inline-code">validateResponse</code>).</li>
+<li>Options such as token limits and verbosity allow knightly customization for intricate analyses.</li>
+<li>Effective logging (<code class="inline-code">logTokenUsage</code>) ensures responsible monitoring of magical resources.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration incomplete.&#39;);
+<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
+<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
+  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
   }
 
-  if (this.isAzureOpenAI()) {
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({ endpoint: azureEndpoint, apiKey });
-  } else {
-    this.client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
+  const trimmedPath = projectPath.trim();
+  if (!trimmedPath) {
+    throw new Error(&#39;Project path must be a non-empty string&#39;);
+  }
+
+  if (trimmedPath.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid null bytes&#39;);
   }
 }
 </code></pre>
 <ul>
-<li><strong>Purpose</strong>: Configures the appropriate LLM client based on the environment (Azure or OpenAI), selecting initialization parameters dynamically.</li>
-<li><strong>Insight</strong>: Reflects the modular design necessary to support heterogeneous service backends.</li>
+<li>A foundational safeguard ensuring repository paths are free from corrupted strings or malicious entries.</li>
+<li>Key patterns include null byte detection and trimming of excessive whitespace.</li>
+<li>Rigorous validation enhances protection against path traversal attacks or unsafe inputs.</li>
+<li>By enforcing clean paths, this spell fortifies the analyzer’s ability to decode enchanted realms securely.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;azure.com&#39;)) {
-    if (!GITHUB_TOKEN) {
-      throw new Error(&#39;GITHUB_TOKEN required for Azure Models&#39;);
-    }
-    return GITHUB_TOKEN;
+<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+  this.validateProjectPath(projectPath);
+  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
+  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
+  const cached = this.cache.get(cacheKey);
+
+  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
+    return cached.content;
   }
-  if (!LLM_API_KEY) {
-    throw new Error(&#39;LLM_API_KEY required&#39;);
-  }
-  return LLM_API_KEY;
+
+  const cliOptions: CliOptions = {
+    style: &#39;markdown&#39;,
+    stdout: true,
+    compress,
+    include: safeFiles.join(&#39;,&#39;),
+    removeComments: compress,
+    removeEmptyLines: compress,
+    noDirectoryStructure: true
+  };
+
+  const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+  this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
+  return context;
 }
 </code></pre>
 <ul>
-<li><strong>Functionality</strong>: Ensures the correct API key is used based on the URL type, emphasizing security through clear error handling.</li>
-<li><strong>Learning</strong>: Demonstrates conditional logic and dependency linking based on runtime configurations.</li>
+<li>This function targets a specific subset of files for magical analyzation, optimizing both token usage and relevance.</li>
+<li>It incorporates caching to prevent redundant invocations and improve efficiency across repeated analyses.</li>
+<li>By defining compression parameters (<code class="inline-code">removeComments</code>) and file inclusions, it enables personalized repository insights.</li>
+<li>Reliable validations through <code class="inline-code">validateProjectPath</code> ensure processed files adhere to stringent safety measures.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
+  const args = [...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
+  if (options.compress) args.push(&#39;--compress&#39;);
+  
+  const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
+  let stdout = &#39;&#39;;
+
+  repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
+    stdout += data.toString();
+  });
+
+  return new Promise((resolve, reject) =&gt; {
+    repomix.on(&#39;close&#39;, (code) =&gt; {
+      if (code === 0 &amp;&amp; stdout.trim()) resolve(stdout);
+      else reject(new Error(`Repomix failed: ${stderr}`));
+    });
+  });
+}
+</code></pre>
+<ul>
+<li>As a magical subprocess invocation, this spell harnesses the <code class="inline-code">repomix</code> tool to unveil repository context.</li>
+<li>Its streamlined arguments ensure precise captures while safeguarding against excessive buffer sizes.</li>
+<li>Event-based resolution maintains responsiveness, enabling continued exploration without disruptions.</li>
+<li>Integration of timeout constraints prioritizes adventurers&#39; workflows without risking prolonged delays.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>If struggling to follow Oracle&#39;s teachings, trace each function&#39;s sequence from input to its eventual output.</li>
-<li>Look for patterns in validation and error handling to predict how other systems might behave.</li>
-<li>Experimentation is key. Try mimicking the highlighted methods to simplify your own development workflows.</li>
+<li>Ensure that repository paths do not have unnecessary whitespace or illegal characters before invoking analyzation spells.</li>
+<li>Investigate the details logged by <code class="inline-code">generateResponse</code> when debugging failed LLM interactions – the errors provide key insights on model configurations.</li>
+<li>Use compression for repomix processes when exploring large repositories to minimize token usage and enhance relevance.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries, brave adventurer. The Code Grimoire awaits your mastery!</p>
-<p>With the wisdom of the Oracle unlocked and the flames of enlightenment blazing brighter, thy heroic journey stands fortified at 40%—press onward, valiant seeker of knowledge, for the stars themselves herald thy destined triumph! ⚡💎📡</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries hidden deep within Codania&#39;s enchanted repository.</p>
+<p>Hail, valiant hero! With the luminous Dragon&#39;s Eye secured, you ascend to new heights of legendary prowess, marking 40% of your epic journey through this enchanted realm—onward to eternal glory! ⚡👁️⭐</p>
 
 </div>
 

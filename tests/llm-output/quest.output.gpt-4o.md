@@ -1,83 +1,255 @@
-# Quest 2: Quest Generation Engine
+# Quest 2: The Quest Generation Engine
+---
+This second quest delves into the critical components of the narrative construction pipeline responsible for transforming raw repository data into developer-themed adventures. By exploring core files, you will uncover how themes are integrated, stories are generated, and quests are dynamically structured based on user context.
 
-## Technical Overview
-The Quest Generation Engine is responsible for dynamically creating themed adventures and quests based on the structure and content of a repository. This module integrates with various components, such as the AdventureManager, StoryGenerator, and configuration utilities, to generate narratives, explore code, and manage progress. Its key purpose is to turn repository code into a gamified exploration experience.
+## Quest Objectives
+As you explore the code below, investigate these key questions:
+- 🔍 **Theme Calibration**: How does the system validate and process different themes, including custom ones?
+- ⚡ **Story Assembly**: What mechanisms are used to generate developer-themed stories and quests dynamically?
+- 🛡️ **Progression Metrics**: How does the engine track quest progression and completion?
 
-## Key Components
-- **AdventureManager** (_packages/core/src/adventure/adventure-manager.ts_):
-  - Main interface for managing quests, progress, and state related to repository exploration.
-  - Includes methods for initializing adventures, executing quests, and validating user input.
-- **AdventureState** (_packages/core/src/adventure/adventure-manager.ts_):
-  - Stores state for the current adventure, including active quests, completed quests, and configurations.
-  - Provides progress tracking and state reset functionality.
-- **StoryGenerator** (_packages/core/src/adventure/story-generator.ts_):
-  - Handles generation of overarching story narratives and quest content based on themes and repository structure.
-  - Uses LLM integration to produce structured markdown responses for quest content.
-- **Adventure Config Utilities** (_packages/core/src/shared/adventure-config.ts_):
-  - Provides functions to parse and extract configurations from `adventure.config.json`.
-  - Formats configuration data for use in story generation.
+## File Exploration
 
-## Implementation Details
-### AdventureManager
-- **State Management**: `AdventureState` manages persistent adventure data like quests, progress, and themes. The `AdventureManager` operates directly on this state to coordinate actions and updates.
-- **Quest Handling**: Quests are initialized using repository data and theme configurations. They can be retrieved, explored, and marked as completed. Completed quests are cached for efficiency during revisits.
-- **Input Validation**: User input for quest selection is validated and sanitized using strict rules to ensure compatibility with the code-matching logic.
-- **LLM Integration**: Quest-specific content is generated using `StoryGenerator`, which calls an LLM client with custom prompts based on the selected theme and repository context.
+### packages/core/src/adventure/adventure-manager.ts: Core adventure flow and state management
+This file defines the backbone of the adventure system, managing user progress, theme configuration, and dynamic quest generation. Key highlights include initialization, user input validation, and quest execution using cached state. This file connects the user interface to the story generator while maintaining consistency across interactions.
 
-### StoryGenerator
-- **Markdown Parsing**: Story narratives and quest data are extracted from markdown responses using structured parsing methods (e.g., headings, lists).
-- **Prompt Customization**: Generation prompts are tailored to include repository context, theme guidelines, and custom instructions from `adventure.config.json`.
-- **Fallback Mechanisms**: If LLM responses fail, the engine provides default templates to ensure continuity of functionality.
-- **Content Refinement**: LLM responses are cleaned and validated using schemas (e.g., Zod) to ensure adherence to expected formats.
-
-### Configuration Handling
-- **Adventure Config Parsing**: `parseAdventureConfig()` extracts configuration data, such as quests and file paths, from `adventure.config.json`.
-- **File Merging**: Configuration-defined file paths and functions are merged into generated quest data to ensure quests correspond to actual code highlights.
-
-## Code Examples
-
-### Initializing an Adventure
+#### Highlights
+- `initializeAdventure`: Initializes the adventure by resetting state, setting project context, and invoking story generation.
+- `exploreQuest`: Validates the user input for quest selection and executes the chosen quest with caching support.
+- `progressPercentage`: Calculates and returns the percentage of completed quests.
+  
+## Code
+### packages/core/src/adventure/adventure-manager.ts
 ```typescript
-const adventureManager = new AdventureManager();
+async initializeAdventure(
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string,
+  customThemeData?: CustomThemeData
+): Promise<string> {
+  this.state.reset();
+  this.state.projectInfo = projectInfo;
+  this.state.currentTheme = theme;
+  this.state.projectPath = projectPath || process.cwd();
 
-const projectInfo = { repomixContent: '...', otherMetadata: '...' };
-const theme = 'developer';
-const story = await adventureManager.initializeAdventure(projectInfo, theme, '/path/to/project');
+  if (theme === 'custom' && customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
 
-console.log(story); // Outputs the story with available quests
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  this.state.title = storyResponse.title;
+  this.state.story = storyResponse.story;
+
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests
+  });
+}
 ```
-This setup initializes a new adventure, sets the theme, and generates the narrative and corresponding quests based on the repository structure.
+- This method resets the adventure state, ensuring a clean slate for each new session.
+- It uses the selected theme to configure the story generator, including custom themes when applicable.
+- Story and quest generation rely on the `StoryGenerator`, which dynamically incorporates repository data and configuration files.
 
-### Executing a Quest
+---
+
 ```typescript
-const selectedQuest = 'quest-1'; // Quest ID or keyword
-const result = await adventureManager.exploreQuest(selectedQuest);
+async exploreQuest(choice: string): Promise<AdventureResult> {
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
 
-console.log(result.narrative);  // Outputs quest content and progress summary
-console.log(result.progressUpdate); // Displays progress as percentage
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
+
+  const quest = this.findQuest(sanitizedChoice);
+  if (!quest) {
+    return this.createNotFoundResult();
+  }
+
+  return await this.executeQuest(quest);
+}
 ```
-This executes a quest by ID or name, generating the narrative and updating progress status.
+- User inputs for quest selection are validated and sanitized using strict parsing logic.
+- The `isProgressRequest` method checks whether the user is requesting progress metrics.
+- Quests are dynamically retrieved from stored or cached states, ensuring high responsiveness.
 
-### Progress Tracking
+---
+
 ```typescript
-const progress = adventureManager.getProgress();
-
-console.log(progress.narrative); // Summary of completed quests and remaining quests
-console.log(progress.choices); // List of next available actions
+get progressPercentage(): number {
+  return this.quests.length > 0 
+    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
+    : 0;
+}
 ```
-This retrieves the current progress and provides actionable options for the user.
+- Tracks overall adventure progress by comparing completed quests against total quests.
+- Uses the `completedQuests` and `quests` data sets managed by the `AdventureState` class.
 
-## Integration Points
-- **LLM Client** (_packages/core/src/llm/llm-client.ts_): Provides API access for generating story and quest content.
-- **Adventure Config Utilities** (_packages/core/src/shared/adventure-config.ts_): Used to merge configuration-based data into quests for enriched context.
-- **Theme System** (_packages/core/src/shared/theme.ts_): Defines the structure for themes, including custom theme implementations.
-- **Code Analysis Pipeline** (_packages/core/src/analyzer/repo-analyzer.ts_): Generates targeted repository content when specific files are defined in quests.
+---
 
-## Best Practices & Considerations
-- **Validate Repository Paths**: Ensure paths and files referenced in `adventure.config.json` are accessible and accurate.
-- **Optimize Cache Usage**: Completed quest caching (`questContentCache`) reduces redundant LLM calls and improves performance.
-- **Enforce Structure**: Use Zod schemas to validate LLM responses for quests and stories to conform to the expected format.
-- **Theme Guidelines**: Make use of theme-based vocabulary by customizing LLM prompts to align with thematic keywords and tone.
-- **Error Handling**: Implement fallback mechanisms for cases where LLM responses fail or contain invalid data.
+### packages/core/src/adventure/story-generator.ts: Dynamic story construction and customization
+This file is responsible for generating the narrative and quests by leveraging user-selected themes and repository context. It interfaces with the LLM client for intelligent generation based on configurations and prompts.
 
-Congratulations on committing 'Quest 2: Quest Generation Engine' to the main branch—your code is now 20% closer to deployment greatness! 🚀⚡💎
+#### Highlights
+- `generateStoryAndQuests`: Generates a themed story and corresponding quests using the project's data and selected theme.
+- `generateQuestContent`: Creates interactive quest content tailored to specific files and functions.
+- `validateTheme`: Ensures the theme is valid, falling back to a default in case of errors.
+
+## Code
+### packages/core/src/adventure/story-generator.ts
+```typescript
+async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
+  this.currentProject = projectInfo;
+  this.projectPath = projectPath;
+
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
+}
+```
+- Combines repository data with a validated theme to generate structured stories and quest objects.
+- Uses the helper method `generateWithLLM` for language model-driven content creation.
+
+---
+
+```typescript
+async generateQuestContent(config: QuestGenerationConfig): Promise<QuestContent> {
+  const { quest, theme, codeContent, questPosition, totalQuests } = config;
+
+  if (this.projectPath) {
+    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+    const customInstructionsFromConfig = extractCustomInstructions(this.projectPath);
+  }
+
+  const prompt = loadQuestContentPrompt({
+    theme,
+    adventureTitle: quest.title,
+    codeContent,
+    storyContent: this.currentStoryContent || 'No story context available.',
+    questPosition,
+    totalQuests
+  });
+
+  const response = await this.withTimeout(
+    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+  );
+
+  return {
+    adventure: response.content.trim(),
+    fileExploration: '',
+    codeSnippets: [],
+    hints: []
+  };
+}
+```
+- Generates quest-specific narrative and guidance using formatted repository data and custom instructions.
+- Ensures integration with the story's overall structure by incorporating `storyContent`.
+
+---
+
+```typescript
+private validateTheme(theme: AdventureTheme): AdventureTheme {
+  if (!isValidTheme(theme)) {
+    console.warn(`Invalid theme '${theme}', defaulting to ${DEFAULT_THEME}`);
+    return DEFAULT_THEME;
+  }
+  return theme;
+}
+```
+- Ensures theme consistency by validating user-provided input against the pre-defined set of acceptable themes.
+- Automatically falls back to a system-defined default theme when invalid input is detected.
+
+---
+
+### packages/core/src/shared/adventure-config.ts: Adventure configuration and file handling
+This file provides methods to parse and format adventure configuration files, ensuring repository context alignment with story generation needs.
+
+#### Highlights
+- `parseAdventureConfig`: Parses the adventure configuration file and returns it as an object.
+- `formatAdventureConfigForPrompt`: Formats configuration data for use as input to the story generation pipeline.
+- `extractUniqueFilePaths`: Extracts and validates file paths referenced in the configuration.
+
+## Code
+### packages/core/src/shared/adventure-config.ts
+```typescript
+export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+```
+- Reads and parses the `adventure.config.json` file to provide critical data for quest generation.
+- Handles errors gracefully, returning `null` for missing or malformed files.
+
+---
+
+```typescript
+export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') {
+    return '';
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return '';
+  }
+
+  let formatted = `## Quest Structure\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\nFiles: ${quest.files.map((f: any) => f.path).filter(Boolean).join(', ')}\n`;
+  }
+
+  return formatted;
+}
+```
+- Provides lightweight summaries of file paths and quest structures to integrate with prompts.
+- Optimizes the narrative pipeline by reducing configuration redundancy.
+
+---
+
+```typescript
+export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') return [];
+
+  const unique = new Set<string>();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (typeof node.path === 'string' && fs.existsSync(path.resolve(projectPath, node.path.trim()))) {
+      unique.add(node.path.trim());
+    }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child => {
+      if (child && typeof child === 'object') stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+```
+- Traverses nested configuration objects to extract and validate all referenced file paths.
+- Ensures only existing paths are included, reducing errors during quest generation.
+
+---
+
+## Helpful Hints
+- Consider examining the interplay between `StoryGenerator` and `AdventureManager` for streamlined story creation.
+- Explore how cached quest content in `AdventureState` improves performance during repeated interactions.
+- Investigate how `formatAdventureConfigForPrompt` minimizes data redundancy for enhanced LLM responsiveness.
+
+---
+Excellent work! Continue to the next quest to uncover more mysteries.
+
+Congratulations on pushing the 'Quest Generation Engine' to production, achieving a critical 20% milestone in your development roadmap—you're iterating like a true code artisan! 🚀⚡💎
