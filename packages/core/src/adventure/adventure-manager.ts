@@ -290,13 +290,13 @@ export class AdventureManager {
     const questPosition = this.state.quests.findIndex(q => q.id === quest.id) + 1;
     const totalQuests = this.state.quests.length;
 
-    return await this.storyGenerator.generateQuestContent(
+    return await this.storyGenerator.generateQuestContent({
       quest,
-      this.state.currentTheme!,
+      theme: this.state.currentTheme!,
       codeContent,
       questPosition,
       totalQuests
-    );
+    });
   }
   
 

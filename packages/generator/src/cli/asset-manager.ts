@@ -49,7 +49,34 @@ export class AssetManager {
   }
 
   /**
-   * Copy quest navigator files
+   * Copy shared navigator files to global location (for multi-theme)
+   */
+  copySharedNavigator(rootOutputDir: string): void {
+    const templatesDir = path.join(this.sourceDir, 'templates');
+    const cssSource = path.join(templatesDir, 'quest-navigator.css');
+    const jsSource = path.join(templatesDir, 'quest-navigator.js');
+    const svgSource = path.join(templatesDir, 'compass-icon.svg');
+
+    // Create consolidated shared assets directory
+    const sharedAssetsDir = path.join(rootOutputDir, 'assets', 'shared');
+    fs.mkdirSync(sharedAssetsDir, { recursive: true });
+
+    // Copy shared files
+    if (fs.existsSync(cssSource)) {
+      fs.copyFileSync(cssSource, path.join(sharedAssetsDir, 'quest-navigator.css'));
+    }
+    if (fs.existsSync(jsSource)) {
+      fs.copyFileSync(jsSource, path.join(sharedAssetsDir, 'quest-navigator.js'));
+    }
+    if (fs.existsSync(svgSource)) {
+      fs.copyFileSync(svgSource, path.join(sharedAssetsDir, 'compass-icon.svg'));
+    }
+
+    console.log(chalk.green('✅ Shared navigator files copied to consolidated assets/shared directory'));
+  }
+
+  /**
+   * Copy quest navigator files to theme-specific location (for single theme)
    */
   copyQuestNavigator(outputDir: string): void {
     const templatesDir = path.join(this.sourceDir, 'templates');

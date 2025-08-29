@@ -5,7 +5,7 @@ import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { formatAdventureConfigForPrompt, extractCustomInstructions } from '../shared/adventure-config.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
-import { marked } from 'marked';
+import { marked, Token } from 'marked';
 import { z } from 'zod';
 
 export interface Quest {
@@ -36,6 +36,14 @@ export interface CodeSnippet {
   explanation: string;
 }
 
+export interface QuestGenerationConfig {
+  quest: Quest;
+  theme: AdventureTheme;
+  codeContent: string;
+  questPosition?: number;
+  totalQuests?: number;
+}
+
 // Zod schemas for LLM response validation
 const QuestSchema = z.object({
   id: z.string(),
@@ -51,12 +59,67 @@ const StoryResponseSchema = z.object({
 });
 
 /**
+ * Extract title from markdown tokens
+ */
+function extractTitle(tokens: Token[]): string {
+  for (const token of tokens) {
+    if (token.type === 'heading' && token.depth === 1) {
+      return token.text;
+    }
+  }
+  return 'Adventure';
+}
+
+/**
+ * Determine if current section is a quest section
+ */
+function isQuestSection(section: string): boolean {
+  return section === 'quests' || section === 'adventures' || section === 'choose a quest';
+}
+
+/**
+ * Determine if current section is a story section
+ */
+function isStorySection(section: string, titleFound: boolean): boolean {
+  return section === 'story' || section === 'adventure' || (titleFound && section === 'story');
+}
+
+/**
+ * Extract code files from a list token
+ */
+function extractCodeFilesFromList(listToken: any, quest: Partial<Quest>): void {
+  if (listToken.items) {
+    for (const item of listToken.items) {
+      const isCodeFile = item.text.includes('.') && 
+        (item.text.includes('/') || item.text.match(/\.(ts|js|py|java|cpp|c|rs|go)$/));
+      
+      if (isCodeFile) {
+        quest.codeFiles = quest.codeFiles || [];
+        quest.codeFiles.push(item.text.trim());
+      }
+    }
+  }
+}
+
+/**
+ * Create a quest object from partial quest data
+ */
+function createQuest(questData: Partial<Quest>, questIndex: number): Quest {
+  return {
+    id: `quest-${questIndex + 1}`,
+    title: questData.title!,
+    description: questData.description!.trim(),
+    codeFiles: questData.codeFiles || []
+  };
+}
+
+/**
  * Parse markdown response to extract structured data
  */
 function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   const tokens = marked.lexer(markdownContent);
   
-  let title = '';
+  const title = extractTitle(tokens);
   let story = '';
   const quests: Quest[] = [];
   
@@ -67,59 +130,36 @@ function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   for (const token of tokens) {
     if (token.type === 'heading') {
       if (token.depth === 1) {
-        title = token.text;
         titleFound = true;
-        currentSection = 'story'; // Assume content after H1 is story content
+        currentSection = 'story';
       } else if (token.depth === 2) {
         currentSection = token.text.toLowerCase();
-        if (currentSection === 'story' || currentSection === 'adventure') {
-          // Next paragraphs will be story content
-        } else if (currentSection === 'quests' || currentSection === 'adventures' || currentSection === 'choose a quest') {
-          // Next sections will be quests
-        }
-      } else if (token.depth === 3 && (currentSection === 'quests' || currentSection === 'adventures' || currentSection === 'choose a quest')) {
-        // Save previous quest if exists
+      } else if (token.depth === 3 && isQuestSection(currentSection)) {
+        // Save previous quest if valid
         if (currentQuest.title && currentQuest.description) {
-          quests.push({
-            id: `quest-${quests.length + 1}`,
-            title: currentQuest.title,
-            description: currentQuest.description,
-            codeFiles: currentQuest.codeFiles || []
-          });
+          quests.push(createQuest(currentQuest, quests.length));
         }
         // Start new quest
         currentQuest = { title: token.text, description: '', codeFiles: [] };
       }
     } else if (token.type === 'paragraph') {
-      if (currentSection === 'story' || currentSection === 'adventure' || (titleFound && currentSection === 'story')) {
+      if (isStorySection(currentSection, titleFound)) {
         story += token.text + '\n\n';
       } else if (currentQuest.title) {
         currentQuest.description += token.text + '\n\n';
       }
     } else if (token.type === 'list' && currentQuest.title) {
-      // Extract code files from list items
-      for (const item of token.items) {
-        if (item.text.includes('.') && (item.text.includes('/') || item.text.match(/\.(ts|js|py|java|cpp|c|rs|go)$/))) {
-          currentQuest.codeFiles = currentQuest.codeFiles || [];
-          currentQuest.codeFiles.push(item.text.trim());
-        }
-      }
+      extractCodeFilesFromList(token, currentQuest);
     }
   }
   
-  // Add final quest if exists
+  // Add final quest if valid
   if (currentQuest.title && currentQuest.description) {
-    const quest = {
-      id: `quest-${quests.length + 1}`,
-      title: currentQuest.title,
-      description: currentQuest.description.trim(),
-      codeFiles: currentQuest.codeFiles || []
-    };
-    quests.push(quest);
+    quests.push(createQuest(currentQuest, quests.length));
   }
   
   return {
-    title: title || 'Adventure',
+    title,
     story: story.trim() || 'Welcome to your coding adventure!',
     quests
   };
@@ -190,13 +230,8 @@ export class StoryGenerator {
   /**
    * Generate detailed quest content using LLM
    */
-  async generateQuestContent(
-    quest: Quest,
-    theme: AdventureTheme,
-    codeContent: string,
-    questPosition?: number,
-    totalQuests?: number
-  ): Promise<QuestContent> {
+  async generateQuestContent(config: QuestGenerationConfig): Promise<QuestContent> {
+    const { quest, theme, codeContent, questPosition, totalQuests } = config;
     // Include formatted adventure config as context if available
     let adventureGuidance = '';
     let customInstructions = '';

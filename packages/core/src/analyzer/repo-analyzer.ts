@@ -18,6 +18,14 @@ export interface RepomixOptions {
   style?: 'xml' | 'markdown' | 'plain';
 }
 
+interface OptimizationState {
+  optimized: string[];
+  currentFunction: string[];
+  braceDepth: number;
+  inFunction: boolean;
+  functionName: string;
+}
+
 export class RepoAnalyzer {
   private cache = new Map<string, { content: string; timestamp: number }>();
 
@@ -357,72 +365,96 @@ export class RepoAnalyzer {
   /**
    * Optimize a code block by extracting essential functions and patterns
    */
+  private shouldSkipLine(line: string): boolean {
+    const trimmed = line.trim();
+    return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed === '';
+  }
+
+  private updateBraceDepth(line: string, currentDepth: number): number {
+    const openBraces = (line.match(/{/g) || []).length;
+    const closeBraces = (line.match(/}/g) || []).length;
+    return currentDepth + openBraces - closeBraces;
+  }
+
+  private processFunctionStart(line: string, trimmed: string, state: OptimizationState): void {
+    if (state.inFunction && state.currentFunction.length > 0) {
+      // Add previous function if it's important
+      if (this.isImportantFunction(state.functionName)) {
+        state.optimized.push(...state.currentFunction);
+      }
+    }
+    
+    // Start new function
+    state.inFunction = true;
+    state.functionName = this.extractFunctionName(trimmed);
+    state.currentFunction = [line];
+  }
+
+  private processFunctionContent(line: string, trimmed: string, state: OptimizationState): void {
+    state.currentFunction.push(line);
+    
+    // End function when we return to base level
+    if (state.braceDepth === 0 && trimmed.includes('}')) {
+      if (this.isImportantFunction(state.functionName)) {
+        state.optimized.push(...state.currentFunction);
+      }
+      state.inFunction = false;
+      state.currentFunction = [];
+      state.functionName = '';
+    }
+  }
+
+  private processTopLevelCode(line: string, trimmed: string, state: OptimizationState): void {
+    // Keep top-level declarations, exports, imports
+    if (this.isImportantTopLevel(trimmed)) {
+      state.optimized.push(line);
+    }
+  }
+
   private optimizeCodeBlock(codeLines: string[], language: string): string[] {
     if (codeLines.length <= 2) return codeLines; // Keep short blocks as-is
 
-    const optimized: string[] = [codeLines[0]]; // Keep opening ```
-    const codeContent = codeLines.slice(1, -1); // Extract actual code
+    const state: OptimizationState = {
+      optimized: [codeLines[0]], // Keep opening ```
+      currentFunction: [],
+      braceDepth: 0,
+      inFunction: false,
+      functionName: ''
+    };
     
-    let currentFunction: string[] = [];
-    let braceDepth = 0;
-    let inFunction = false;
-    let functionName = '';
+    const codeContent = codeLines.slice(1, -1); // Extract actual code
 
     for (const line of codeContent) {
       const trimmed = line.trim();
       
       // Skip comments and empty lines for optimization
-      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed === '') {
+      if (this.shouldSkipLine(trimmed)) {
         continue;
       }
 
       // Track brace depth
-      braceDepth += (line.match(/{/g) || []).length;
-      braceDepth -= (line.match(/}/g) || []).length;
+      state.braceDepth = this.updateBraceDepth(line, state.braceDepth);
 
       // Detect function/method/class starts
       if (this.isFunctionStart(trimmed)) {
-        if (inFunction && currentFunction.length > 0) {
-          // Add previous function if it's important
-          if (this.isImportantFunction(functionName)) {
-            optimized.push(...currentFunction);
-          }
-        }
-        
-        // Start new function
-        inFunction = true;
-        functionName = this.extractFunctionName(trimmed);
-        currentFunction = [line];
+        this.processFunctionStart(line, trimmed, state);
         continue;
       }
 
-      if (inFunction) {
-        currentFunction.push(line);
-        
-        // End function when we return to base level
-        if (braceDepth === 0 && trimmed.includes('}')) {
-          if (this.isImportantFunction(functionName)) {
-            optimized.push(...currentFunction);
-          }
-          inFunction = false;
-          currentFunction = [];
-          functionName = '';
-        }
+      if (state.inFunction) {
+        this.processFunctionContent(line, trimmed, state);
       } else {
-        // Keep top-level declarations, exports, imports
-        if (this.isImportantTopLevel(trimmed)) {
-          optimized.push(line);
-        }
+        this.processTopLevelCode(line, trimmed, state);
       }
     }
 
     // Add any remaining function
-    if (inFunction && currentFunction.length > 0 && this.isImportantFunction(functionName)) {
-      optimized.push(...currentFunction);
+    if (state.inFunction && state.currentFunction.length > 0 && this.isImportantFunction(state.functionName)) {
+      state.optimized.push(...state.currentFunction);
     }
 
-    optimized.push(codeLines[codeLines.length - 1]); // Keep closing ```
-    return optimized;
+    state.optimized.push(codeLines[codeLines.length - 1]); // Keep closing ```
+    return state.optimized;
   }
 
   /**

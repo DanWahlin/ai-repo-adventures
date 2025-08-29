@@ -85,91 +85,28 @@ class HTMLAdventureGenerator {
   }
 
   async startWithArgs(args: Map<string, string>): Promise<void> {
-    console.log(chalk.bgBlue.white.bold(' 🌟 AI Repo Adventures HTML Generator 🌟 '));
-    console.log(chalk.dim('─'.repeat(50)));
-    console.log();
+    this.printHeader();
 
     try {
-      // Set theme from args
-      const themeArg = args.get('theme');
-      if (themeArg) {
-        const theme = this.parseThemeArg(themeArg);
-        if (!theme) {
-          throw new Error(`Invalid theme: ${themeArg}. Valid themes: space, mythical, ancient, developer, custom, all`);
-        }
-        
-        if (theme === 'all') {
-          // Handle multi-theme generation
-          await this.generateAllThemes(args);
-          return;
-        }
-        
-        this.selectedTheme = theme;
-        console.log(chalk.green(`✅ Theme: ${themeArg}`));
+      // Handle theme configuration
+      const shouldGenerateAllThemes = this.configureTheme(args);
+      if (shouldGenerateAllThemes) {
+        await this.generateAllThemes(args);
+        return;
       }
 
-      // Set output directory from args
-      const outputArg = args.get('output');
-      this.outputDir = outputArg || './public';
-      console.log(chalk.green(`✅ Output: ${this.outputDir}`));
-
-      // Handle overwrite setting
-      const overwrite = args.has('overwrite');
-      if (overwrite) {
-        console.log(chalk.green('✅ Overwrite: enabled'));
-      }
-
-      // Handle max-quests setting
-      const maxQuestsArg = args.get('max-quests');
-      const maxQuests = maxQuestsArg ? parseInt(maxQuestsArg, 10) : undefined;
-      if (maxQuests !== undefined && (isNaN(maxQuests) || maxQuests < 0)) {
-        throw new Error(`Invalid max-quests value: ${maxQuestsArg}. Must be a positive number.`);
-      }
-      if (maxQuests !== undefined) {
-        console.log(chalk.green(`✅ Max quests: ${maxQuests}`));
-        this.maxQuests = maxQuests;
-      }
-
-      // Handle log-llm-output setting
-      this.logLlmOutput = args.has('log-llm-output');
-      if (this.logLlmOutput) {
-        console.log(chalk.green('✅ LLM output logging: enabled'));
-      }
-
-      // Handle serve setting
-      this.serve = args.has('serve');
-      if (this.serve) {
-        console.log(chalk.green('✅ HTTP server: will start after generation'));
-      }
-
-      // Check if output directory exists and handle overwrite
-      if (fs.existsSync(this.outputDir) && !overwrite) {
-        const files = fs.readdirSync(this.outputDir).filter(f => f.endsWith('.html'));
-        if (files.length > 0) {
-          throw new Error(`Output directory ${this.outputDir} contains HTML files. Use --overwrite to replace them.`);
-        }
-      }
-
-      // Create directories if they don't exist or if overwrite is enabled
-      if (overwrite && fs.existsSync(this.outputDir)) {
-        fs.rmSync(this.outputDir, { recursive: true, force: true });
-      }
+      // Configure output and options
+      this.configureOutputDirectory(args);
+      const overwrite = this.configureOptions(args);
       
-      // Create output directories
-      fs.mkdirSync(this.outputDir, { recursive: true });
-      fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
-      fs.mkdirSync(path.join(this.outputDir, 'assets','images'), { recursive: true });
-
+      // Setup directories and generate
+      this.setupOutputDirectories(overwrite);
       await this.generateAdventure();
       
-      console.log();
-      console.log(chalk.green.bold('🎉 Adventure website generated successfully!'));
-      console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
+      this.printSuccessMessage();
       
       if (this.serve) {
         await this.startHttpServer();
-      } else {
-        console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
       }
     } catch (error) {
       console.error(chalk.red('❌ Error generating adventure:'), error);
@@ -179,6 +116,98 @@ class HTMLAdventureGenerator {
     
     this.rl.close();
     process.exit(0);
+  }
+
+  private printHeader(): void {
+    console.log(chalk.bgBlue.white.bold(' 🌟 AI Repo Adventures HTML Generator 🌟 '));
+    console.log(chalk.dim('─'.repeat(50)));
+    console.log();
+  }
+
+  private configureTheme(args: Map<string, string>): boolean {
+    const themeArg = args.get('theme');
+    if (!themeArg) return false;
+    
+    const theme = this.parseThemeArg(themeArg);
+    if (!theme) {
+      throw new Error(`Invalid theme: ${themeArg}. Valid themes: space, mythical, ancient, developer, custom, all`);
+    }
+    
+    if (theme === 'all') {
+      return true; // Signal that all themes should be generated
+    }
+    
+    this.selectedTheme = theme;
+    console.log(chalk.green(`✅ Theme: ${themeArg}`));
+    return false;
+  }
+
+  private configureOutputDirectory(args: Map<string, string>): void {
+    const outputArg = args.get('output');
+    this.outputDir = outputArg || './public';
+    console.log(chalk.green(`✅ Output: ${this.outputDir}`));
+  }
+
+  private configureOptions(args: Map<string, string>): boolean {
+    // Configure overwrite setting
+    const overwrite = args.has('overwrite');
+    if (overwrite) {
+      console.log(chalk.green('✅ Overwrite: enabled'));
+    }
+
+    // Configure max-quests setting
+    const maxQuestsArg = args.get('max-quests');
+    const maxQuests = maxQuestsArg ? parseInt(maxQuestsArg, 10) : undefined;
+    if (maxQuests !== undefined && (isNaN(maxQuests) || maxQuests < 0)) {
+      throw new Error(`Invalid max-quests value: ${maxQuestsArg}. Must be a positive number.`);
+    }
+    if (maxQuests !== undefined) {
+      console.log(chalk.green(`✅ Max quests: ${maxQuests}`));
+      this.maxQuests = maxQuests;
+    }
+
+    // Configure logging and serving
+    this.logLlmOutput = args.has('log-llm-output');
+    if (this.logLlmOutput) {
+      console.log(chalk.green('✅ LLM output logging: enabled'));
+    }
+
+    this.serve = args.has('serve');
+    if (this.serve) {
+      console.log(chalk.green('✅ HTTP server: will start after generation'));
+    }
+
+    return overwrite;
+  }
+
+  private setupOutputDirectories(overwrite: boolean): void {
+    // Check if output directory exists and handle overwrite
+    if (fs.existsSync(this.outputDir) && !overwrite) {
+      const files = fs.readdirSync(this.outputDir).filter(f => f.endsWith('.html'));
+      if (files.length > 0) {
+        throw new Error(`Output directory ${this.outputDir} contains HTML files. Use --overwrite to replace them.`);
+      }
+    }
+
+    // Create directories if they don't exist or if overwrite is enabled
+    if (overwrite && fs.existsSync(this.outputDir)) {
+      fs.rmSync(this.outputDir, { recursive: true, force: true });
+    }
+    
+    // Create output directories
+    fs.mkdirSync(this.outputDir, { recursive: true });
+    fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
+    fs.mkdirSync(path.join(this.outputDir, 'assets','images'), { recursive: true });
+  }
+
+  private printSuccessMessage(): void {
+    console.log();
+    console.log(chalk.green.bold('🎉 Adventure website generated successfully!'));
+    console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
+    
+    if (!this.serve) {
+      console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
+    }
   }
 
   private parseThemeArg(themeArg: string): AdventureTheme | 'all' | null {
@@ -359,7 +388,9 @@ class HTMLAdventureGenerator {
     this.generateThemeCSS();
 
     console.log(chalk.dim('🧭 Adding quest navigator...'));
-    this.copyQuestNavigator();
+    if (!this.isMultiTheme) {
+      this.copyQuestNavigator();
+    }
 
     console.log(chalk.dim('🖼️ Copying images...'));
     this.copyImages();
@@ -392,9 +423,10 @@ class HTMLAdventureGenerator {
    * Get appropriate GitHub logo based on theme brightness
    */
   private getGitHubLogo(): string {
+    const sharedPath = this.isMultiTheme ? '../assets/shared' : 'assets/shared';
     return this.isLightTheme(this.selectedTheme) 
-      ? 'assets/shared/github-mark.svg'          // Dark logo for light themes
-      : 'assets/shared/github-mark-white.svg';   // White logo for dark themes
+      ? `${sharedPath}/github-mark.svg`          // Dark logo for light themes
+      : `${sharedPath}/github-mark-white.svg`;   // White logo for dark themes
   }
 
   /**
@@ -583,7 +615,11 @@ class HTMLAdventureGenerator {
       THEME_ICON: icons.theme,
       QUEST_ICON: icons.quest,
       GITHUB_LOGO: this.getGitHubLogo(),
-      CHANGE_THEME_LINK: changeThemeLink
+      CHANGE_THEME_LINK: changeThemeLink,
+      ASSETS_PATH: 'assets',
+      NAVIGATOR_ASSETS_PATH: this.isMultiTheme ? '../assets/shared' : 'assets',
+      IMAGES_PATH: this.isMultiTheme ? '../assets/images' : 'assets/images',
+      SHARED_PATH: this.isMultiTheme ? '../assets/shared' : 'assets/shared'
     };
   }
 
@@ -600,6 +636,12 @@ class HTMLAdventureGenerator {
   }
 
   private copyImages(): void {
+    // Skip copying images in multi-theme mode for individual themes
+    // Images are copied once at the root level
+    if (this.isMultiTheme) {
+      return;
+    }
+
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
     const sourceImagesDir = path.join(__dirname, 'assets', 'images');
     const sourceSharedDir = path.join(__dirname, 'assets', 'shared');
@@ -635,38 +677,9 @@ class HTMLAdventureGenerator {
 
   private copyQuestNavigator(): void {
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const templatesDir = path.join(__dirname, 'templates');
-    const assetsDir = path.join(this.outputDir, 'assets');
-
-    try {
-      // Ensure assets directory exists
-      if (!fs.existsSync(assetsDir)) {
-        fs.mkdirSync(assetsDir, { recursive: true });
-      }
-
-      // Copy quest navigator JavaScript
-      const navigatorJSSource = path.join(templatesDir, 'quest-navigator.js');
-      const navigatorJSTarget = path.join(assetsDir, 'quest-navigator.js');
-      if (fs.existsSync(navigatorJSSource)) {
-        fs.copyFileSync(navigatorJSSource, navigatorJSTarget);
-      }
-
-      // Copy quest navigator CSS
-      const navigatorCSSSource = path.join(templatesDir, 'quest-navigator.css');
-      const navigatorCSSTarget = path.join(assetsDir, 'quest-navigator.css');
-      if (fs.existsSync(navigatorCSSSource)) {
-        fs.copyFileSync(navigatorCSSSource, navigatorCSSTarget);
-      }
-
-      // Copy compass icon SVG
-      const compassSVGSource = path.join(templatesDir, 'compass-icon.svg');
-      const compassSVGTarget = path.join(assetsDir, 'compass-icon.svg');
-      if (fs.existsSync(compassSVGSource)) {
-        fs.copyFileSync(compassSVGSource, compassSVGTarget);
-      }
-    } catch (error) {
-      console.log(chalk.yellow('⚠️ Warning: Could not copy quest navigator files'));
-    }
+    const { AssetManager } = require('./asset-manager.js');
+    const assetManager = new AssetManager(__dirname);
+    assetManager.copyQuestNavigator(this.outputDir);
   }
 
   private loadThemeCSS(theme: AdventureTheme): string {
@@ -969,6 +982,27 @@ class HTMLAdventureGenerator {
     fs.mkdirSync(path.join(this.outputDir, 'assets'), { recursive: true });
     fs.mkdirSync(path.join(this.outputDir, 'assets', 'images'), { recursive: true });
 
+    // Copy shared assets to avoid duplication across themes
+    const __dirname = path.dirname(new URL(import.meta.url).pathname);
+    const assetManager = new (await import('./asset-manager.js')).AssetManager(__dirname);
+    assetManager.copySharedNavigator(this.outputDir);
+    assetManager.copyGlobalAssets(this.outputDir);
+    
+    // Copy all images once to the root assets directory
+    const sourceImagesDir = path.join(__dirname, 'assets', 'images');
+    const targetImagesDir = path.join(this.outputDir, 'assets', 'images');
+    
+    if (fs.existsSync(sourceImagesDir)) {
+      fs.mkdirSync(targetImagesDir, { recursive: true });
+      const imageFiles = fs.readdirSync(sourceImagesDir);
+      console.log(chalk.green(`✅ Copying ${imageFiles.length} images to shared assets directory`));
+      imageFiles.forEach(file => {
+        const sourcePath = path.join(sourceImagesDir, file);
+        const targetPath = path.join(targetImagesDir, file);
+        fs.copyFileSync(sourcePath, targetPath);
+      });
+    }
+
     // Generate each theme in its own subdirectory
     const themes: AdventureTheme[] = ['space', 'mythical', 'ancient', 'developer'];
     
@@ -991,7 +1025,7 @@ class HTMLAdventureGenerator {
       const themeDir = path.join(this.outputDir, theme);
       fs.mkdirSync(themeDir, { recursive: true });
       fs.mkdirSync(path.join(themeDir, 'assets'), { recursive: true });
-      fs.mkdirSync(path.join(themeDir, 'assets', 'images'), { recursive: true });
+      // Images are now shared at root level, no need for theme-specific images directory
       
       // Create a new generator instance for this theme to avoid state conflicts
       const themeGenerator = new HTMLAdventureGenerator();
