@@ -629,7 +629,13 @@ class HTMLAdventureGenerator {
     const animationsCSS = this.loadAnimationsCSS();
     
     // Combine CSS in the correct order: theme variables, base styles, animations
-    const combinedCSS = themeCSS + '\n\n' + baseCSS + '\n\n' + animationsCSS;
+    let combinedCSS = themeCSS + '\n\n' + baseCSS + '\n\n' + animationsCSS;
+    
+    // Fix image paths based on theme mode
+    // In multi-theme: theme CSS is at ./theme/assets/theme.css, images at root ./assets/images/
+    // In single-theme: theme CSS is at ./assets/theme.css, images at ./assets/images/  
+    const imagePath = this.isMultiTheme ? '../../assets/images/' : 'images/';
+    combinedCSS = combinedCSS.replace(/url\('images\//g, `url('${imagePath}`);
     
     const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
     fs.writeFileSync(cssPath, combinedCSS);
@@ -677,7 +683,6 @@ class HTMLAdventureGenerator {
 
   private copyQuestNavigator(): void {
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const { AssetManager } = require('./asset-manager.js');
     const assetManager = new AssetManager(__dirname);
     assetManager.copyQuestNavigator(this.outputDir);
   }

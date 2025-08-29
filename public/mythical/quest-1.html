@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Mystic Tools of Codara - Repo Adventure</title>
+    <title>Quest 1: The Mystic Codebook of Tools - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Enchanted Forge of Code</a>
+                <a href="index.html">The Realm of Enchanted Repositories</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,27 +45,27 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Mystic Tools of Codara</h1>
+    <h1>Quest 1: The Mystic Codebook of Tools</h1>
 <hr>
-<p>In the mythical realm of Codara, a kingdom flourished where enchanted scrolls held the power of creation. These scrolls, infused with spells, wove tools, stories, and adventures to guide brave coders. At the heart of Codara was the enchanted Forge, a magical source of storytelling prowess. Yet, its wisdom could only be tapped by adventurers embarking on the Quest to master the Mystic Tools – ancient artifacts that harmonized the enchanting scrolls. The journey began in the arcane library of the Mystic Code Processor, where the whispered tools lay dormant, awaiting a worthy hero. Adventure awaits, brave one!</p>
+<p>In the mystical Kingdom of Codeoria, a legendary prophecy speaks of an artifact – the Code Grimoire – split into enigmatic chapters. For the first chapter, brave knights must seek the Mystic Codebook of Tools. This enchanted volume binds the essence of all tools used to conjure interactive quests. However, it is protected by spells of dynamic validation and guarded by the mythical Schema Sentinel. To claim the Codebook, adventurers must decipher its creation and unleash its full potential.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Unveiling the Mystic Handlers</strong>: How does <code class="inline-code">setupHandlers</code> dynamically configure and validate tools to ensure the Forge&#39;s harmony?</li>
-<li>⚡ <strong>Summoning the Forge&#39;s Power</strong>: How does <code class="inline-code">run</code> initialize the Forge for operations and pre-generative content for seamless adventures?</li>
-<li>🛡️ <strong>Safeguarding the Forge</strong>: How does the <code class="inline-code">main</code> function prepare the system for threats like abrupt shutdowns or unhandled errors?</li>
+<li>🔍 <strong>Mapping Magical Tools</strong>: How does the system dynamically list and describe tools, ensuring they serve their purpose without causing havoc?</li>
+<li>⚡ <strong>Flow of the Enchantment</strong>: What is the flow of initializing and running the enchanted server to handle multiple requests from adventurers?</li>
+<li>🛡️ <strong>Guarding Against Chaos</strong>: How does the system validate input and handle errors or unexpected tool usage?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Codara Gateway</h3>
-<p>This file is the entry point for the gamified server hosting Codara&#39;s adventures. It houses the foundational class <code class="inline-code">RepoAdventureServer</code>, which configures tools, handles user commands, and ensures system resilience. Additionally, the <code class="inline-code">main</code> function governs server start-up and ensures graceful handling of unexpected errors or shutdowns, mirroring the reliability of a mystic guardian.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a>: The Enchanted Server</h3>
+<p>This file houses the <code class="inline-code">RepoAdventureServer</code> class, the cornerstone of the Mystic Codebook’s functionality. It initializes the magical server, enabling adventurers to interact with the enchanted tools. Key features include dynamic tool management and input validation, ensuring that heroes do not invoke forbidden spells or mishandle the enchanted artifacts. This creation showcases a central <code class="inline-code">run</code> method for starting its operations and a <code class="inline-code">setupHandlers</code> method to define the spells of tool listing and execution.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code> dynamically lists and validates tools, ensuring that only enchanted tools aligned with the Forge&#39;s schema are configured.</li>
-<li><code class="inline-code">run</code> initializes the server and its magical transport while pre-generating structured content for user quests.</li>
-<li><code class="inline-code">main</code> orchestrates server instantiation, configures graceful shutdowns, and handles potential initialization errors.</li>
+<li><code class="inline-code">setupHandlers</code> dynamically lists tools and validates input schemas, invoking their handlers safely.</li>
+<li><code class="inline-code">run</code> initializes the transport layer and pre-generates content to empower adventurers without delay.</li>
+<li><code class="inline-code">main</code> orchestrates the server startup and handles unexpected interruptions gracefully.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/mcp/src/server.ts</h3>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
 <pre><code class="language-typescript">private setupHandlers() {
   this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
     const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
@@ -76,15 +76,18 @@
         $refStrategy: &#39;none&#39;
       })
     }));
+
     return { tools: toolList };
   });
 
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
+
       if (!(name in tools)) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
+
       const tool = tools[name as keyof typeof tools];
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
@@ -93,7 +96,9 @@
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
+
       return await tool.handler(validationResult.data as any);
+
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -107,26 +112,25 @@
 }
 </code></pre>
 <ul>
-<li>Dynamically lists all tools from the <code class="inline-code">tools</code> module by extracting their <code class="inline-code">name</code>, <code class="inline-code">description</code>, and validated input schema.</li>
-<li>Uses Zod schemas to enforce strict input validation, preventing invalid parameters from disrupting the Forge.</li>
-<li>Error handling elegantly distinguishes between user and system errors, providing meaningful feedback to users.</li>
-<li>Encourages modular tool development by decoupling tool definitions and server execution.</li>
+<li>Dynamically maps and lists tools, ensuring that their names, descriptions, and input schemas are accessible to adventurers.</li>
+<li>Validates input arguments for tools against their <code class="inline-code">Zod</code> schemas to prevent errors during handling.</li>
+<li>Explicitly handles unknown tools and provides meaningful error messages for invalid parameters.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Initializes a <code class="inline-code">StdioServerTransport</code> to handle input/output, making the system compatible with command-line operations.</li>
-<li>Connects the server to begin processing user input and tool requests.</li>
-<li>Pre-generates content with <code class="inline-code">repoAnalyzer</code> for smoother user interactions by warming up caches in the background.</li>
-<li>Outputs diagnostic information to help monitor server status and potential setup issues.</li>
+<li>Establishes communication with adventurers through the <code class="inline-code">StdioServerTransport</code>, ensuring seamless interactions.</li>
+<li>Pre-generates repository content to enhance performance, reducing lag during quests.</li>
+<li>Outputs informative messages, maintaining awareness of system status and cache preparation.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async function main() {
@@ -135,10 +139,12 @@
     [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
+
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
+
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
@@ -147,21 +153,20 @@
 }
 </code></pre>
 <ul>
-<li>Creates an instance of <code class="inline-code">RepoAdventureServer</code>, setting the foundation for operational adventures.</li>
-<li>Attaches signal listeners for <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> to invoke <code class="inline-code">gracefulShutdown</code>, ensuring resource cleanup.</li>
-<li>Monitors for unhandled promise rejections to log issues without destabilizing the server.</li>
-<li>Implements robust top-level error handling during server initialization to prevent silent failures.</li>
+<li>Ensures graceful shutdown to avoid disruptions when adventurers end their journey or when errors occur.</li>
+<li>Catches unhandled promise rejections while keeping the server operational for resilience.</li>
+<li>Initializes the primary server logic and provides recovery mechanisms for unforeseen circumstances.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Navigating Handlers</strong>: Follow the <code class="inline-code">setupHandlers</code> logic to understand how tools are dynamically integrated using schemas.</li>
-<li><strong>Performance Insights</strong>: Investigate how <code class="inline-code">run</code> minimizes latency by warming caches with pre-generated content.</li>
-<li><strong>Error Guards</strong>: Examine how <code class="inline-code">main</code> mitigates errors and prepares for unexpected shutdowns, ensuring system resilience.</li>
+<li>Follow the <code class="inline-code">setupHandlers</code> structure to learn how dynamic content can simplify tool management.</li>
+<li>Investigate how <code class="inline-code">run</code> pre-generates content for smoother quest interactions.</li>
+<li>Be curious about error-handling mechanisms used in <code class="inline-code">main</code> for robust and graceful operations.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of Codara&#39;s enchanted libraries.</p>
-<p>By the decree of the Celestial Scribes, your triumphant mastery of Quest 1—The Mystic Tools of Codara—has ignited the eternal flame of heroism within the Kingdom of Scholars, advancing you toward the legendary path of enlightenment! 🚀⚡💎</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Hail, brave scholar, for with the unearthing of the Mystic Codebook of Tools, you have forged the first star in the constellation of wisdom’s eternal kingdom—now onward, champion, to illuminate the path that awaits! ⭐⚡🗺️</p>
 
 </div>
 

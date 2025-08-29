@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**IMPORTANT**: As Claude runs tests that generate content, always clean up the content once done if it's temporary and not needed for the project.
+
 ## Development Commands
 
 - **Build**: `npm run build` - Compiles all TypeScript packages using workspace dependencies

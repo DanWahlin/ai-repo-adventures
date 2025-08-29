@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Forge of Interaction - Repo Adventure</title>
+    <title>Quest 1: MCP Tool Interface - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Codex of Computational Adventures</a>
+                <a href="index.html">Developer Documentation Generator for Repository Analysis</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,131 +45,122 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Forge of Interaction</h1>
-<hr>
-<p>Within the sprawling domain of the <strong>Codex of Computational Adventures</strong>, lies the fabled Forge of Interaction. Here, hammers of generative servers strike the molten data of developer tools, forging dynamic interfaces that breathe life into the codebase. To activate the forge&#39;s power, the <strong>RepoAdventureServer</strong> must configure itself as the ultimate mediator between commands and computational tools. But be warned - the success of this forge depends on methodical handlers, the calibration of tools, and the precision of execution!</p>
-<h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:</p>
+    <h1>Quest 1: MCP Tool Interface</h1>
+<h2>Technical Overview</h2>
+<p>The MCP Tool Interface handles the registration, validation, and execution of interactive tools within the MCP server. It enables dynamic listing and invocation of tools using well-defined schemas. This module is implemented in <strong>packages/mcp/src/server.ts</strong> for server operations and <strong>packages/mcp/src/tools.ts</strong> for tool definitions. This section focuses on the communication logic related to tool management and the server&#39;s request/response infrastructure.</p>
+<h2>Key Components</h2>
 <ul>
-<li>🔍 <strong>Handler Optimization</strong>: How does <code class="inline-code">RepoAdventureServer.setupHandlers</code> handle the dynamic listing of available tools and their execution?</li>
-<li>⚡ <strong>Server Activation</strong>: What steps does the <code class="inline-code">RepoAdventureServer.run</code> method take to initialize and prepare the system for use?</li>
-<li>🛡️ <strong>Failure Resilience</strong>: How does the <code class="inline-code">main</code> method manage unexpected errors during server execution or shutdown?</li>
+<li><strong>RepoAdventureServer</strong>: Primary class for initializing the MCP server, handling requests for tool listing and execution.<ul>
+<li><code class="inline-code">setupHandlers()</code>: Defines server request handlers for dynamic tool management.</li>
+<li><code class="inline-code">run()</code>: Starts the server and initializes pre-generation of project data.</li>
 </ul>
-<h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Interactive Engine</h3>
-<p>This file contains the implementation of the primary server class, <code class="inline-code">RepoAdventureServer</code>, which facilitates interaction between the Codex’s tools and the command interface. The server processes requests for tool listings and command executions, validating both the tools and their input schemas dynamically. The foundational methods set up handlers for interaction and execute the server’s transport mechanism to manage connections.</p>
-<h4>Highlights</h4>
+</li>
+<li><strong>tools</strong>: Defined in <strong>packages/mcp/src/tools.ts</strong>, this exports individual tools as well as a consolidated module for use in the server.<ul>
+<li><code class="inline-code">start_adventure</code>: Tool for analyzing a codebase and initiating an exploration workflow.</li>
+<li><code class="inline-code">choose_theme</code>: Tool for customizing quests based on user-selected themes.</li>
+<li><code class="inline-code">explore_quest</code>: Tool for progressing through generated quests.</li>
+<li><code class="inline-code">view_progress</code>: Tool for tracking and visualizing progress through quests.</li>
+</ul>
+</li>
+</ul>
+<h2>Implementation Details</h2>
+<p><strong>RepoAdventureServer:</strong></p>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: Sets up dynamic request handlers for tools. This enables the server to validate and list tools interactively.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code>: Manages the server&#39;s initialization and transport connection while warming up the cache with pre-generated content.</li>
-<li><code class="inline-code">main</code>: Oversees the entire lifecycle of the server, handling fatal initialization errors, graceful shutdowns, and unhandled promise rejections.</li>
+<li>The <code class="inline-code">RepoAdventureServer</code> class uses the <code class="inline-code">@modelcontextprotocol/sdk</code> library to create a server instance with:<ul>
+<li>Static metadata (<code class="inline-code">name</code>, <code class="inline-code">version</code>, <code class="inline-code">description</code>) that identifies the server.</li>
+<li>Dynamically determined tool capabilities, populated at runtime.</li>
 </ul>
-<h2>Code</h2>
-<h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
-
-    return { tools: toolList };
-  });
-
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-
-      const tool = tools[name as keyof typeof tools];
-      const validationResult = tool.schema.safeParse(args);
-
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      return await tool.handler(validationResult.data as any);
-
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
-</code></pre>
+</li>
+<li>Tools are loaded dynamically from <strong>packages/mcp/src/tools.ts</strong> and passed through <code class="inline-code">zodToJsonSchema</code> to validate input schemas and generate machine-readable specifications.</li>
+<li>Request handlers for tools:<ul>
+<li><code class="inline-code">ListToolsRequestSchema</code>: Enumerates available tools along with their descriptions and input schemas.</li>
+<li><code class="inline-code">CallToolRequestSchema</code>: Invokes a given tool, ensuring its input matches the defined Zod schema.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Error Handling:</strong></p>
 <ul>
-<li><strong>Dynamic Handlers</strong>: This code dynamically lists and validates tools using schemas, ensuring new tools can be added without changing this logic.</li>
-<li><strong>Error Management</strong>: Safeguards against invalid inputs and unknown tools, throwing clear and actionable errors for the client.</li>
-<li><strong>Flexibility</strong>: By using schemas (<code class="inline-code">zodToJsonSchema</code>), it defines input expectations clearly, allowing tools to self-document.</li>
-<li><strong>Dynamic Mapping</strong>: Tools are iterated dynamically using <code class="inline-code">Object.entries</code>, supporting extensibility without static code.</li>
+<li>Custom <code class="inline-code">McpError</code> instances, such as <code class="inline-code">ErrorCode.MethodNotFound</code> and <code class="inline-code">ErrorCode.InvalidParams</code>, encapsulate error types and messages for client communication.</li>
+<li>The server gracefully handles runtime failures, including invalid tool execution and unexpected errors, falling back to <code class="inline-code">ErrorCode.InternalError</code> for unclassified issues.</li>
 </ul>
-<hr>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
-</code></pre>
+<p><strong>tools.ts:</strong></p>
 <ul>
-<li><strong>Transport Initiation</strong>: Connects to a transport (<code class="inline-code">StdioServerTransport</code>) to enable interactive client-server communication.</li>
-<li><strong>Cache Warm-Up</strong>: Prepares the content pipeline in advance to ensure fast responses during runtime.</li>
-<li><strong>Logging</strong>: Logs critical startup information for debugging and monitoring purposes.</li>
+<li>Tools follow a modular structure. Each tool exports:<ul>
+<li>A <code class="inline-code">schema</code> (constructed using Zod): Defines tool-specific input validation rules.</li>
+<li>A <code class="inline-code">handler</code>: Processes validated input and performs the tool&#39;s function.</li>
 </ul>
-<hr>
-<pre><code class="language-typescript">async function main() {
+</li>
+<li>All tools are consolidated into the <code class="inline-code">tools</code> export for registration.</li>
+</ul>
+<h2>Code Examples</h2>
+<p><strong>Defining a Request Handler for Tool Execution:</strong></p>
+<pre><code class="language-typescript">this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
   try {
-    const server = new RepoAdventureServer();
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
+    const { name, arguments: args } = request.params;
 
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-    });
+    if (!(name in tools)) {
+      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+    }
 
-    await server.run();
+    const tool = tools[name as keyof typeof tools];
+    const validationResult = tool.schema.safeParse(args);
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.issues.map((err) =&gt;
+        `${err.path.join(&#39;.&#39;)}: ${err.message}`
+      ).join(&#39;, &#39;);
+      throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+    }
+
+    return await tool.handler(validationResult.data as any);
   } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
+    if (error instanceof McpError) {
+      throw error;
+    }
+    throw new McpError(
+      ErrorCode.InternalError,
+      `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
-}
+});
 </code></pre>
+<p><strong>Tool Definition Example in tools.ts:</strong></p>
+<pre><code class="language-typescript">export const start_adventure = {
+  schema: z.object({
+    projectDirectory: z.string().min(1, &quot;Project directory is required&quot;),
+  }),
+  description: &quot;Analyzes the codebase and presents initial theme options.&quot;,
+  async handler(input: { projectDirectory: string }) {
+    const { projectDirectory } = input;
+    return adventureManager.initializeAdventure(projectDirectory);
+  },
+};
+</code></pre>
+<h2>Integration Points</h2>
 <ul>
-<li><strong>Lifecycle Management</strong>: Activates shutdown hooks (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>) for reliable termination.</li>
-<li><strong>Error Recovery</strong>: Logs unhandled rejections, ensuring non-fatal errors don&#39;t crash the server.</li>
-<li><strong>Fatal Error Reporting</strong>: Stops execution on unrecoverable initialization issues, increasing system reliability.</li>
-<li><strong>Resilience</strong>: Provides robust handling mechanisms for operational reliability.</li>
+<li><strong>RepoAnalyzer</strong> (from <code class="inline-code">@ai-repo-adventures/core/analyzer</code>):<ul>
+<li>Used for content pre-generation in <code class="inline-code">run()</code>.</li>
+<li>Ensures that server operations are expedited by warming up caches.</li>
 </ul>
-<hr>
-<h2>Helpful Hints</h2>
+</li>
+<li><strong>Tools</strong>:<ul>
+<li>Dynamic tool registration integrates with the core <code class="inline-code">Server</code> instance, ensuring tools are extensible and interpreted via Zod schemas.</li>
+</ul>
+</li>
+<li><strong>Signals (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>)</strong>:<ul>
+<li>Facilitates graceful shutdown handling, calling <code class="inline-code">repoAnalyzer.cleanup()</code> to release resources.</li>
+</ul>
+</li>
+</ul>
+<h2>Best Practices &amp; Considerations</h2>
 <ul>
-<li>Review the <code class="inline-code">zodToJsonSchema</code> integration to see how data validation and input schemas are managed.</li>
-<li>Investigate the <code class="inline-code">tools</code> array to understand how it connects tool metadata dynamically at runtime.</li>
-<li>Examine <code class="inline-code">repoAnalyzer.preGenerate</code> for insight on the preprocessing pipeline that ensures performance.</li>
+<li><strong>Tool Extensibility</strong>: Add new tools by defining their <code class="inline-code">schema</code>, <code class="inline-code">handler</code>, and <code class="inline-code">description</code> in a modular structure. Register them in <strong>tools.js</strong> by including them in the <code class="inline-code">tools</code> export.</li>
+<li><strong>Error Propagation</strong>: Use <code class="inline-code">McpError</code> for predictable client-facing error responses. Always validate tool inputs using Zod schemas.</li>
+<li><strong>Graceful Shutdown</strong>: Ensure resource cleanup (e.g., <code class="inline-code">repoAnalyzer.cleanup()</code>) is implemented for all long-running processes when the server shuts down.</li>
+<li><strong>Zod Schema Usage</strong>: Define comprehensive schema validation to prevent invalid data propagation and improve client usability with detailed validation errors.</li>
+<li><strong>Logging</strong>: Use <code class="inline-code">console.error</code> for runtime diagnostic messages. Avoid excessive logging that may obscure actionable errors.</li>
+<li><strong>Background Task Efficiency</strong>: The <code class="inline-code">repoAnalyzer.preGenerate</code> call in <code class="inline-code">run()</code> should be monitored for heavy computational load that may impact server startup time.</li>
 </ul>
-<hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Congratulations, developer—Quest 1: The Forge of Interaction has been successfully compiled and executed, signaling a stellar initialization of your coding adventure! 🚀⚡</p>
+<p>You&#39;ve successfully deployed the MCP Tool Interface module—milestone achieved with precision; proceed to debug, refactor, and scale the codebase for Quest mastery! 🚀💎</p>
 
 </div>
 

@@ -1,130 +1,83 @@
-# Quest 1: The Archive Simulator
----
-In the realm of Endless Journeys, brave adventurers encounter the Archive, a mythical repository that breathes life into explorations. From its depths, dynamic tools materialize, enabling explorers to decode, analyze, and uncover its mysteries. Today, your mission guides you to the Archive Simulator, an MCP-powered interface that bridges adventurers with the tools needed to decipher coded scrolls and generate immersive stories from repositories.
+# Quest 2: Quest Generation Engine
 
-## Quest Objectives
-As you explore the code below, investigate these key questions:
-- 🔍 **Handler Integration**: How does `RepoAdventureServer.setupHandlers` dynamically manage tools and their schemas?
-- ⚡ **Transport Mechanics**: What role does `RepoAdventureServer.run` play in establishing the server connection and preloading content pipelines?
-- 🛡️ **Graceful Exit**: How does `main` implement clean shutdown processes to ensure error-free termination?
+## Technical Overview
+The Quest Generation Engine is responsible for dynamically creating themed adventures and quests based on the structure and content of a repository. This module integrates with various components, such as the AdventureManager, StoryGenerator, and configuration utilities, to generate narratives, explore code, and manage progress. Its key purpose is to turn repository code into a gamified exploration experience.
 
-## File Exploration
-### packages/mcp/src/server.ts: MCP Server Implementation
-This file provides the backbone for the Archive Simulator, orchestrating dynamic tools and the MCP server environment. It includes a `RepoAdventureServer` class and key methods like `setupHandlers` for registering tools dynamically and `run` for server execution with graceful shutdown procedures.
+## Key Components
+- **AdventureManager** (_packages/core/src/adventure/adventure-manager.ts_):
+  - Main interface for managing quests, progress, and state related to repository exploration.
+  - Includes methods for initializing adventures, executing quests, and validating user input.
+- **AdventureState** (_packages/core/src/adventure/adventure-manager.ts_):
+  - Stores state for the current adventure, including active quests, completed quests, and configurations.
+  - Provides progress tracking and state reset functionality.
+- **StoryGenerator** (_packages/core/src/adventure/story-generator.ts_):
+  - Handles generation of overarching story narratives and quest content based on themes and repository structure.
+  - Uses LLM integration to produce structured markdown responses for quest content.
+- **Adventure Config Utilities** (_packages/core/src/shared/adventure-config.ts_):
+  - Provides functions to parse and extract configurations from `adventure.config.json`.
+  - Formats configuration data for use in story generation.
 
-#### Highlights
-- `RepoAdventureServer.setupHandlers` dynamically lists available tools, validates their parameters, and executes tool-specific handlers, enabling modular tool expansion. 
-- `RepoAdventureServer.run` initializes the server on standard I/O transport, pre-generating repository analysis to optimize performance while awaiting user commands.
-- `main` establishes the server lifecycle, handling startup errors and ensuring clean exit routines upon termination signals.
+## Implementation Details
+### AdventureManager
+- **State Management**: `AdventureState` manages persistent adventure data like quests, progress, and themes. The `AdventureManager` operates directly on this state to coordinate actions and updates.
+- **Quest Handling**: Quests are initialized using repository data and theme configurations. They can be retrieved, explored, and marked as completed. Completed quests are cached for efficiency during revisits.
+- **Input Validation**: User input for quest selection is validated and sanitized using strict rules to ensure compatibility with the code-matching logic.
+- **LLM Integration**: Quest-specific content is generated using `StoryGenerator`, which calls an LLM client with custom prompts based on the selected theme and repository context.
 
-## Code
-### packages/mcp/src/server.ts
+### StoryGenerator
+- **Markdown Parsing**: Story narratives and quest data are extracted from markdown responses using structured parsing methods (e.g., headings, lists).
+- **Prompt Customization**: Generation prompts are tailored to include repository context, theme guidelines, and custom instructions from `adventure.config.json`.
+- **Fallback Mechanisms**: If LLM responses fail, the engine provides default templates to ensure continuity of functionality.
+- **Content Refinement**: LLM responses are cleaned and validated using schemas (e.g., Zod) to ensure adherence to expected formats.
+
+### Configuration Handling
+- **Adventure Config Parsing**: `parseAdventureConfig()` extracts configuration data, such as quests and file paths, from `adventure.config.json`.
+- **File Merging**: Configuration-defined file paths and functions are merged into generated quest data to ensure quests correspond to actual code highlights.
+
+## Code Examples
+
+### Initializing an Adventure
 ```typescript
-private setupHandlers() {
-  // Dynamic tool listing
-  this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-    const toolList = Object.entries(tools).map(([name, tool]) => ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: 'jsonSchema7',
-        $refStrategy: 'none'
-      })
-    }));
+const adventureManager = new AdventureManager();
 
-    return { tools: toolList };
-  });
+const projectInfo = { repomixContent: '...', otherMetadata: '...' };
+const theme = 'developer';
+const story = await adventureManager.initializeAdventure(projectInfo, theme, '/path/to/project');
 
-  // Dynamic tool execution
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-
-      const tool = tools[name as keyof typeof tools];
-      
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) => 
-          `${err.path.join('.')}: ${err.message}`
-        ).join(', ');
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      return await tool.handler(validationResult.data as any);
-
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
+console.log(story); // Outputs the story with available quests
 ```
-- Dynamically lists available tools by iterating over the `tools` module, creating schema-driven definitions compatible with MCP standards.
-- Validates user inputs using Zod schemas, ensuring safe and predictable tool execution.
-- Modularizes error handling with `McpError`, aligning with MCP error codes for improved debugging and user feedback.
+This setup initializes a new adventure, sets the theme, and generates the narrative and corresponding quests based on the repository structure.
 
----
-
+### Executing a Quest
 ```typescript
-async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error('Repo Adventure MCP server running on stdio');
-  
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
+const selectedQuest = 'quest-1'; // Quest ID or keyword
+const result = await adventureManager.exploreQuest(selectedQuest);
+
+console.log(result.narrative);  // Outputs quest content and progress summary
+console.log(result.progressUpdate); // Displays progress as percentage
 ```
-- Establishes MCP server environment by connecting through the `StdioServerTransport`.
-- Pre-generates repository analysis content to streamline user interactions by caching metadata upfront.
-- Incorporates asynchronous workflows to optimize tool initialization before user commands.
+This executes a quest by ID or name, generating the narrative and updating progress status.
 
----
-
+### Progress Tracking
 ```typescript
-async function main() {
-  try {
-    const server = new RepoAdventureServer();
-    
-    ['SIGINT', 'SIGTERM'].forEach(sig => 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    process.on('unhandledRejection', (reason) => {
-      console.error('Unhandled promise rejection:', reason);
-      console.error('MCP server continuing to run. Please report this error.');
-    });
-    
-    await server.run();
-  } catch (error) {
-    console.error('Fatal error starting MCP server:', error);
-    process.exit(1);
-  }
-}
+const progress = adventureManager.getProgress();
+
+console.log(progress.narrative); // Summary of completed quests and remaining quests
+console.log(progress.choices); // List of next available actions
 ```
-- Implements robust error handling during server lifecycle management to prevent unexpected crashes.
-- Registers signal handlers (`SIGINT` and `SIGTERM`) for clean shutdown, preserving the system's integrity on termination.
-- Logs unhandled promise rejections without halting the server, promoting resilience.
+This retrieves the current progress and provides actionable options for the user.
 
----
+## Integration Points
+- **LLM Client** (_packages/core/src/llm/llm-client.ts_): Provides API access for generating story and quest content.
+- **Adventure Config Utilities** (_packages/core/src/shared/adventure-config.ts_): Used to merge configuration-based data into quests for enriched context.
+- **Theme System** (_packages/core/src/shared/theme.ts_): Defines the structure for themes, including custom theme implementations.
+- **Code Analysis Pipeline** (_packages/core/src/analyzer/repo-analyzer.ts_): Generates targeted repository content when specific files are defined in quests.
 
-## Helpful Hints
-- Use the `ListToolsRequestSchema` handler to explore registered tools and their schemas.
-- Investigate the caching mechanism within `repoAnalyzer.preGenerate` for insights on pre-optimization techniques.
-- Study the lifecycle management in `main` for best practices in error handling and graceful shutdowns.
+## Best Practices & Considerations
+- **Validate Repository Paths**: Ensure paths and files referenced in `adventure.config.json` are accessible and accurate.
+- **Optimize Cache Usage**: Completed quest caching (`questContentCache`) reduces redundant LLM calls and improves performance.
+- **Enforce Structure**: Use Zod schemas to validate LLM responses for quests and stories to conform to the expected format.
+- **Theme Guidelines**: Make use of theme-based vocabulary by customizing LLM prompts to align with thematic keywords and tone.
+- **Error Handling**: Implement fallback mechanisms for cases where LLM responses fail or contain invalid data.
 
----
-
-Excellent work! Continue to the next quest to uncover more mysteries.
-
-Console.log('🎉 Success! Quest 1: The Archive Simulator has been fully committed—your codebase of skills is initializing at lightning speed 🚀✨ onto the roadmap of mastery!')
+Congratulations on committing 'Quest 2: Quest Generation Engine' to the main branch—your code is now 20% closer to deployment greatness! 🚀⚡💎
