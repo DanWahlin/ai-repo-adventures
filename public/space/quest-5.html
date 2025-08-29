@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 5: Mapping the Core Systems - Repo Adventure</title>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
+    <!-- Prism.js for syntax highlighting -->
+    <!-- Using minimal theme since we override all styles with our custom theme -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Configure Prism autoloader for syntax highlighting
+        if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
+            window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Trigger Prism highlighting after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Prism) {
+                window.Prism.highlightAll();
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="nav-left">
+                <a href="index.html">Galactic Odyssey: The Codebase Chronicles</a>
+            </div>
+            <div class="nav-middle">
+            </div>
+            <div class="nav-right">
+                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="#" class="nav-link quest-map-trigger">Quests</a>
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <img src="../assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="quest-content">
+    <h1>Quest 5: Mapping the Core Systems</h1>
+<hr>
+<p>The <strong>SS Code Explorer</strong> approaches its final frontier within the labyrinthine Code Nebula, the uncharted core systems of the galaxy of source files. This critical mission aims to construct a stellar map of the configuration and foundational utilities that govern the entire mission infrastructure. As cosmic currents pull the crew deeper into the nebula’s gravitational center, where neither light nor meaning can escape, you must decrypt encrypted instructions, catalog configurations, and stabilize navigational beacons. These systems are the beating heart of the digital galaxy – the adventure cannot thrive without understanding their dynamics.</p>
+<p>The starship&#39;s advanced AI will illuminate the path forward, but your steady command and sharp analytical skills must bring order to these core systems. Success here ensures that your work resonates across the galaxy of source files, achieving balance and coherence. Brace yourself, adventurer. The final mysteries await!</p>
+<h2>Quest Objectives</h2>
+<p>As you explore the code below, investigate these key questions:</p>
+<ul>
+<li>🔍 <strong>Signal Analysis</strong>: How does <code class="inline-code">parseAdventureConfig</code> ensure valid JSON parsing, and what impact does its output have on downstream functions?</li>
+<li>⚡ <strong>Pathfinding Algorithms</strong>: How does <code class="inline-code">extractUniqueFilePaths</code> process the configuration to retrieve accurate file paths, and what role does the <code class="inline-code">Set</code> play in ensuring correctness?</li>
+<li>🛡️ <strong>Cosmic Compression</strong>: What techniques are used by <code class="inline-code">formatAdventureConfigForPrompt</code> to optimize configuration data for compact representation, and how might this improve AI handling?</li>
+</ul>
+<h2>File Exploration</h2>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Configuration Handling Core</h3>
+<p>This file plays an essential role in shaping the adventure ecosystem. Within, you will find functions responsible for reading, parsing, and transforming the adventure configuration file. These methods act as translators between raw JSON data and actionable inputs for other components of the starship. As such, adventures rely on this file for critical operations like loading configuration data, validating structures, and distilling relevant details for AI prompts.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">parseAdventureConfig</code>: Parses the adventure configuration file into an object, ensuring validation and catching JSON-related errors. This function significantly reduces the risk of runtime errors by centralizing JSON parsing logic.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Traverses the loaded configuration to identify and return all unique file paths referenced. Using a <code class="inline-code">Set</code> ensures the paths are deduplicated, while recursive object traversal guarantees no path is missed.</li>
+<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Optimizes the adventure configuration data into a concise, human-readable format, specifically tailored for use in Large Language Model (LLM) prompts. Cuts down unnecessary descriptions while preserving essential structure.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+</code></pre>
+<ul>
+<li>This function acts as the primary JSON parser for the configuration file, handling critical edge cases such as file absence or unreadability.</li>
+<li>By centralizing parsing logic, the code prevents duplication and ensures uniform error handling across the system.</li>
+<li>Its <code class="inline-code">try-catch</code> block safeguards the system against JSON parse errors, returning <code class="inline-code">null</code> for invalid configurations instead of causing cascading failures.</li>
+<li>Output directly feeds into higher-level functions like <code class="inline-code">extractUniqueFilePaths</code>, making its reliability pivotal.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
+  }
+
+  return Array.from(unique);
+}
+</code></pre>
+<ul>
+<li>This function identifies and validates all <code class="inline-code">path</code> fields in the configuration, constructing a set of distinct, existing paths.</li>
+<li>Deduplication is achieved using a <code class="inline-code">Set</code> object, ensuring efficiency and accuracy.</li>
+<li>The recursive stack-based traversal eliminates the need for hardcoded assumptions about data structure depth or order, enabling flexibility.</li>
+<li>By relying on <code class="inline-code">fs.existsSync</code>, the system avoids referencing invalid paths, enhancing robustness.</li>
+<li>Outputs interface seamlessly with higher-level content generation functions.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
+
+  let formatted = `## Quest Structure\n`;
+
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    
+    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
+    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
+
+    const functions = quest.files
+      .flatMap((f: any) =&gt; f.highlights || [])
+      .map((h: any) =&gt; h.name)
+      .filter(Boolean);
+    formatted += `Functions: ${functions.join(&#39;, &#39;)}\n\n`;
+  }
+
+  return formatted;
+}
+</code></pre>
+<ul>
+<li>This function distills the adventure structure into an abbreviated format optimized for LLM input, improving both space efficiency and clarity.</li>
+<li>Eliminates redundant descriptions by focusing solely on titles, file paths, and functions, reducing data overhead while retaining actionable information.</li>
+<li>The use of template literals (<code class="inline-code">...</code>) enhances readability and minimizes extraneous formatting code.</li>
+<li>Outputs benefit AI-driven systems by reducing the cognitive load necessary to interpret the structure, creating smoother downstream workflows.</li>
+</ul>
+<hr>
+<h2>Helpful Hints</h2>
+<ul>
+<li>Use the <code class="inline-code">extractUniqueFilePaths</code> function as a tool to verify the integrity of file references within your project.</li>
+<li>When experimenting with new adventure structures, test them through <code class="inline-code">formatAdventureConfigForPrompt</code> to ensure compatibility with LLMs.</li>
+<li>Debugging configuration issues? Start with <code class="inline-code">parseAdventureConfig</code> to identify parsing or structural errors.</li>
+</ul>
+<hr>
+<p>You have mastered all the secrets of the codebase! Your adventure is complete.</p>
+<p>Stellar work, Cadet—Quest 5 has been charted with cosmic precision, bringing us 80% closer to mission completion—onward to the stars! 🚀⭐📡</p>
+
+</div>
+
+
+      <div class="quest-navigation quest-navigation-bottom">
+        <a href="quest-4.html" class="prev-quest-btn">← Previous: Quest 4</a>
+        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>
+      </div>
+    
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Created using <a href="https://github.com/DanWahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
+        </div>
+    </footer>
+    
+    <!-- Quest Navigator Script (for navbar Quests button functionality) -->
+    <script src="../assets/shared/quest-navigator.js"></script>
+</body>
+</html>
