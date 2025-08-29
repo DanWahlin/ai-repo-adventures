@@ -1,215 +1,162 @@
-# Quest 2: Quest Generation Engine
+# Quest 1: MCP Tool Interface
 ---
-The Quest Generation Engine is the heart of the system, responsible for crafting dynamic, developer-themed adventures. By leveraging structured analysis of codebases, it offers tailored narratives, quests, and techniques for skill-building. In this quest, we delve into the specific mechanisms that generate, configure, and adapt quests based on the codebase structure. The files examined here define key aspects of quest initialization, story generation, and configuration management.
+You step onto the bridge of the starship *RepoRanger*, your command console alive with swirling constellations of code. A signal crackles into your earpiece—a mysterious transmission from the heart of the uncharted Code Galaxy. The message is fragmented, almost indecipherable, but one thing is clear: to venture further, you must first master your Multi-Capability Protocol (MCP) Toolkit. The interface is your gateway to interacting with the untamed code clusters of the galaxy. This mission will train you to deploy, adapt, and control these stellar tools.
 
 ## Quest Objectives
-As you explore the code, investigate these key questions:
-- 🔍 **Engine Initialization**: How are adventures initialized with dynamic themes, quests, and project contexts?
-- ⚡ **Story Creation**: What patterns and validation mechanisms ensure quests align with project themes and available code files?
-- 🛡️ **Config Integration**: How does the engine load, format, and apply configurations like `adventure.config.json`?
+As you explore the code below, investigate these key questions:
+- 🔍 **Signal Mapping**: How are tools dynamically registered and validated in the MCP system?
+- ⚡ **Launch Sequence**: What is the process for initializing and running the MCP server? 
+- 🛡️ **Safety Protocols**: What mechanisms are used to handle errors or unexpected conditions during tool execution? 
 
 ## File Exploration
-### `packages/core/src/adventure/adventure-manager.ts`: Adventure initialization and quest management
-The `AdventureManager` class handles the creation and execution of quests. Its methods define how the system initializes adventures, validates choices, and adapts quests based on user interactions.
+### packages/mcp/src/server.ts: Core MCP Server Implementation
+This file orchestrates the operation of the MCP server, facilitating communication between the coder and the tools in your arsenal. The `RepoAdventureServer` class is central to the design, controlling the server's lifecycle, handling client requests, and ensuring dynamic extensibility. It links the underlying tools with request schemas and uses those links to validate and execute actions in real-time.
 
 #### Highlights
-- `initializeAdventure`: Resets the system, loads the project context, and generates initial quests.
-- `exploreQuest`: Executes a selected quest by interfacing with the state for cached or newly generated content.
-- `generateQuestContent`: Builds quest-specific code exploration content, integrating relevant code files.
-- `progressPercentage`: Calculates progress based on completed quests.
+- `RepoAdventureServer.setupHandlers`: Registers request handlers, enabling the dynamic listing and execution of tools. It ensures tools are invoked through schemas that are validated before execution.
+- `RepoAdventureServer.run`: Initializes the server transport layer and pre-generates content for smoother user interactions, simulating cache-warming for high efficiency.
+- `main`: The server's entry point where key processes like graceful shutdown and error monitoring are configured.
 
 ## Code
-### `packages/core/src/adventure/adventure-manager.ts`
+### packages/mcp/src/server.ts
 ```typescript
-async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise<string> {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
-  
-  if (theme === 'custom' && customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
-  }
+private setupHandlers() {
+  // Dynamic tool listing
+  this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+    const toolList = Object.entries(tools).map(([name, tool]) => ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: 'jsonSchema7',
+        $refStrategy: 'none'
+      })
+    }));
 
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  
-  this.state.title = storyResponse.title;
-  this.state.story = storyResponse.story;
-  
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
+    return { tools: toolList };
   });
-}
-```
-- Resets the state for fresh adventures, ensuring a clean slate.
-- Dynamically assigns themes via `customThemeData`.
-- Integrates story and quests by invoking `StoryGenerator`.
-- Enforces constraints set within `adventure.config.json`.
 
----
+  // Dynamic tool execution
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      const { name, arguments: args } = request.params;
 
-```typescript
-async exploreQuest(choice: string): Promise<AdventureResult> {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-  
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-  
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-  
-  return await this.executeQuest(quest);
-}
-```
-- Validates user input through `validateAndSanitizeChoice`.
-- Handles progress requests or initiates the quest execution process.
-- Falls back to a "quest not found" result for invalid choices.
-
----
-
-```typescript
-get progressPercentage(): number {
-  return this.quests.length > 0 
-    ? Math.round((this.completedQuests.size / this.state.quests.length) * 100)
-    : 0;
-}
-```
-- Calculates the percentage of completed quests dynamically.
-- Provides feedback on system progress for both user experience and state management.
-
----
-
-### `packages/core/src/adventure/story-generator.ts`: Creating dynamic quest content
-The `StoryGenerator` centralizes the process of generating structured narratives and quests. It translates codebase analysis and configurations into customized adventures.
-
-#### Highlights
-- `generateStoryAndQuests`: Combines a project’s structure and selected theme to create stories and quests.
-- `parseMarkdownToStoryResponse`: Parses markdown content into structured data.
-- `generateQuestContent`: Produces fine-tuned quest exploration based on specific code files and themes.
-
-### `packages/core/src/adventure/story-generator.ts`
-```typescript
-async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise<StoryResponse> {
-  const response = await this.withTimeout(
-    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
-  );
-  
-  const parsed = parseMarkdownToStoryResponse(response.content);
-  
-  StoryResponseSchema.parse(parsed);
-  this.currentStoryContent = parsed.story;
-
-  return parsed;
-}
-```
-- Validates the correctness of responses with `StoryResponseSchema`.
-- Uses LLM-generated storytelling based on themes.
-- Saves parsed stories for reuse in follow-up quest generation.
-
----
-
-```typescript
-function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
-  const tokens = marked.lexer(markdownContent);
-  const title = extractTitle(tokens);
-  let story = '';
-  const quests: Quest[] = [];
-  let currentQuest: Partial<Quest> = {};
-
-  for (const token of tokens) {
-    if (token.type === 'heading' && token.depth === 3) {
-      if (currentQuest.title && currentQuest.description) {
-        quests.push(createQuest(currentQuest, quests.length));
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
-      currentQuest = { title: token.text, description: '' };
-    } else if (currentQuest.title && token.type === 'paragraph') {
-      currentQuest.description += token.text + '\n\n';
-    }
-  }
-  if (currentQuest.title) {
-    quests.push(createQuest(currentQuest, quests.length));
-  }
 
-  return { title, story: story.trim(), quests };
-}
-```
-- Parses markdown to extract titles, story sections, and quests.
-- Implements structured tokens from a library like `marked`.
+      const tool = tools[name as keyof typeof tools];
+      
+      // Validate arguments using the tool's Zod schema
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) => 
+          `${err.path.join('.')}: ${err.message}`
+        ).join(', ');
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
 
----
+      // Execute the tool handler with validated arguments
+      return await tool.handler(validationResult.data as any);
 
-### `packages/core/src/shared/adventure-config.ts`: Managing configurations
-This file contains utilities to load and parse the `adventure.config.json` file. It ensures quest generation remains consistent with project-specific setups.
-
-#### Highlights
-- `loadAdventureConfig`: Reads the raw content of the configuration file.
-- `parseAdventureConfig`: Parses JSON and ensures it conforms to expectations.
-- `formatAdventureConfigForPrompt`: Optimizes configuration data for theme-specific prompts.
-
-### `packages/core/src/shared/adventure-config.ts`
-```typescript
-export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
-```
-- Ensures non-blocking behavior if the configuration file is missing.
-- Enables flexibility in how quests are structured.
-
----
-
-```typescript
-export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  try {
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-```
-- Handles unexpected parsing issues gracefully, avoiding application crashes.
-- Validates and parses the `adventure.config.json` file.
-
----
-
-```typescript
-export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const adventure = parseAdventureConfig(projectPath);
-
-  let formatted = `## Quest Structure\n`;
-  adventure?.adventure?.quests?.forEach((quest: any) => {
-    if (quest.title && Array.isArray(quest.files)) {
-      formatted += `### ${quest.title}\nFiles: ${quest.files.map(f => f.path).join(', ')}\n\n`;
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
-
-  return formatted;
 }
 ```
-- Produces a concise summary of quests and files.
-- Helps contextualize adventure setup for LLM inputs.
+- Dynamically registers available tools, creating a scalable and adaptable system.
+- Validates tool arguments using Zod schemas, enforcing precise input validation.
+- Standardizes error responses through the `McpError` class for clarity and debugging efficiency.
+- Bridges tool definitions from the `tools.ts` file to runtime functionality, making tools discoverable and executable.
+
+---
+
+```typescript
+async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error('Repo Adventure MCP server running on stdio');
+  
+  // Pre-generate repomix content for the current working directory to warm up the cache
+  // This happens in the background while waiting for user commands
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
+}
+```
+- Configures the server to communicate over standard I/O, adapting to a variety of environments.
+- Implements a pre-cache mechanism via `repoAnalyzer.preGenerate`, improving performance for subsequent operations.
+- Logs server activities for transparency and troubleshooting, ensuring operational awareness.
+
+---
+
+```typescript
+async function main() {
+  try {
+    const server = new RepoAdventureServer();
+    
+    // Handle graceful shutdown for both signals
+    ['SIGINT', 'SIGTERM'].forEach(sig => 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    
+    // Handle unhandled promise rejections - log but don't shutdown during normal operation
+    process.on('unhandledRejection', (reason) => {
+      console.error('Unhandled promise rejection:', reason);
+      console.error('MCP server continuing to run. Please report this error.');
+      // Don't call gracefulShutdown() here as it may be a recoverable error
+    });
+    
+    await server.run();
+  } catch (error) {
+    console.error('Fatal error starting MCP server:', error);
+    process.exit(1);
+  }
+}
+```
+- Manages system-level signal events like `SIGINT` to ensure smooth shutdowns.
+- Captures unresolved promise rejections, enabling error recovery while preserving server uptime.
+- Serves as the primary entry point for launching the MCP Server, bootstrapping necessary services.
+
+## File Exploration
+### packages/mcp/src/tools.ts: Tool Registry and Exporter
+This file acts as the hub for all tools in the MCP suite. It consolidates individual tool handlers, assigns descriptive metadata, and bundles everything into a single exportable structure.
+
+#### Highlights
+- `start_adventure.handler`: Analyzes a codebase and initiates an exploration session.
+- `choose_theme.handler`: Allows the user to select a story theme and adapt adventures accordingly.
+- `explore_quest.handler`: Enables interaction with specific quests within the generated adventure.
+- `view_progress.handler`: Tracks and reports on quest completion, presenting a clear view of progress.
+
+---
+
+```typescript
+export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+```
+- Aggregates all tools into a shared structure for registration and discoverability.
+- Combines functionality with descriptive metadata to create a seamless integration point with the MCP Server.
+- Simplifies tool maintenance by centralizing the export configuration in one location.
 
 ---
 
 ## Helpful Hints
-- Explore the relationship between `StoryGenerator` and `AdventureManager` to align narrative generation across user inputs.
-- Pay attention to error handling in `adventure-config.ts` to understand how missing or invalid JSON is handled elegantly.
-- Investigate how themes influence `generateStoryAndQuests` to provide dynamic user experiences.
+- Understand the relationship between `tools.ts` and `server.ts`—the former defines tools, while the latter executes them dynamically.
+- Pay close attention to error reporting in `setupHandlers`, which demonstrates how to handle invalid inputs gracefully.
+- Use the `main` function as a reference for how to set up graceful shutdowns in your own projects.
 
 ---
+
 Excellent work! Continue to the next quest to uncover more mysteries.
 
-Achievement Unlocked: You’ve elegantly refactored creativity into the Quest Generation Engine—20% complete, your codebase now shines like a diamond in production! 🚀⚡💎
+Quest 1: MCP Tool Interface complete—stellar work, Cadet! You've navigated through cosmic complexities with precision and are ready to ignite your thrusters for the next galactic mission! 🚀⚡⭐

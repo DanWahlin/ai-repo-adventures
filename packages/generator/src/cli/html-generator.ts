@@ -400,6 +400,9 @@ class HTMLAdventureGenerator {
 
     console.log(chalk.dim('📖 Generating quest pages...'));
     await this.generateQuestPages();
+
+    console.log(chalk.dim('🎉 Creating adventure summary page...'));
+    this.generateSummaryHTML();
   }
 
   private extractQuestInfo(): void {
@@ -730,6 +733,12 @@ class HTMLAdventureGenerator {
     fs.writeFileSync(indexPath, html);
   }
 
+  private generateSummaryHTML(): void {
+    const html = this.buildSummaryHTML();
+    const summaryPath = path.join(this.outputDir, 'summary.html');
+    fs.writeFileSync(summaryPath, html);
+  }
+
   private async generateQuestPages(): Promise<void> {
     const questsToGenerate = this.quests.length;
     
@@ -811,10 +820,12 @@ class HTMLAdventureGenerator {
     const nextQuest = questIndex < this.quests.length - 1 ? this.quests[questIndex + 1] : null;
 
     let bottomNavigation = '';
-    if (prevQuest || nextQuest) {
+    const isLastQuest = questIndex === this.quests.length - 1;
+    
+    if (prevQuest || nextQuest || isLastQuest) {
       // Determine navigation CSS class based on which buttons are present
       let navClass = 'quest-navigation quest-navigation-bottom';
-      const hasCompleteButton = !nextQuest && prevQuest; // Last quest with complete button
+      const hasCompleteButton = isLastQuest; // Last quest always has complete button
       
       if (prevQuest && nextQuest) {
         // Both buttons present - use default space-between
@@ -822,8 +833,11 @@ class HTMLAdventureGenerator {
         navClass += ' nav-prev-only';
       } else if (!prevQuest && nextQuest) {
         navClass += ' nav-next-only';
+      } else if (!prevQuest && hasCompleteButton) {
+        // Single quest with complete button only
+        navClass += ' nav-next-only';
       }
-      // Note: when hasCompleteButton is true, we use default space-between for proper alignment
+      // Note: when hasCompleteButton is true with prevQuest, we use default space-between for proper alignment
       
       bottomNavigation = `
       <div class="${navClass}">`;
@@ -836,10 +850,10 @@ class HTMLAdventureGenerator {
       if (nextQuest) {
         bottomNavigation += `
         <a href="${nextQuest.filename}" class="next-quest-btn">Next: Quest ${questIndex + 2} →</a>`;
-      } else if (prevQuest) {
-        // On the last quest, add a button to return to the theme homepage
+      } else if (isLastQuest) {
+        // On the last quest, add a button to go to summary page
         bottomNavigation += `
-        <a href="index.html" class="next-quest-btn complete-btn">Complete Adventure →</a>`;
+        <a href="summary.html" class="next-quest-btn complete-btn">Complete Adventure →</a>`;
       }
       
       bottomNavigation += `
@@ -855,6 +869,41 @@ class HTMLAdventureGenerator {
     };
 
     return this.templateEngine.renderPage('quest-template.html', variables);
+  }
+
+  private buildSummaryHTML(): string {
+    const lastQuest = this.quests[this.quests.length - 1];
+    const lastQuestNumber = this.quests.length;
+    
+    // Generate quest summary list from existing quest data
+    const questSummaryItems = this.quests.map((quest, index) => 
+      `<li><strong>Quest ${index + 1}</strong>: ${this.stripHTML(this.formatInlineMarkdown(quest.title))}</li>`
+    ).join('\n');
+    
+    const questSummaryList = `<ul>\n${questSummaryItems}\n</ul>`;
+
+    // Get theme-specific completion message
+    const themeData = this.selectedTheme === 'developer' ? 
+      { name: 'Developer', emoji: '💻', description: 'Clean, technical documentation focused on code architecture and patterns' } :
+      this.selectedTheme === 'space' ?
+      { name: 'Space', emoji: '🚀', description: 'Cosmic exploration through starships and galactic adventures' } :
+      this.selectedTheme === 'mythical' ?
+      { name: 'Mythical', emoji: '🏰', description: 'Enchanted kingdom with magical quests and legendary artifacts' } :
+      this.selectedTheme === 'ancient' ?
+      { name: 'Ancient', emoji: '🏛️', description: 'Archaeological exploration through ancient civilizations and lost knowledge' } :
+      { name: 'Adventure', emoji: '⚔️', description: 'Epic journey through code exploration and discovery' };
+
+    const variables = {
+      ...this.getCommonTemplateVariables(),
+      PAGE_TITLE: `${themeData.name} Adventure - Complete!`,
+      THEME_COMPLETION_MESSAGE: `You have successfully completed the ${themeData.name} adventure! ${themeData.emoji}`,
+      JOURNEY_SUMMARY: `Through ${lastQuestNumber} challenging quests, you've explored the depths of this codebase and uncovered its architectural secrets. You've navigated through ${themeData.description.toLowerCase()}, gaining valuable insights into the system's design and implementation.`,
+      QUEST_SUMMARY_LIST: questSummaryList,
+      LAST_QUEST_FILENAME: lastQuest.filename,
+      LAST_QUEST_TITLE: `Quest ${lastQuestNumber}`
+    };
+    
+    return this.templateEngine.renderPage('summary-template.html', variables);
   }
 
   private formatInlineMarkdown(text: string): string {
