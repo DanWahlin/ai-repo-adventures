@@ -85,10 +85,10 @@ GITHUB_TOKEN=your_github_token_here
 LLM_BASE_URL=https://models.inference.ai.azure.com
 LLM_MODEL=gpt-4o
 
-# Or Local Ollama
+# Or Local Ollama (results can vary and may not generate compatible output - you can try it! :-))
 LLM_BASE_URL=http://localhost:11434/v1
 LLM_API_KEY=ollama
-LLM_MODEL=llama3.2
+LLM_MODEL=gpt-oss:120b
 ```
 
 ### Adventure Configuration

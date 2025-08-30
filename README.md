@@ -332,13 +332,6 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 
 2. **Configure Your Preferred Provider**:
 
-   **🆓 GitHub Models (Free tier available - but limited)**:
-   ```bash
-   GITHUB_TOKEN=your_github_token_here
-   LLM_BASE_URL=https://models.inference.ai.azure.com
-   LLM_MODEL=gpt-4o-mini
-   ```
-
    **🔥 OpenAI (Direct)**:
    ```bash
    LLM_API_KEY=your_openai_key_here
@@ -354,11 +347,18 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
    LLM_API_VERSION=2025-01-01-preview
    ```
 
-   **🏠 Local Ollama**:
+   **🆓 Local Ollama**:
    ```bash
    LLM_BASE_URL=http://localhost:11434/v1
    LLM_API_KEY=ollama
-   LLM_MODEL=llama3.2
+   LLM_MODEL=gpt-oss:120b
+   ```
+
+   **🆓 GitHub Models (Free tier available - but very limited and will only work with very small scenarios)**:
+   ```bash
+   GITHUB_TOKEN=your_github_token_here
+   LLM_BASE_URL=https://models.inference.ai.azure.com
+   LLM_MODEL=gpt-4o-mini
    ```
 
 3. **Fine-tune Settings** (Optional):

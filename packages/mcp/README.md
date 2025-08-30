@@ -78,7 +78,7 @@ LLM_API_KEY=your_openai_key_here
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-4o-mini
 
-# GitHub Models (free tier)
+# GitHub Models (Free tier available - but very limited and will only work with very small scenarios)
 GITHUB_TOKEN=your_github_token_here
 LLM_BASE_URL=https://models.inference.ai.azure.com
 LLM_MODEL=gpt-4o-mini
