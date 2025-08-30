@@ -99,26 +99,28 @@ Create an `adventure.config.json` in your project root to guide quest generation
 {
   "adventure": {
     "name": "Your Project Name",
-    "url": "https://github.com/yourusername/yourrepo"
-  },
-  "quests": [
-    {
-      "title": "Core Features",
-      "description": "Explore the main functionality",
-      "files": [
-        {
-          "path": "src/main.ts",
-          "description": "Main entry point",
-          "highlights": [
-            {
-              "name": "initializeApp",
-              "description": "Application initialization"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+    "description": "Brief description of what your project does",
+    "url": "https://github.com/yourusername/yourrepo",
+    "customInstructions": "[Optional: Any specific guidance for story generation]",
+    "quests": [
+      {
+        "title": "Core Features",
+        "description": "Explore the main functionality",
+        "files": [
+          {
+            "path": "src/main.ts",
+            "description": "Main entry point",
+            "highlights": [
+              {
+                "name": "initializeApp",
+                "description": "Application initialization"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
