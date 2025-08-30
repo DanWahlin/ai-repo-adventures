@@ -622,6 +622,7 @@ class HTMLAdventureGenerator {
       CHANGE_THEME_LINK: changeThemeLink,
       ASSETS_PATH: 'assets',
       NAVIGATOR_ASSETS_PATH: this.isMultiTheme ? '../assets/shared' : 'assets',
+      TOGGLE_ASSETS_PATH: this.isMultiTheme ? '../assets' : 'assets',
       IMAGES_PATH: this.isMultiTheme ? '../assets/images' : 'assets/images',
       SHARED_PATH: this.isMultiTheme ? '../assets/shared' : 'assets/shared'
     };

@@ -53,9 +53,14 @@ export class AssetManager {
    */
   copySharedNavigator(rootOutputDir: string): void {
     const templatesDir = path.join(this.sourceDir, 'templates');
+    const assetsDir = path.join(this.sourceDir, 'assets');
     const cssSource = path.join(templatesDir, 'quest-navigator.css');
     const jsSource = path.join(templatesDir, 'quest-navigator.js');
     const svgSource = path.join(templatesDir, 'compass-icon.svg');
+    
+    // Theme toggle files
+    const themeToggleCssSource = path.join(assetsDir, 'theme-toggle.css');
+    const themeToggleJsSource = path.join(assetsDir, 'theme-toggle.js');
 
     // Create consolidated shared assets directory
     const sharedAssetsDir = path.join(rootOutputDir, 'assets', 'shared');
@@ -72,7 +77,18 @@ export class AssetManager {
       fs.copyFileSync(svgSource, path.join(sharedAssetsDir, 'compass-icon.svg'));
     }
 
-    console.log(chalk.green('✅ Shared navigator files copied to consolidated assets/shared directory'));
+    // Copy theme toggle files to root assets (they need to be accessible from theme directories)
+    const rootAssetsDir = path.join(rootOutputDir, 'assets');
+    fs.mkdirSync(rootAssetsDir, { recursive: true });
+    
+    if (fs.existsSync(themeToggleCssSource)) {
+      fs.copyFileSync(themeToggleCssSource, path.join(rootAssetsDir, 'theme-toggle.css'));
+    }
+    if (fs.existsSync(themeToggleJsSource)) {
+      fs.copyFileSync(themeToggleJsSource, path.join(rootAssetsDir, 'theme-toggle.js'));
+    }
+
+    console.log(chalk.green('✅ Shared navigator and theme toggle files copied to consolidated assets directory'));
   }
 
   /**
@@ -80,26 +96,35 @@ export class AssetManager {
    */
   copyQuestNavigator(outputDir: string): void {
     const templatesDir = path.join(this.sourceDir, 'templates');
+    const sourceAssetsDir = path.join(this.sourceDir, 'assets');
     const cssSource = path.join(templatesDir, 'quest-navigator.css');
     const jsSource = path.join(templatesDir, 'quest-navigator.js');
     const svgSource = path.join(templatesDir, 'compass-icon.svg');
+    
+    // Theme toggle files
+    const themeToggleCssSource = path.join(sourceAssetsDir, 'theme-toggle.css');
+    const themeToggleJsSource = path.join(sourceAssetsDir, 'theme-toggle.js');
 
     const assetsDir = path.join(outputDir, 'assets');
     fs.mkdirSync(assetsDir, { recursive: true });
 
-    // Copy CSS file
+    // Copy navigator files
     if (fs.existsSync(cssSource)) {
       fs.copyFileSync(cssSource, path.join(assetsDir, 'quest-navigator.css'));
     }
-
-    // Copy JS file  
     if (fs.existsSync(jsSource)) {
       fs.copyFileSync(jsSource, path.join(assetsDir, 'quest-navigator.js'));
     }
-
-    // Copy SVG icon
     if (fs.existsSync(svgSource)) {
       fs.copyFileSync(svgSource, path.join(assetsDir, 'compass-icon.svg'));
+    }
+
+    // Copy theme toggle files
+    if (fs.existsSync(themeToggleCssSource)) {
+      fs.copyFileSync(themeToggleCssSource, path.join(assetsDir, 'theme-toggle.css'));
+    }
+    if (fs.existsSync(themeToggleJsSource)) {
+      fs.copyFileSync(themeToggleJsSource, path.join(assetsDir, 'theme-toggle.js'));
     }
   }
 
