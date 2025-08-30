@@ -321,7 +321,7 @@ This will:
 
 ## Configuration
 
-### LLM Setup (Optional - Enables Dynamic Story Generation)
+### LLM Setup (Required for Dynamic Story Generation)
 
 The server supports multiple LLM providers through a generic OpenAI-compatible client:
 
@@ -634,96 +634,68 @@ MIT
 
 ## Prompt for adventure.config.json Generation
 
-Run this in GitHub Copilot, Claude Code, or your favorite AI editor to generate an initial `adventure.config.json` file. This file is key to helping the LLM understand the project's structure and key components.
+Use this prompt with GitHub Copilot, Claude Code, or your favorite AI coding assistant to generate an `adventure.config.json` file for your project. This configuration helps the AI adventure system understand your project's structure and create meaningful quest paths.
 
 ---
 
-Analyze the overall project and determine key "adventure quest" paths to help people understand the monorepo structure and main functionality. Your results will go into the root of the project into a file named adventure.config.json. Focus on the packages/ structure and key integration points. Use the updated file paths as shown in the following JSON:
+**PROMPT FOR AI CODING ASSISTANT:**
 
-```json
+```
+Please analyze this codebase and create an adventure.config.json file at the root of the project to help users explore the project through guided quests.
+
+Requirements:
+- Identify 3-5 key areas of functionality in the codebase
+- Select 2-4 representative files for each area
+- Highlight 2-4 important functions/classes or other members per file
+- Focus on entry points, main logic, and system integrations
+
+Use this exact JSON structure:
+
 {
-    "quests": [
+  "adventure": {
+    "name": "[Your Project Name]",
+    "description": "[Brief project description]", 
+    "url": "https://github.com/[username]/[repo-name]",
+    "customInstructions": "[Optional: Any specific guidance for story generation]"
+  },
+  "quests": [
+    {
+      "title": "[Quest Name - e.g. 'Authentication System']",
+      "description": "[What users learn from exploring this area]",
+      "files": [
         {
-            "title": "MCP Server Interface",
-            "description": "Understanding how users interact with the system through the 4 main MCP tools",
-            "url": "https://github.com/[your-org]/[your-repo]",
-            "files": [
-                {
-                    "path": "packages/mcp/src/tools/tools.ts",
-                    "description": "The 4 main MCP tools that provide the user interface to the adventure system",
-                    "highlights": [
-                        {
-                            "name": "start_adventure.handler",
-                            "description": "Analyzes repositories and presents theme options to users"
-                        },
-                        {
-                            "name": "choose_theme.handler", 
-                            "description": "Generates themed stories and adventures based on user selection"
-                        },
-                        {
-                            "name": "explore_quest.handler",
-                            "description": "Executes individual quest exploration with progress tracking"
-                        },
-                        {
-                            "name": "view_progress.handler",
-                            "description": "Shows completion stats and remaining quests"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "title": "Core Adventure Engine",
-            "description": "The heart of the adventure generation system with LLM integration",
-            "files": [
-                {
-                    "path": "packages/core/src/adventure/adventure-manager.ts",
-                    "description": "Orchestrates adventure state and manages user interactions",
-                    "highlights": [
-                        {
-                            "name": "AdventureManager.initializeAdventure",
-                            "description": "Creates themed stories and quests using LLM"
-                        },
-                        {
-                            "name": "AdventureManager.exploreQuest",
-                            "description": "Executes quest exploration with targeted content generation"
-                        }
-                    ]
-                },
-                {
-                    "path": "packages/core/src/adventure/story-generator.ts",
-                    "description": "LLM-powered story and quest content generation",
-                    "highlights": [
-                        {
-                            "name": "StoryGenerator.generateWithLLM",
-                            "description": "Generates themed narratives using multiple LLM providers"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "title": "HTML Adventure Generation",
-            "description": "CLI tool for creating beautiful standalone HTML adventure websites",
-            "files": [
-                {
-                    "path": "packages/generator/src/cli/html-generator.ts",
-                    "description": "Interactive HTML adventure generator with theme support and auto-launch",
-                    "highlights": [
-                        {
-                            "name": "HTMLAdventureGenerator.generateAdventure",
-                            "description": "Main orchestrator for HTML website generation"
-                        },
-                        {
-                            "name": "HTMLAdventureGenerator.generateThemeCSS",
-                            "description": "Creates themed CSS files with responsive design"
-                        }
-                    ]
-                }
-            ]
+          "path": "[relative/path/to/important/file.js]",
+          "description": "[Role of this file in the system]",
+          "highlights": [
+            {
+              "name": "[functionName or ClassName.method]", 
+              "description": "[What this code does and why it matters]"
+            }
+          ]
         }
-    ]
+      ]
+    }
+  ]
 }
+
+Prioritize files that contain:
+✓ Main entry points (index.js, program.cs, main.ts, app.js, etc.)
+✓ Core business logic and algorithms  
+✓ API routes and controllers
+✓ Database models and data access
+✓ Configuration and setup code
+✓ Key middleware and utilities
+
+Avoid:
+✗ Test files, build scripts, or configuration-only files
+✗ Simple utility functions without business logic
+✗ Auto-generated or boilerplate code
+
+Aim for 15-25 total highlights across all quests for the best exploration experience.
 ```
 
-Show me what you plan to use for quests and files members before proceeding and doing any updates adventure.config.json. I'll review and provide feedback.
+**After generating the file, the AI adventure system will use this configuration to:**
+- Create themed stories that guide users through your codebase
+- Generate step-by-step exploration paths focusing on the highlighted functions
+- Provide educational context about how different parts of your system work together
+- Create beautiful HTML adventure websites for sharing your project exploration
