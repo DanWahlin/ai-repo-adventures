@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: Codex of Arcane Insight - Repo Adventure</title>
+    <title>Quest 3: Chronicles of Heroic Tales - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Enchanted Kingdom of Code</a>
+                <a href="index.html">The Enchanted Codex of Questoria</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,209 +45,168 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: Codex of Arcane Insight</h1>
+    <h1>Quest 3: Chronicles of Heroic Tales</h1>
 <hr>
-<p>In the shimmering rings of the Repository, an enigma has emerged—the Codex of Arcane Insight. For generations, the Codex has guided the Developers of the land, deciphering cryptic scrolls and shaping quests of profound complexity. But the Codex&#39;s inner mechanisms are shrouded in layers of spellwork. To reveal its secrets, one must journey deep into the realm of magical analyzers and enchanted clients, where every enchantment serves a purpose and every error could spell doom. Are you ready to delve into the weave of this arcane construct?</p>
+<p>In the magical kingdom of Questoria, the grand convergence of spells culminates in the Chronicles of Heroic Tales. To unveil such chronicles, the Adventurer seeks the mystical Insight of Code. Whispers of ancient methods echo through the enchanted scripts, guiding scholars to craft stories that test the mettle of any brave hero. Yet, only one knightly hacker can unite the fragments of this arcane knowledge into a complete tale, ready to inspire those who dare follow.</p>
+<p><strong>Adventure Awaits</strong> – Dive into the very foundations of story generation and chart the threads of thematic code!</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Mystic Binding</strong>: How does the <code class="inline-code">generateRepomixContext</code> function orchestrate the content generation process, and what key patterns ensure its reliability?</li>
-<li>⚡ <strong>Arcane Channeling</strong>: How does the <code class="inline-code">generateResponse</code> function from <code class="inline-code">LLMClient</code> manage its invocation of the language model, including error handling and response validation?</li>
-<li>🛡️ <strong>Guardian Runes</strong>: What safeguards are implemented in <code class="inline-code">validateProjectPath</code> and <code class="inline-code">getApiKey</code> to ensure only safe and authorized inputs are used?</li>
+<li>🔍 <strong>Arcane Threading</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> interweave themes, story generation, and quest structure into a cohesive code journey?  </li>
+<li>⚡ <strong>Epic Propagation</strong>: What mechanisms enable <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> to dynamically adapt adventures using themes and files within the configuration?  </li>
+<li>🛡️ <strong>Safeguard of Configurations</strong>: How does <code class="inline-code">parseAdventureConfig</code> ensure the adventure configuration file is safely validated, and what patterns are used for resilience?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Enchanted Codebase Lens</h3>
-<p>The <code class="inline-code">repo-analyzer.ts</code> file acts as a magical instrument to extract and refine knowledge from the enchanted Repository. It contains utilities for managing content, optimizing code excerpts, and interacting with repomix subprocesses. Its key highlights reveal its essential role in the quest to unlock optimized adventures.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: Core Architect of Adventure</h3>
+<p>The <code class="inline-code">AdventureManager</code> is the beating heart of Questoria&#39;s chronicles, orchestrating themes, quests, and user exploration. Acting as an intermediary between powerful code-generation magic (<code class="inline-code">StoryGenerator</code>) and the end-user, this class ensures episodic tales remain thematically immersive.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateRepomixContext</code>: This function summons optimized content representations while managing caching and fallback strategies. It ensures consistent results even when faced with failures or edge cases.</li>
-<li><code class="inline-code">generateTargetedContent</code>: A focused spell used to generate precise portions of the codebase, emphasizing safety and reliability.</li>
-<li><code class="inline-code">validateProjectPath</code>: A protective ward to ensure the project path adheres to strict safety and correctness guidelines.</li>
+<li><code class="inline-code">initializeAdventure</code>: Resets the mystical state and invokes the <code class="inline-code">StoryGenerator</code>, integrating contextual configurations from enchanted scripts into story creation.</li>
+<li><code class="inline-code">exploreQuest</code>: Guides adventurers through selected heroic trials by validating and executing choices.</li>
+<li><code class="inline-code">generateQuestContent</code>: Channels code insights and mystical data to expand on specific missions within quests.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
-<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
-    this.validateProjectPath(projectPath);
-    
-    const configuredFiles = extractUniqueFilePaths(projectPath);
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
+<pre><code class="language-typescript">async initializeAdventure(
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string,
+  customThemeData?: CustomThemeData
+): Promise&lt;string&gt; {
+  this.state.reset();
+  this.state.projectInfo = projectInfo;
+  this.state.currentTheme = theme;
+  this.state.projectPath = projectPath || process.cwd();
 
-    if (configuredFiles.length &gt; 0) {
-        try {
-            return await this.generateOptimizedContent(projectPath, configuredFiles);
-        } catch (error) {
-            console.warn(`Failed to generate optimized content, falling back to targeted content: ${error.message}`);
-            try {
-                return await this.generateTargetedContent(projectPath, configuredFiles);
-            } catch (fallbackError) {
-                console.warn(`Failed to generate targeted content, falling back to full repomix content: ${fallbackError.message}`);
-            }
-        }
-    }
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
 
-    const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
-    const cached = this.cache.get(cacheKey);
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  this.state.title = storyResponse.title;
+  this.state.story = storyResponse.story;
 
-    if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-        return cached.content;
-    }
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
+  return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
+}
+</code></pre>
+<ul>
+<li>Resets the adventure&#39;s state ensuring a blank slate for any new tales.</li>
+<li>Dynamically generates a story and quest map based on <code class="inline-code">StoryGenerator</code> magic and current configurations.</li>
+<li>Injects additional user-defined files or customizations to maintain adaptive narratives.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
+  
+  const quest = this.findQuest(sanitizedChoice);
+  if (!quest) {
+    return this.createNotFoundResult();
+  }
+
+  return await this.executeQuest(quest);
+}
+</code></pre>
+<ul>
+<li>Validates and adapts user input into actionable explorations using careful checks.</li>
+<li>Leverages modularized methods like <code class="inline-code">findQuest</code> to handle input types dynamically.</li>
+<li>Handles both successful and unsuccessful explorations by encapsulating logic under <code class="inline-code">AdventureResult</code>.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private async generateQuestContent(quest: Quest): Promise&lt;QuestContent&gt; {
+  let codeContent: string;
+
+  if (quest.codeFiles &amp;&amp; quest.codeFiles.length &gt; 0 &amp;&amp; this.state.projectPath) {
     try {
-        const ignorePatterns = [
-            &#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;, &#39;.nyc_output&#39;
-        ];
-        if (!options.includeTests) {
-            ignorePatterns.push(&#39;**/*.test.ts&#39;, &#39;**/*.spec.ts&#39;, &#39;**/tests/**&#39;, &#39;**/test/**&#39;);
-        }
-
-        const cliOptions: CliOptions = {
-            style: options.style || &#39;markdown&#39;,
-            stdout: true,
-            compress: options.compress !== false,
-            ignore: ignorePatterns.join(&#39;,&#39;),
-            removeComments: true,
-            removeEmptyLines: true,
-            noDirectoryStructure: true
-        };
-
-        const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-
-        this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-
-        return context;
+      codeContent = await repoAnalyzer.generateTargetedContent(
+        this.state.projectPath,
+        quest.codeFiles,
+        false
+      );
     } catch (error) {
-        throw new Error(`Repomix execution failed: ${error.message}`);
+      console.warn(`Failed targeted content generation, fallback:`, error);
+      codeContent = this.state.projectInfo!.repomixContent;
     }
+  } else {
+    codeContent = this.state.projectInfo!.repomixContent;
+  }
+
+  const questPosition = this.state.quests.findIndex(q =&gt; q.id === quest.id) + 1;
+  return await this.storyGenerator.generateQuestContent({
+    quest,
+    theme: this.state.currentTheme!,
+    codeContent,
+    questPosition,
+    totalQuests: this.state.quests.length
+  });
 }
 </code></pre>
 <ul>
-<li>This function uses a fallback system, ensuring optimal content generation even under adverse conditions.</li>
-<li>It employs caching to boost performance, avoiding redundant resource use on repeated calls.</li>
-<li>The use of flexible CLI options allows adaptability in content extraction based on adventure needs.</li>
-<li>Patterns such as early validation, error handling, and layered fallbacks enhance robustness.</li>
-<li>It tightly integrates with other adventure components, ensuring seamless collaboration.</li>
+<li>Dynamically adapts mission-specific content or defaults to full repository context as backup.</li>
+<li>Connects mission positioning with broader quest narratives to enable logical flow across sessions.</li>
+<li>Defensively manages potential errors during targeted content generation.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-    if (!projectPath || typeof projectPath !== &#39;string&#39;) {
-        throw new Error(&#39;Project path must be a non-empty string&#39;);
-    }
-
-    const trimmedPath = projectPath.trim();
-    if (!trimmedPath) {
-        throw new Error(&#39;Project path must be a non-empty string&#39;);
-    }
-
-    if (trimmedPath.includes(&#39;\0&#39;)) {
-        throw new Error(&#39;Project path contains invalid null bytes&#39;);
-    }
-}
-</code></pre>
-<ul>
-<li>This function ensures only valid project paths can proceed further in the system.</li>
-<li>Essential checks, such as trimming whitespace and null byte detection, prevent common injection vulnerabilities.</li>
-<li>The early rejection of invalid paths bolsters the overall security of the adventure code processing.</li>
-<li>Minimal yet effective validation code ensures simplicity without compromising on safeguards.</li>
-<li>A focus on input sanitization enforces the reliability of downstream processes.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Sorcerer of Model Responses</h3>
-<p>The <code class="inline-code">llm-client.ts</code> file acts as a mystic intermediary between the Developer and the models. It crafts tailored prompts, channels them through structured invocations, and interprets the outcomes to enhance our arcane understanding. It is a critical keystone of the Codex.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a>: Weaver of Tales</h3>
+<p>The <code class="inline-code">StoryGenerator</code> class interprets project structure and transforms it into themed adventures. Through tokenization, schema validation, and prompt-based LLM invocations, it ensures immersive storytelling that aligns with the code&#39;s universe.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">generateResponse</code>: The central function for summoning language model responses while managing errors, tokens, and format validation.</li>
-<li><code class="inline-code">constructor</code>: Initializes the <code class="inline-code">LLMClient</code> with contextual configuration and readiness to interact with OpenAI or Azure services.</li>
-<li><code class="inline-code">getApiKey</code>: Ensures that only authorized API keys are used, with fallback for GitHub-hosted models.</li>
+<li><code class="inline-code">generateStoryAndQuests</code>: Harmonizes themes and narrative context to summon immersive tales.</li>
+<li><code class="inline-code">generateQuestContent</code>: Constructs granular quest-level details using dynamic prompts augmented by current state.</li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Decodes mystical markdown responses into structured fantasy (adventures and quests).</li>
 </ul>
-<h2>Code</h2>
-<h3>packages/core/src/llm/llm-client.ts</h3>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-    try {
-        const requestParams = this.buildRequestParams(prompt, options);
-        const completion = await this.executeRequest(requestParams);
-        let content = this.validateResponse(completion);
-
-        if (options?.responseFormat === &#39;json_object&#39;) {
-            content = this.cleanJsonResponse(content);
-        }
-
-        this.logTokenUsage(completion);
-
-        return { content };
-    } catch (error) {
-        this.logDetailedError(error, prompt);
-        throw new Error(`LLM request failed: ${error.message}`);
-    }
+<pre><code class="language-typescript">async generateStoryAndQuests(
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string
+): Promise&lt;StoryResponse&gt; {
+  this.currentProject = projectInfo;
+  const validatedTheme = this.validateTheme(theme);
+  return await this.generateWithLLM(projectInfo, validatedTheme);
 }
 </code></pre>
 <ul>
-<li>Core logic for orchestrating model invocations with rigorous validation and logging.</li>
-<li>Error handling is enhanced by detailed diagnostics, aiding Developers in debugging issues.</li>
-<li>Modular structure (e.g., <code class="inline-code">buildRequestParams</code>, <code class="inline-code">validateResponse</code>) ensures extensibility.</li>
-<li>Handles post-processing of the response, including specialized JSON formats.</li>
-<li>Logging usage metrics empowers Developers to manage token limits effectively.</li>
+<li>Ensures theme accuracy and alignment with story context before invoking LLM magic.</li>
+<li>Modifies responses dynamically to fit ongoing adventures.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">constructor() {
-    this.model = LLM_MODEL;
-    const apiKey = this.getApiKey();
-    if (!apiKey || !LLM_BASE_URL) {
-        throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key.&#39;);
-    }
-
-    if (this.isAzureOpenAI()) {
-        const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-        this.client = new AzureOpenAI({
-            endpoint: azureEndpoint,
-            apiKey,
-            apiVersion: LLM_API_VERSION,
-            deployment: this.model
-        });
-    } else {
-        this.client = new OpenAI({
-            apiKey,
-            baseURL: LLM_BASE_URL
-        });
-    }
-}
-</code></pre>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Keeper of Reliance</h3>
+<p>The Adventure Configuration utility validates and processes key files ensuring stability through safe parsing and path validation.</p>
+<h4>Highlights</h4>
 <ul>
-<li>This constructor dynamically decides between OpenAI and Azure clients based on the environment.</li>
-<li>It enforces essential configuration parameters, ensuring the client is properly set up.</li>
-<li>Separation of concerns (API key retrieval, service selection) simplifies initialization.</li>
-<li>Readily extensible for additional providers if required by future adventures.</li>
-<li>Handles Azure-specific endpoint structure nuances, showcasing adaptability.</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Safeguards JSON parsing while isolating erroneous cases to prevent system failures.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Iteratively gleans file references within nested configuration structures.</li>
+<li><code class="inline-code">loadAdventureConfig</code>: Provides a safe method to load project configurations with fallback for missing files.</li>
 </ul>
-<hr>
-<pre><code class="language-typescript">private getApiKey(): string {
-    if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;)) {
-        if (!GITHUB_TOKEN) {
-            throw new Error(&#39;GITHUB_TOKEN required for GitHub Models.&#39;);
-        }
-        return GITHUB_TOKEN;
-    }
-    if (!LLM_API_KEY) {
-        throw new Error(&#39;LLM_API_KEY required.&#39;);
-    }
-    return LLM_API_KEY;
+<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
+  const raw = loadAdventureConfig(projectPath);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 </code></pre>
 <ul>
-<li>Implements API key logic specific to supported providers, ensuring the right credentials are used.</li>
-<li>Differentiates between GitHub-hosted Azure models and standard OpenAI credentials.</li>
-<li>Enhances security by ensuring access is restricted to valid authentication tokens.</li>
-<li>The concise implementation focuses on clarity and reduces misconfigurations.</li>
-<li>Setting explicit expectations via error messages aids in proper environment setup.</li>
+<li>Returns <code class="inline-code">null</code> for absence of configuration files or parsing failures – a graceful handling approach.</li>
+<li>Centralizes JSON validation to fortify against invalid structures.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>🧙‍♂️ <strong>Follow the Trail</strong>: When analyzing <code class="inline-code">generateRepomixContext</code>, follow the flow of fallback sequences and caching logic across related functions.</li>
-<li>🔑 <strong>Rely on the Guardians</strong>: Explore how <code class="inline-code">validateProjectPath</code> and <code class="inline-code">getApiKey</code> protect the system from unverified inputs.</li>
-<li>✨ <strong>Interpret the Signs</strong>: Observe the nuances in <code class="inline-code">LLMClient.generateResponse</code> to better understand its advanced error-handling mechanisms.</li>
+<li><strong>Equipped for Errors</strong>: Look for how functions handle fallbacks (try-catch) and redundant checks (e.g., <code class="inline-code">!raw</code> or <code class="inline-code">loadConfig</code> wrappers).</li>
+<li><strong>Follow the Threads</strong>: Analyze how methods deliver seamless integration between configuration, themes, and interactive quests.</li>
+<li><strong>Adopt Clever Patterns</strong>: Observe Set-based uniqueness filters or nested-value traversal when assimilating structure-wide data.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of the Repository&#39;s magic.</p>
-<p>With the Codex of Arcane Insight now bound into your grasp, noble seeker, you ascend further as a luminary of wisdom, leaving behind the echoes of shadowed ignorance—ride boldly toward the brilliance of destiny! ⚡👁️💎</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>With the wisdom of ancient scrolls and the valor of a legendary knight, you’ve triumphed through Quest 3: Chronicles of Heroic Tales—march boldly, steadfast hero, for the realm gleams brighter at 40% completion! ⚡💎📡</p>
 
 </div>
 
