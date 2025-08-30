@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: Knights of the MCP Tool Interface - Repo Adventure</title>
+    <title>Quest 1: The Castle's Mystic Interface - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Enchanted Realm of Codaria</a>
+                <a href="index.html">The Enchanted Kingdom of Code</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,24 +45,24 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: Knights of the MCP Tool Interface</h1>
+    <h1>Quest 1: The Castle&#39;s Mystic Interface</h1>
 <hr>
-<p>In the mystical realm of Codaria, the ancient Castle Configura hums with the magic of enchanted scripts. Within its wizard-towered halls, the knights of the MCP Tool Interface ready their arms to combat the Chaos Bug. This nefarious foe corrupts functionality and disrupts the harmony of spellbinding code. Brave adventurer, your journey begins here. You must explore the lore captured within the MCP’s arcane files to uncover how tools are forged and quests are shaped. Wield these magical implements to restore order to Codaria’s code-charmed lands!</p>
+<p>In the heart of the Enchanted Kingdom of Code lies the Repository – a castle brimming with magical scrolls and boundless wisdom. Developers brave its winding corridors in search of the Quest Scrolls to create legendary adventures. Your journey begins in the castle’s Mystic Interface – a portal where spells known as &quot;tools&quot; awaken to life. Discover the ancient mechanisms of the server that brings these tools to eager heroes across the kingdom. Brace yourself, adventurer, as the castle grows more complex with every step.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Tool Mapping Chronicles</strong>: How does <code class="inline-code">setupHandlers</code> dynamically register tools and validate their descriptions and schemas?</li>
-<li>⚡ <strong>Command Summoning Path</strong>: How does the <code class="inline-code">run</code> method initialize the system and pre-generate repository content for seamless interaction?</li>
-<li>🛡️ <strong>Error Cleansing Ritual</strong>: How does <code class="inline-code">main</code> handle shutdown signals and protect the system from unruly errors?</li>
+<li>🔍 <strong>Spell Cataloging</strong>: How does the server dynamically assemble the list of available tools in the kingdom?</li>
+<li>⚡ <strong>Ritual Execution</strong>: What steps does the server follow to validate and invoke a magical tool’s handler?</li>
+<li>🛡️ <strong>Failsafe Enchantments</strong>: How is error handling woven into the server to protect the kingdom from unworthy spells or mishaps?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Foundations</h3>
-<p>This file reveals the wisdom of the MCP server’s inner workings. It constructs the enchanted backbone that supports tool registration and execution. Through <code class="inline-code">setupHandlers</code>, knights ensure their tools are initiated with proper magical descriptions and parameters validated using schemas. The <code class="inline-code">run</code> method prepares the realm for interactive use, warming caches to guard against interruption. Finally, <code class="inline-code">main</code> invokes the MCP server’s startup and handles potential disruptions gracefully. These functions exemplify Codaria’s spellcraft, ensuring its enchanted systems remain resilient.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Server Infrastructure for Tool Invocation</h3>
+<p>This file outlines the enchanted infrastructure of the Mystic Interface. The <code class="inline-code">RepoAdventureServer</code> class is the centerpiece, imbuing the castle with the power to list available tools and execute them. Its <code class="inline-code">setupHandlers</code> method initializes the two key components: the dynamic tool catalog and the invocation mechanism. The <code class="inline-code">run</code> method breathes life into the server, creating a direct channel between the realm of Developers and the tool repository. Graceful shutdown mechanisms ensure the magic fades without disrupting the delicate balance of the repository.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">RepoAdventureServer.setupHandlers</code>: This method dynamically registers tools, validating their configurations. It ensures tools are described and their input schemas are correctly mapped using <code class="inline-code">zodToJsonSchema</code>.</li>
-<li><code class="inline-code">RepoAdventureServer.run</code>: Initializes the MCP server transport, connects the magical interface, and pre-generates repository insights with <code class="inline-code">repoAnalyzer.preGenerate</code>.</li>
-<li><code class="inline-code">main</code>: Handles MCP server startup while safeguarding against interruptions like shutdown signals or promise rejections.</li>
+<li><code class="inline-code">setupHandlers</code> dynamically registers all available tools and configures the castle’s magical response system, combining intuitive input validation with execution logic.</li>
+<li><code class="inline-code">run</code> establishes the Mystic Interface’s transport layer, triggers tool-loading rituals, and warms up the cache for smoother adventures.</li>
+<li><code class="inline-code">main</code> acts as the central summoning spell, connecting heroes to the server while guarding against unplanned interruptions.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
@@ -91,19 +91,16 @@
       }
 
       const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool&#39;s Zod schema
       const validationResult = tool.schema.safeParse(args);
+
       if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
+        const errorMessages = validationResult.error.issues.map(err =&gt; 
           `${err.path.join(&#39;.&#39;)}: ${err.message}`
         ).join(&#39;, &#39;);
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
 
-      // Execute the tool handler with validated arguments
       return await tool.handler(validationResult.data as any);
-
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -117,25 +114,29 @@
 }
 </code></pre>
 <ul>
-<li>Validates tools dynamically using <code class="inline-code">zodToJsonSchema</code>, ensuring input schemas are mapped to JSON schema definitions.</li>
-<li>Protects against invalid tool execution with comprehensive error handling using <code class="inline-code">McpError</code>.</li>
-<li>Demonstrates a modular approach to tool invocation and validation, centralizing logic for consistent tool configuration.</li>
+<li>Dynamically registers all tools, ensuring a scalable and flexible system for adding new magical spells.</li>
+<li>Validates tool arguments against schemas to reject malformed invocations before execution.</li>
+<li>Implements structured error handling to distinguish tool-specific failures from internal server errors.</li>
+<li>Converts Zod schemas to JSON schemas, enabling broader compatibility across the castle’s systems.</li>
+<li>Maintains an organized response structure to facilitate smooth integration with mystical Developer interfaces.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
+
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Connects the MCP server via <code class="inline-code">StdioServerTransport</code>, initializing communication through a sturdy neural pathway for command exchange.</li>
-<li>Prepares the repository landscape by invoking <code class="inline-code">repoAnalyzer.preGenerate</code>, warming the cache for optimal subsequent interactions.</li>
-<li>Ensures seamless initiation of interactions by avoiding delays in analyzer setup.</li>
+<li>Activates the Mystic Interface, enabling communication between tools and Developers.</li>
+<li>Initializes the working directory’s context to showcase prepared content during the Developer’s journey.</li>
+<li>Prefetches repository data to optimize the spell-casting experience in real-time.</li>
+<li>Employs the <code class="inline-code">StdioServerTransport</code> layer for robust message transmission between realms.</li>
+<li>Prints status updates to inform Developers of the castle’s readiness and ongoing preparations.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async function main() {
@@ -150,29 +151,41 @@
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
-    
+
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
     process.exit(1);
   }
 }
+
+function gracefulShutdown() {
+  console.error(&#39;\nShutting down MCP server...&#39;);
+  try {
+    repoAnalyzer.cleanup();
+  } catch (e) {
+    console.error(&#39;Cleanup error:&#39;, e);
+  }
+  process.exit(0);
+}
 </code></pre>
 <ul>
-<li>Handles graceful shutdown through <code class="inline-code">process.on</code>, ensuring resources are cleaned once signals are captured (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>).</li>
-<li>Monitors unhandled rejections without triggering server shutdown, offering resilience against unexpected conditions.</li>
-<li>Establishes robust MCP server initialization logic, preparing the enchanted script realms for uninterrupted workflow.</li>
+<li>Orchestrates the startup sequence, ensuring the Mystic Interface is ready for the Developer’s journey.</li>
+<li>Listens for termination signals, executing a graceful shutdown that preserves the castle’s stability.</li>
+<li>Implements recovery mechanisms to handle unhandled promise rejections during runtime.</li>
+<li>Provides detailed logging to keep Developers informed, aiding troubleshooting in the face of unexpected errors.</li>
+<li>Centralizes the logic for error handling and process lifecycle management.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>To understand how tools are registered and validated, focus on <code class="inline-code">setupHandlers</code> and its usage of Zod schemas.</li>
-<li>Investigating <code class="inline-code">run</code> will provide insight into system initialization and preemptive caching mechanisms.</li>
-<li>Observe <code class="inline-code">main</code> for strategies to protect the server from abrupt interruptions or unhandled promise rejections.</li>
+<li>🪄 <strong>Uncover Connections</strong>: Observe how <code class="inline-code">setupHandlers</code> relies on shared tool registries, discovering the modularity underpinning the castle’s design.</li>
+<li>🔮 <strong>Trace the Path</strong>: Follow the invocation flow from tool listing to execution for hidden patterns.</li>
+<li>🛠️ <strong>Expand the Castle</strong>: Consider how additional tools can be integrated into this architecture.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries within Codaria’s enchanted code realms.</p>
-<p>Behold, brave hero, thou hast conquered the arcane trials of Quest 1: Knights of the MCP Tool Interface, ascending as a true champion of the digital realm—march onward to further glory! ⚔️💎⚡</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Huzzah, brave adventurer, for you have unraveled the arcane secrets of the Mystic Interface in the Castle&#39;s labyrinth—a triumphant first step on your legendary quest, shining like a ⭐ among the stars of the realm!</p>
 
 </div>
 
