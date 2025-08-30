@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The MCP Tool Interface - Repo Adventure</title>
+    <title>Quest 1: Configurations and Themes Nexus - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository Chronicles: Crafting a Dynamic Adventure Framework</a>
+                <a href="index.html">Repository Chronicles: Exploring Modular Systems</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,141 +45,142 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The MCP Tool Interface</h1>
+    <h1>Quest 1: Configurations and Themes Nexus</h1>
 <hr>
-<p>Welcome to the Code Explorer&#39;s Guild, where our first challenge lies in unraveling the inner workings of the MCP (Model Context Protocol) interface. This quest will take us deep into the foundational mechanisms of server operations and the adventure toolset. As you unearth the secrets within, you&#39;ll gain critical insights into how modular tools interact with the server&#39;s architecture to power interactive storytelling.</p>
+<p>Welcome, developer! As the framework’s Configurations and Themes Nexus evolves, your task is to analyze its pivotal role in HTML generation workflows. You’ll delve deep into template rendering systems, asset management, and how the HTML generation pipeline produces feature-rich static sites. Grab your tools—this is your opportunity to master the intricate core setup of this repository&#39;s adventure generator!</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Tool Deployment Analysis</strong>: How does the <code class="inline-code">setupHandlers</code> function dynamically manage and validate tools for interaction?</li>
-<li>⚡ <strong>Server Execution Flow</strong>: What role does the <code class="inline-code">run</code> function play in initializing and orchestrating the MCP interface?</li>
-<li>🛡️ <strong>Error Resilience Review</strong>: How does the <code class="inline-code">main</code> function incorporate error handling and system shutdown mechanisms?</li>
+<li>🔍 <strong>Code Modularity Blueprint</strong>: How does <code class="inline-code">HTMLAdventureGenerator.generateAdventure</code> leverage external systems for modular functionality?</li>
+<li>⚡ <strong>Template Rendering Patterns</strong>: What mechanisms are used by <code class="inline-code">TemplateEngine.renderPage</code> and <code class="inline-code">TemplateEngine.replacePlaceholders</code> to integrate data into HTML templates dynamically?</li>
+<li>🛡️ <strong>Asset Management Workflow</strong>: What strategies does <code class="inline-code">AssetManager.copyGlobalAssets</code> employ to ensure reusable resources are correctly deployed across themes?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The MCP Server Core</h3>
-<p>This file defines the server class <code class="inline-code">RepoAdventureServer</code>, which orchestrates core logic for managing tools and handling client requests. It provides handlers for listing available tools and executing them based on client requests. Additionally, the <code class="inline-code">run</code> function establishes the server&#39;s transport mechanism and precomputes analysis data for performance optimization. Meanwhile, <code class="inline-code">main</code> acts as the entry point, ensuring robust error handling and facilitating system-wide graceful shutdown procedures.</p>
+<h3><span class="header-prefix">packages/generator/src/cli/html-generator.ts:</span> HTML adventure generator implementation</h3>
+<p>This file defines the <code class="inline-code">HTMLAdventureGenerator</code> class, a primary command-line interface for generating HTML-based adventure websites. The generator coordinates tasks such as processing repository configurations, managing themes, and rendering quest pages. It represents how the codebase operationalizes its modular design to convert repositories into interactive experiences.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Dynamically registers handlers for listing and executing tools, ensuring client requests are processed with schema-based validation.</li>
-<li><code class="inline-code">run</code>: Launches the MCP server, initializes the transport, and kicks off pre-generation of content via the <code class="inline-code">repoAnalyzer</code>.</li>
-<li><code class="inline-code">main</code>: Provides the entry point for the server, incorporating signal-based cleanup and error resilience to ensure graceful handling of shutdowns or unexpected issues.</li>
+<li><code class="inline-code">HTMLAdventureGenerator.generateAdventure</code> orchestrates the entire generation pipeline, leveraging templates and asset managers to produce the final output.</li>
+<li><code class="inline-code">HTMLAdventureGenerator.generateAllThemes</code> focuses on supporting multiple themes, enabling concurrent creation of theme-specific directories.</li>
+<li><code class="inline-code">HTMLAdventureGenerator.startHttpServer</code> provides a quick-serving option to preview the generated content locally.</li>
+<li><code class="inline-code">HTMLAdventureGenerator.buildQuestHTML</code> incorporates rendered content into quest pages, including structured navigation for the user.</li>
+</ul>
+<h3><span class="header-prefix">packages/generator/src/cli/template-engine.ts:</span> Dynamically renders HTML templates</h3>
+<p>This file houses the <code class="inline-code">TemplateEngine</code> class, which loads and processes HTML templates. Utilizing caching techniques and placeholder replacements, it ensures consistent and on-demand rendering of dynamic content.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">TemplateEngine.renderPage</code> combines templates and variable data to produce fully-constructed HTML pages.</li>
+<li><code class="inline-code">TemplateEngine.replacePlaceholders</code> facilitates placeholder resolution, replacing template variables with actual data during rendering.</li>
+</ul>
+<h3><span class="header-prefix">packages/generator/src/cli/asset-manager.ts:</span> Manages asset copying and organization</h3>
+<p>The <code class="inline-code">AssetManager</code> file provides utilities for handling static assets. It focuses on ensuring that images, stylesheets, and theme-specific resources are structured appropriately.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">AssetManager.copyGlobalAssets</code> centralizes reusable assets into shared directories for efficient multi-theme handling.</li>
+<li><code class="inline-code">AssetManager.copyQuestNavigator</code> ensures navigation-specific resources are copied to theme or global directories, depending on the mode of operation.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
+<h3>packages/generator/src/cli/html-generator.ts</h3>
+<pre><code class="language-typescript">async generateAdventure(): Promise&lt;void&gt; {
+  console.log(chalk.yellow.bold(&#39;🚀 Generating Adventure...&#39;));
+  console.log();
 
-    return { tools: toolList };
-  });
+  console.log(chalk.dim(&#39;📊 Analyzing codebase...&#39;));
+  const repomixContent = await repoAnalyzer.generateRepomixContext(this.projectPath);
+  const projectInfo = createProjectInfo(repomixContent);
 
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
+  console.log(chalk.dim(&#39;✨ Generating themed story and quests...&#39;));
+  const storyContent = await this.adventureManager.initializeAdventure(
+    projectInfo,
+    this.selectedTheme,
+    this.projectPath,
+    this.customThemeData
+  );
 
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
+  console.log(chalk.dim(&#39;🎨 Creating theme styling...&#39;));
+  this.generateThemeCSS();
 
-      const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool&#39;s Zod schema
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
+  console.log(chalk.dim(&#39;🧭 Adding quest navigator...&#39;));
+  if (!this.isMultiTheme) {
+    this.copyQuestNavigator();
+  }
 
-      // Execute the tool handler with validated arguments
-      return await tool.handler(validationResult.data as any);
+  console.log(chalk.dim(&#39;📝 Creating main adventure page...&#39;));
+  this.generateIndexHTML();
 
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
+  console.log(chalk.dim(&#39;📖 Generating quest pages...&#39;));
+  await this.generateQuestPages();
 }
 </code></pre>
 <ul>
-<li>Dynamically registers handlers to list and execute tools, creating compatibility between custom tool schemas and the core server framework.</li>
-<li>Converts Zod schemas into JSON schema definitions for compatibility and validation.</li>
-<li>Implements robust error handling by wrapping tool execution in <code class="inline-code">try-catch</code> blocks for consistent error reporting.</li>
-<li>Separates concerns by leaving tool definitions outside the server, making the system modular and scalable.</li>
-<li>Validates tool arguments against schemas to ensure consistent tool behavior and input/output expectations.</li>
+<li>This code initializes and coordinates the HTML generation process.</li>
+<li>External systems like <code class="inline-code">repoAnalyzer</code> and <code class="inline-code">adventureManager</code> are heavily leveraged for modular execution.</li>
+<li>It captures the importance of maintaining clear separation between analysis, theme-specific setup, and HTML rendering.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-  
-  // Pre-generate repomix content for the current working directory to warm up the cache
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
+<h3>packages/generator/src/cli/template-engine.ts</h3>
+<pre><code class="language-typescript">renderPage(contentTemplate: string, variables: TemplateVariables): string {
+  const baseTemplate = this.loadTemplate(&#39;base-template.html&#39;);
+  const contentHtml = this.loadTemplate(contentTemplate);
+
+  const renderedContent = this.replacePlaceholders(contentHtml, variables);
+  const pageVariables = { ...variables, CONTENT: renderedContent };
+
+  return this.replacePlaceholders(baseTemplate, pageVariables);
+}
+
+private replacePlaceholders(template: string, variables: TemplateVariables): string {
+  let result = template;
+  for (const [key, value] of Object.entries(variables)) {
+    const placeholder = `{{${key}}}`;
+    result = result.replace(new RegExp(placeholder, &#39;g&#39;), value || &#39;&#39;);
+  }
+
+  return result;
 }
 </code></pre>
 <ul>
-<li>Initializes the server by setting up <code class="inline-code">StdioServerTransport</code>, enabling communication through standard input/output.</li>
-<li>Outputs server status for operational monitoring and troubleshooting.</li>
-<li>Pre-generates repository content using the <code class="inline-code">repoAnalyzer</code> to reduce subsequent latency during user interactions.</li>
-<li>Uses asynchronous functions and Promises to ensure seamless execution performance.</li>
-<li>Demonstrates a strategic caching approach for performance optimization on large repositories.</li>
+<li><code class="inline-code">renderPage</code> demonstrates modular page assembly using base and content templates.</li>
+<li>The <code class="inline-code">replacePlaceholders</code> function underscores the simplicity and efficiency of inline template variable replacement.</li>
+<li>This approach minimizes redundancy while maximizing reusability, aligning closely with template-engine best practices.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async function main() {
+<h3>packages/generator/src/cli/asset-manager.ts</h3>
+<pre><code class="language-typescript">copyGlobalAssets(outputDir: string): void {
   try {
-    const server = new RepoAdventureServer();
-    
-    // Handle graceful shutdown for both signals
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+    const globalSharedDir = path.join(outputDir, &#39;assets&#39;, &#39;shared&#39;);
+    fs.mkdirSync(globalSharedDir, { recursive: true });
+
+    const globalImages = [&#39;github-mark.svg&#39;, &#39;github-mark-white.svg&#39;];
+    globalImages.forEach(file =&gt; {
+      const sourcePath = path.join(this.sourceDir, &#39;assets&#39;, &#39;shared&#39;, file);
+      if (fs.existsSync(sourcePath)) {
+        const targetPath = path.join(globalSharedDir, file);
+        fs.copyFileSync(sourcePath, targetPath);
+      }
     });
-    
-    await server.run();
+
+    console.log(chalk.green(&#39;✅ Global assets copied&#39;));
   } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
+    console.log(chalk.yellow(&#39;⚠️ Warning: Could not copy global images&#39;));
   }
 }
 </code></pre>
 <ul>
-<li>Serves as the main entry point for the MCP server, managing the initialization lifecycle of <code class="inline-code">RepoAdventureServer</code>.</li>
-<li>Implements signal-based interrupt handling via <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> for reliable system shutdown on critical signals.</li>
-<li>Adds logging for unhandled promise rejections without causing application crashes during runtime.</li>
-<li>Wraps the server lifecycle in a <code class="inline-code">try-catch</code> block to capture and log fatal startup errors.</li>
-<li>Ensures application exit codes are updated to reflect error conditions, aligning with UNIX best practices.</li>
+<li>Demonstrates a resilient strategy for ensuring critical shared assets are copied.</li>
+<li>Files are grouped logically for multi-theme scalability, ensuring consistent availability.</li>
+<li>Emphasizes error handling and clear user feedback for effective troubleshooting.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Consider extending the server with additional tool handlers as needed for new adventure features.</li>
-<li>Explore the <code class="inline-code">repoAnalyzer</code> implementation for detailed caching mechanics.</li>
-<li>Investigate how tools interact with the <code class="inline-code">setupHandlers</code> function to see how schemas enhance runtime input validation.</li>
+<li>📂 Prioritize understanding the relationship between <code class="inline-code">HTMLAdventureGenerator</code> and external engines like <code class="inline-code">TemplateEngine</code> and <code class="inline-code">AssetManager</code>.</li>
+<li>🧩 Look at how placeholder replacement simplifies template rendering and boosts efficiency across themes.</li>
+<li>🚀 Experiment with extending the <code class="inline-code">copyGlobalAssets</code> method to include additional asset types during tests.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>🎉 Congratulations, you&#39;ve successfully debugged and deployed your first milestone with &quot;Quest 1: The MCP Tool Interface&quot;—your codebase evolution is off to a stellar start! 🚀💎⚡</p>
+<p>Achievement unlocked: You&#39;ve successfully deployed &quot;Quest 1: Configurations and Themes Nexus&quot; to production—stellar work optimizing your codebase for the journey ahead! 🚀💎📡</p>
 
 </div>
 

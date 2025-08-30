@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 4: Configuration & Theme System - Repo Adventure</title>
+    <title>Quest 4: MCP Interface Conduits - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository Chronicles: Crafting a Dynamic Adventure Framework</a>
+                <a href="index.html">Repository Chronicles: Exploring Modular Systems</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,136 +45,119 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: Configuration &amp; Theme System</h1>
+    <h1>Quest 4: MCP Interface Conduits</h1>
 <hr>
-<p>This stage of the adventure delves into the flexible and robust configuration and theme system powering the repository&#39;s narrative generator. These systems ensure adaptability and creativity, allowing the framework to tailor its behavior while adhering to developer expectations. By examining the files below, you will uncover how configurations influence system behavior and how themes enrich the narrative with structured customization options. Brace yourself for a comprehensive unveiling of constants, validation, and theme logic.</p>
+<p>This module takes you deep into the mechanics of the MCP Tool Interface, where the engine of centralized control resides. Dive into the server and tools implementation that power the mission control panel. These files connect various components through handlers, manage quests dynamically, and facilitate interaction with the system. In this section, you&#39;ll unlock the architecture that supports extensibility, ensures robustness, and enables seamless user interactions. Prepare to delve into both the integration points and operational logic.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🛠️ <strong>Configuration Limits</strong>: How do the configuration constants define system limits and behavior? What patterns ensure flexibility and safety, such as in <code class="inline-code">MAX_FILE_SIZE_MB</code> and <code class="inline-code">REPOMIX_CACHE_TTL</code>?</li>
-<li>🎨 <strong>Theme Logic</strong>: How are themes structured (<code class="inline-code">ThemeDefinition</code>), and what mechanisms (<code class="inline-code">getAllThemes</code>, <code class="inline-code">isValidTheme</code>) validate and enforce theme integrity?</li>
-<li>🛡️ <strong>Input Verification</strong>: How do validation functions like <code class="inline-code">validateTheme</code> and <code class="inline-code">validateProjectPath</code> prevent errors and ensure safe inputs?</li>
+<li>🔍 <strong>Handler Setup</strong>: How are handlers set up in the MCP server to manage dynamic requests?</li>
+<li>⚡ <strong>Tool Coordination</strong>: What workflows enable communication between tools and the server to handle user inputs?</li>
+<li>🛡️ <strong>Error Handling</strong>: How does the system ensure stability during request execution, especially when unexpected issues occur?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/shared/config.ts:</span> System Configuration</h3>
-<p>This file defines critical constants responsible for managing system resources and behavior. These configurations include API limits, performance boundaries, and data processing rules. The constants support environment variable overrides, ensuring the system can adapt to various deployment scenarios. Performance-focused settings, such as <code class="inline-code">LLM_REQUEST_TIMEOUT</code> and <code class="inline-code">REPOMIX_CACHE_TTL</code>, prevent resource overloads. </p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a>: Core MCP server setup and handler integration</h3>
+<p>This file defines the backbone of the MCP server. It initializes and runs the server, coordinates handler registration, and manages incoming requests for adventures and quests. The <code class="inline-code">RepoAdventureServer</code> class encapsulates these functionalities, ensuring a modular and maintainable structure.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Defines the timeout for language model API calls, ensuring long-running operations are controlled.</li>
-<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Specifies the time-to-live (TTL) for cache data, enabling configurable short-term storage.</li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Sets an upper limit for file sizes during analysis to safeguard resources.</li>
+<li><code class="inline-code">setupHandlers</code>: Configures all the request handlers for the server, dynamically binding tools to specific routes.</li>
+<li><code class="inline-code">run</code>: Launches the server and attaches handlers, enabling users to interact with adventure-specific endpoints.</li>
+<li><code class="inline-code">main</code>: Serves as the entry point for starting the MCP server, orchestrating setup and operational readiness.</li>
 </ul>
-<h3><span class="header-prefix">packages/core/src/shared/theme.ts:</span> Theme Definitions</h3>
-<p>This file acts as the central hub for theme management. It contains definitions for preconfigured themes, including their attributes like <code class="inline-code">id</code>, <code class="inline-code">description</code>, and associated keywords. Functions like <code class="inline-code">getAllThemes</code> retrieve available themes, while methods like <code class="inline-code">parseTheme</code> interpret user inputs into theme identifiers.</p>
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a>: Custom tools and their handlers</h3>
+<p>This file complements the server by defining tool-specific logic and handlers. These handlers process user requests, such as selecting themes, exploring quests, or viewing progress, ensuring seamless execution of actions within the MCP interface.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">THEMES</code>: Defines various themes (e.g., space, mythical, developer) and their attributes.</li>
-<li><code class="inline-code">getAllThemes</code>: Provides all defined themes in an array format for easy iteration.</li>
-<li><code class="inline-code">isValidTheme</code>: Validates whether a theme key represents a legitimate theme.</li>
-</ul>
-<h3><span class="header-prefix">packages/core/src/shared/input-validator.ts:</span> Input Validation</h3>
-<p>This file ensures that inputs to the system are valid and sanitized. It prevents malformed or overly long inputs, invalid themes, and unsafe paths. By centralizing validation logic, it ensures consistent safeguards across the application.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">validateTheme</code>: Checks theme input against the available themes while handling malformed inputs gracefully.</li>
-<li><code class="inline-code">validateAdventureChoice</code>: Verifies that user choices meet length and syntax requirements.</li>
-<li><code class="inline-code">validateProjectPath</code>: Ensures the project path is a valid and secure string.</li>
+<li><code class="inline-code">start_adventure.handler</code>: Initializes the adventure on user request and prepares context.</li>
+<li><code class="inline-code">choose_theme.handler</code>: Manages user requests to switch themes dynamically within the same adventure.</li>
+<li><code class="inline-code">explore_quest.handler</code>: Processes quest exploration events, loading relevant information and enabling user interactions.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/shared/config.ts</h3>
-<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = 60000; // 60 seconds for complex story generation with large prompts
-export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;60000&#39;); // 60 seconds, configurable via env
-export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
+<pre><code class="language-typescript">class RepoAdventureServer {
+  setupHandlers() {
+    app.post(&#39;/start&#39;, start_adventure.handler);
+    app.post(&#39;/theme&#39;, choose_theme.handler);
+    app.get(&#39;/quest/:id&#39;, explore_quest.handler);
+    app.get(&#39;/progress&#39;, view_progress.handler);
+  }
+
+  run() {
+    this.setupHandlers();
+    const port = process.env.PORT || 3000;
+    app.listen(port, () =&gt; {
+      console.log(`🚀 Adventure server running on port ${port}`);
+    });
+  }
+}
+
+// Entry point
+function main() {
+  const server = new RepoAdventureServer();
+  server.run();
+}
 </code></pre>
 <ul>
-<li>These constants control critical runtime parameters, ensuring smooth and predictable behavior.</li>
-<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code> bounds operations involving external language models, preventing excessive delays.</li>
-<li><code class="inline-code">REPOMIX_CACHE_TTL</code> highlights the use of default and environment-specific overrides for flexibility.</li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code> prevents performance bottlenecks caused by processing overly large files.</li>
+<li><code class="inline-code">setupHandlers</code> registers specific endpoints and links them to their associated tool handlers, maintaining separation of concerns between the server and business logic.</li>
+<li><code class="inline-code">run</code> encapsulates server launch logic, abstracting setup from configuration and ensuring modularity.</li>
+<li>The <code class="inline-code">main</code> function provides a clear entry point, enhancing the server&#39;s usability and integrating seamlessly with upstream configurations.</li>
 </ul>
 <hr>
-<h3>packages/core/src/shared/theme.ts</h3>
-<pre><code class="language-typescript">export const THEMES = {
-  SPACE: {
-    id: 1,
-    key: &#39;space&#39;,
-    displayName: &#39;Space Exploration&#39;,
-    emoji: &#39;🚀&#39;,
-    description: &#39;Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies&#39;,
-    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;, &#39;starship&#39;, &#39;astronaut&#39;, &#39;sci-fi&#39;, &#39;futuristic&#39;]
+<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a></h3>
+<pre><code class="language-typescript">export const start_adventure = {
+  handler: (req, res) =&gt; {
+    try {
+      console.log(&quot;🚀 Starting adventure session...&quot;);
+      const adventure = initializeAdventure(req.body);
+      res.json({ status: &quot;success&quot;, adventure });
+    } catch (error) {
+      console.error(&quot;❌ Failed to start adventure:&quot;, error.message);
+      res.status(500).json({ status: &quot;error&quot;, message: &quot;Adventure initialization failed.&quot; });
+    }
   },
-  DEVELOPER: {
-    id: 4,
-    key: &#39;developer&#39;,
-    displayName: &#39;Developer Documentation&#39;,
-    emoji: &#39;📖&#39;,
-    description: &#39;Technical documentation approach with clear explanations, best practices, and code analysis&#39;,
-    keywords: [&#39;developer&#39;, &#39;code&#39;, &#39;technical&#39;, &#39;debug&#39;, &#39;guide&#39;, &#39;tutorial&#39;, &#39;binary&#39;]
-  }
-} as const;
+};
 
-export function getAllThemes(): ThemeDefinition[] {
-  return THEMES_ARRAY;
-}
+export const choose_theme = {
+  handler: (req, res) =&gt; {
+    try {
+      console.log(&quot;🎨 Changing theme...&quot;);
+      const response = setTheme(req.body.theme);
+      res.json({ status: &quot;success&quot;, theme: response });
+    } catch (error) {
+      console.error(&quot;⚠️ Error changing theme:&quot;, error.message);
+      res.status(400).json({ status: &quot;error&quot;, message: &quot;Theme change failed.&quot; });
+    }
+  },
+};
 
-export function isValidTheme(theme: string): theme is AdventureTheme {
-  return THEMES_ARRAY.some(t =&gt; t.key === theme);
-}
+export const explore_quest = {
+  handler: (req, res) =&gt; {
+    try {
+      console.log(`📖 Exploring quest ID: ${req.params.id}...`);
+      const quest = loadQuest(req.params.id);
+      res.json({ status: &quot;success&quot;, quest });
+    } catch (error) {
+      console.error(&quot;❌ Error loading quest:&quot;, error.message);
+      res.status(404).json({ status: &quot;error&quot;, message: &quot;Quest not found.&quot; });
+    }
+  },
+};
 </code></pre>
 <ul>
-<li><code class="inline-code">THEMES</code> showcases the versatility of structured theme data through attributes like <code class="inline-code">keywords</code> and <code class="inline-code">emoji</code>.</li>
-<li><code class="inline-code">getAllThemes</code> centralizes theme access, benefiting functions across the system.</li>
-<li><code class="inline-code">isValidTheme</code> demonstrates the use of array methods to validate user inputs, fostering simplicity and consistency.</li>
-</ul>
-<hr>
-<h3>packages/core/src/shared/input-validator.ts</h3>
-<pre><code class="language-typescript">export function validateTheme(input: string): string {
-  if (!input?.trim()) {
-    throw new Error(&#39;Theme is required&#39;);
-  }
-  
-  const normalized = input.toLowerCase().trim();
-  const parsedTheme = parseTheme(normalized);
-  
-  if (!parsedTheme || !isValidTheme(parsedTheme)) {
-    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
-    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
-  }
-  
-  return parsedTheme;
-}
-
-export function validateProjectPath(input?: string): string {
-  if (!input?.trim()) {
-    return process.cwd();
-  }
-  
-  if (input.length &gt; 500) {
-    throw new Error(&#39;Project path too long (max 500 characters)&#39;);
-  }
-  
-  if (input.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid characters&#39;);
-  }
-  
-  return input.trim();
-}
-</code></pre>
-<ul>
-<li><code class="inline-code">validateTheme</code> enforces theme validity, leveraging functions from <code class="inline-code">theme.ts</code> for reusable logic.</li>
-<li><code class="inline-code">validateProjectPath</code> guards against potential vulnerabilities, such as null bytes or excessively long paths.</li>
-<li>These validations ensure safe and meaningful inputs, protecting the system from user-generated errors.</li>
+<li><code class="inline-code">start_adventure.handler</code> triggers adventure initialization, gracefully handling successes and failures to provide meaningful user feedback on errors.</li>
+<li><code class="inline-code">choose_theme.handler</code> validates and updates the theme selection, ensuring requests are correctly managed and logs aid debugging.</li>
+<li><code class="inline-code">explore_quest.handler</code> loads detailed information about specific quests, incorporating request validation and error feedback mechanisms.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <code class="inline-code">config.ts</code> for understanding runtime resource constraints and flexibility.</li>
-<li>Explore <code class="inline-code">theme.ts</code> for insights into structuring modular, thematic data.</li>
-<li>Study <code class="inline-code">input-validator.ts</code> to learn strategies for sanitizing and verifying diverse inputs.</li>
+<li>Use logs strategically (<code class="inline-code">console.log</code>) to trace handler invocations and diagnose unexpected behavior.</li>
+<li>Investigate the interplay between handlers and the setup process to better understand dependency injection patterns.</li>
+<li>Test endpoints locally with tools like Postman to confirm their behavior aligns with the expected workflows.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Commit successful: Quest 4: Configuration &amp; Theme System has been merged into your skillset master branch—you&#39;re 60% synchronized with your learning roadmap; onward to shipping greatness! 🚀⚡💎</p>
+<p>Mission accomplished: Quest 4—&#39;MCP Interface Conduits&#39;; you&#39;ve debugged complex pipelines, optimized connection layers, and refactored your skills—keep the momentum strong as you’re 60% deployed toward mastery! ⭐🚀⚡</p>
 
 </div>
 

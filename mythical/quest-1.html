@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Mystic Instrument of the MCP - Repo Adventure</title>
+    <title>Quest 1: The Enchantment Weaver - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Chronicles of the Enchanted Repository</a>
+                <a href="index.html">The Enchanted Codex of Questoria</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,137 +45,177 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Mystic Instrument of the MCP</h1>
+    <h1>Quest 1: The Enchantment Weaver</h1>
 <hr>
-<p>In the mythical Kingdom of Repositoria, the scrolls have fallen into entropy, causing a rift between the realms of structure and chaos. Within the castle’s enchanted workspace lies the Mystic Instrument of the MCP (Model Context Protocol), a tool of immense power designed to weave order into the codebase tapestry. The Master Codewrights have summoned you, the Hero of Syntax, to delve into this instrument’s design, uncover its secrets, and reinstate balance to the Kingdom through your wisdom.</p>
+<p>In the magical kingdom of Questoria, the Enchanted Codex is the keystone of adventurers’ dreams - a mythical artifact that empowers its wielder to transform code into enchanting stories. However, this relic has long been fragmented, with its knowledge buried in scattered scrolls. One such wondrous scroll resides within the halls of the Template Guild, where incantations take the form of rendered pages. Within these runes lies the path to unify rows of data, summon dynamic content, and breathe life into hollow templates.</p>
+<p>Fellow traveler, your quest begins here! Will you wield the power of the Template Engine, ensuring the Codex’s wisdom awakens once more? Journey deep into the enchanted lines of <code class="inline-code">template-engine.ts</code>, and be guided by its companion, the Asset Keeper, within <code class="inline-code">asset-manager.ts</code>.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Handler Enchantment</strong>: How does <code class="inline-code">RepoAdventureServer</code> use <code class="inline-code">setupHandlers</code> to dynamically register and validate mystical tools in a way that supports modularity and flexibility?</li>
-<li>⚡ <strong>Awakening the Server</strong>: What role does the <code class="inline-code">run</code> function play in activating the server amidst both initialization rituals and background preparation? </li>
-<li>🛡️ <strong>Safeguard of Continuity</strong>: How does the <code class="inline-code">main</code> function implement graceful shutdown and error resilience to ensure the kingdom’s stability, even during unforeseen interruptions?</li>
+<li>🔍 <strong>Hall of Cached Glyphs</strong>: How does template caching work, and what role does <code class="inline-code">loadTemplate</code> play in the reuse of magical scrolls?</li>
+<li>⚡ <strong>Incantation of Replacement</strong>: How are template placeholders dynamically replaced with enchanted values through <code class="inline-code">replacePlaceholders</code>?</li>
+<li>🛡️ <strong>Artefact Transference</strong>: In what ways does <code class="inline-code">copyGlobalAssets</code> ensure quest treasures are prepared for all themes while handling magical errors gracefully?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Server’s Enchanted Framework</h3>
-<p>This file acts as the cornerstone for the MCP’s operations, defining the server’s structural magic. It includes the <code class="inline-code">RepoAdventureServer</code>, which encapsulates key functions such as <code class="inline-code">setupHandlers</code> for managing tool registration and <code class="inline-code">run</code> for initiating operational flows. Additionally, it defines the <code class="inline-code">main</code> method for invocation rituals and spell-binding resilience against errors and abrupt terminations.</p>
+<h3><span class="header-prefix">packages/generator/src/cli/template-engine.ts:</span> The Template Enchanter</h3>
+<p>Deep within the Codex lies the Template Engine, a class that manipulates enchanted scrolls, stored in the <code class="inline-code">templates</code> directory. It summons these scrolls dynamically, replacing placeholders with context-specific variables to construct dynamic HTML pages. Core highlights include:</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: This function dynamically lists and validates tools against schema definitions. It ensures that only well-defined tools are engaged, reinforcing modular adaptability and protecting against malformed invocations.</li>
-<li><code class="inline-code">run</code>: Activates the Mystic Instrument, connecting transports to initiate communication channels and premixing code context for a smooth adventure narrative. It also runs background preparations for enhancing responsiveness.</li>
-<li><code class="inline-code">main</code>: Orchestrates the activation ceremony and safeguards continuity through signal handling and error resilience, ensuring the server remains stalwart amidst disruptions.</li>
+<li><code class="inline-code">loadTemplate</code>: Retrieves a template file, storing it in a cache for future use. If the scroll does not exist, an exception is raised, maintaining the reliability of the script.</li>
+<li><code class="inline-code">replacePlaceholders</code>: Ensures each template’s placeholders (e.g., <code class="inline-code">{{key}}</code>) are replaced by their corresponding values, enchanting static scrolls for use in dynamic dispatch.</li>
+<li><code class="inline-code">renderPage</code>: Combines a base template (always the foundation) with a content template, replacing placeholders and producing a fully rendered page.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  // Dynamic tool listing
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
+<h3>packages/generator/src/cli/template-engine.ts</h3>
+<pre><code class="language-typescript">private loadTemplate(templateName: string): string {
+  if (this.templateCache.has(templateName)) {
+    return this.templateCache.get(templateName)!;
+  }
 
-    return { tools: toolList };
-  });
-
-  // Dynamic tool execution
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-
-      const tool = tools[name as keyof typeof tools];
-      
-      // Validate arguments using the tool&#39;s Zod schema
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      // Execute the tool handler with validated arguments
-      return await tool.handler(validationResult.data as any);
-
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
-</code></pre>
-<ul>
-<li>Dynamically retrieves all registered tools, ensuring schema-based metadata is available for clients. </li>
-<li>Utilizes the Zod library for input validation, strengthening robustness against schema mismatches.</li>
-<li>Implements error-handling constructs to isolate and address both external and internal failures during execution.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  const templatePath = path.join(this.templatesDir, templateName);
   
-  // Pre-generate repomix content for the current working directory to warm up the cache
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
-</code></pre>
-<ul>
-<li>Connects the server’s logical core to its communication transport, synchronizing data exchange with external agents.</li>
-<li>Orchestrates cache pre-generation to minimize latency during real-time tool interactions and optimize client experience.</li>
-<li>Logs operational readiness, ensuring any activation errors are immediately visible for resolution.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async function main() {
   try {
-    const server = new RepoAdventureServer();
-    
-    // Handle graceful shutdown for both signals
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-    });
-    
-    await server.run();
+    const content = fs.readFileSync(templatePath, &#39;utf-8&#39;);
+    this.templateCache.set(templateName, content);
+    return content;
   } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
+    throw new Error(`Failed to load template ${templateName}: ${error}`);
   }
 }
 </code></pre>
 <ul>
-<li>Executes the server&#39;s activation sequence while implementing graceful shutdown hooks to catch termination signals (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>) and ensure cleanup operations.</li>
-<li>Logs unhandled promises for debugging without crashing the server, preserving operational availability.</li>
-<li>Centralizes error reporting and prevention of system-wide termination through fault-tolerant patterns.</li>
+<li><strong>What it does</strong>: Retrieves a template file and stores it in the local cache (<code class="inline-code">templateCache</code>) for optimized subsequent use.</li>
+<li><strong>Patterns used</strong>: Implements caching to avoid redundant file read operations, improving performance.</li>
+<li><strong>Challenges resolved</strong>: Dynamically loading templates from the file system while ensuring smooth operation through error handling when templates are missing.</li>
+<li><strong>Connections</strong>: Essential to all template rendering methods, as templates are required before they can be rendered dynamically.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private replacePlaceholders(template: string, variables: TemplateVariables): string {
+  let result = template;
+
+  for (const [key, value] of Object.entries(variables)) {
+    const placeholder = `{{${key}}}`;
+    result = result.replace(new RegExp(placeholder, &#39;g&#39;), value || &#39;&#39;);
+  }
+  
+  return result;
+}
+</code></pre>
+<ul>
+<li><strong>Core functionality</strong>: Replaces placeholders such as <code class="inline-code">{{key}}</code> with corresponding variable values provided during function invocation.</li>
+<li><strong>Technical techniques</strong>: Uses regular expressions to find placeholders and dynamically substitute values throughout the template.</li>
+<li><strong>Efficiency</strong>: Processes templates in a single pass, ensuring optimal runtime performance even for dense content.</li>
+<li><strong>Integration</strong>: Extensively used by <code class="inline-code">renderPage</code> to ensure complete generation of contextualized, ready-to-display content.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">renderPage(contentTemplate: string, variables: TemplateVariables): string {
+  const baseTemplate = this.loadTemplate(&#39;base-template.html&#39;);
+  const contentHtml = this.loadTemplate(contentTemplate);
+
+  // First render the content template
+  const renderedContent = this.replacePlaceholders(contentHtml, variables);
+
+  // Then render the base template with the content
+  const pageVariables = {
+    ...variables,
+    CONTENT: renderedContent
+  };
+  
+  return this.replacePlaceholders(baseTemplate, pageVariables);
+}
+</code></pre>
+<ul>
+<li><strong>Purpose</strong>: Orchestrates the rendering of full HTML pages by joining base templates and content templates, enhancing reusability and modularity.</li>
+<li><strong>Structure</strong>: Combines rendering layers iteratively to ensure accurate context propagation.</li>
+<li><strong>Why it matters</strong>: Enables rapid prototyping of quests or documents, as only placeholders and specialized content need to be defined and merged.</li>
+</ul>
+<hr>
+<h3>packages/generator/src/cli/asset-manager.ts</h3>
+<p>The Asset Manager safeguards the Codex’s visual treasures - icons, images, and shared artifacts. It handles the transference of assets across directories to ensure proper functionality during HTML quest generation.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">copyGlobalAssets</code>: Transfers shared images and global assets to their respective locations, accommodating theme-specific and universal configurations.</li>
+<li><code class="inline-code">copyQuestNavigator</code>: Handles the duplication of navigation resources (CSS, JS) at both a local and global level depending on scope.</li>
+<li><code class="inline-code">copyImages</code>: Ensures theme-unique and shared images are consolidated in the target output directory.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/generator/src/cli/asset-manager.ts</h3>
+<pre><code class="language-typescript">copyGlobalAssets(outputDir: string): void {
+  try {
+    const globalAssetsDir = path.join(outputDir, &#39;assets&#39;);
+    const targetImagesDir = path.join(globalAssetsDir, &#39;images&#39;);
+    fs.mkdirSync(targetImagesDir, { recursive: true });
+
+    // Copy global shared images to shared directory  
+    const globalSharedDir = path.join(outputDir, &#39;assets&#39;, &#39;shared&#39;);
+    fs.mkdirSync(globalSharedDir, { recursive: true });
+    
+    const globalImages = [&#39;github-mark.svg&#39;, &#39;github-mark-white.svg&#39;];
+    globalImages.forEach(file =&gt; {
+      const sourcePath = path.join(this.sourceDir, &#39;assets&#39;, &#39;shared&#39;, file);
+      if (fs.existsSync(sourcePath)) {
+        const targetPath = path.join(globalSharedDir, file);
+        fs.copyFileSync(sourcePath, targetPath);
+      }
+    });
+
+    // Copy header image for theme selection page
+    const headerImageSource = path.join(this.sourceDir, &#39;assets&#39;, &#39;images&#39;, &#39;ai-adventures.png&#39;);
+    if (fs.existsSync(headerImageSource)) {
+      const headerImageTarget = path.join(targetImagesDir, &#39;ai-adventures.png&#39;);
+      fs.copyFileSync(headerImageSource, headerImageTarget);
+    }
+  } catch (error) {
+    console.log(chalk.yellow(&#39;⚠️ Warning: Could not copy global images&#39;));
+  }
+}
+</code></pre>
+<ul>
+<li><strong>What it does</strong>: Transfers assets critical for theme styling and quest guidance (e.g., images, headers) while copying shared components cleanly.</li>
+<li><strong>Design principles</strong>: Ensures robust error handling and reusability across multi-themed environments.</li>
+<li><strong>Contextual importance</strong>: A key facilitator in ensuring visual consistency and functionality of all generated quest environments.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">copyQuestNavigator(outputDir: string): void {
+  const templatesDir = path.join(this.sourceDir, &#39;templates&#39;);
+  const cssSource = path.join(templatesDir, &#39;quest-navigator.css&#39;);
+  const jsSource = path.join(templatesDir, &#39;quest-navigator.js&#39;);
+  const svgSource = path.join(templatesDir, &#39;compass-icon.svg&#39;);
+
+  const assetsDir = path.join(outputDir, &#39;assets&#39;);
+  fs.mkdirSync(assetsDir, { recursive: true });
+
+  // Copy CSS file
+  if (fs.existsSync(cssSource)) {
+    fs.copyFileSync(cssSource, path.join(assetsDir, &#39;quest-navigator.css&#39;));
+  }
+
+  // Copy JS file  
+  if (fs.existsSync(jsSource)) {
+    fs.copyFileSync(jsSource, path.join(assetsDir, &#39;quest-navigator.js&#39;));
+  }
+
+  // Copy SVG icon
+  if (fs.existsSync(svgSource)) {
+    fs.copyFileSync(svgSource, path.join(assetsDir, &#39;compass-icon.svg&#39;));
+  }
+}
+</code></pre>
+<ul>
+<li><strong>Purpose</strong>: Supplies individual themes or quests with unique navigational resources, ensuring structural autonomy.</li>
+<li><strong>Handling limitations</strong>: Includes safety checks to handle any omission of expected assets without breaking dependent processes.</li>
+<li><strong>Why it’s useful</strong>: Combines theme independence with the scalability required for multi-themed projects.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Familiarize yourself with Zod’s schema validation and its role in ensuring tool compatibility within the MCP.</li>
-<li>Observe the “pre-generation” process in <code class="inline-code">run</code> for insights on optimizing server responses.</li>
-<li>Recognize how graceful shutdown mechanisms are implemented to protect ongoing operations.</li>
+<li>✨ The Template Engine excels with modular design – observe the separation of <code class="inline-code">replacePlaceholders</code> for flexibility in rendering.</li>
+<li>⚔️ When reading error handling flows, ensure reusable constructs like <code class="inline-code">loadTemplate</code> are properly leveraged.</li>
+<li>📜 Practice combining themes with shared assets to reduce duplication while maintaining styling freedom.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>With the triumphant echoes of ancient bards singing your name, brave hero, you have claimed the Mystic Instrument of the MCP, unlocking the first gem of knowledge on your legendary path—may your next quests shine even brighter in the annals of the stars! 🚀⚡💎</p>
+<p>Huzzah, noble seeker, you have woven the first thread of mastery in the Enchantment Weaver’s tapestry—let the realms herald your triumph as you rise toward destiny’s stellar crown! ⚡💎⭐</p>
 
 </div>
 

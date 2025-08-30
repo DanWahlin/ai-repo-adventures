@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Quest Generation Engine - Repo Adventure</title>
+    <title>Quest 2: Code Analysis and AI Collaboration - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">Repository Chronicles: Crafting a Dynamic Adventure Framework</a>
+                <a href="index.html">Repository Chronicles: Exploring Modular Systems</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,205 +45,150 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest Generation Engine</h1>
+    <h1>Quest 2: Code Analysis and AI Collaboration</h1>
 <hr>
-<p>The mechanisms of this interactive storytelling engine are now open to exploration. This engine bridges the gap between code and narrative by leveraging the <code class="inline-code">AdventureManager</code>, <code class="inline-code">AdventureState</code>, and <code class="inline-code">StoryGenerator</code> to craft seamless journeys. Each component takes its place in designing quests that adapt to a project&#39;s unique structure and thematic requirements. The adventure configuration system introduces structured rules to further refine the experiences by integrating files, functions, and highlights from a well-defined configuration. Let’s investigate how these pieces work together to generate and execute dynamic quests.</p>
+<p>Equip yourself with the tools to navigate the intricate layers of the MCP (Modular Code Platform) server and tool interfaces. In this quest, we will study how the server dynamically handles requests, validates user inputs, and executes tools built on top of MCP schemas. Dive into the underlying mechanics defined in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a> and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a> to understand how AI and modular design collaborate to create an interactive developer experience. </p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Adventure Initialization</strong>: How does the <code class="inline-code">initializeAdventure</code> function assemble quests for a new journey, and what are the key components of its setup process?  </li>
-<li>⚡ <strong>Quest Execution Flow</strong>: What is the role of <code class="inline-code">exploreQuest</code> in validating, locating, and executing a user&#39;s selection, and how does caching impact its performance?  </li>
-<li>🛡️ <strong>Configuration Integration</strong>: How does <code class="inline-code">parseAdventureConfig</code> handle configuration files to enforce custom logic, and how are paths extracted for quest refinement?</li>
+<li>🔍 <strong>Handler Configurations</strong>: How does the <code class="inline-code">setupHandlers</code> method dynamically define request handlers for tool listing and execution?</li>
+<li>⚡ <strong>Startup Sequence</strong>: What patterns or methods are used by the <code class="inline-code">run</code> or <code class="inline-code">main</code> functions to initialize the MCP server and ensure seamless startup?</li>
+<li>🛡️ <strong>Tool Execution Safety</strong>: What validation mechanisms are in place to ensure safe and accurate execution of tools?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Orchestrates story generation, quest execution, and user interaction</h3>
-<p>The <code class="inline-code">AdventureManager</code> class provides key functions for initializing adventures and executing quests with user input. Alongside it is <code class="inline-code">AdventureState</code>, which tracks progress, manages cached quest data, and keeps the current theme and project context.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Server Implementation</h3>
+<p>This file encapsulates the configuration, handler setup, and startup logic for the MCP server. It ensures modular functionality by dynamically setting handlers for tools and preparing the environment for user interactions. Interaction safety is bolstered through structured validation and error handling.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Prepares a new adventure with <code class="inline-code">StoryGenerator</code>. Sets the theme, parses configuration files, and integrates quests.  </li>
-<li><code class="inline-code">exploreQuest</code>: Validates user input and executes the selected quest. Manages quest state with caching for completed adventures.  </li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Dynamically calculates how much of the adventure is complete, tracking completed quests relative to the total.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Manages the loading, parsing, and formatting of adventure configurations</h3>
-<p>This module parses configuration data from <code class="inline-code">adventure.config.json</code>, ensuring custom logic is applied to quests. It also optimizes configuration data for efficient use in prompts.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Loads and validates JSON configuration to extract quest-related data. Returns object form for direct use in structured logic.  </li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Extracts unique file paths referenced in the configuration, ensuring only valid paths are included.  </li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Prepares a condensed configuration summary optimized for inclusion in LLM prompts.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Generates structured stories and quests programmatically</h3>
-<p>The <code class="inline-code">StoryGenerator</code> processes project information, themes, and configurations to produce dynamic adventure narratives. It also validates themes and cooperates with <code class="inline-code">adventure-config</code> for accurate quest structures.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">generateStoryAndQuests</code>: Consolidates project data and configuration-derived rules into an overarching adventure narrative and its associated quests.  </li>
-<li><code class="inline-code">generateQuestContent</code>: Generates detailed code exploration prompts based on individual quests, augmenting them with context.  </li>
-<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Extracts and structures story elements such as title, quests, and descriptions from LLM responses.</li>
+<li><code class="inline-code">setupHandlers</code>: Configures request handlers for listing and executing tools dynamically, incorporating input validation and schema conversions.</li>
+<li><code class="inline-code">run</code>: Establishes the server&#39;s communication transport and pre-generates Repomix content for readiness.</li>
+<li><code class="inline-code">main</code>: The entry point that initializes <code class="inline-code">RepoAdventureServer</code> and handles critical operational signals like graceful shutdowns.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/adventure/adventure-manager.ts</h3>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
+<h3>packages/mcp/src/server.ts</h3>
+<pre><code class="language-typescript">  private setupHandlers() {
+    // Dynamic tool listing
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+        name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema, { 
+          target: &#39;jsonSchema7&#39;,
+          $refStrategy: &#39;none&#39;
+        })
+      }));
+      return { tools: toolList };
+    });
 
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
+    // Dynamic tool execution
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+      try {
+        const { name, arguments: args } = request.params;
+        if (!(name in tools)) {
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+        const tool = tools[name as keyof typeof tools];
+        // Validate arguments using the tool&#39;s Zod schema
+        return await tool.handler(tool.schema.parse(args));
+      } catch (error) {
+        if (error instanceof McpError) throw error;
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
   }
-
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  this.state.title = storyResponse.title;
-  this.state.story = storyResponse.story;
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
-  });
-}
 </code></pre>
 <ul>
-<li>Resets the adventure state to ensure no data leaks between sessions.  </li>
-<li>Integrates <code class="inline-code">StoryGenerator</code> to dynamically create a story and quests based on theme and project info.  </li>
-<li>Config integration ensures that quests are customized using <code class="inline-code">adventure.config.json</code> for enhanced narrative control.</li>
+<li>Dynamically registers request handlers for both listing and executing tools.</li>
+<li>Converts tool schemas to a standardized format (<code class="inline-code">jsonSchema7</code>) for client usability.</li>
+<li>Validates tool arguments through <code class="inline-code">zod</code> schemas to prevent invalid operations.</li>
+<li>Catches errors with specific MCP error handling and propagates meaningful messages.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
+<pre><code class="language-typescript">  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+    const projectPath = process.cwd();
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repoAnalyzer.preGenerate(projectPath);
   }
-
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
-}
-
-private async executeQuest(quest: Quest): Promise&lt;AdventureResult&gt; {
-  this.validateQuestPrerequisites();
-
-  let content: QuestContent;
-  let summary: string;
-  const cached = this.state.questContentCache.get(quest.id);
-  if (cached) {
-    await new Promise(resolve =&gt; setTimeout(resolve, 500));
-    content = cached.content;
-    summary = cached.summary;
-    content.adventure = `🔄 **[REVISITING COMPLETED QUEST]**\n\n${content.adventure}`;
-  } else {
-    content = await this.generateQuestContent(quest);
-    summary = await this.generateCompletionSummary(quest);
-    this.state.questContentCache.set(quest.id, { content, summary });
-  }
-
-  this.markQuestCompleted(quest);
-  return this.createQuestResult(content, summary);
-}
 </code></pre>
 <ul>
-<li>Validates user input with sanitization to prevent errors from invalid choices.  </li>
-<li>Integrates caching logic; revisits require no external calls, enhancing efficiency.  </li>
-<li>Handles dependency checks (<code class="inline-code">validateQuestPrerequisites</code>) to prevent execution in incomplete states.</li>
+<li>Instantiates a <code class="inline-code">StdioServerTransport</code> to manage transport protocols for the server.</li>
+<li>Pre-generates content related to the repository&#39;s working directory, improving system readiness.</li>
+<li>Logs meaningful details about server startup and pre-cache operations.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">get progressPercentage(): number {
-  return this.quests.length &gt; 0 
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)
-    : 0;
-}
-</code></pre>
-<ul>
-<li>Provides dynamic tracking of adventure progress using current state data.  </li>
-<li>Ensures accurate representation even if quests or completions change dynamically.</li>
-</ul>
-<hr>
-<h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
+<pre><code class="language-typescript">async function main() {
   try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
+    const server = new RepoAdventureServer();
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
+    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+      console.error(&#39;Unhandled promise rejection:&#39;, reason);
+    });
+    await server.run();
+  } catch (error) {
+    console.error(&#39;Fatal error starting MCP server:&#39;, error);
+    process.exit(1);
   }
 }
 </code></pre>
 <ul>
-<li>Parses raw JSON configuration data into a structured format for further processing.  </li>
-<li>Includes error handling to ensure invalid or missing files do not crash the system.</li>
+<li>Initializes the <code class="inline-code">RepoAdventureServer</code> class and handles signal-based shutdown behavior.</li>
+<li>Catches unhandled promise rejections, ensuring the server remains operational in most scenarios.</li>
+<li>Provides robust error handling for startup failures by exiting gracefully.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Tool Registration and Definitions</h3>
+<p>This file serves as the registry for MCP tools, encapsulating their structure, functionality, and entry points. Each tool is implemented as an independent module and re-exported for dynamic registration.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code>: Initiates codebase analysis and presents theme options.</li>
+<li><code class="inline-code">explore_quest.handler</code>: Facilitates interactions within specific developer-themed quests.</li>
+<li><code class="inline-code">view_progress.handler</code>: Reports on the overall progress and remaining tasks.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
+import { viewProgress } from &#39;./tools/view-progress.js&#39;;
 
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-
-  while (stack.length) {
-    const node = stack.pop();
-    if (node &amp;&amp; typeof node === &#39;object&#39;) {
-      if (typeof node.path === &#39;string&#39; &amp;&amp; fs.existsSync(path.resolve(projectPath, node.path.trim()))) {
-        unique.add(node.path.trim());
-      }
-      for (const value of Array.isArray(node) ? node : Object.values(node)) {
-        stack.push(value);
-      }
-    }
-  }
-  return Array.from(unique);
-}
+export const tools = {
+  start_adventure: startAdventure,
+  explore_quest: exploreQuest,
+  view_progress: viewProgress
+};
 </code></pre>
 <ul>
-<li>Extracts and validates file paths from configuration to ensure they exist in the system.  </li>
-<li>Utilizes a depth-first search to handle nested structures efficiently.</li>
+<li>Imports tool handlers from independent modules, ensuring modularity and maintainability.</li>
+<li>Re-exports tools in a consolidated object for standardized usage across MCP components.</li>
+<li>Encourages decoupled development by isolating tool logic and separating concerns.</li>
 </ul>
 <hr>
-<h3>packages/core/src/adventure/story-generator.ts</h3>
-<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
-  const prompt = loadStoryGenerationPrompt({
-    theme,
-    repomixContent: projectInfo.repomixContent || &#39;No repomix content available&#39;,
-    adventureGuidance: projectPath ? formatAdventureConfigForPrompt(projectPath) : &#39;&#39;
-  });
-
-  const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY });
-  const cleanContent = response.content.trim().replace(/^```markdown\s*|\s*```$/g, &#39;&#39;);
-
-  const parsed = parseMarkdownToStoryResponse(cleanContent);
-  StoryResponseSchema.parse(parsed);  
-  this.currentStoryContent = parsed.story;
-
-  return parsed;
-}
+<pre><code class="language-typescript">export const start_adventure = startAdventure;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
 </code></pre>
 <ul>
-<li>Creates an LLM prompt for narrative and quest generation, focusing on provided configurations.  </li>
-<li>Applies schema-based validation for safe structured responses.  </li>
-<li>Processes configuration context dynamically to ensure precision in results.</li>
+<li>Maps internal tool structures to MCP-compliant names (<code class="inline-code">start_adventure</code>, <code class="inline-code">explore_quest</code>).</li>
+<li>Facilitates streamlined integrations with the MCP server and client endpoints.</li>
+<li>Adds clear naming conventions for easier management and extensibility.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>For error-free execution, check file paths and configuration syntax within <code class="inline-code">adventure.config.json</code>.  </li>
-<li>Cache relies heavily on quest IDs; ensure uniqueness when adding new quests.  </li>
-<li>Adventure progress percentages enable tracking but require accurate quest totals.</li>
+<li><strong>Validation Patterns</strong>: Study the <code class="inline-code">setupHandlers</code> method to understand how dynamic validation prevents runtime failures.</li>
+<li><strong>Startup Design</strong>: Observe the interplay between <code class="inline-code">run</code> and <code class="inline-code">main</code> to identify key steps for resilient server initialization.</li>
+<li><strong>Tool Modularity</strong>: Explore how <code class="inline-code">tools.ts</code> cleanly separates functionality for better codebase organization.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>🎉 Congratulations, developer, you&#39;ve successfully implemented a robust Quest Generation Engine—your codebase just hit a critical milestone with 20% of the mission complete; onward to the next sprint! 🚀⚡💎</p>
+<p>⭐ System check complete: you&#39;ve refactored your way through Quest 2 with perfectly modular code and AI-driven synergy—keep pushing toward full stack mastery! 🚀</p>
 
 </div>
 

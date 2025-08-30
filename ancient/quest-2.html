@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: Chronicles of Quest Creation - Repo Adventure</title>
+    <title>Quest 2: The Heirloom Tools Chamber - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Pyramid of Infinite Knowledge</a>
+                <a href="index.html">The Lost Codex of the Digital Pyramid</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,125 +45,170 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: Chronicles of Quest Creation</h1>
+    <h1>Quest 2: The Heirloom Tools Chamber</h1>
 <hr>
-<p>Before you lies the Great Archive Chamber, hidden within the Pyramid of Infinite Knowledge. The walls are inscribed with intricate glyphs, representing the core essence of how quests themselves are forged. This is the birthplace of adventure, where the mechanisms that breathe life into challenges and chronicles are designed and set in motion. To unlock the secrets within, you must study these ancient scripts—understanding their rituals of initialization, orchestration, and precision. Each discovery will reveal another layer of the pyramid&#39;s wisdom.</p>
+<p>The air grows still as you pass into the second chamber of the ancient Codex of the Digital Pyramid. The walls shimmer, etched with glyphs describing powerful, lost instruments once wielded by wise architects of the forgotten civilization. You stand before the Heirloom Tools Chamber, where the sacred repository of interactive instruments lies dormant. To unlock the full potential of these relics, you must uncover the secrets hidden within two ancient scrolls: the orchestration mechanism (<code class="inline-code">server.ts</code>) and the map of the tools (<code class="inline-code">tools.ts</code>). </p>
+<p>The treasures of this chamber lie in understanding their behavior and integration. Only by piecing together the glyph’s wisdom will you carry these heirlooms forward into your journey.  </p>
+<p>Explore this chamber carefully, and every tool may become your ally.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Glyph of Beginnings</strong>: How is the <code class="inline-code">initializeAdventure</code> function setting up the foundational elements of a quest? What steps does it follow and why are they significant?</li>
-<li>⚡ <strong>Engraved Choices</strong>: How does <code class="inline-code">exploreQuest</code> manage the identification and execution of quests based on user input? What mechanisms ensure it functions accurately?</li>
-<li>🛡️ <strong>Cache Guardian</strong>: What strategies does the <code class="inline-code">AdventureManager</code> use to cache content, and how does the quest retrieval process utilize the cache for efficiency?</li>
+<li>🔍 <strong>Tool Registration Rituals</strong>: How are the tools dynamically registered and validated within the <code class="inline-code">server.ts</code> file, and what patterns ensure their adaptability?</li>
+<li>⚡ <strong>The Ritual of Execution</strong>: What is the flow of handling a &quot;tool execution&quot; request, and how are errors managed to maintain stability in <code class="inline-code">server.ts</code>?</li>
+<li>🛡️ <strong>Shared Repository Secrets</strong>: How are the tools organized and exported in <code class="inline-code">tools.ts</code>, and what does this structure reveal about their design philosophy for maintainability?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> The Quest Mastermind</h3>
-<p>This file governs the complete lifecycle of an adventure, from initializing quests to managing progress and retrieving results. As the nexus of quest operations, functions here leverage extensive contextual inputs to dynamically shape user experiences. With features like adventure initiation, quest management, and caching, it acts as both architect and guardian of the adventure&#39;s flow.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Orchestration of the Sacred Tools</h3>
+<p>This file is the central hub where the <code class="inline-code">RepoAdventureServer</code> orchestrates tools for the gamified MCP server. Here, we see the construction of the server, its handler setup, and its lifecycle management. The <code class="inline-code">setupHandlers</code> method dynamically registers tools defined in the <code class="inline-code">tools</code> module, while <code class="inline-code">run</code> prepares the server for operation, including pre-generating resources for efficiency.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: This function is responsible for crafting the foundational narrative and quests for the adventure. It orchestrates validation, state resetting, and the integration of external themes.</li>
-<li><code class="inline-code">exploreQuest</code>: Once a choice is made, this function determines the corresponding quest and ensures its content is executed or retrieved from cached results.</li>
-<li><code class="inline-code">generateQuestContent</code>: Produces detailed and contextual quest content by interacting with the repository analyzer and external data sources.</li>
+<li><code class="inline-code">setupHandlers</code>: Dynamically lists the tools, converts schemas for validation, and sets request handlers.</li>
+<li><code class="inline-code">run</code>: Connects the server transport, pre-warms the &quot;repomix&quot; cache, and logs server readiness.</li>
+<li><code class="inline-code">main</code>: The server&#39;s entry point, including graceful shutdown handling and error resilience.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/core/src/adventure/adventure-manager.ts</h3>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
+<h3>packages/mcp/src/server.ts</h3>
+<pre><code class="language-typescript">private setupHandlers() {
+  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+      name,
+      description: tool.description,
+      inputSchema: zodToJsonSchema(tool.schema, { 
+        target: &#39;jsonSchema7&#39;,
+        $refStrategy: &#39;none&#39;
+      })
+    }));
 
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
-  }
+    return { tools: toolList };
+  });
 
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+    try {
+      const { name, arguments: args } = request.params;
 
-  this.state.title = storyResponse.title;
-  this.state.story = storyResponse.story;
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
+      if (!(name in tools)) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
 
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
+      const tool = tools[name as keyof typeof tools];
+      const validationResult = tool.schema.safeParse(args);
+      if (!validationResult.success) {
+        const errorMessages = validationResult.error.issues.map((err) =&gt; 
+          `${err.path.join(&#39;.&#39;)}: ${err.message}`
+        ).join(&#39;, &#39;);
+        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+      }
+
+      return await tool.handler(validationResult.data as any);
+
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   });
 }
 </code></pre>
 <ul>
-<li>This function lays the groundwork for the adventure by resetting state and generating the narrative and quests.</li>
-<li>External themes can be customized, allowing dynamic adaptability to user preferences.</li>
-<li>The use of <code class="inline-code">mergeQuestFilesFromConfig</code> and <code class="inline-code">enforceConfigQuestCount</code> ensures that quest generation complies with configuration constraints.</li>
-<li>Highlights structured initialization of both narrative and functionality.</li>
+<li>Dynamically retrieves registered tools and their schemas, ensuring the tools are described with metadata accessible at runtime.</li>
+<li>Validates inputs of tool execution using Zod schemas, ensuring strict adherence to input requirements.</li>
+<li>Carefully manages error handling, distinguishing between known tool errors and unexpected issues, reinforcing server reliability.</li>
+<li>Provides additional resilience against invalid tool executions, aligning schema validation with robust system behavior.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+<pre><code class="language-typescript">async run() {
+  const transport = new StdioServerTransport();
+  await this.server.connect(transport);
+  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
 
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
+  const projectPath = process.cwd();
+  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+  repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Handles both progress review and user quest selection.</li>
-<li>Ensures quest choices are sanitized and validated for accurate handling.</li>
-<li>Utilizes <code class="inline-code">findQuest</code> to match user input with available quests, supporting title and number-based selection.</li>
-<li>Demonstrates a well-structured system for managing user interaction and execution.</li>
+<li>Initializes transport for communication, preparing the server for external requests.</li>
+<li>Logs readiness for monitoring, enhancing visibility during deployment.</li>
+<li>Pre-generates content to optimize performance for early interactions, mitigating response delays during runtime.</li>
+<li>Integrates a third-party analyzer (<code class="inline-code">repoAnalyzer</code>) to handle preprocessing tasks asynchronously.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private async executeQuest(quest: Quest): Promise&lt;AdventureResult&gt; {
-  this.validateQuestPrerequisites();
+<pre><code class="language-typescript">async function main() {
+  try {
+    const server = new RepoAdventureServer();
 
-  let content: QuestContent;
-  let summary: string;
+    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+      process.on(sig as NodeJS.Signals, gracefulShutdown)
+    );
 
-  const cached = this.state.questContentCache.get(quest.id);
-  if (cached) {
-    await new Promise(resolve =&gt; setTimeout(resolve, 500));
-    content = cached.content;
-    summary = cached.summary;
-    content = {
-      ...content,
-      adventure: `🔄 **[REVISITING COMPLETED QUEST]**\n\n${content.adventure}`
-    };
-  } else {
-    content = await this.generateQuestContent(quest);
-    summary = await this.generateCompletionSummary(quest);
-    this.state.questContentCache.set(quest.id, { content, summary });
+    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+      console.error(&#39;Unhandled promise rejection:&#39;, reason);
+      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+    });
+    
+    await server.run();
+  } catch (error) {
+    console.error(&#39;Fatal error starting MCP server:&#39;, error);
+    process.exit(1);
   }
-
-  this.markQuestCompleted(quest);
-  return this.createQuestResult(content, summary);
 }
 </code></pre>
 <ul>
-<li>Demonstrates efficient caching by checking and retrieving quest content without redundant computations.</li>
-<li>When revisiting completed quests, it enriches the experience with indicators and reduced latency.</li>
-<li>Highlights the use of <code class="inline-code">generateQuestContent</code> for dynamically creating new content when needed.</li>
-<li>Meticulously handles state updates, ensuring seamless transitions between cached and new data.</li>
+<li>Serves as the main entry point for server initialization and lifecycle management.</li>
+<li>Ensures graceful shutdown with signal listeners for <code class="inline-code">SIGINT</code>/<code class="inline-code">SIGTERM</code>.</li>
+<li>Captures unhandled promise rejections, allowing error reporting without halting the process unnecessarily.</li>
+<li>Offers robust error management, ensuring clear diagnostics and minimizing downtime.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Repository of Ancient Tools</h3>
+<p>This file catalogs and exports tools required by the <code class="inline-code">RepoAdventureServer</code>. It establishes a clean and modular structure for defining tools, ensuring flexibility for future expansion. The exported <code class="inline-code">tools</code> object maps the handler functions and schema descriptions for seamless integration with the server orchestrator.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">start_adventure.handler</code>: Analyzes the codebase and prepares a gamified introduction.</li>
+<li><code class="inline-code">choose_theme.handler</code>: Enables users to generate a customized theme for their adventure.</li>
+<li><code class="inline-code">explore_quest.handler</code>: Handles the exploration of individual quests.</li>
+<li><code class="inline-code">view_progress.handler</code>: Provides insights into quest completion status.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/mcp/src/tools.ts</h3>
+<pre><code class="language-typescript">export const start_adventure = startAdventure;
+export const choose_theme = chooseTheme;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
+</code></pre>
+<ul>
+<li>Maps each handler to a named export, maintaining a readable structure.</li>
+<li>Aggregates functions from separate files, ensuring separation of concerns.</li>
+<li>Defines tools explicitly, enabling dynamic discovery when the server initializes.</li>
+<li>Creates a modular design for easier maintenance and extensibility.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export const tools = {
+  start_adventure,
+  choose_theme,
+  explore_quest,
+  view_progress
+};
+</code></pre>
+<ul>
+<li>Aggregates all tools in a single export object, simplifying server integration.</li>
+<li>Provides descriptive identifiers (<code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>) aligned with their purpose for clarity.</li>
+<li>Supports dynamic tool loading by the server, promoting adaptability to changing requirements.</li>
+<li>Organizes tools for consistency and coherence, aiding developers when extending functionality.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Initialization Insights</strong>: Explore how the state-reset procedure guarantees a clean slate for adventure initialization in <code class="inline-code">initializeAdventure</code>.</li>
-<li><strong>Validation Rituals</strong>: Observe <code class="inline-code">exploreQuest</code> for its input sanitization and how it ensures user input is validated before processing.</li>
-<li><strong>Caching Wisdom</strong>: Assess how the <code class="inline-code">executeQuest</code> function optimizes performance with strategic caching and efficient quest retrieval designs.</li>
+<li>When combining tools into the <code class="inline-code">tools</code> object, ensure handlers and schemas maintain compatibility with validation mechanisms.</li>
+<li>Observe how <code class="inline-code">setupHandlers</code> leverages dynamic data (e.g., <code class="inline-code">tool.schema</code>) to ensure its structure aligns with future tools you add.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Hark, seeker of wisdom, thou hast etched thy name upon the sacred tablets of creation, triumphing in the second odyssey with valor—let the eons echo thy feat as the stars align for thy glorious ascent! ⭐⚡💎</p>
+<p>Hail, seeker of sacred wisdom! Thy triumph in unlocking the Heirloom Tools Chamber shall echo through the halls of ancients, for thou hast claimed the relics of ingenuity with resolute spirit—carry forth this spark to illuminate future quests! 🗺️ 👁️ 💎⭐</p>
 
 </div>
 

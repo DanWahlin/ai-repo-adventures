@@ -367,7 +367,7 @@
           const nextButton = navContainer.querySelector('.next-quest-btn');
           if (nextButton) {
             nextButton.innerHTML = `Complete Adventure →`;
-            nextButton.href = 'index.html';
+            nextButton.href = 'summary.html';
             nextButton.classList.add('complete-btn');
           }
         }

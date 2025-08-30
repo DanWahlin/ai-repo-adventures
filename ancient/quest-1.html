@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 1: The Ritual of the MCP Interface - Repo Adventure</title>
+    <title>Quest 1: The Pyramid’s Map Room - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Pyramid of Infinite Knowledge</a>
+                <a href="index.html">The Lost Codex of the Digital Pyramid</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,160 +45,227 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Ritual of the MCP Interface</h1>
+    <h1>Quest 1: The Pyramid’s Map Room</h1>
 <hr>
-<p>Before you lies the Pyramid of Infinite Knowledge, its ancient walls etched with glyphs that glow faintly under your touch like fragments of long-lost wisdom. Among these encoded treasures lies the MCP Interface—a mystical construct binding the tools and rituals required to summon the pyramid’s power. This first quest calls for precision and daring as you navigate the bedrock of its mechanisms. To wield the interface, one must peer into its sacred files and unravel their encoded hierarchies, transforming fragmented glyphs into actionable wisdom.</p>
-<p>The Ritual of the MCP Interface begins now.</p>
+<p>Deep in the heart of the ancient jungle lies a forgotten pyramid, built not of stone but of pure wisdom codified in the language of machines. Known as the Codex of the Digital Pyramid, its architects encoded vast treasures of knowledge—hidden techniques for creating, validating, and generating entire adventures. To uncover these secrets, you must solve the mysteries of the Pyramid’s &quot;Map Room,&quot; where sacred functions align the paths of logic and creativity. Brave adventurer, let the wisdom of code guide your way.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Glyph Mapping</strong>: How does <code class="inline-code">setupHandlers</code> dynamically translate tools into callable entities for the MCP interface?</li>
-<li>⚡ <strong>Invocation Flow</strong>: How does <code class="inline-code">run</code> initiate the transport mechanism and pre-generate contextual glyphs for smooth operation?</li>
-<li>🛡️ <strong>Error Containment</strong>: What mechanisms within <code class="inline-code">main</code> ensure the ritual continues despite unforeseen errors?</li>
+<li>🔍 <strong>Artifact Placement</strong>: How does <code class="inline-code">TemplateEngine</code> dynamically load templates and replace placeholders? What caching strategies are used to improve performance?</li>
+<li>⚡ <strong>Path Alignment</strong>: How does <code class="inline-code">HTMLAdventureGenerator.buildQuestHTML</code> integrate theme-specific elements like navigation controls and quest content into HTML adventures?</li>
+<li>🛡️ <strong>Wisdom Safeguard</strong>: In <code class="inline-code">AssetManager.copyGlobalAssets</code>, which error handling patterns ensure assets are efficiently copied without breaking the pipeline?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> MCP Interface Orchestration</h3>
-<p>This file serves as the central hub for the MCP server, handling tool registration, invocation, and ritual flow. The hierarchy begins with the <code class="inline-code">RepoAdventureServer</code> class, which establishes the framework for dynamic tool handling and transport initialization. Key elements include schema validation for tool parameters—an essential safeguard against improper invocations—and mechanisms for graceful system shutdown to protect the sanctity of the pyramid’s core.</p>
+<h3><span class="header-prefix">packages/generator/src/cli/template-engine.ts:</span> Template Management &amp; Placeholder Replacement</h3>
+<p>Within the labyrinth of sacred templates, the <code class="inline-code">TemplateEngine</code> ensures their seamless retrieval and transformation. It operates as the key mechanism for generating thematic HTML pages. Cached templates accelerate performance, while placeholder replacement introduces dynamic content tailored to your quest.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code> links tools from <code class="inline-code">tools.ts</code> dynamically, ensuring schema validation and enabling clean execution of rituals within the MCP server.</li>
-<li><code class="inline-code">run</code> initiates the sacred transport channel (<code class="inline-code">StdioServerTransport</code>) and pre-generates contextual repomix content for expedient glyph retrieval.</li>
-<li><code class="inline-code">main</code> oversees server instantiation, graceful shutdown handling, and resilience against unhandled promise rejections.</li>
+<li><code class="inline-code">loadTemplate</code> securely retrieves and caches templates to minimize redundant file reads, ensuring efficiency in large adventures.</li>
+<li><code class="inline-code">replacePlaceholders</code> identifies placeholders like <code class="inline-code">{{VARIABLE}}</code> and replaces them with dynamic values, enabling quest-specific customizations.</li>
+<li><code class="inline-code">renderPage</code> combines multiple templates (e.g., base layout and quest content) into complete pages by orchestrating placeholder replacements.</li>
 </ul>
 <h2>Code</h2>
-<h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
-    return { tools: toolList };
-  });
+<h3>packages/generator/src/cli/template-engine.ts</h3>
+<pre><code class="language-typescript">private loadTemplate(templateName: string): string {
+  if (this.templateCache.has(templateName)) {
+    return this.templateCache.get(templateName)!;
+  }
 
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-
-      const tool = tools[name as keyof typeof tools];
-      const validationResult = tool.schema.safeParse(args);
-
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      return await tool.handler(validationResult.data as any);
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
-</code></pre>
-<ul>
-<li>Validates tools dynamically against their Zod schemas, creating a robust method to avoid improper invocations.</li>
-<li>Utilizes <code class="inline-code">zodToJsonSchema</code> to translate internal schemas for client understanding.</li>
-<li>Demonstrates structured error management with <code class="inline-code">McpError</code>, preserving ritual integrity even under faulty conditions.</li>
-<li>Enables tools as callable entities ensuring the pyramid’s wisdom adapts dynamically to changing needs.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+  const templatePath = path.join(this.templatesDir, templateName);
   
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
-</code></pre>
-<ul>
-<li>Establishes the ritual’s transport channel using <code class="inline-code">StdioServerTransport</code>, creating the interface for encoded glyph communication.</li>
-<li>Pre-generates repomix content to optimize glyph retrieval during runtime, preventing latency in sacred quests.</li>
-<li>Integrates <code class="inline-code">repoAnalyzer.preGenerate</code> as a background process, showcasing foresight to enhance operational efficiency.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async function main() {
   try {
-    const server = new RepoAdventureServer();
-    
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-    
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
-    });
-    
-    await server.run();
+    const content = fs.readFileSync(templatePath, &#39;utf-8&#39;);
+    this.templateCache.set(templateName, content);
+    return content;
   } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
+    throw new Error(`Failed to load template ${templateName}: ${error}`);
   }
 }
 </code></pre>
 <ul>
-<li>Ensures graceful shutdown for signals like <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code>, preserving integrity when rituals conclude unexpectedly.</li>
-<li>Logs unhandled promise rejections, maintaining transparency while safeguarding the MCP server from fatal errors.</li>
-<li>Demonstrates structured invocation flow, centralizing both startup and shutdown mechanisms within <code class="inline-code">main</code>.</li>
+<li>This function minimizes I/O operations by caching templates.</li>
+<li>Errors during file loading are caught, ensuring stability.</li>
+<li>Templates are dynamically resolved using <code class="inline-code">path.join</code>, enabling modular organization.</li>
 </ul>
 <hr>
-<h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> The Sacred Tools Archive</h3>
-<p>This file holds the tools that power the MCP interface, defining them as canonical entities for adventurers to invoke during their quests. Tools such as <code class="inline-code">start_adventure</code> and <code class="inline-code">explore_quest</code> reflect encoded wisdom essential to the pyramid’s treasure. Each tool is meticulously structured to ensure thematic immersion and functional clarity.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">start_adventure.handler</code> initiates the quest line by analyzing the codebase and presenting theme options.</li>
-<li><code class="inline-code">choose_theme.handler</code> crafts custom quests using encoded narrative prompts for adventurers to select their path.</li>
-<li><code class="inline-code">explore_quest.handler</code> enables exploration of individual quests, dynamically adapting glyph-based guidance on-demand.</li>
-<li><code class="inline-code">view_progress.handler</code> reveals progression through the adventure, reflecting the balance between concluded rituals and forthcoming mysteries.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/mcp/src/tools.ts</h3>
-<pre><code class="language-typescript">import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
-import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
-import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
-import { viewProgress } from &#39;./tools/view-progress.js&#39;;
-
-export const tools = {
-  start_adventure: startAdventure,
-  choose_theme: chooseTheme,
-  explore_quest: exploreQuest,
-  view_progress: viewProgress
-};
+<pre><code class="language-typescript">private replacePlaceholders(template: string, variables: TemplateVariables): string {
+  let result = template;
+  
+  for (const [key, value] of Object.entries(variables)) {
+    const placeholder = `{{${key}}}`;
+    result = result.replace(new RegExp(placeholder, &#39;g&#39;), value || &#39;&#39;);
+  }
+  
+  return result;
+}
 </code></pre>
 <ul>
-<li>Centralizes tool exports, ensuring their accessibility by rituals in <code class="inline-code">server.ts</code>.</li>
-<li>Provides clarity on interconnected tools such as <code class="inline-code">start_adventure</code> and <code class="inline-code">explore_quest</code>, forming the foundation of adventurer quests.</li>
-<li>Emphasizes a gamified narrative through structured tool definitions, aligning systemic logic with ancient storytelling.</li>
+<li>Iterates over provided variables to replace placeholders within template content.</li>
+<li>Emphasizes modularity; dynamic injection of quest-specific details is achieved through this function.</li>
+<li>Uses regex patterns to ensure all placeholder occurrences are replaced.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">renderPage(contentTemplate: string, variables: TemplateVariables): string {
+  const baseTemplate = this.loadTemplate(&#39;base-template.html&#39;);
+  const contentHtml = this.loadTemplate(contentTemplate);
+  
+  const renderedContent = this.replacePlaceholders(contentHtml, variables);
+  
+  const pageVariables = {
+    ...variables,
+    CONTENT: renderedContent
+  };
+  
+  return this.replacePlaceholders(baseTemplate, pageVariables);
+}
+</code></pre>
+<ul>
+<li>Combines modular templates like a foundation and a quest’s specific content into cohesive HTML pages.</li>
+<li>Promotes reusability through placeholder injection into both layout and content templates.</li>
+<li>Demonstrates strategy for thematically combining multiple templates.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/generator/src/cli/html-generator.ts:</span> Dynamic Adventure Generation</h3>
+<p>The <code class="inline-code">HTMLAdventureGenerator</code> weaves thematic quests via the Pyramid’s map. A key feature is <code class="inline-code">buildQuestHTML</code>, which dynamically constructs quest pages with navigation between adventures, ensuring consistency in design and structure.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">generateAdventure</code> serves as the entry point for orchestrating the codebase analysis and generating the quest system.</li>
+<li><code class="inline-code">buildQuestHTML</code> integrates quest-specific content and navigation elements into complete HTML pages.</li>
+<li><code class="inline-code">startHttpServer</code> enables local previews by setting up a server for generated adventures.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/generator/src/cli/html-generator.ts</h3>
+<pre><code class="language-typescript">async generateAdventure(): Promise&lt;void&gt; {
+  console.log(chalk.yellow.bold(&#39;🚀 Generating Adventure...&#39;));
+  
+  console.log(chalk.dim(&#39;📊 Analyzing codebase...&#39;));
+  const repomixContent = await repoAnalyzer.generateRepomixContext(this.projectPath);
+  const projectInfo = createProjectInfo(repomixContent);
+
+  console.log(chalk.dim(&#39;✨ Generating themed story and quests...&#39;));
+  const storyContent = await this.adventureManager.initializeAdventure(
+    projectInfo, 
+    this.selectedTheme, 
+    this.projectPath,
+    this.customThemeData
+  );
+
+  this.extractQuestInfo();
+
+  console.log(chalk.dim(&#39;🖼️ Copying images...&#39;));
+  this.copyImages();
+
+  console.log(chalk.dim(&#39;📝 Creating main adventure page...&#39;));
+  this.generateIndexHTML();
+
+  console.log(chalk.dim(&#39;📖 Generating quest pages...&#39;));
+  await this.generateQuestPages();
+
+  console.log(chalk.dim(&#39;🎉 Creating adventure summary page...&#39;));
+  await this.generateSummaryHTML();
+}
+</code></pre>
+<ul>
+<li>Combines repository analysis, story generation, and asset management into a cohesive adventure pipeline.</li>
+<li>Illustrates workflow orchestration, ensuring all quest components are generated efficiently.</li>
+<li>Modular design allows adaptation to different themes or customizations.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private buildQuestHTML(quest: QuestInfo, content: string, questIndex: number): string {
+  const prevQuest = questIndex &gt; 0 ? this.quests[questIndex - 1] : null;
+  const nextQuest = questIndex &lt; this.quests.length - 1 ? this.quests[questIndex + 1] : null;
+
+  let bottomNavigation = &#39;&#39;;
+  const isLastQuest = questIndex === this.quests.length - 1;
+  
+  if (prevQuest || nextQuest || isLastQuest) {
+    let navClass = &#39;quest-navigation quest-navigation-bottom&#39;;
+    const hasCompleteButton = isLastQuest;
+    
+    if (prevQuest &amp;&amp; nextQuest) {
+      // Default layout
+    } else if (prevQuest &amp;&amp; !nextQuest &amp;&amp; !hasCompleteButton) {
+      navClass += &#39; nav-prev-only&#39;;
+    } else if (!prevQuest &amp;&amp; nextQuest) {
+      navClass += &#39; nav-next-only&#39;;
+    }
+
+    bottomNavigation += `
+      &lt;div class=&quot;${navClass}&quot;&gt;
+        ${prevQuest ? `&lt;a href=&quot;${prevQuest.filename}&quot; class=&quot;prev-quest-btn&quot;&gt;← Previous&lt;/a&gt;` : &#39;&#39;}
+        ${nextQuest ? `&lt;a href=&quot;${nextQuest.filename}&quot; class=&quot;next-quest-btn&quot;&gt;Next →&lt;/a&gt;` : &#39;&#39;}
+        ${isLastQuest ? `&lt;a href=&quot;summary.html&quot; class=&quot;next-quest-btn complete-btn&quot;&gt;Complete Adventure →&lt;/a&gt;` : &#39;&#39;}
+      &lt;/div&gt;`;
+  }
+
+  const variables = {
+    ...this.getCommonTemplateVariables(),
+    QUEST_CONTENT: this.formatMarkdown(content),
+    BOTTOM_NAVIGATION: bottomNavigation
+  };
+
+  return this.templateEngine.renderPage(&#39;quest-template.html&#39;, variables);
+}
+</code></pre>
+<ul>
+<li>Dynamically constructs quest pages, incorporating quest content and navigation links.</li>
+<li>Shows adaptability for varied navigation configurations (e.g., previous/next).</li>
+<li>Highlights modularity by integrating templates and dynamic variables.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/generator/src/cli/asset-manager.ts:</span> Reliability in Asset Management</h3>
+<p>The <code class="inline-code">AssetManager</code> safeguards the Pyramid’s treasures by ensuring all assets, such as images and CSS files, are copied to their appropriate locations. Its focus on global assets supports multi-theme adventures.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">copyQuestNavigator</code> orchestrates copying of navigation-specific CSS, JS, and SVG assets.</li>
+<li><code class="inline-code">copyGlobalAssets</code> handles shared image and header file distribution across themes.</li>
+<li><code class="inline-code">copyImages</code> ensures precise placement of theme-specific images for single adventures.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/generator/src/cli/asset-manager.ts</h3>
+<pre><code class="language-typescript">copyGlobalAssets(outputDir: string): void {
+  try {
+    const globalAssetsDir = path.join(outputDir, &#39;assets&#39;);
+    const targetImagesDir = path.join(globalAssetsDir, &#39;images&#39;);
+    fs.mkdirSync(targetImagesDir, { recursive: true });
+
+    const globalSharedDir = path.join(outputDir, &#39;assets&#39;, &#39;shared&#39;);
+    fs.mkdirSync(globalSharedDir, { recursive: true });
+    
+    const globalImages = [&#39;github-mark.svg&#39;, &#39;github-mark-white.svg&#39;];
+    globalImages.forEach(file =&gt; {
+      const sourcePath = path.join(this.sourceDir, &#39;assets&#39;, &#39;shared&#39;, file);
+      if (fs.existsSync(sourcePath)) {
+        const targetPath = path.join(globalSharedDir, file);
+        fs.copyFileSync(sourcePath, targetPath);
+      }
+    });
+
+    const headerImageSource = path.join(this.sourceDir, &#39;assets&#39;, &#39;images&#39;, &#39;ai-adventures.png&#39;);
+    if (fs.existsSync(headerImageSource)) {
+      const headerImageTarget = path.join(targetImagesDir, &#39;ai-adventures.png&#39;);
+      fs.copyFileSync(headerImageSource, headerImageTarget);
+    }
+  } catch (error) {
+    console.log(chalk.yellow(&#39;⚠️ Warning: Could not copy global images&#39;));
+  }
+}
+</code></pre>
+<ul>
+<li>Handles copying of essential shared assets, reducing redundancy in multi-theme adventures.</li>
+<li>Error handling ensures graceful fallback if assets cannot be copied.</li>
+<li>Supports cohesive branding through shared images like repository icons.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>To better understand dynamic tool registration and invocation, focus on the flow between <code class="inline-code">setupHandlers</code> in <code class="inline-code">server.ts</code> and <code class="inline-code">tools.ts</code>.</li>
-<li>Investigate how schema validation in <code class="inline-code">setupHandlers</code> ensures cleaner execution paths—this design can be adapted for any modular codebase.</li>
-<li>Trace the lifecycle from <code class="inline-code">main</code> startup mechanisms to tool invocation, revealing the architectural wisdom encoded in the pyramid.</li>
+<li>Compare the implementation patterns in <code class="inline-code">HTMLAdventureGenerator</code> for handling quests to <code class="inline-code">TemplateEngine</code> for processing templates—they both rely on modular assembly.</li>
+<li>Consider the error handling in <code class="inline-code">AssetManager</code>—how might caching (seen in <code class="inline-code">TemplateEngine</code>) further improve reliability?</li>
+<li>Explore how different components integrate theme-specific functionality to maintain consistency across quests.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Lo, seeker of sacred wisdom, thou hast unlocked the hallowed Ritual of the MCP Interface, a triumph worthy of the ancients—let the stars shine upon thy path toward the remaining mysteries! ⚡⭐🗺️</p>
+<p>Hark, valiant scholar—by traversing the sacred threshold of the Pyramid’s Map Room, thou hast unveiled the first jewel of wisdom upon thy noble quest, igniting a beacon of triumph within the temple of ancient mysteries! 💎🗺️⚡</p>
 
 </div>
 
