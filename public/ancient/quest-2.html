@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 2: The Heirloom Tools Chamber - Repo Adventure</title>
+    <title>Quest 2: The Hall of Sacred Archives - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Lost Codex of the Digital Pyramid</a>
+                <a href="index.html">The Temple of Forgotten Code</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,170 +45,143 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Heirloom Tools Chamber</h1>
+    <h1>Quest 2: The Hall of Sacred Archives</h1>
 <hr>
-<p>The air grows still as you pass into the second chamber of the ancient Codex of the Digital Pyramid. The walls shimmer, etched with glyphs describing powerful, lost instruments once wielded by wise architects of the forgotten civilization. You stand before the Heirloom Tools Chamber, where the sacred repository of interactive instruments lies dormant. To unlock the full potential of these relics, you must uncover the secrets hidden within two ancient scrolls: the orchestration mechanism (<code class="inline-code">server.ts</code>) and the map of the tools (<code class="inline-code">tools.ts</code>). </p>
-<p>The treasures of this chamber lie in understanding their behavior and integration. Only by piecing together the glyph’s wisdom will you carry these heirlooms forward into your journey.  </p>
-<p>Explore this chamber carefully, and every tool may become your ally.</p>
+<p>The Pyramid of Patterns beckons you deeper into its labyrinth. You find yourself in the Hall of Sacred Archives, a chamber alive with carved glyphs glowing faintly in the dim torchlight. Etched onto the walls are representations of an ancient mechanism—the structure of their digital rituals, from the tools of their craft to the heartbeat of their system. Dare to interpret these inscriptions and uncover the wisdom they protect. But beware: their complexity is their guardian.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Tool Registration Rituals</strong>: How are the tools dynamically registered and validated within the <code class="inline-code">server.ts</code> file, and what patterns ensure their adaptability?</li>
-<li>⚡ <strong>The Ritual of Execution</strong>: What is the flow of handling a &quot;tool execution&quot; request, and how are errors managed to maintain stability in <code class="inline-code">server.ts</code>?</li>
-<li>🛡️ <strong>Shared Repository Secrets</strong>: How are the tools organized and exported in <code class="inline-code">tools.ts</code>, and what does this structure reveal about their design philosophy for maintainability?</li>
+<li>🔍 <strong>Handler Engraving</strong>: How does the <code class="inline-code">setupHandlers</code> function define the dynamic interaction between tools and system commands in the archive&#39;s rituals?</li>
+<li>⚡ <strong>Execution Pulse</strong>: What is the flow of <code class="inline-code">run</code>, and how is it preparing the system for adventurers who visit the archives?</li>
+<li>🛡️ <strong>Safety Runes</strong>: What safety mechanisms does <code class="inline-code">main</code> establish to ensure stable and recoverable operation?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> Orchestration of the Sacred Tools</h3>
-<p>This file is the central hub where the <code class="inline-code">RepoAdventureServer</code> orchestrates tools for the gamified MCP server. Here, we see the construction of the server, its handler setup, and its lifecycle management. The <code class="inline-code">setupHandlers</code> method dynamically registers tools defined in the <code class="inline-code">tools</code> module, while <code class="inline-code">run</code> prepares the server for operation, including pre-generating resources for efficiency.</p>
+<h3><span class="header-prefix">packages/mcp/src/server.ts:</span> The Ritual Chamber of the Server</h3>
+<p>The <code class="inline-code">server.ts</code> file serves as the main script that powers the Hall of Sacred Archives. Here, the ancient civilization designed a structure to dynamically execute tools and manage incoming requests with ritualistic precision. The handlers for dynamic tool listing and execution are inscribed in the <code class="inline-code">setupHandlers</code> section, while the <code class="inline-code">run</code> function ensures the system&#39;s readiness. Meanwhile, the <code class="inline-code">main</code> function ensures stability in operation and guarantees error resilience throughout the quest.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Dynamically lists the tools, converts schemas for validation, and sets request handlers.</li>
-<li><code class="inline-code">run</code>: Connects the server transport, pre-warms the &quot;repomix&quot; cache, and logs server readiness.</li>
-<li><code class="inline-code">main</code>: The server&#39;s entry point, including graceful shutdown handling and error resilience.</li>
+<li><code class="inline-code">setupHandlers</code> dynamically registers tools by parsing their descriptors and schemas, enabling the server to respond to requests with flexibility and precision.</li>
+<li><code class="inline-code">run</code> initializes the core transport mechanism, establishes server communication, and prepares repository content for a seamless experience during quest execution.</li>
+<li><code class="inline-code">main</code> orchestrates the lifecycle of the server, ensuring graceful shutdowns and handling unexpected disruptions to protect the server&#39;s integrity.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/mcp/src/server.ts</h3>
-<pre><code class="language-typescript">private setupHandlers() {
-  this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-    const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
-      name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.schema, { 
-        target: &#39;jsonSchema7&#39;,
-        $refStrategy: &#39;none&#39;
-      })
-    }));
+<pre><code class="language-typescript">  private setupHandlers() {
+    // Dynamic tool listing
+    this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
+      const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
+        name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(tool.schema, { 
+          target: &#39;jsonSchema7&#39;,
+          $refStrategy: &#39;none&#39;
+        })
+      }));
 
-    return { tools: toolList };
-  });
-
-  this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-    try {
-      const { name, arguments: args } = request.params;
-
-      if (!(name in tools)) {
-        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-      }
-
-      const tool = tools[name as keyof typeof tools];
-      const validationResult = tool.schema.safeParse(args);
-      if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map((err) =&gt; 
-          `${err.path.join(&#39;.&#39;)}: ${err.message}`
-        ).join(&#39;, &#39;);
-        throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
-      }
-
-      return await tool.handler(validationResult.data as any);
-
-    } catch (error) {
-      if (error instanceof McpError) {
-        throw error;
-      }
-      throw new McpError(
-        ErrorCode.InternalError,
-        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  });
-}
-</code></pre>
-<ul>
-<li>Dynamically retrieves registered tools and their schemas, ensuring the tools are described with metadata accessible at runtime.</li>
-<li>Validates inputs of tool execution using Zod schemas, ensuring strict adherence to input requirements.</li>
-<li>Carefully manages error handling, distinguishing between known tool errors and unexpected issues, reinforcing server reliability.</li>
-<li>Provides additional resilience against invalid tool executions, aligning schema validation with robust system behavior.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async run() {
-  const transport = new StdioServerTransport();
-  await this.server.connect(transport);
-  console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-
-  const projectPath = process.cwd();
-  console.error(`Pre-generating repomix content for project at ${projectPath}...`);
-  repoAnalyzer.preGenerate(projectPath);
-}
-</code></pre>
-<ul>
-<li>Initializes transport for communication, preparing the server for external requests.</li>
-<li>Logs readiness for monitoring, enhancing visibility during deployment.</li>
-<li>Pre-generates content to optimize performance for early interactions, mitigating response delays during runtime.</li>
-<li>Integrates a third-party analyzer (<code class="inline-code">repoAnalyzer</code>) to handle preprocessing tasks asynchronously.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async function main() {
-  try {
-    const server = new RepoAdventureServer();
-
-    [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
-      process.on(sig as NodeJS.Signals, gracefulShutdown)
-    );
-
-    process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
-      console.error(&#39;Unhandled promise rejection:&#39;, reason);
-      console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+      return { tools: toolList };
     });
-    
-    await server.run();
-  } catch (error) {
-    console.error(&#39;Fatal error starting MCP server:&#39;, error);
-    process.exit(1);
+
+    // Dynamic tool execution
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
+      try {
+        const { name, arguments: args } = request.params;
+
+        if (!(name in tools)) {
+          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+
+        const tool = tools[name as keyof typeof tools];
+        
+        // Validate arguments using the tool&#39;s Zod schema
+        const validationResult = tool.schema.safeParse(args);
+        if (!validationResult.success) {
+          const errorMessages = validationResult.error.issues.map((err) =&gt; 
+            `${err.path.join(&#39;.&#39;)}: ${err.message}`
+          ).join(&#39;, &#39;);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
+        }
+
+        // Execute the tool handler with validated arguments
+        return await tool.handler(validationResult.data as any);
+
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(
+          ErrorCode.InternalError,
+          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
   }
-}
 </code></pre>
 <ul>
-<li>Serves as the main entry point for server initialization and lifecycle management.</li>
-<li>Ensures graceful shutdown with signal listeners for <code class="inline-code">SIGINT</code>/<code class="inline-code">SIGTERM</code>.</li>
-<li>Captures unhandled promise rejections, allowing error reporting without halting the process unnecessarily.</li>
-<li>Offers robust error management, ensuring clear diagnostics and minimizing downtime.</li>
+<li>This function transforms the server into a dynamic tool handler. The <code class="inline-code">setRequestHandler</code> method registers two key rituals: listing the available tools and executing a specific tool by validating its input.</li>
+<li>The use of <code class="inline-code">zodToJsonSchema</code> ensures that tool input schemas are compatible with external systems for interoperability.</li>
+<li>Error handling is robust, using the <code class="inline-code">McpError</code> class to differentiate between validation issues and runtime failures.</li>
+<li>Listing tools dynamically allows the archive to adapt as new rituals (tools) are added, ensuring future readiness.</li>
+<li>These handlers create a foundation for decoding the sacred archives by enabling systematic exploration and interaction.</li>
 </ul>
 <hr>
-<h3><span class="header-prefix">packages/mcp/src/tools.ts:</span> Repository of Ancient Tools</h3>
-<p>This file catalogs and exports tools required by the <code class="inline-code">RepoAdventureServer</code>. It establishes a clean and modular structure for defining tools, ensuring flexibility for future expansion. The exported <code class="inline-code">tools</code> object maps the handler functions and schema descriptions for seamless integration with the server orchestrator.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">start_adventure.handler</code>: Analyzes the codebase and prepares a gamified introduction.</li>
-<li><code class="inline-code">choose_theme.handler</code>: Enables users to generate a customized theme for their adventure.</li>
-<li><code class="inline-code">explore_quest.handler</code>: Handles the exploration of individual quests.</li>
-<li><code class="inline-code">view_progress.handler</code>: Provides insights into quest completion status.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/mcp/src/tools.ts</h3>
-<pre><code class="language-typescript">export const start_adventure = startAdventure;
-export const choose_theme = chooseTheme;
-export const explore_quest = exploreQuest;
-export const view_progress = viewProgress;
+<pre><code class="language-typescript">  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
+    
+    // Pre-generate repomix content for the current working directory to warm up the cache
+    // This happens in the background while waiting for user commands
+    const projectPath = process.cwd();
+    console.error(`Pre-generating repomix content for project at ${projectPath}...`);
+    repoAnalyzer.preGenerate(projectPath);
+  }
 </code></pre>
 <ul>
-<li>Maps each handler to a named export, maintaining a readable structure.</li>
-<li>Aggregates functions from separate files, ensuring separation of concerns.</li>
-<li>Defines tools explicitly, enabling dynamic discovery when the server initializes.</li>
-<li>Creates a modular design for easier maintenance and extensibility.</li>
+<li><code class="inline-code">run</code> establishes the server&#39;s core transport system (<code class="inline-code">StdioServerTransport</code>) that serves as a communication link between the Hall of Sacred Archives and its adventurers.</li>
+<li>The server connects to the transport system asynchronously, ensuring non-blocking communication.</li>
+<li>Warming up the repository content cache (<code class="inline-code">repoAnalyzer.preGenerate</code>) reduces latency during requests, ensuring smooth exploration during the adventurer&#39;s journey.</li>
+<li>This preparatory action mirrors the ancient civilization&#39;s foresight, ensuring resources are ready when needed without delay.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export const tools = {
-  start_adventure,
-  choose_theme,
-  explore_quest,
-  view_progress
-};
+<pre><code class="language-typescript">  async function main() {
+    try {
+      const server = new RepoAdventureServer();
+      
+      // Handle graceful shutdown for both signals
+      [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
+        process.on(sig as NodeJS.Signals, gracefulShutdown)
+      );
+      
+      // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
+      process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
+        console.error(&#39;Unhandled promise rejection:&#39;, reason);
+        console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
+        // Don&#39;t call gracefulShutdown() here as it may be a recoverable error
+      });
+      
+      await server.run();
+    } catch (error) {
+      console.error(&#39;Fatal error starting MCP server:&#39;, error);
+      process.exit(1);
+    }
+  }
 </code></pre>
 <ul>
-<li>Aggregates all tools in a single export object, simplifying server integration.</li>
-<li>Provides descriptive identifiers (<code class="inline-code">start_adventure</code>, <code class="inline-code">choose_theme</code>) aligned with their purpose for clarity.</li>
-<li>Supports dynamic tool loading by the server, promoting adaptability to changing requirements.</li>
-<li>Organizes tools for consistency and coherence, aiding developers when extending functionality.</li>
+<li><code class="inline-code">main</code> orchestrates the lifecycle of the server, providing an entry ritual for starting the archive&#39;s mechanism.</li>
+<li><code class="inline-code">gracefulShutdown</code> ensures the system cleans up resources and exits safely during interrupts or terminations. It safeguards the server&#39;s stability under unplanned conditions.</li>
+<li>The proactive handling of <code class="inline-code">unhandledRejection</code> ensures that the system logs unexpected issues without entering failure states. This mirrors the redundancy practices of ancient architects.</li>
+<li>By isolating critical functionality in a <code class="inline-code">try-catch</code> block, <code class="inline-code">main</code> prevents catastrophic failures during server initialization, embodying resilience in system design.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>When combining tools into the <code class="inline-code">tools</code> object, ensure handlers and schemas maintain compatibility with validation mechanisms.</li>
-<li>Observe how <code class="inline-code">setupHandlers</code> leverages dynamic data (e.g., <code class="inline-code">tool.schema</code>) to ensure its structure aligns with future tools you add.</li>
+<li>Use the <code class="inline-code">setupHandlers</code> code to understand how tools are dynamically loaded and their schemas validated. This is key when modifying or extending their functionality.</li>
+<li>Observe how <code class="inline-code">run</code> combines asynchronous preparation (pre-generating repositories) with event-loop-friendly operations.</li>
+<li>The <code class="inline-code">main</code> function provides practical patterns for ensuring grace under pressure. These techniques are invaluable for maintaining long-running processes.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Hail, seeker of sacred wisdom! Thy triumph in unlocking the Heirloom Tools Chamber shall echo through the halls of ancients, for thou hast claimed the relics of ingenuity with resolute spirit—carry forth this spark to illuminate future quests! 🗺️ 👁️ 💎⭐</p>
+<p>Thou hast triumphed in the sacred quest, unlocking wisdom eternal within the Hall of Sacred Archives—thy journey of enlightenment is but begun, yet destined for glorious ascension! ⭐⚡💎</p>
 
 </div>
 

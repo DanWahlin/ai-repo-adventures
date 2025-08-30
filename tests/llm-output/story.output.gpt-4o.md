@@ -1,13 +1,13 @@
-# Cosmic Chronicles: Adventures in the Code Galaxy
+# The Enchanted Chronicles of the Code Kingdom
 
-You are a coder-astronaut aboard the starship *RepoRanger*, tasked with exploring the uncharted Code Galaxy. A mysterious signal from the core of the galaxy hints at powerful technologies hidden within, but to decode its secrets, you must assemble and maintain your ship’s systems. Each system corresponds to a vital module of your mission: navigation, analysis, and cosmic story generation. The galaxy awaits, brimming with challenges that demand your expertise. 
+In a mythical kingdom where knowledge and innovation are the lifeblood of its people, a grand castle known as the Repository Tower is home to powerful scrolls of magic and spells. These scrolls, written in a mystic language known as TypeScript, drive the kingdom’s prosperity. But the Tower has grown vast, its secrets scattered and its spellbooks unorganized. To restore order and unlock the kingdom's potential, you—a brave adventurer—must embark on heroic quests to decipher the spells, organize the scrolls, and ensure the magic flows uninterrupted.
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: MCP Tool Interface** - Explore the *Command Bridge*, where **server.ts** and **tools.ts** control starship operations and handle interstellar mission directives.
-**Quest 2: Quest Generation Engine** - Navigate the *Mission Planning System*, where **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** chart intergalactic storytelling pathways.
-**Quest 3: Code Analysis & Content Pipeline** - Survey the *Data Analysis Array*, where **repo-analyzer.ts** and **llm-client.ts** process stellar signals and generate mission insights.
-**Quest 4: Configuration & Theme System** - Inspect the *Cosmic Configuration Hub*, where **config.ts**, **theme.ts**, and **input-validator.ts** configure ship systems and align mission themes.
-**Quest 5: Foundation & Utilities** - Adjust the *Structural Core*, where **adventure-config.ts** underpins ship stability and integrates with essential data pipelines.
+**Quest 1: The Mystic Forge of Static Wonders** - Forge powerful enchanted scrolls inside **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts**, as you build the static pages that unite the kingdom's knowledge.
+**Quest 2: The Omnipotent Scepter of Command** - Harness the mystical scepter within **server.ts** and **tools.ts**, empowering the kingdom’s central spellcasting interface to manage enchanted quests and thematic spells.
+**Quest 3: The Arcane Texts of Adventure** - Discover the kingdom's epic tales and heroic experiences within **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts**, crafting magical quests and weaving intricate story arcs.
+**Quest 4: The Sage’s Orb of Understanding** - Unearth prophetic insights stored in **repo-analyzer.ts** and **llm-client.ts**, wielding ancient magical tools to analyze the realm's scrolls and reveal their true potential.
+**Quest 5: The Enchanted Attire of Themes** - Tailor the kingdom’s aesthetic elegance using **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts**, perfecting the enchanted themes and validating their cohesion.

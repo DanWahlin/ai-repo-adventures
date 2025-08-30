@@ -271,27 +271,48 @@ export class StoryGenerator {
     // Clean and process the LLM response
     let cleanContent = response.content.trim();
     
-    // First, try to extract content between delimiters
+    // Enhanced markdown extraction with better error handling
     const beginMarker = '---BEGIN MARKDOWN---';
     const endMarker = '---END MARKDOWN---';
     const beginIndex = cleanContent.indexOf(beginMarker);
     const endIndex = cleanContent.indexOf(endMarker);
     
+    // Log for debugging purposes
+    console.log(`🔧 Processing LLM response: ${cleanContent.length} chars, markers at ${beginIndex}/${endIndex}`);
+    
     if (beginIndex !== -1 && endIndex !== -1 && endIndex > beginIndex) {
       // Extract content between markers
-      cleanContent = cleanContent.substring(
+      const extracted = cleanContent.substring(
         beginIndex + beginMarker.length,
         endIndex
       ).trim();
-    } else {
-      // Fallback: Remove markdown code fences if present
-      if (cleanContent.startsWith('```markdown')) {
-        cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
-      }
       
-      // Remove common LLM meta-commentary patterns that shouldn't appear in the final content
-      cleanContent = this.removeLLMMetaCommentary(cleanContent);
+      // Verify extraction worked (should not contain the markers)
+      if (!extracted.includes(beginMarker) && !extracted.includes(endMarker)) {
+        cleanContent = extracted;
+        console.log(`✅ Successfully extracted markdown content: ${cleanContent.length} chars`);
+      } else {
+        console.warn(`⚠️ Extraction failed - markers still present, using fallback`);
+        // Continue to fallback processing
+      }
     }
+    
+    // Additional safety check - if markers are still present, remove them manually
+    if (cleanContent.includes(beginMarker) || cleanContent.includes(endMarker)) {
+      console.log(`🔧 Removing remaining markdown markers manually`);
+      cleanContent = cleanContent
+        .replace(beginMarker, '')
+        .replace(endMarker, '')
+        .trim();
+    }
+    
+    // Fallback: Remove markdown code fences if present
+    if (cleanContent.startsWith('```markdown')) {
+      cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Remove common LLM meta-commentary patterns that shouldn't appear in the final content
+    cleanContent = this.removeLLMMetaCommentary(cleanContent);
     
     // Return the content as a simple QuestContent structure with everything in adventure field
     return {
