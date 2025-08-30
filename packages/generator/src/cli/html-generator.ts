@@ -935,14 +935,10 @@ class HTMLAdventureGenerator {
   }
 
   private generateJourneySummary(questCount: number, themeData: any): string {
-    // Fix grammar for quest count
-    const questText = questCount === 1 ? 'quest' : 'quests';
-    const questCountText = questCount === 1 ? 'one challenging quest' : `${questCount} challenging quests`;
-    
     if (this.selectedTheme === 'developer') {
-      return `Through ${questCountText}, you've analyzed the MCP (Model Context Protocol) architecture and learned how this repository powers AI-driven code exploration. You've examined server implementation, tool orchestration, and request handling patterns that enable dynamic storytelling from codebases.`;
+      return `You've analyzed the MCP (Model Context Protocol) architecture and learned how this repository powers AI-driven code exploration. You've examined server implementation, tool orchestration, and request handling patterns that enable dynamic storytelling from codebases.`;
     } else {
-      return `Through ${questCountText}, you've journeyed through ${themeData.context} to uncover the secrets of the MCP architecture. Your ${themeData.journey} revealed the intricate systems that power AI-driven code exploration and transform repositories into interactive adventures.`;
+      return `You've journeyed through ${themeData.context} to uncover the secrets of the MCP architecture. Your ${themeData.journey} revealed the intricate systems that power AI-driven code exploration and transform repositories into interactive adventures.`;
     }
   }
 

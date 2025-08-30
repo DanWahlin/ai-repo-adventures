@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Well of Insight - Repo Adventure</title>
+    <title>Quest 3: The Oracle of the Texts - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <!-- Prism.js for syntax highlighting -->
@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="index.html">The Pyramid of Ancient Algorithms</a>
+                <a href="index.html">The Sacred Codex of Computational Wisdom</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -45,30 +45,121 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Well of Insight</h1>
+    <h1>Quest 3: The Oracle of the Texts</h1>
 <hr>
-<p>Through the dense overgrowth of the sprawling jungle, the air shimmers with an ancient mystique. You arrive at a sunlit clearing where the towering Codex Obscurum looms. The third glyph reveals itself: an intricate pattern of paths weaving into a sacred basin. Known as the Well of Insight, this chamber symbolizes an ancient civilization’s commitment to understanding. This leg of the journey beckons you to uncover the design of tools that analyze, validate, and transcend knowledge itself.</p>
-<p>The ancient glyphs guide you to investigate two essential texts within the pyramid that govern the flow of insight: <code class="inline-code">repo-analyzer.ts</code> and <code class="inline-code">llm-client.ts</code>. What ancient wisdom will you unravel within their sacred inscriptions?</p>
+<p>You journey to the heart of a long-forgotten jungle temple and stand before the Oracle&#39;s Chamber of Codes. Here lies the <strong>Sacred Codex of Computational Wisdom</strong>, its pages illuminating how the ancients analyzed labyrinthine knowledge structures and harnessed the enigmatic power of machine learning to decode them. The Oracle&#39;s inscriptions speak of the <code class="inline-code">RepoAnalyzer</code> and <code class="inline-code">LLMClient</code>—guardians of structured wisdom and generative insight. Unlocking their secrets requires careful study, for they hold the key to shaping coherent and rich adventures from scattered fragments of knowledge.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Glyph of Initialization</strong>: How does the <code class="inline-code">RepoAnalyzer</code> class ensure project paths and files are valid before analysis begins? What safety checks are applied?</li>
-<li>⚡ <strong>Stream of Knowledge</strong>: How does the <code class="inline-code">LLMClient</code> interface manage requests to external APIs, and what mechanisms ensure their reliability?</li>
-<li>🛡️ <strong>Guardians of Error</strong>: What strategies are employed in both classes to handle errors or unexpected inputs gracefully?</li>
+<li>🔍 <strong>Glyph Structure Analysis</strong>: How does <code class="inline-code">RepoAnalyzer</code> handle project path validation and file normalization to ensure safety and reliability of user input?</li>
+<li>⚡ <strong>Invocation Rites</strong>: How does the <code class="inline-code">LLMClient</code> initialize its configurations for either OpenAI or Azure, and how does it dynamically handle different model types such as GPT-5?</li>
+<li>🛡️ <strong>Fail-Safe Mechanisms</strong>: What strategies are used in both <code class="inline-code">LLMClient</code> and <code class="inline-code">RepoAnalyzer</code> to handle errors, timeouts, or invalid responses to ensure system resilience and informed recovery?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a>: Sacred architecture of code analysis</h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> class represents the architecture of the ancient analysis pipeline. This class is responsible for generating context for project files and applying function-focused optimizations. Its subtle strength lies in its design to ensure validation, efficiency, and scalability. Within this script, pathways are fortified through key mechanisms such as input validation, caching, and subprocess management, ensuring only worthy content traverses its chambers.</p>
+<h3><span class="header-prefix">packages/core/src/llm/llm-client.ts:</span> Machine Learning Interface</h3>
+<p>This file contains the implementation of the <code class="inline-code">LLMClient</code>, the Oracle&#39;s conduit to generative wisdom. It bridges environments like OpenAI and Azure OpenAI, allowing structured interactions with advanced textual models. The client is designed for flexibility and reliability, with robust error-handling mechanisms to ensure the service operates effectively even during failures.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">validateProjectPath</code>: A gatekeeper that ensures project paths are safely constructed.</li>
-<li><code class="inline-code">validateAndNormalizeTargetFiles</code>: Acts as a scribe, filtering and standardizing file paths for security and reliability.</li>
-<li><code class="inline-code">generateTargetedContent</code>: Crafts an optimized context only for selected project paths and files.</li>
-<li><code class="inline-code">extractFunctionFocusedContent</code>: Captures the essence of code by preserving only critical patterns.</li>
-<li><code class="inline-code">captureRepomixStdout</code>: Handles subprocesses for external tool integration, safeguarding memory and resource constraints.</li>
+<li><code class="inline-code">constructor</code>: Initializes the API client and validates required configurations based on the model provider (e.g., OpenAI or Azure).</li>
+<li><code class="inline-code">generateResponse</code>: Handles the invocation of the machine learning model, processes the response, and manages errors during model interaction.</li>
+<li><code class="inline-code">buildRequestParams</code>: Constructs customized request parameters for interaction with different model types, including specific handling for GPT-5 configurations.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
+<h3>packages/core/src/llm/llm-client.ts</h3>
+<pre><code class="language-typescript">constructor() {
+  this.model = LLM_MODEL;
+
+  const apiKey = this.getApiKey();
+  if (!apiKey || !LLM_BASE_URL) {
+    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).&#39;);
+  }
+
+  if (this.isAzureOpenAI()) {
+    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
+    this.client = new AzureOpenAI({
+      endpoint: azureEndpoint,
+      apiKey,
+      apiVersion: LLM_API_VERSION,
+      deployment: this.model
+    });
+  } else {
+    this.client = new OpenAI({
+      apiKey,
+      baseURL: LLM_BASE_URL
+    });
+  }
+}
+</code></pre>
+<ul>
+<li>Initializes the <code class="inline-code">LLMClient</code> based on the environment, choosing between OpenAI and Azure configurations.</li>
+<li>Validates the API key (<code class="inline-code">LLM_API_KEY</code> or <code class="inline-code">GITHUB_TOKEN</code>) and ensures the <code class="inline-code">LLM_BASE_URL</code> is specified.</li>
+<li>Selects appropriate initialization configurations; for Azure OpenAI, extracts the base endpoint and specifies deployment.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
+  try {
+    const requestParams = this.buildRequestParams(prompt, options);
+    const completion = await this.executeRequest(requestParams);
+    let content = this.validateResponse(completion);
+
+    if (options?.responseFormat === &#39;json_object&#39;) {
+      content = this.cleanJsonResponse(content);
+    }
+
+    this.logTokenUsage(completion);
+    return { content };
+  } catch (error) {
+    this.logDetailedError(error, prompt);
+    const message = error instanceof Error ? error.message : &#39;Unknown error&#39;;
+    throw new Error(`LLM request failed: ${message}`);
+  }
+}
+</code></pre>
+<ul>
+<li>Builds request parameters, communicates with the model, and validates its response.</li>
+<li>Implements error logging (e.g., <code class="inline-code">logDetailedError</code>) to capture failures and provide contextual information.</li>
+<li>Scopes error recovery and logging mechanisms, ensuring efficiency in generative system pipelines.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private buildRequestParams(prompt: string, options?: LLMRequestOptions): OpenAIRequestParams {
+  const requestParams: OpenAIRequestParams = {
+    model: this.model,
+    messages: [{ role: &#39;user&#39;, content: prompt }]
+  };
+
+  if (options?.responseFormat) {
+    requestParams.response_format = { type: options.responseFormat };
+  }
+
+  if (this.isGPT5Model()) {
+    requestParams.temperature = 1;
+    requestParams.max_completion_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+    requestParams.verbosity = options?.verbosity || GPT5_VERBOSITY;
+    requestParams.reasoning_effort = options?.reasoningEffort || GPT5_REASONING_EFFORT;
+  } else {
+    requestParams.temperature = LLM_TEMPERATURE; 
+    requestParams.max_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
+  }
+
+  return requestParams;
+}
+</code></pre>
+<ul>
+<li>Dynamically builds API request payloads for multiple model types, customizing parameters like <code class="inline-code">temperature</code> and <code class="inline-code">max_tokens</code>.</li>
+<li>Provides special handling for GPT-5 models, including verbosity and reasoning effort.</li>
+<li>Accommodates various response formats (e.g., JSON, text) to suit application needs.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/analyzer/repo-analyzer.ts:</span> Knowledge Structuring Tool</h3>
+<p>The <code class="inline-code">RepoAnalyzer</code> is the cornerstone for validating, analyzing, and optimizing repository files. It ensures that only well-structured content is passed to downline processes, reducing memory overhead and maximizing processing efficiency.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">validateProjectPath</code>: Ensures that user-provided repository paths are free of dangerous values and properly formatted.</li>
+<li><code class="inline-code">validateAndNormalizeTargetFiles</code>: Filters, normalizes, and validates file paths to prevent path traversal and optimize resources.</li>
+<li><code class="inline-code">generateRepomixContext</code>: Executes a complete repository analysis, optionally integrating configuration to customize content for targeted file sets.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/analyzer/repo-analyzer.ts</h3>
 <pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
   if (!projectPath || typeof projectPath !== &#39;string&#39;) {
     throw new Error(&#39;Project path must be a non-empty string&#39;);
@@ -85,144 +176,79 @@
 }
 </code></pre>
 <ul>
-<li>Validates that the project path is a non-empty, sanitized string.</li>
-<li>Prevents injection of null bytes to eliminate hazardous file system behavior.</li>
-<li>Demonstrates defensive programming where invalid inputs are rejected early.</li>
+<li>Validates project paths, checking for empty values and null bytes to prevent security risks.</li>
+<li>Protects the system from malformed input by normalizing and sanitizing user inputs.</li>
+<li>Raises errors immediately upon detecting invalid paths, ensuring reliable execution.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">private validateAndNormalizeTargetFiles(projectPath: string, targetFiles: string[]): string[] {
-  const MAX_TARGET_FILES = 50; 
+  const MAX_TARGET_FILES = 50;
   const projectRoot = path.resolve(projectPath);
 
   const safeFiles = [...new Set(targetFiles)]
     .slice(0, MAX_TARGET_FILES)
     .map(file =&gt; {
       if (typeof file !== &#39;string&#39; || !file.trim()) return null;
-
       const trimmed = file.trim();
-      if (trimmed.includes(&#39;\0&#39;) || trimmed.includes(&#39;..&#39;)) {
-        console.warn(`Rejecting potentially unsafe file path: ${trimmed}`);
-        return null;
-      }
-      return path.resolve(projectPath, trimmed);
+      if (trimmed.includes(&#39;\0&#39;) || trimmed.includes(&#39;..&#39;)) return null;
+
+      const fullPath = path.resolve(projectPath, file);
+      if (!fullPath.startsWith(projectRoot + path.sep) &amp;&amp; fullPath !== projectRoot) return null;
+      if (!fs.existsSync(fullPath)) return null;
+
+      return path.relative(projectPath, fullPath);
     })
-    .filter((file): file is string =&gt; file !== null &amp;&amp; fs.existsSync(file))
-    .map(file =&gt; path.relative(projectPath, file));
+    .filter((file): file is string =&gt; file !== null);
 
   return safeFiles;
 }
 </code></pre>
 <ul>
-<li>Provides patterns for deduplication, sanitization, and validation of input files, ensuring only safe paths are processed.</li>
-<li>Applies consistency in generated cache keys by standardizing file system references.</li>
-<li>Rejects unsafe inputs quickly to uphold data integrity and prevent path traversal.</li>
+<li>Ensures file paths are checked for null bytes and unsafe traversal sequences (e.g., <code class="inline-code">..</code>).</li>
+<li>Validates each file&#39;s existence and ensures it resides within the project directory.</li>
+<li>Deduplicates and limits the file list to prevent overloads, improving processing efficiency.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
+<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
+  const configuredFiles = extractUniqueFilePaths(projectPath);
 
-  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-  if (safeFiles.length === 0) {
-    throw new Error(&#39;No valid target files found after validation&#39;);
+  if (configuredFiles.length &gt; 0) {
+    return await this.generateOptimizedContent(projectPath, configuredFiles);
   }
+
+  const ignorePatterns = [
+    &#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;, &#39;coverage&#39;, &#39;.nyc_output&#39;
+  ];
 
   const cliOptions: CliOptions = {
-    style: &#39;markdown&#39;,
-    compress,
-    include: safeFiles.join(&#39;,&#39;),
+    style: options.style || &#39;markdown&#39;,
+    stdout: true,
+    compress: options.compress !== false,
+    ignore: ignorePatterns.join(&#39;,&#39;),
+    removeComments: true,
+    removeEmptyLines: true,
+    noDirectoryStructure: true,
   };
 
-  return this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
+  return await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
 }
 </code></pre>
 <ul>
-<li>Builds subprocess options dynamically based on input validation results.</li>
-<li>Optimizes pipeline efficiency by targeting specific files, reducing redundancy.</li>
-<li>Enables compression for token optimization in downstream processing.</li>
-</ul>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a>: The voice of the Algorithmic Obelisk</h3>
-<p>The <code class="inline-code">LLMClient</code> class is a vital emissary for connecting to external large language model APIs like OpenAI’s GPT-powered endpoints. It implements safety, compatibility, and error resilience to ensure that communication with these powerful sources of wisdom remains efficient and structured. The methods within are crafted to act as sentinels, rejecting invalid configurations and handling unexpected errors while logging each exchange in vivid detail.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">constructor</code>: Configures the LLM client with dynamic instantiation for either OpenAI or Azure APIs.</li>
-<li><code class="inline-code">getApiKey</code>: Validates and selects the correct API key for the current environment.</li>
-<li><code class="inline-code">generateResponse</code>: Serves as the bridge to query the LLM and validates its response.</li>
-<li><code class="inline-code">buildRequestParams</code>: Adapts LLM queries dynamically to model-specific requirements.</li>
-<li><code class="inline-code">logDetailedError</code>: Logs debug information in enriched detail to guide recovery strategies.</li>
-</ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required. Please set LLM_BASE_URL and appropriate API key.&#39;);
-  }
-
-  if (this.isAzureOpenAI()) {
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({ endpoint: azureEndpoint, apiKey, deployment: this.model });
-  } else {
-    this.client = new OpenAI({ apiKey, baseURL: LLM_BASE_URL });
-  }
-}
-</code></pre>
-<ul>
-<li>Dynamically configures an instance of OpenAI or AzureOpenAI clients based on the environment configuration.</li>
-<li>Verifies key environment variables to prevent unauthorized or unconfigured API calls.</li>
-<li>Uses dependency injection-like modularity, isolating API type-specific logic cleanly.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private getApiKey(): string {
-  if (LLM_BASE_URL.includes(&#39;models.inference.ai.azure.com&#39;) &amp;&amp; GITHUB_TOKEN) {
-    return GITHUB_TOKEN;
-  }
-  if (LLM_API_KEY) {
-    return LLM_API_KEY;
-  }
-  throw new Error(&#39;API key required. Set LLM_API_KEY or GITHUB_TOKEN.&#39;);
-}
-</code></pre>
-<ul>
-<li>Dynamically evaluates and retrieves the appropriate API key for the target LLM provider.</li>
-<li>Implements fallbacks and human-readable error messages.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  try {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
-
-    let content = this.validateResponse(completion);
-    if (options?.responseFormat === &#39;json_object&#39;) {
-      content = this.cleanJsonResponse(content);
-    }
-
-    this.logTokenUsage(completion);
-    return { content };
-  } catch (error) {
-    this.logDetailedError(error, prompt);
-    throw new Error(`LLM request failed: ${error.message}`);
-  }
-}
-</code></pre>
-<ul>
-<li>Represents the flow between request building, execution, and validation of the model’s response.</li>
-<li>Safeguards against and logs errors while providing fallback details to assist debugging.</li>
-<li>Implements flexibility to handle multiple response formats.</li>
+<li>Analyzes the repository, harnessing <code class="inline-code">repomix</code> to extract and structure code in a compact, token-efficient format.</li>
+<li>Accommodates custom file configurations for targeted exploration, while maintaining flexible defaults.</li>
+<li>Validates and filters irrelevant or sensitive files (e.g., <code class="inline-code">node_modules</code>) to conserve resources.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>When inspecting validation methods, pay attention to edge cases like empty inputs or illegal file paths.</li>
-<li>Map out the lifecycle of an LLM request. Trace how <code class="inline-code">LLMClient</code> builds, executes, and interprets requests.</li>
-<li>To understand optimization, follow how <code class="inline-code">RepoAnalyzer</code> reduces data complexity to make efficient external calls.</li>
+<li>Paths can harm your system if not sanitized properly—closely inspect how the Oracle guards against unsafe values.</li>
+<li>Notice how the system aligns machine configurations for OpenAI and Azure, revealing its modularity and versatility.</li>
+<li>Investigate the handling of errors in both classes—resilience is the Oracle&#39;s key to enlightenment.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>With thy valiant spirit, thou hast unveiled the sacred truths of the Well of Insight, ascending the steps of wisdom’s eternal temple—march boldly, seeker of illumination, for the stars themselves herald thy triumph! ⭐⚡💎</p>
+<p>O seeker of sacred knowledge, thou hast deciphered the Oracle of the Texts with wisdom unparalleled, ascending further upon the gilded path of enlightenment—take heart, for the stars yet guide thee to glory eternal! ⭐📜⚡</p>
 
 </div>
 
