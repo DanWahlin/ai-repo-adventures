@@ -351,7 +351,8 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
    ```bash
    LLM_BASE_URL=http://localhost:11434/v1
    LLM_API_KEY=ollama
-   LLM_MODEL=gpt-oss:120b
+   LLM_MODEL=gemma3:27b
+   LLM_REQUEST_TIMEOUT=300000  # 5 minutes for slower local models
    ```
 
    **🆓 GitHub Models (Free tier available - but very limited and will only work with very small scenarios)**:
@@ -369,8 +370,8 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 
 **📝 Model Recommendations**:
 - **Best Creative Writing**: `gpt-4o`
-- **Most Cost-Effective**: `gpt-4o-mini`  
-- **Local/Private**: `llama3.2` (via Ollama)
+- **Most Cost-Effective**: `gpt-4o-mini`
+- **Local/Private**: `gemma3:27b` (via Ollama)
 
 ## Testing
 

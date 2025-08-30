@@ -92,7 +92,7 @@ LLM_API_VERSION=2025-01-01-preview
 # Local Ollama
 LLM_BASE_URL=http://localhost:11434/v1
 LLM_API_KEY=ollama
-LLM_MODEL=llama3.2
+LLM_MODEL=gemma3:27b
 ```
 
 ### Adventure Configuration
