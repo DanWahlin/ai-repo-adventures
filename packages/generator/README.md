@@ -169,26 +169,26 @@ Use this exact JSON structure:
     "name": "[Your Project Name]",
     "description": "[Brief project description]", 
     "url": "https://github.com/[username]/[repo-name]",
-    "customInstructions": "[Optional: Any specific guidance for story generation]"
-  },
-  "quests": [
-    {
-      "title": "[Quest Name - e.g. 'Authentication System']",
-      "description": "[What users learn from exploring this area]",
-      "files": [
-        {
-          "path": "[relative/path/to/important/file.js]",
-          "description": "[Role of this file in the system]",
-          "highlights": [
-            {
-              "name": "[functionName or ClassName.method]", 
-              "description": "[What this code does and why it matters]"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+    "customInstructions": "[Optional: Any specific guidance for story generation]",
+    "quests": [
+      {
+        "title": "[Quest Name - e.g. 'Authentication System']",
+        "description": "[What users learn from exploring this area]",
+        "files": [
+          {
+            "path": "[relative/path/to/important/file.js]",
+            "description": "[Role of this file in the system]",
+            "highlights": [
+              {
+                "name": "[functionName or ClassName.method]", 
+                "description": "[What this code does and why it matters]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
 
 Prioritize files that contain:
