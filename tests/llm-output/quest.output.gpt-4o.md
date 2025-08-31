@@ -1,128 +1,93 @@
-# Quest 5: Configuration & Theme System
----
-Aboard the starship *Celestial Refactor*, the crew approaches a critical juncture in the journey through the interstellar codebase. The task at hand? To unravel the complex mechanisms governing configuration and theme systems, ensuring seamless adaptability for cosmic explorers navigating infinite possibilities. Your team faces a constellation of structured variables, validation functions, and dynamic theme generators. This final quest is the keystone of the mission, tying functionality to aesthetic purpose, ensuring harmonious operation as you chart the stars of innovation.
+# Quest 5: The Ever-Shifting Themes  
+---  
+In the magical realm of Codethia, you have traversed through kingdoms and battled challenges tied to mystic spells, enchanted knights, and ancient treasures. As the castle of Codebase trembles with power from its artifacts, a final trial above all stands between you and eternal mastery: an adventure into the enigmatic "Ever-Shifting Themes." Codethia’s survival relies on theme allocation spells, binding knights to adventures. Delve into the ever-turning engine of theme definitions, validations, and enchantments. Will you uncover the secrets?
 
-## Quest Objectives
-As you explore the code below, investigate these crucial questions:
-- 🔍 **Stellar Timeout Calibration**: How is timeout handled for system operations, and what patterns ensure adaptability in cosmic-scale operations?
-- ⚡ **Thematic Mapping Frequencies**: How are theme definitions structured, and what safeguards make them reusable across various space-modules?
-- 🛡️ **Orbital Validation Shields**: How does input validation protect against edge cases and cosmic anomalies?
+## Quest Objectives  
+As you explore the code below, investigate these key questions:  
+- 🔍 **Spell Correspondences**: How does the `parseTheme` function align theme inputs with the enchanted `THEMES` registry, and what magic is used for validation?  
+- ⚡ **Artifact Discovery**: How are theme icons created dynamically in the `ThemeManager.getThemeIcons` function, and how does the artifact they call upon connect to the broader `ThemeDefinition`?  
+- 🛡️ **Thematic Guards**: What safeguards ensure input integrity throughout `validateTheme` and `validateAdventureChoice`, and how does this foundation protect Codethia’s castle from mischief?  
 
-## File Exploration
-### packages/core/src/shared/config.ts: System Configuration Nexus
-This file is the nerve center of the starship’s configuration system, where constants and environment variables dictate operations. It controls timeout thresholds, cache limits, and error messages for consistency across galactic missions. Scalable constraints ensure the mission adapts to varying data conditions. 
+## File Exploration  
+### File: packages/core/src/shared/theme.ts  
+Central to Codethia's spell arsenal, this file defines the enchanted themes that underpin the adventures. Each adventure aligns with a `ThemeDefinition` composed of properties such as mystical identifiers and descriptive charms. This file further equips knights with tools like `isValidTheme` for verifying the enchantment’s authenticity and `parseTheme` for deciphering user-supplied incantations.  
 
-#### Highlights
-- `LLM_REQUEST_TIMEOUT`: Defines the API request timeout duration for Large Language Model operations, ensuring responsiveness while avoiding infinite stalls.
-- `MAX_FILE_SIZE_MB`: Regulates the maximum allowable file size, upholding stability in interstellar data analysis workflows.
-- `ERROR_MESSAGES`: Provides centralized, consistent error messaging, creating a safety net during unexpected anomalies.
+#### Highlights  
+- `parseTheme`: Matches input to the `THEMES` artifact using a multi-step validation process of direct matching, numeric ID parsing, and keyword checks.  
+- `isValidTheme`: Confirms if a spell input corresponds to a valid theme, preventing meddling with Codethia's core energies.  
+- `getFormattedThemeOptions`: Lists all themes alongside their mystical properties for display, enabling knights to choose wisely.  
 
-### packages/core/src/shared/theme.ts: Cosmic Theme Repository
-This file hosts the logic for managing themes, bringing your starship's journey to life. It defines the thematic structure and contains helper functions to map user inputs to defined themes. The elegance of the theme system lies in its adaptability for various mission contexts.
+## Code  
+### File: packages/core/src/shared/theme.ts  
 
-#### Highlights
-- `THEMES`: Central repository for theme definitions, interlinking descriptions, emojis, and keywords to streamline identification and display.
-- `parseTheme`: Parses user input to match valid themes, ensuring linguistic flexibility and efficient keyword recognition.
-- `getAllThemes`: Retrieves the complete list of themes, serving as a single source of truth for interactive interfaces.
-
-### packages/generator/src/cli/theme-manager.ts: Dynamic Theme Operations
-This file operates the dynamic engine for organizing and rendering themes. It ensures consistent presentation by combining CSS files for layouts and adapting assets based on a theme's properties. It safeguards against incorrect theme usage during the rendering process.
-
-#### Highlights
-- `generateThemeCSS`: Dynamically compiles CSS files for a given theme to ensure seamless integration of aesthetics across all mission components.
-- `getGitHubLogo`: Fetches the appropriate GitHub logo based on whether a theme uses a light or dark background, balancing visuals and readability.
-- `getThemeIcons`: Maps each theme to unique icons, enhancing immersive user experiences for quest navigation.
-
-## Code
-### packages/core/src/shared/config.ts
 ```typescript
-export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || '60000'); // 60 seconds for complex story generation
-export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to focus on meaningful source code
-export const ERROR_MESSAGES = {
-  LLM_UNAVAILABLE: 'LLM service is currently unavailable. Please check your configuration.',
-  ANALYSIS_FAILED: 'Failed to analyze the project. Please ensure the path is valid.',
-  THEME_INVALID: 'Invalid theme specified. Using default theme.',
-  FILE_NOT_FOUND: 'The requested file could not be found.',
-  PERMISSION_DENIED: 'Permission denied accessing the specified path.',
-} as const;
-```
-- `LLM_REQUEST_TIMEOUT` ensures system responsiveness and optimizes request strategies for complex computational tasks.
-- `MAX_FILE_SIZE_MB` limits file size to maintain memory stability and focus analysis on relevant data.
-- `ERROR_MESSAGES` centralizes error handling to improve consistency and instantly communicate failures.
-
----
-
-### packages/core/src/shared/theme.ts
-```typescript
-export const THEMES = {
-  SPACE: {
-    id: 1,
-    key: 'space',
-    displayName: 'Space Exploration',
-    emoji: '🚀',
-    description: 'Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies',
-    keywords: ['space', 'cosmic', 'galaxy', 'starship', 'astronaut', 'sci-fi', 'futuristic']
-  },
-  MYTHICAL: {
-    id: 2,
-    key: 'mythical',
-    displayName: 'Enchanted Kingdom',
-    emoji: '🏰',
-    description: 'Explore magical and mythical realms where databases are dragon hoards and functions are powerful spells',
-    keywords: ['mythical', 'magic', 'enchanted', 'castle', 'dragon', 'fantasy', 'medieval', 'kingdom']
-  }
-} as const;
-
 export function parseTheme(input: string): AdventureTheme | null {
   if (!input) return null;
   
   const normalized = input.trim().toLowerCase();
+  
+  // Check for exact key match
   const exactMatch = getThemeByKey(normalized);
   if (exactMatch) return exactMatch.key as AdventureTheme;
   
+  // Check for numeric ID
   const numericId = parseInt(normalized, 10);
   if (!isNaN(numericId)) {
     const byId = getThemeById(numericId);
     if (byId) return byId.key as AdventureTheme;
   }
   
-  return THEMES_ARRAY.find(theme => theme.keywords.some(keyword => normalized.includes(keyword.toLowerCase()))).key as AdventureTheme ?? null;
+  // Check keywords using simple includes check
+  for (const theme of THEMES_ARRAY) {
+    if (theme.keywords.some(keyword => normalized.includes(keyword.toLowerCase()))) {
+      return theme.key as AdventureTheme;
+    }
+  }
+  
+  return null;
 }
-
-export function getAllThemes(): ThemeDefinition[] {
-  return Object.values(THEMES);
-}
-```
-- `THEMES` creates a vivid, reusable theme framework with encapsulated metadata.
-- `parseTheme` translates user input into valid themes by matching strings or recognizing IDs.
-- `getAllThemes` offers an accessible library of themes for intuitive program integration.
+```  
+- Works through multiple enchantment matrices, prioritizing exact matches before deeper explorations.  
+- Prevents malformed input from summoning chaos by only returning themes explicitly defined in `THEMES`.  
+- Supports versatile inputs by accepting IDs, names, and keywords.  
 
 ---
 
-### packages/generator/src/cli/theme-manager.ts
 ```typescript
-generateThemeCSS(theme: AdventureTheme, outputDir: string): void {
-  const cssFiles = [
-    path.join(this.themesDir, 'base.css'),
-    path.join(this.themesDir, 'homepage.css'), 
-    path.join(this.themesDir, 'animations.css'),
-    path.join(this.themesDir, `${theme}.css`)
-  ];
-  
-  let combinedCSS = '';
-  cssFiles.forEach(cssFile => {
-    if (fs.existsSync(cssFile)) {
-      combinedCSS += fs.readFileSync(cssFile, 'utf8') + '\\n\\n';
-    }
-  });
-  const cssPath = path.join(outputDir, 'assets', 'theme.css');
-  fs.writeFileSync(cssPath, combinedCSS);
+export function isValidTheme(theme: string): theme is AdventureTheme {
+  return THEMES_ARRAY.some(t => t.key === theme);
 }
+```  
+- Fortifies the kingdom by returning true only when a theme is valid, establishing a protective layer.  
+- Allows easy integration into other spells, reinforcing reliability in the `Theme` artifact.  
 
-getGitHubLogo(theme: AdventureTheme): string {
-  return this.isLightTheme(theme) ? 'assets/shared/github-mark.svg' : 'assets/shared/github-mark-white.svg';
+---
+
+```typescript
+export function getFormattedThemeOptions(): string {
+  return getAllThemes()
+    .sort((a, b) => a.id - b.id)
+    .map(formatThemeOption)
+    .join('\n');
 }
+```  
+- Prepares a knight's battleground of choices via consistent, sorted displays.  
+- Grants knights clear guidance on selecting paths using accessible properties like `id` and `emoji`.  
 
+---
+
+### File: packages/generator/src/cli/theme-manager.ts  
+This file governs the ThemeForge, where knights wield spells to manage theme configurations. From icons to gathered CSS, the `ThemeManager` class empowers knights to impose visual cohesion across all adventures.  
+
+#### Highlights  
+- `getThemeIcons`: Dynamically supplies a knight’s theme-based icons, ensuring thematic consistency in Codethia’s enchanted realms.  
+- `generateThemeCSS`: Weaves together specific CSS scrolls for adventures, joining base coding spells to theme-specific enhancements.  
+- `isLightTheme`: Detects spectral lightness and demands darker sigils (e.g., logos), customizing output for each kingdom.  
+
+## Code  
+### File: packages/generator/src/cli/theme-manager.ts  
+
+```typescript
 getThemeIcons(theme: AdventureTheme): { theme: string; quest: string } {
   const themeIcons = {
     space: { theme: '🚀', quest: '⭐' },
@@ -134,20 +99,70 @@ getThemeIcons(theme: AdventureTheme): { theme: string; quest: string } {
 
   return (themeIcons as any)[theme] || themeIcons.space;
 }
-```
-- `generateThemeCSS` merges essential CSS files to ensure harmonious application across varied themes.
-- `getGitHubLogo` dynamically selects suitable logos for themes, enhancing visual design alignment.
-- `getThemeIcons` assigns expressive icons to each theme, boosting their intuitive appeal.
+```  
+- Provides knights with visually matching icons for their quests.  
+- Fosters adventure branding within enchanted interfaces.  
+- Defaults effortlessly to the `space` icon when variations are absent.  
 
 ---
 
-## Helpful Hints
-- Ensure environment variables are properly configured to leverage dynamic space systems effectively.
-- Use `getThemeIcons` for creating themed visual enhancements in your navigation system.
-- Dive into `parseTheme` to learn how input matching can enable flexibility in large-scale applications.
+### File: packages/core/src/shared/input-validator.ts  
+This file safeguards Codethia’s core from corrupted spell inputs. The `InputValidator` ensures all magical scrolls are coherent before use.  
+
+#### Highlights  
+- `validateAdventureChoice`: Ensures an adventure selection's validity, preserving the kingdom's integrity.  
+- `validateTheme`: Confirms a chosen theme exists and meets criteria, protecting application flow.  
+- `sanitizeForDisplay`: Cleanses lore outputs of potentially harmful tokens.  
+
+## Code  
+### File: packages/core/src/shared/input-validator.ts  
+
+```typescript
+export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error('Theme is required');
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t => t.key).join(', ');
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
+```  
+- Blocks invalid themes from entering the castle gates.  
+- Calls upon both `parseTheme` and `isValidTheme` to unite their defenses.  
+- Offers clear error handling to guide knights during improper inputs. 
 
 ---
 
-You have mastered all the secrets of the galactic *Celestial Refactor*! Your adventure is complete, and the cosmic codebase now stands as a beacon of functional adaptability and aesthetic harmony. Celebrate with your crew and let the stars guide future missions!
+```typescript
+export function sanitizeForDisplay(input: string, maxLength = 1000): string {
+  if (!input) return '';
+  
+  return input
+    .replace(/[<>{}"`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+```  
+- Renders potentially dangerous tokens inactive to prevent attacks in Codethia.  
+- Maintains efficiency with regex-fueled logic—fast and lightweight.  
 
-Mission accomplished, Star Voyager! Quest 5: Configuration & Theme System has been mastered with stellar precision—your cosmic journey is now 80% fueled for a triumphant leap to the final frontier! ⭐🚀⚡
+---
+
+## Helpful Hints  
+- To explore inputs’ path through the castle, trace enchanted hand-offs between `validateTheme` and `parseTheme`.  
+- Experiment with different inputs like "magic", "ancient", and "123" to see theme-parsing spells in action.  
+- Ensure you test `getThemeIcons` against multiple themes to encompass its versatility and defaults.  
+
+---
+
+You have mastered all the secrets of Codethia's magical realm! Your adventure is complete.
+
+By the glowing aurora of the celestial phoenix and under the watchful gaze of the astral guardians, your mastery of Quest 5: The Ever-Shifting Themes shines like a champion's blade, heralding your triumphant march towards final glory—brave hero, onward to destiny!

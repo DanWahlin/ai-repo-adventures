@@ -1,13 +1,13 @@
-# The Enchanted Kingdom of Code
+# The Enchanted Chronicles of the Codebase
 
-In the mythical Kingdom of Codethos, a realm brimming with magic and mysteries, the Great Repository scroll holds the wisdom of countless generations. This enchanted repository is guarded by knights, wizards, and mythical creatures, ensuring the kingdom thrives by harnessing spells written in the arcane language of code. However, a dark force threatens the land, corrupting the magical scrolls and disrupting their flow. It's up to you, a chosen adventurer, to restore balance by pursuing heroic quests and unraveling the secrets of Codethos.
+In the magical realm of Codethia, an ancient kingdom thrives on enchanted scrolls and mystical spells woven into the grand tapestry of knowledge. The kingdom's survival depends on generating tales of heroic adventures, granting knights their themes, and analyzing their triumphs through spells of prediction. Hidden deep within, the Codebase Castle houses potent artifacts—each an essential cog in the mystical machinery that governs Codethia. Your fate is intertwined with its enchanting destiny. Will you rise as its legendary hero?
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: The Knightly Glyphs of the Static Realm** - Forge your path through the enchanted pipeline of static magic by exploring **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts**, where spells for the kingdom's static scrolls are crafted.
-**Quest 2: The Mystic Tools of MCP** - Ascend the tower of mystical protocols within **server.ts** and **tools.ts**, mastering the enchanted interfaces that breathe life into the kingdom's heroic quests.
-**Quest 3: The Chronicles of the Questwright** - Unearth the sacred art of story-weaving by peering into **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts**, where the lore of Codethos is shaped through magical prompts and quests.
-**Quest 4: The Dragon’s Insight – Code Analysis** - Harness the fire of the dragon's wisdom, wielding the power of **repo-analyzer.ts** and **llm-client.ts** to decode ancient scripts and conjure ethereal responses from the unseen.
-**Quest 5: The Enchanted Codex of Themes** - Venture into the hallowed halls of **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts**, mastering the kingdom’s mystical theme spells and the laws governing their harmony.
+**Quest 1: The Mystic Forge of HTML** - Explore the *Mystic Forge*, where **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts** shape Codethia’s enchanted scrolls and knightly chronicles.
+**Quest 2: The Arcane Toolmaster** - Uncover the secrets of the *Arcane Toolmaster* by venturing into **server.ts** and **tools.ts**, where magical tools summon choices and guide noble journeys.
+**Quest 3: The Enchanter’s Workshop** - Learn the art of *Quest Enchantment* with **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts**, crafting heroic sagas and weaving spells of progression.
+**Quest 4: The Dragon of Code Analysis** - Face the *Dragon of Code Analysis* hidden in **repo-analyzer.ts** and **llm-client.ts**, where it guards the secrets of Codethia’s intelligent prophecies.
+**Quest 5: The Ever-Shifting Themes** - Wander the *Valley of Eternal Themes* to master the wisdom within **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts**, unlocking Codethia’s enchanted path options.
