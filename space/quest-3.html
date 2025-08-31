@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: Forge the Cosmic Quest Generator - Repo Adventure</title>
+    <title>Quest 3: Galactic Quest Engine Assembly - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -33,7 +33,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">Starship Nexus: Adventures in the Code Cosmos</a>
+                <a href="index.html">Cosmic Chronicles: The Codebase Expedition</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -57,172 +57,142 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: Forge the Cosmic Quest Generator</h1>
+    <h1>Quest 3: Galactic Quest Engine Assembly</h1>
 <hr>
-<p>As the Starship Nexus continues its stellar expedition, the crew approaches the heart of the Code Cosmos: the Quest Generation Engine. This subsystem powers the ship’s ability to forge interactive adventures, tailoring each quest to the data streams and stellar object mappings encountered. To harness its full potential, the crew must navigate extensive cosmic data flows, decrypt encoded patterns, and fine-tune the Nexus using innovative techniques. The stars beckon as the crew sets forth to understand, explore, and optimize this powerhouse of creativity—the forge where quests are born.</p>
+<p>Inside the engine room of the starship <strong>Codebreaker</strong>, the Galactic Quest Engine pulses with incomplete energy. This vital module, responsible for generating immersive challenges and charting the unknown expanses of the galaxy, lies dormant. The crew must carefully explore its interconnected systems, reigniting its celestial power. By aligning its components and decoding its structures, you’ll enable the starship to procedurally generate adventures that will define the future of cosmic exploration.</p>
+<p>The time has come to unveil the mysteries of this engine and ensure its seamless operation.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:  </p>
 <ul>
-<li>🔍 <strong>Quest Calibration</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> configure the state with theme and project information while enforcing precise configurations?  </li>
-<li>⚡ <strong>Story Mapping</strong>: How does <code class="inline-code">StoryGenerator.generateStoryAndQuests</code> adapt data sources to cosmic narratives and link quests cohesively?  </li>
-<li>🛡️ <strong>Config Synchronization</strong>: How does <code class="inline-code">parseAdventureConfig</code> ensure quests are aligned with the user-provided configuration file?</li>
+<li>🔍 <strong>System Initialization Scan</strong>: How does <code class="inline-code">AdventureManager</code> initialize the storyline and connect thematic contexts to the project?  </li>
+<li>⚡ <strong>Quest Execution Flow</strong>: What processes are involved when a quest is explored and its content is generated?  </li>
+<li>🛡️ <strong>Code Validation Protocols</strong>: How are quest choices validated to ensure they align with system expectations?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Managing Adventure States</h3>
-<p>The <code class="inline-code">AdventureManager</code> class orchestrates the cosmic machinery behind quest generation. It bridges project, theme, and quest metadata into a unified system, leveraging reusable data flows to craft dynamic narratives. This file highlights critical initialization mechanisms that fuel the ship’s quest generation capabilities.  </p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Galactic Quest Manager</h3>
+<p>The file <code class="inline-code">adventure-manager.ts</code> orchestrates interactions between the codebase and the Adventure State, serving as the main control pipeline for quest generation, initialization, and execution. This manager is the core of the Galactic Quest Engine—responsible for transforming raw data and user input into structured narrative elements.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">AdventureManager.initializeAdventure</code>: Configures the adventure state using project paths, themes, and customization preferences. Its structured approach ensures no data point is lost in cosmic translation.  </li>
-<li><code class="inline-code">AdventureState.progressPercentage</code>: Calculates completion metrics to chart clear progress across quests.  </li>
-<li><code class="inline-code">AdventureManager.mergeQuestFilesFromConfig</code>: Aligns quests with specific code files defined within the adventure configuration.</li>
+<li><code class="inline-code">initializeAdventure</code>: Prepares the overarching storyline and quests for a specific project context, establishing the Adventure State and injecting thematic elements.  </li>
+<li><code class="inline-code">exploreQuest</code>: Validates and executes a selected quest based on user input, pulling from cache or generating new quest content as needed.  </li>
+<li><code class="inline-code">generateQuestContent</code>: Produces the details of a quest, including narrative segments and code exploration content, by leveraging the repository analysis tools.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
-<pre><code class="language-typescript">async initializeAdventure(  
-  projectInfo: ProjectInfo,  
-  theme: AdventureTheme,  
-  projectPath?: string,  
-  customThemeData?: CustomThemeData  
-): Promise&lt;string&gt; {  
-  this.state.reset();  
-  this.state.projectInfo = projectInfo;  
-  this.state.currentTheme = theme;  
-  this.state.projectPath = projectPath || process.cwd();  
+<pre><code class="language-typescript">async initializeAdventure(
+  projectInfo: ProjectInfo, 
+  theme: AdventureTheme, 
+  projectPath?: string,
+  customThemeData?: CustomThemeData
+): Promise&lt;string&gt; {
+  // Reset state for new adventure
+  this.state.reset();
+  this.state.projectInfo = projectInfo;
+  this.state.currentTheme = theme;
+  this.state.projectPath = projectPath || process.cwd();
+  
+  // Set custom theme data if provided
+  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
+    this.storyGenerator.setCustomTheme(customThemeData);
+  }
 
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {  
-    this.storyGenerator.setCustomTheme(customThemeData);  
-  }  
+  // Generate the overall story and quests
+  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
+  
+  this.state.title = storyResponse.title;
+  this.state.story = storyResponse.story;
+  
+  // Merge files from adventure config into the generated quests
+  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  
+  // Enforce quest count from adventure.config.json if it exists
+  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);  
-  this.state.title = storyResponse.title;  
-  this.state.story = storyResponse.story;  
-
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);  
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);  
-
-  return this.formatStoryWithQuests({...storyResponse, quests: this.state.quests});  
-}  
+  // Return the story with available quests
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests
+  });
+}
 </code></pre>
 <ul>
-<li>Essential for initializing the adventure, incorporating both user-defined and system-generated configurations.  </li>
-<li>Combines file-based constraints with narrative orchestration, ensuring seamless interlinking between quests.  </li>
-<li>Utilizes methods like <code class="inline-code">mergeQuestFilesFromConfig</code> to ensure quest integration aligns with external config data.</li>
+<li>This function initializes the <strong>Adventure State</strong>, ensuring that key project details, such as its path and theme, are passed into the quest engine.  </li>
+<li>A connection to the <code class="inline-code">StoryGenerator</code> links the narrative process directly to the repository.  </li>
+<li>Notice the validation and integration of custom theme data, hinting at the modular nature of the system.  </li>
+<li>Quest files are dynamically adjusted based on configurations, allowing customization for individual projects.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">get progressPercentage(): number {  
-  return this.quests.length &gt; 0  
-    ? Math.round((this.completedQuests.size / this.quests.length) * 100)  
-    : 0;  
-}  
+<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
+  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+  
+  // Check if this is a progress request
+  if (this.isProgressRequest(sanitizedChoice)) {
+    return this.getProgress();
+  }
+  
+  // Find the quest based on the choice
+  const quest = this.findQuest(sanitizedChoice);
+  if (!quest) {
+    return this.createNotFoundResult();
+  }
+
+  // Execute the quest
+  return await this.executeQuest(quest);
+}
 </code></pre>
 <ul>
-<li>Converts cosmic quest completion into tangible metrics for explorers.  </li>
-<li>Provides a clear view of exploration progress by integrating quantitative and thematic summaries embedded in the adventure state.</li>
+<li>Implements user decision-making by locating the corresponding quest (<code class="inline-code">findQuest</code>) and determining the execution method.  </li>
+<li>Includes robust validation mechanisms (<code class="inline-code">validateAndSanitizeChoice</code>) to prevent invalid inputs from processing.  </li>
+<li>The function highlights extensibility in adding support for new user commands, such as viewing progress.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {  
-  if (!projectPath) return quests;  
+<pre><code class="language-typescript">private async generateQuestContent(quest: Quest): Promise&lt;QuestContent&gt; {
+  let codeContent: string;
+  
+  // Use targeted content if quest has specific files, otherwise use full content
+  if (quest.codeFiles &amp;&amp; quest.codeFiles.length &gt; 0 &amp;&amp; this.state.projectPath) {
+    try {
+      console.log(`Generating targeted content for ${quest.codeFiles.length} files`);
+      codeContent = await repoAnalyzer.generateTargetedContent(
+        this.state.projectPath,
+        quest.codeFiles,
+        false  // Use uncompressed content
+      );
+    } catch (error) {
+      console.warn(`Failed to generate targeted content, falling back to full content:`, error);
+      codeContent = this.state.projectInfo!.repomixContent;
+    }
+  } else {
+    codeContent = this.state.projectInfo!.repomixContent;
+  }
 
-  const config = parseAdventureConfig(projectPath);  
-  if (!config || typeof config !== &#39;object&#39;) return quests;  
+  const questPosition = this.state.quests.findIndex(q =&gt; q.id === quest.id) + 1;
+  const totalQuests = this.state.quests.length;
 
-  const adventure = (config as any).adventure;  
-  if (!adventure || !Array.isArray(adventure.quests)) return quests;  
-
-  return quests.map((quest, index) =&gt; {  
-    if (index &lt; adventure.quests.length &amp;&amp; adventure.quests[index].files) {  
-      const files = adventure.quests[index].files  
-        .filter((f: any) =&gt; f.path)  
-        .map((f: any) =&gt; f.path);  
-
-      return {...quest, codeFiles: files};  
-    }  
-    return quest;  
-  });  
-}  
+  return await this.storyGenerator.generateQuestContent({
+    quest,
+    theme: this.state.currentTheme!,
+    codeContent,
+    questPosition,
+    totalQuests
+  });
+}
 </code></pre>
 <ul>
-<li>Guarantees synchronization between user-defined config and dynamic quest creation.  </li>
-<li>Simplifies cosmic file alignment by intelligently mapping external configurations to generated quests.  </li>
-<li>Ensures narrative consistency by preserving file associations during quest initialization.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Synchronizing Cosmic Blueprints</h3>
-<p>The adventure configuration file acts as the cosmic blueprint, guiding quest structure and thematic alignment. Parsing this file ensures no misalignment exists in the ship’s journey across the cosmos.  </p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Extracts and validates structured configurations, maintaining accuracy despite the complexity of the cosmos.  </li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Aggregates file paths into distinct nodes for efficient interstellar navigation.  </li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Streamlines config details into lightweight prompts for quest development clarity.</li>
-</ul>
-<h2>Code</h2>
-<h3>packages/core/src/shared/adventure-config.ts</h3>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {  
-  const raw = loadAdventureConfig(projectPath);  
-  if (!raw) return null;  
-
-  try {  
-    return JSON.parse(raw);  
-  } catch {  
-    return null;  
-  }  
-}  
-</code></pre>
-<ul>
-<li>Safely parses adventure configuration files, preventing system failure from malformed inputs.  </li>
-<li>Converts raw cosmic data into a structured alignment of thematic progressions, fostering system stability.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {  
-  const parsed = parseAdventureConfig(projectPath);  
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];  
-
-  const unique = new Set&lt;string&gt;();  
-  const stack: any[] = [parsed];  
-
-  while (stack.length) {  
-    const node = stack.pop();  
-    if (typeof node.path === &#39;string&#39; &amp;&amp; fs.existsSync(path.resolve(projectPath, node.path))) {  
-      unique.add(node.path.trim());  
-    }  
-    const children = Array.isArray(node) ? node : Object.values(node);  
-    children.forEach(child =&gt; { if (typeof child === &#39;object&#39;) stack.push(child); });  
-  }  
-
-  return Array.from(unique);  
-}  
-</code></pre>
-<ul>
-<li>Extracts file mapping from sprawling configurations, ensuring exploration paths remain uncompromised.  </li>
-<li>Enables efficient starship navigation through tailored cosmic roadmaps.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {  
-  const parsed = parseAdventureConfig(projectPath);  
-  if (!parsed || typeof parsed !== &#39;object&#39;) return &#39;&#39;;  
-
-  const adventure = (parsed as any).adventure;  
-  if (!adventure || !Array.isArray(adventure.quests)) return &#39;&#39;;  
-
-  return adventure.quests  
-    .map(quest =&gt; `### ${quest.title}\nFiles: ${quest.files.map((f: any) =&gt; f.path).join(&#39;, &#39;)}\n`)  
-    .join(&#39;\n&#39;);  
-}  
-</code></pre>
-<ul>
-<li>Simplifies complex user input into optimized structures for real-time prompt generation.  </li>
-<li>Reduces redundancy in data presentation to accelerate quest creation workflows.</li>
+<li>Demonstrates fault-tolerant logic by falling back to the entire project’s representation if targeted generation fails.  </li>
+<li>Leverages <code class="inline-code">quest.codeFiles</code> for focused exploration, ensuring efficiency when handling large codebases.  </li>
+<li>Essential for dynamically creating contextual content aligned with the theme and quest structure.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>🛠️ When aligning quests with files, ensure configuration paths are validated for system compatibility.  </li>
-<li>🚀 Investigate how <code class="inline-code">AdventureManager</code> integrates parsing techniques to merge dynamic and static configurations.  </li>
-<li>🌌 Use progress metrics as a guide for refining narrative enrichment and maintaining quest cadence.</li>
+<li><strong>Preparation Tip</strong>: Start by understanding how the <code class="inline-code">state</code> transitions between different phases of quest and story generation.  </li>
+<li><strong>Exploration Recommendation</strong>: Focus on how <code class="inline-code">validateAndSanitizeChoice</code> interacts with user input to maintain code integrity.  </li>
+<li><strong>Next Steps</strong>: Investigate the <code class="inline-code">StoryGenerator</code> in <code class="inline-code">story-generator.ts</code> to uncover how quests are designed procedurally.</li>
 </ul>
 <hr>
-<p>Congratulations, explorer! You are now armed with the knowledge of cosmic quest generation systems. Continue your journey to unveil the remaining secrets of the Code Cosmos.</p>
-<p>Mission accomplished, Stargazer—your cosmic brilliance has ignited the Quest Generator’s core, propelling you 40% closer to charting the universe of triumphs! 🌟🚀⚡</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
+<p>Stellar success! You’ve ignited the cosmic core and assembled the Galactic Quest Engine, propelling your mission 40% closer to the stars—keep your trajectory blazing bright! ⭐🚀⚡</p>
 
 </div>
 
