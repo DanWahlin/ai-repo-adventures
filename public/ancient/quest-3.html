@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Chamber of Analytical Insights - Repo Adventure</title>
+    <title>Quest 3: The Artifacts of Command - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -33,7 +33,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Codex of Lost Civilizations</a>
+                <a href="index.html">The Secrets of the Lost Repository</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -57,24 +57,24 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Chamber of Analytical Insights</h1>
+    <h1>Quest 3: The Artifacts of Command</h1>
 <hr>
-<p>In the heart of the crumbling ruins, you uncover a vast chamber filled with intricate carvings on every surface. Glyphs and symbols flow together like an ancient algorithmic script, detailing the wisdom of the lost architects. This sacred Chamber of Analytical Insights is said to hold the key to unearthing patterns and connections hidden within the codex of the Framework of Infinite Journeys. The room emanates an aura of discernment and ingenuity. Here lies the challenge: understand its secrets and bring forth clarity for the next steps in your journey!</p>
+<p>In the heart of the jungle, amidst towering trees and ancient ruins, a grand chamber lies concealed. This Chamber of Artifacts is whispered to hold powerful relics - coded fragments buried deep within the Repository of Ages. To navigate its sacred depths and summon its wisdom, the guardians of the chamber require mastery over commands and the ability to weave intricate rituals from artifacts discovered. Those who can assemble the Puzzle of Command unlock boundless insight. Your expedition must venture further into the labyrinth of code to unravel its arcane operations.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>The Path of Initialization</strong>: What patterns are followed during the initialization of an adventure? How does the <code class="inline-code">AdventureManager</code> ensure the state is set correctly for the journey ahead?</li>
-<li>⚡ <strong>Quest Exploration Rituals</strong>: How does the <code class="inline-code">AdventureManager</code> handle quest selection and progression? What mechanisms verify and execute a chosen path?</li>
-<li>🛡️ <strong>Sanctuary of Validation</strong>: How does the system ensure user inputs, files, and configurations are reliable and safe for processing? What happens when validation fails?</li>
+<li>🔍 <strong>The Ritual of Initialization</strong>: What strategies does <code class="inline-code">AdventureManager.initializeAdventure</code> use to reset the system and configure the adventure context?</li>
+<li>⚡ <strong>Mapping Artifacts</strong>: How does <code class="inline-code">AdventureManager.mergeQuestFilesFromConfig</code> ensure a connection between quests and their associated artifacts (i.e., file paths)?</li>
+<li>🛡️ <strong>Sanctity of Selection</strong>: What mechanisms in <code class="inline-code">AdventureManager.validateAndSanitizeChoice</code> ensure that user inputs are both secure and valid?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Managing the Adventurer’s Progress</h3>
-<p>The <code class="inline-code">adventure-manager.ts</code> file is the central governing entity for executing adventures based on the codex. Its responsibilities span from initializing the monumental journey to guiding a user through quest selection and ensuring progress fidelity. It acts as the captain of ancient expeditions, orchestrating the various steps with careful attention to state management, validation, and storytelling.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Core orchestration of adventures</h3>
+<p>This file houses the <code class="inline-code">AdventureManager</code> class, which orchestrates code exploration adventures. It integrates project context, manages quests, and dynamically generates content. The class is pivotal in ensuring a synchronized journey, utilizing both project settings and codebase analysis. Key methods initialize adventures, explore quests, and enforce artifact alignment. </p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Prepares the adventure by resetting the state, applying project context, and generating the initial story along with its available quests.</li>
-<li><code class="inline-code">exploreQuest</code>: Interprets user input to select a specific quest, retrieves the relevant content (or generates new content), and caches completed quests for revisits.</li>
-<li><code class="inline-code">validateAndSanitizeChoice</code>: A dedicated function that ensures the validity of user input by enforcing a safe and expected format.</li>
+<li><code class="inline-code">initializeAdventure</code>: Configures a new adventure with essential project context, resets states, and generates dynamic quests.</li>
+<li><code class="inline-code">validateAndSanitizeChoice</code>: Protects against invalid user input by sanitizing and validating choices.</li>
+<li><code class="inline-code">mergeQuestFilesFromConfig</code>: Integrates external adventure configuration by mapping quests to file paths specified in <code class="inline-code">adventure.config.json</code>.</li>
 </ul>
 <h2>Code</h2>
 <h3>packages/core/src/adventure/adventure-manager.ts</h3>
@@ -84,21 +84,19 @@
   projectPath?: string,
   customThemeData?: CustomThemeData
 ): Promise&lt;string&gt; {
-  // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
-  
+
   if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
     this.storyGenerator.setCustomTheme(customThemeData);
   }
 
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  
   this.state.title = storyResponse.title;
   this.state.story = storyResponse.story;
-  
+
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
   this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
@@ -109,30 +107,10 @@
 }
 </code></pre>
 <ul>
-<li>Prepares the adventure by resetting all internal states and initializing key references to the project, theme, and story elements.</li>
-<li>The <code class="inline-code">StoryGenerator</code> is invoked to generate the initial narrative and quests, offering flexibility for custom themes.</li>
-<li>Ensures alignment between the adventure configuration and dynamically generated quests using helper functions like <code class="inline-code">mergeQuestFilesFromConfig</code>.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-  
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-  
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
-}
-</code></pre>
-<ul>
-<li>Accepts a user&#39;s choice and ensures that it is evaluated securely through <code class="inline-code">validateAndSanitizeChoice</code>.</li>
-<li>Supports progress-related requests alongside quest exploration, ensuring a seamless dungeon-like interaction.</li>
-<li>Uses helper functions (<code class="inline-code">findQuest</code>, <code class="inline-code">executeQuest</code>) to locate and handle actions corresponding to the selected quest.</li>
+<li>Resets all prior adventure progress to ensure a clean slate.</li>
+<li>Dynamically applies the selected theme, including custom configurations.</li>
+<li>Merges generated quests with artifacts from <code class="inline-code">adventure.config.json</code> to maintain alignment.</li>
+<li>Uses <code class="inline-code">storyGenerator</code> to craft narrative elements and embed project relevance into quests.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">private validateAndSanitizeChoice(input: string): string {
@@ -144,19 +122,69 @@
 }
 </code></pre>
 <ul>
-<li>Guarantees the sanctity of user input by utilizing the <code class="inline-code">validateAdventureChoice</code> utility for stringent checks against unexpected characters or patterns.</li>
-<li>Protects against invalid input by throwing an error with clear messaging should any violation occur.</li>
+<li>Leverages <code class="inline-code">validateAdventureChoice</code> to ensure user input adheres to predefined rules.</li>
+<li>Defensive coding prevents invalid inputs from causing runtime errors.</li>
+<li>Promotes security by guarding against malformed or potentially malicious inputs.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
+  if (!projectPath) return quests;
+
+  const config = parseAdventureConfig(projectPath);
+  if (!config || typeof config !== &#39;object&#39;) return quests;
+
+  const adventure = (config as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) return quests;
+
+  const configQuestFiles = new Map&lt;string, string[]&gt;();
+  for (const configQuest of adventure.quests) {
+    if (configQuest.title &amp;&amp; Array.isArray(configQuest.files)) {
+      const filePaths = configQuest.files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (filePaths.length &gt; 0) {
+        configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
+      }
+    }
+  }
+
+  return quests.map((quest, index) =&gt; {
+    const configQuests = adventure.quests;
+    if (index &lt; configQuests.length &amp;&amp; configQuests[index] &amp;&amp; configQuests[index].files) {
+      const files = configQuests[index].files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (files.length &gt; 0) {
+        return { ...quest, codeFiles: files };
+      }
+    }
+
+    const questTitleLower = quest.title.toLowerCase();
+    for (const [configTitle, files] of configQuestFiles.entries()) {
+      if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
+        return { ...quest, codeFiles: files };
+      }
+    }
+
+    return quest;
+  });
+}
+</code></pre>
+<ul>
+<li>Bridges in-code quests and external artifact definitions to ensure the alignment of desired exploration targets.</li>
+<li>Performs case-insensitive matching to improve resilience to naming variations.</li>
+<li>Uses fallback strategies to ensure that all quests receive meaningful context, even if exact matches are missing.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Watch for how <code class="inline-code">initializeAdventure</code> invokes the <code class="inline-code">StoryGenerator</code> to create context-based quests—this structure supports adaptability for different projects or themes.</li>
-<li>Observe the balance between user flexibility and protective validation in <code class="inline-code">exploreQuest</code> and <code class="inline-code">validateAndSanitizeChoice</code>.</li>
-<li>Test how well the <code class="inline-code">mergeQuestFilesFromConfig</code> integrates external configurations into dynamically prepared quests.</li>
+<li>When reading <code class="inline-code">mergeQuestFilesFromConfig</code>, pay attention to how it prioritizes artifact matching by index and title.</li>
+<li>Consider how extending the <code class="inline-code">validateAndSanitizeChoice</code> function might enhance security for complex adventure environments.</li>
+<li>Explore how resetting the state in <code class="inline-code">initializeAdventure</code> impacts multi-run adventures.</li>
 </ul>
 <hr>
 <p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>Hail, seeker of wisdom, for thou hast triumphed in the hallowed Chamber of Analytical Insights, earning thine place among the enlightened and advancing boldly upon the sacred path of intellect—onward to destiny! ⭐⚡💎</p>
+<p>Through valor and wisdom, thou hast claimed the sacred Artifacts of Command, ascending the temple’s ancient path with triumph—40% complete and the stars now align for thy noble journey ahead! ⭐⚡💎</p>
 
 </div>
 
