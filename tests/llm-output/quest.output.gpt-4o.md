@@ -1,84 +1,82 @@
-# Quest 5: The Altar of Interaction
+# Quest 5: Configuration & Theme System
 ---
-In the heart of the ancient jungle, amidst the undisturbed ruins of a sophisticated past, you discover the "Altar of Interaction"—a construct used to harmonize systems within this lost civilization. By studying the intricate code paths and interacting with the structures of their technologies, you can uncover how their interconnected frameworks operated with precision. This altar's glyphs speak of systems that once synchronized the civilization’s greatest tools, ensuring seamless exchanges of power and wisdom. Decode the messages hidden within and restore their essence to the present.
+Aboard the starship *Celestial Refactor*, the crew approaches a critical juncture in the journey through the interstellar codebase. The task at hand? To unravel the complex mechanisms governing configuration and theme systems, ensuring seamless adaptability for cosmic explorers navigating infinite possibilities. Your team faces a constellation of structured variables, validation functions, and dynamic theme generators. This final quest is the keystone of the mission, tying functionality to aesthetic purpose, ensuring harmonious operation as you chart the stars of innovation.
 
 ## Quest Objectives
-As you explore the code below, investigate these key questions:
-- 🔍 **Thematic Weaves**: How are themes defined and categorized to maintain their sacred significance across the system?
-- ⚡ **Validation Mechanisms**: What techniques are used to safeguard user inputs and ensure harmony with the system requirements?
-- 🛡️ **Resurrection of Settings**: How does the system preserve and apply key configuration details to optimize interactions?
+As you explore the code below, investigate these crucial questions:
+- 🔍 **Stellar Timeout Calibration**: How is timeout handled for system operations, and what patterns ensure adaptability in cosmic-scale operations?
+- ⚡ **Thematic Mapping Frequencies**: How are theme definitions structured, and what safeguards make them reusable across various space-modules?
+- 🛡️ **Orbital Validation Shields**: How does input validation protect against edge cases and cosmic anomalies?
 
 ## File Exploration
-### packages/core/src/shared/config.ts: Configuration Settings
-This file establishes the foundational settings for the interaction systems, defining how resources like timeouts and limits are managed across the platform. The constants here are like the sacred equations that govern the altar’s rituals, structuring parameters for harmonious operations. It provides essential configurations for API interactions, error messaging, and key limits like maximum file sizes and processing times.
+### packages/core/src/shared/config.ts: System Configuration Nexus
+This file is the nerve center of the starship’s configuration system, where constants and environment variables dictate operations. It controls timeout thresholds, cache limits, and error messages for consistency across galactic missions. Scalable constraints ensure the mission adapts to varying data conditions. 
 
 #### Highlights
-- `LLM_REQUEST_TIMEOUT` controls the allowable duration for data exchanges, ensuring that distant "rituals" complete without undue delays.
-- `REPOMIX_CACHE_TTL` manages caching lifespans, reflecting the civilization’s efficient reuse of memory.
-- `MAX_FILE_SIZE_MB` upholds the altar’s sacred rule of analyzing only manageably sized files.
+- `LLM_REQUEST_TIMEOUT`: Defines the API request timeout duration for Large Language Model operations, ensuring responsiveness while avoiding infinite stalls.
+- `MAX_FILE_SIZE_MB`: Regulates the maximum allowable file size, upholding stability in interstellar data analysis workflows.
+- `ERROR_MESSAGES`: Provides centralized, consistent error messaging, creating a safety net during unexpected anomalies.
+
+### packages/core/src/shared/theme.ts: Cosmic Theme Repository
+This file hosts the logic for managing themes, bringing your starship's journey to life. It defines the thematic structure and contains helper functions to map user inputs to defined themes. The elegance of the theme system lies in its adaptability for various mission contexts.
+
+#### Highlights
+- `THEMES`: Central repository for theme definitions, interlinking descriptions, emojis, and keywords to streamline identification and display.
+- `parseTheme`: Parses user input to match valid themes, ensuring linguistic flexibility and efficient keyword recognition.
+- `getAllThemes`: Retrieves the complete list of themes, serving as a single source of truth for interactive interfaces.
+
+### packages/generator/src/cli/theme-manager.ts: Dynamic Theme Operations
+This file operates the dynamic engine for organizing and rendering themes. It ensures consistent presentation by combining CSS files for layouts and adapting assets based on a theme's properties. It safeguards against incorrect theme usage during the rendering process.
+
+#### Highlights
+- `generateThemeCSS`: Dynamically compiles CSS files for a given theme to ensure seamless integration of aesthetics across all mission components.
+- `getGitHubLogo`: Fetches the appropriate GitHub logo based on whether a theme uses a light or dark background, balancing visuals and readability.
+- `getThemeIcons`: Maps each theme to unique icons, enhancing immersive user experiences for quest navigation.
 
 ## Code
 ### packages/core/src/shared/config.ts
 ```typescript
-export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || '60000'); // 60 seconds for complex story generation with large prompts, configurable via env
-export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || '60000'); // 60 seconds, configurable via env
-export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues and focus on source code
+export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || '60000'); // 60 seconds for complex story generation
+export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to focus on meaningful source code
+export const ERROR_MESSAGES = {
+  LLM_UNAVAILABLE: 'LLM service is currently unavailable. Please check your configuration.',
+  ANALYSIS_FAILED: 'Failed to analyze the project. Please ensure the path is valid.',
+  THEME_INVALID: 'Invalid theme specified. Using default theme.',
+  FILE_NOT_FOUND: 'The requested file could not be found.',
+  PERMISSION_DENIED: 'Permission denied accessing the specified path.',
+} as const;
 ```
-- These constants define essential operational limits for the system, reflecting optimized thresholds for performance.
-- `LLM_REQUEST_TIMEOUT` allows flexibility by enabling configuration via environment variables (env).
-- `REPOMIX_CACHE_TTL` illustrates the efficient reuse of resources by limiting cache lifetimes.
-- The `MAX_FILE_SIZE_MB` rule prioritizes focus, avoiding hazardous file sizes.
+- `LLM_REQUEST_TIMEOUT` ensures system responsiveness and optimizes request strategies for complex computational tasks.
+- `MAX_FILE_SIZE_MB` limits file size to maintain memory stability and focus analysis on relevant data.
+- `ERROR_MESSAGES` centralizes error handling to improve consistency and instantly communicate failures.
 
 ---
 
-### packages/core/src/shared/theme.ts: Theme Definitions
-This module serves as the definitive guide to the themes of the system, akin to the architectural blueprints of the altar. It describes each "theme" with attributes like name, symbol, description, and its alignment with potential user inputs. These definitions form the heart of maintaining the altar’s symbolic power and aesthetic harmony.
-
-#### Highlights
-- `THEMES` enumerates the core identities of each theme and their unique attributes, preserving the integrity of cultural designs.
-- `getAllThemes` simplifies accessing all thematic definitions for system-wide consistency.
-- `parseTheme` employs string-matching techniques to interpret user-provided inputs, mapping them to valid themes.
-
-## Code
 ### packages/core/src/shared/theme.ts
 ```typescript
 export const THEMES = {
-  SPACE: { ... },
-  MYTHICAL: { ... },
-  ANCIENT: {
-    id: 3,
-    key: 'ancient',
-    displayName: 'Ancient Civilization',
-    emoji: '🏺',
-    description: 'Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes',
-    keywords: ['ancient', 'temple', 'pyramid', 'archaeology', 'historical', 'civilization', 'ruins']
+  SPACE: {
+    id: 1,
+    key: 'space',
+    displayName: 'Space Exploration',
+    emoji: '🚀',
+    description: 'Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies',
+    keywords: ['space', 'cosmic', 'galaxy', 'starship', 'astronaut', 'sci-fi', 'futuristic']
   },
-  DEVELOPER: { ... },
-  CUSTOM: { ... }
+  MYTHICAL: {
+    id: 2,
+    key: 'mythical',
+    displayName: 'Enchanted Kingdom',
+    emoji: '🏰',
+    description: 'Explore magical and mythical realms where databases are dragon hoards and functions are powerful spells',
+    keywords: ['mythical', 'magic', 'enchanted', 'castle', 'dragon', 'fantasy', 'medieval', 'kingdom']
+  }
 } as const;
-```
-- `THEMES` defines the symbolic and functional identity of each theme, capturing its essence with clear attributes.
-- Specifically, the "ANCIENT" theme matches the overarching narrative with its archaeological descriptors.
-- Using `as const` ensures these values remain immutable, mirroring the sacred permanence of the altar's inscriptions.
 
----
-
-```typescript
-export function getAllThemes(): ThemeDefinition[] {
-  return THEMES_ARRAY;
-}
-```
-- `getAllThemes` centralizes access to all thematic options, maintaining a consistent source of truth across the system.
-- This simple function highlights efficient data design by leveraging the existing `THEMES_ARRAY`.
-
----
-
-```typescript
 export function parseTheme(input: string): AdventureTheme | null {
   if (!input) return null;
   
   const normalized = input.trim().toLowerCase();
-  
   const exactMatch = getThemeByKey(normalized);
   if (exactMatch) return exactMatch.key as AdventureTheme;
   
@@ -88,93 +86,68 @@ export function parseTheme(input: string): AdventureTheme | null {
     if (byId) return byId.key as AdventureTheme;
   }
   
-  for (const theme of THEMES_ARRAY) {
-    if (theme.keywords.some(keyword => normalized.includes(keyword.toLowerCase()))) {
-      return theme.key as AdventureTheme;
+  return THEMES_ARRAY.find(theme => theme.keywords.some(keyword => normalized.includes(keyword.toLowerCase()))).key as AdventureTheme ?? null;
+}
+
+export function getAllThemes(): ThemeDefinition[] {
+  return Object.values(THEMES);
+}
+```
+- `THEMES` creates a vivid, reusable theme framework with encapsulated metadata.
+- `parseTheme` translates user input into valid themes by matching strings or recognizing IDs.
+- `getAllThemes` offers an accessible library of themes for intuitive program integration.
+
+---
+
+### packages/generator/src/cli/theme-manager.ts
+```typescript
+generateThemeCSS(theme: AdventureTheme, outputDir: string): void {
+  const cssFiles = [
+    path.join(this.themesDir, 'base.css'),
+    path.join(this.themesDir, 'homepage.css'), 
+    path.join(this.themesDir, 'animations.css'),
+    path.join(this.themesDir, `${theme}.css`)
+  ];
+  
+  let combinedCSS = '';
+  cssFiles.forEach(cssFile => {
+    if (fs.existsSync(cssFile)) {
+      combinedCSS += fs.readFileSync(cssFile, 'utf8') + '\\n\\n';
     }
-  }
-  
-  return null;
+  });
+  const cssPath = path.join(outputDir, 'assets', 'theme.css');
+  fs.writeFileSync(cssPath, combinedCSS);
+}
+
+getGitHubLogo(theme: AdventureTheme): string {
+  return this.isLightTheme(theme) ? 'assets/shared/github-mark.svg' : 'assets/shared/github-mark-white.svg';
+}
+
+getThemeIcons(theme: AdventureTheme): { theme: string; quest: string } {
+  const themeIcons = {
+    space: { theme: '🚀', quest: '⭐' },
+    mythical: { theme: '🏰', quest: '⚔️' },
+    ancient: { theme: '🏺', quest: '📜' },
+    developer: { theme: '💻', quest: '🔧' },
+    custom: { theme: '🎨', quest: '⭐' }
+  };
+
+  return (themeIcons as any)[theme] || themeIcons.space;
 }
 ```
-- `parseTheme` employs multiple strategies to interpret input, showcasing flexibility and robustness.
-- It performs direct matches, numeric ID checks, and keyword inclusions to ensure accuracy in identifying themes.
-- This method reinforces a user-friendly interplay with the altar, permitting varied input styles.
-
----
-
-### packages/core/src/shared/input-validator.ts: Validation Rites
-As the guardians of the altar's integrity, these validation functions ensure all interactions align with the civilization’s established rules. This file harmonizes the inputs to maintain the sanctity of the system, guarding against corruption and invalid operations.
-
-#### Highlights
-- `validateAdventureChoice` ensures ritualistic inputs adhere to structural constraints.
-- `validateTheme` confirms that themes are valid offerings, reflecting the sacred allowances of the altar.
-- `sanitizeForDisplay` protects visual representations from disruptive anomalies.
-
-## Code
-### packages/core/src/shared/input-validator.ts
-```typescript
-export function validateAdventureChoice(input: string): string {
-  if (!input?.trim()) {
-    throw new Error('Choice is required');
-  }
-  
-  if (input.length > 200) {
-    throw new Error('Choice too long (max 200 characters)');
-  }
-  
-  return input.trim();
-}
-```
-- This function checks for the presence of input, trims whitespace, and enforces a character limit to keep choices concise.
-- It represents a simple yet impactful layer against disruptive inputs, upholding clarity and focus.
-
----
-
-```typescript
-export function validateTheme(input: string): string {
-  if (!input?.trim()) {
-    throw new Error('Theme is required');
-  }
-  
-  const normalized = input.toLowerCase().trim();
-  const parsedTheme = parseTheme(normalized);
-  
-  if (!parsedTheme || !isValidTheme(parsedTheme)) {
-    const validThemes = getAllThemes().map(t => t.key).join(', ');
-    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
-  }
-  
-  return parsedTheme;
-}
-```
-- This function validates user-provided themes by normalizing inputs and ensuring validity through predefined sacred lists.
-- Dynamic error handling offers both precision and user guidance.
-
----
-
-```typescript
-export function sanitizeForDisplay(input: string, maxLength = 1000): string {
-  if (!input) return '';
-  
-  return input
-    .replace(/[<>{}"`]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxLength);
-}
-```
-- `sanitizeForDisplay` protects visual outputs from harmful content by stripping dangerous characters and trimming excess.
-- By inline cleaning, it supports the altar’s display mechanisms in maintaining purity and elegance.
+- `generateThemeCSS` merges essential CSS files to ensure harmonious application across varied themes.
+- `getGitHubLogo` dynamically selects suitable logos for themes, enhancing visual design alignment.
+- `getThemeIcons` assigns expressive icons to each theme, boosting their intuitive appeal.
 
 ---
 
 ## Helpful Hints
-- Pay attention to how immutability in `THEMES` enhances reliability.
-- Consider the layered input validations and how they mitigate risks.
-- Examine how the `parseTheme` function balances user flexibility with stability.
+- Ensure environment variables are properly configured to leverage dynamic space systems effectively.
+- Use `getThemeIcons` for creating themed visual enhancements in your navigation system.
+- Dive into `parseTheme` to learn how input matching can enable flexibility in large-scale applications.
 
 ---
-You have mastered all the secrets of the Altar of Interaction! Your adventure is complete.
 
-Hail, seeker of wisdom, for thou hast unlocked the sacred truths of the Altar of Interaction, traversing the ancient path with valor and drawing ever nearer to the luminous summit of enlightenment—press on, chosen one, for the final star-lit trial awaits! 🚀💎🗺️⚡
+You have mastered all the secrets of the galactic *Celestial Refactor*! Your adventure is complete, and the cosmic codebase now stands as a beacon of functional adaptability and aesthetic harmony. Celebrate with your crew and let the stars guide future missions!
+
+Mission accomplished, Star Voyager! Quest 5: Configuration & Theme System has been mastered with stellar precision—your cosmic journey is now 80% fueled for a triumphant leap to the final frontier! ⭐🚀⚡

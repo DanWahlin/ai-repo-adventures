@@ -1,13 +1,13 @@
-# The Kingdom of Enchanted Code
+# The Enchanted Kingdom of Code
 
-In the mythical kingdom of Codethra, a land filled with enchanted scripts and mystical frameworks, a great disturbance has spread across the realm. The Book of Adventures, a legendary artifact responsible for weaving the realm's harmonious flow of quests and magic, has been corrupted by fragmented spells and wayward inputs. To restore order, you, a brave adventurer, must journey through the kingdom, exploring ancient scrolls and deciphering coded languages to revive the kingdom's lost equilibrium. At each stage of your journey, the fate of Codethra rests in your hands. 
+In the mythical Kingdom of Codethos, a realm brimming with magic and mysteries, the Great Repository scroll holds the wisdom of countless generations. This enchanted repository is guarded by knights, wizards, and mythical creatures, ensuring the kingdom thrives by harnessing spells written in the arcane language of code. However, a dark force threatens the land, corrupting the magical scrolls and disrupting their flow. It's up to you, a chosen adventurer, to restore balance by pursuing heroic quests and unraveling the secrets of Codethos.
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: The Enchanted HTML Weavers' Forge** - Explore the magic of **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts** where HTML adventures and static spellbinding sites are forged for the realm.
-**Quest 2: The Mystic Tools of the MCP Keep** - Discover the **server.ts** and **tools.ts** that govern the MCP Castle’s tool interface, guiding knights in their heroic journeys.
-**Quest 3: The Questmakers' Arcane Library** - Navigate the enchanted scrolls of **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** to understand how quests are conjured and balanced.
-**Quest 4: The Wizard of Analytical Glyphs** - Unravel the powerful incantations in **repo-analyzer.ts** and **llm-client.ts**, where the realm’s content is analyzed and prophetic insights are summoned.
-**Quest 5: The Codex of Themes and Runes** - Examine the **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts** to wield the mystical properties of configurations, themes, and enchanted rules of the land.
+**Quest 1: The Knightly Glyphs of the Static Realm** - Forge your path through the enchanted pipeline of static magic by exploring **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts**, where spells for the kingdom's static scrolls are crafted.
+**Quest 2: The Mystic Tools of MCP** - Ascend the tower of mystical protocols within **server.ts** and **tools.ts**, mastering the enchanted interfaces that breathe life into the kingdom's heroic quests.
+**Quest 3: The Chronicles of the Questwright** - Unearth the sacred art of story-weaving by peering into **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts**, where the lore of Codethos is shaped through magical prompts and quests.
+**Quest 4: The Dragon’s Insight – Code Analysis** - Harness the fire of the dragon's wisdom, wielding the power of **repo-analyzer.ts** and **llm-client.ts** to decode ancient scripts and conjure ethereal responses from the unseen.
+**Quest 5: The Enchanted Codex of Themes** - Venture into the hallowed halls of **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts**, mastering the kingdom’s mystical theme spells and the laws governing their harmony.
