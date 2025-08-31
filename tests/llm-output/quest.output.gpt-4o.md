@@ -1,34 +1,102 @@
-# Quest 5: Configuring the Galaxy  
+# Quest 5: The Codex of Themes and Configurations
+---
+In the heart of the sprawling ruin, a monumental stone codex rises from the jungle floor. Enigmatic carvings shimmer faintly, revealing insights into the core of the ancient civilization's essence. You recognize it as the "Codex of Themes and Configurations," a convergence of rituals (functions) that dictated the foundation of their adaptive systems and thematic journeys. To unlock the wisdom within, you must decipher its structure across interconnected artifacts: the validation of choices, the definition of themes, and the configuration governing their entire realm.
+
+Each discovery you make will illuminate a fragment of ancient brilliance, guiding you closer to unraveling their ingenious designs.
+
+## Quest Objectives
+As you explore the code below, investigate these key questions:
+- 🔍 **Theme Deciphering**: How does the system determine valid themes and ensure adaptability for user customization while maintaining consistency?
+- ⚡ **Configuration Rituals**: What patterns and environments enable the configuration to drive system behavior and set boundaries (e.g., limits) for safe execution?
+- 🛡️ **Validation Glyphs**: How does the validation mechanism ensure safe input while protecting the system from illogical or malicious data?
+
+## File Exploration
+### `packages/core/src/shared/input-validator.ts`: Validation Rituals
+This file contains the glyphs for validating user inputs, ensuring the integrity of choices, paths, and thematic selections. The system focuses on trimming, sanitizing, and cross-referencing inputs with sacred registries (e.g., themes). By anchoring these operations to simple functions, the system upholds efficiency and clarity.
+
+#### Highlights
+- `validateAdventureChoice`: Trims user input and verifies its length and presence, ensuring no empty or excessively long choices are allowed.
+- `validateTheme`: Matches input themes against a predefined list, normalizing and parsing them while guiding users with clear error messages if invalid options are provided.
+- `sanitizeForDisplay`: Purges potentially harmful characters from input, preserving the wisdom of the system while safeguarding against injection-like attacks.
+
+### `packages/core/src/shared/theme.ts`: Theme Guild
+This artifact defines the framework and attributes of all themes, acting as the sacred atlas for the system's thematic journeys. By coupling data definitions with helper functions, the file encapsulates knowledge for parsing, validating, and formatting themes.
+
+#### Highlights
+- `THEMES`: The central repository of thematic definitions, each with unique properties like `id`, `key`, `description`, and keywords for matching.
+- `getAllThemes`: Retrieves all themes as a simple array, streamlining operations without relying on complex structures.
+- `parseTheme`: Transforms user input into valid theme identifiers by cross-referencing textual keys, numeric IDs, or keywords.
+
+### `packages/core/src/shared/config.ts`: Configuration Dictates
+This fragment encapsulates the environmental parameters and operational boundaries that keep the system secure and performant. From timeouts to memory limits, these constants prevent chaos in the delicate equilibrium of the system.
+
+#### Highlights
+- `LLM_REQUEST_TIMEOUT`: Controls the maximum time allowed for an LLM operation, ensuring responsiveness under heavy computational loads.
+- `MAX_FILE_SIZE_MB`: Defines file size limits to avoid processing excessively large files, ensuring performance is not compromised.
+- `IGNORE_PATTERNS`: Lists directory and file patterns to be skipped during analysis, focusing the system on relevant artifacts.
+
+## Code
+### `packages/core/src/shared/input-validator.ts`
+```typescript
+export function validateAdventureChoice(input: string): string {
+  if (!input?.trim()) {
+    throw new Error('Choice is required');
+  }
+  
+  if (input.length > 200) {
+    throw new Error('Choice too long (max 200 characters)');
+  }
+  
+  return input.trim();
+}
+
+export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error('Theme is required');
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t => t.key).join(', ');
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
+
+export function sanitizeForDisplay(input: string, maxLength = 1000): string {
+  if (!input) return '';
+  
+  return input
+    .replace(/[<>{}"`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+```
+- Ensures inputs are clean, concise, and within acceptable boundaries.
+- Cross-references themes against a sacred registry (`THEMES`) to guide valid user choices.
+- Neutralizes harmful symbols, safeguarding the integrity of the system's output.
+
 ---
 
-To achieve self-sustaining systems aboard the starship *Nebula Explorer*, your crew must align interconnected mechanisms—the AI modules, cosmic data arrays, and mission interfaces—to balance precision and creativity. Your final mission thrusts you into the realm of configurations and themes, exploring systems that empower the starship's adaptive capabilities for generating tailored adventures. Chart your way through this galaxy of dynamic inputs and cosmic settings as you construct and fine-tune mechanisms that harmonize stellar engineering with thematic depth. This is the ultimate frontier to master.  
-
-## Quest Objectives  
-As you explore the code below, investigate these key questions:  
-- 🔍 **Stellar Calibration**: How are adventure themes defined, validated, and retrieved to ensure alignment with user input?  
-- ⚡ **Command Interface Operations**: What are the primary mechanisms that parse, validate, and adapt command-line inputs for configurations?  
-- 🛡️ **System Security Shielding**: How do validation methods handle erroneous input and ensure safe handling of configuration data?  
-
-## File Exploration  
-
-### packages/core/src/shared/theme.ts: Defining Adventure Themes  
-This file establishes the structure of motifs that inspire adventure generation, offering a unified source of truth for theme-related data. It encapsulates definitions, parsing mechanisms, and keyword-matching logic to translate user inputs into actionable data for the starship's adventure generation systems. By consolidating theme metadata, this file ensures consistent interfacing across systems, preventing thematic drift in implementations.  
-#### Highlights  
-- `ThemeDefinition`: Defines the structure for adventure themes, including display information, keywords, and descriptions, essential for guiding user selection.  
-- `parseTheme`: Converts user input into a valid theme using input normalization and keyword matching, ensuring compatibility.  
-- `getThemeByKey`: Retrieves themes by their unique key identifier, acting as a precise mapping mechanism for theme selection.  
-
-## Code  
-
-### packages/core/src/shared/theme.ts  
+### `packages/core/src/shared/theme.ts`
 ```typescript
-export interface ThemeDefinition {
-  readonly id: number;
-  readonly key: string;
-  readonly displayName: string;
-  readonly emoji: string;
-  readonly description: string;
-  readonly keywords: readonly string[];  
+export const THEMES = {
+  ANCIENT: {
+    id: 3,
+    key: 'ancient',
+    displayName: 'Ancient Civilization',
+    emoji: '🏺',
+    description: 'Discover lost temples of code where algorithms are ancient wisdom and APIs are trade routes',
+    keywords: ['ancient', 'temple', 'pyramid', 'archaeology', 'historical', 'civilization', 'ruins']
+  }
+} as const;
+
+export function getAllThemes(): ThemeDefinition[] {
+  return THEMES_ARRAY;
 }
 
 export function parseTheme(input: string): AdventureTheme | null {
@@ -38,13 +106,13 @@ export function parseTheme(input: string): AdventureTheme | null {
   
   const exactMatch = getThemeByKey(normalized);
   if (exactMatch) return exactMatch.key as AdventureTheme;
-  
+
   const numericId = parseInt(normalized, 10);
   if (!isNaN(numericId)) {
     const byId = getThemeById(numericId);
     if (byId) return byId.key as AdventureTheme;
   }
-  
+
   for (const theme of THEMES_ARRAY) {
     if (theme.keywords.some(keyword => normalized.includes(keyword.toLowerCase()))) {
       return theme.key as AdventureTheme;
@@ -53,112 +121,45 @@ export function parseTheme(input: string): AdventureTheme | null {
   
   return null;
 }
-
-export function getThemeByKey(key: string): ThemeDefinition | null {
-  return THEMES_ARRAY.find(theme => theme.key === key) || null;
-}
-```  
-- **What this code does:**  
-  - The `ThemeDefinition` structure provides essential metadata for thematic integration, comprising unique identifiers and exploration keywords.  
-  - `parseTheme` is implemented as a cascading parser that ensures user inputs align with predefined keys, numerical IDs, or associated keywords.  
-  - `getThemeByKey` focuses on precise retrieval of themes via unique keys, enabling consistent inter-system communication.  
-- **Key techniques:**  
-  - Use of normalized inputs ensures compatibility across varied user data formats.  
-  - Cascading logic in `parseTheme` accommodates multiple input types—keys, IDs, and keywords—improving usability.  
-  - Theme retrieval bolsters modularity, separating validation concerns from data extraction.  
-- **Connections:**  
-  - Integrates seamlessly with validation systems to drive theme-related processing in missions.  
-  - Facilitates dynamic adaptation of interface elements based on parsed themes.  
-- **Details to notice:**  
-  - Keyword matching enhances flexibility, ensuring broader user accessibility during theme selection.  
-  - The design avoids geographical or redundant mappings by adhering strictly to identifiers or metadata.  
+```
+- Centralizes all thematic data, ensuring consistency across the system.
+- Facilitates versatile matching by supporting keys, IDs, and keywords.
+- Maintains simplicity while providing flexibility for future thematic expansions.
 
 ---
 
-### packages/generator/src/cli/theme-manager.ts: Adapting Themes for Command Interfaces  
-This file enables transmissive configuration pathways between user-selected themes and automated asset generation. By implementing methods to parse inputs, validate assets, and assemble configurations, it supports high-fidelity adaptation of themes at runtime. Through CSS generation and icon mapping, the Theme Manager transforms abstract data into tangible visual components.  
-#### Highlights  
-- `parseThemeArg`: Maps raw command-line arguments to valid theme identifiers, accommodating both direct and numeric inputs.  
-- `generateThemeCSS`: Builds cohesive visual styles for each theme by combining assets and configurations.  
-- `getThemeIcons`: Retrieves thematic icons to standardize branding across generated assets and user interfaces.  
-
-## Code  
-
-### packages/generator/src/cli/theme-manager.ts  
+### `packages/core/src/shared/config.ts`
 ```typescript
-parseThemeArg(themeArg: string): AdventureTheme | 'all' | null {
-  if (themeArg === 'all') return 'all';
-  
-  const validThemes: AdventureTheme[] = ['space', 'mythical', 'ancient', 'developer'];
-  
-  if (validThemes.includes(themeArg as AdventureTheme)) {
-    return themeArg as AdventureTheme;
-  }
-  
-  const themeNum = parseInt(themeArg);
-  if (themeNum >= 1 && themeNum <= 4) {
-    return validThemes[themeNum - 1];
-  }
-  
-  return null;
-}
-
-generateThemeCSS(theme: AdventureTheme, outputDir: string): void {
-  const cssFiles = [
-    path.join(this.themesDir, 'base.css'),
-    path.join(this.themesDir, 'homepage.css'), 
-    path.join(this.themesDir, 'animations.css'),
-    path.join(this.themesDir, `${theme}.css`)
-  ];
-  
-  let combinedCSS = '';
-  
-  cssFiles.forEach(cssFile => {
-    if (fs.existsSync(cssFile)) {
-      combinedCSS += fs.readFileSync(cssFile, 'utf8') + '\\n\\n';
-    }
-  });
-  
-  const cssPath = path.join(outputDir, 'assets', 'theme.css');
-  fs.writeFileSync(cssPath, combinedCSS);
-}
-
-getThemeIcons(theme: AdventureTheme): { theme: string; quest: string } {
-  const themeIcons = {
-    space: { theme: '🚀', quest: '⭐' },
-    mythical: { theme: '🏰', quest: '⚔️' },
-    ancient: { theme: '🏺', quest: '📜' },
-    developer: { theme: '💻', quest: '🔧' },
-    custom: { theme: '🎨', quest: '⭐' }
-  };
-
-  return (themeIcons as any)[theme] || themeIcons.space;
-}
-```  
-- **What this code does:**  
-  - `parseThemeArg` maps raw command-line inputs directly into identifiers, supporting integer-based indexing for user convenience.  
-  - `generateThemeCSS` assembles a theme-specific stylesheet by merging multiple layers (base and dynamic), ensuring complete visual integration.  
-  - `getThemeIcons` standardizes UI branding for both themes and quests, enriching visual consistency.  
-- **Key techniques:**  
-  - Argument parsing aligns disparate user inputs (strings and integers) for flexible interactivity.  
-  - CSS generation adapts modular resources into centralized outputs, reducing redundancy across themes.  
-  - Icon mapping maintains thematic coherence in visually transmitted data.  
-- **Connections:**  
-  - Directly interfaces with user environments to propagate validated themes and generate configurations.  
-  - Enables scalable CSS and asset management across various missions.  
-- **Details to notice:**  
-  - Modular CSS inclusion allows for extensibility in file additions or modifications.  
-  - Icon definitions remain compact yet expressive, enabling cross-echelon consistency.  
+export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || '60000'); 
+export const MAX_FILE_SIZE_MB = 10; 
+export const IGNORE_PATTERNS = [
+  'node_modules',
+  '.git',
+  '.next',
+  '.nuxt',
+  'dist',
+  'build',
+  'coverage',
+  '.nyc_output',
+  'logs',
+  '*.log',
+  '.env',
+  '.DS_Store',
+  'Thumbs.db',
+] as const;
+```
+- Sets boundaries for file parsing, protecting against inefficiencies and errors.
+- Defines retry mechanisms by configuring request timeouts dynamically.
+- Focuses the system on critical repositories by filtering out unnecessary directories.
 
 ---
 
-## Helpful Hints  
-- Investigate theme parsing (`parseTheme` and `parseThemeArg`) to understand user-friendly mappings and normalization techniques.  
-- Examine asset generation logic (`generateThemeCSS`) to grasp how visual configurations synchronize thematic representation.  
-- Reflect on validation checks to appreciate how interactive choices transform into safe and actionable system commands.  
+## Helpful Hints
+- Utilize the `validateTheme` and `getAllThemes` functions to root out valid user options.
+- Scrutinize environmental patterns in `config.ts` to balance performance with error handling.
+- Consider templatizing new thematic elements by mirroring the structure in `theme.ts`.
 
 ---
+You have mastered all the secrets of this ancient codebase! Your adventure is complete.
 
-You have mastered all the secrets of the *Nebula Explorer*! Your adventure is complete.
-
-🚀 Stellar work on Quest 5: Configuring the Galaxy—your cosmic mastery has energized our starship to warp speed, propelling you closer to a triumphant mission completion at 80% progress!
+Hark, noble scholar, thou hast ascended the sacred steps of wisdom to decipher the illustrious Codex of Themes and Configurations—stand triumphant, for the ancients themselves would marvel at thy questing prowess and herald thy journey toward the final enlightenment! ⚡💎🏺

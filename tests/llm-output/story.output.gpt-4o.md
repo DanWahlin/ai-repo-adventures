@@ -1,13 +1,13 @@
-# The Enchanted Chronicles of Codeia
+# The Architecture of Adventure: A Developer's Guide
 
-Long ago, in the mythical kingdom of Codeia, a powerful magic artifact known as the **Repository Grimoire** maintained balance across the land. This enchanted tome stored the collective knowledge of Codeia, enabling its protectors to wield immense power. But a shadow looms—chaos threatens the grimoire as its ancient spells begin to fray at the edges. You, a brave adventurer, must embark on a series of quests to restore the integrity of this enchanted book, weaving each chapter into a harmonious symphony of magic and logic.
+This repository is the cornerstone of an interactive experience generator that crafts unique adventures from codebases through dynamic storytelling. By analyzing source files, generating themes, configuring content, and rendering web-based quests, it enables developers to explore technical artifacts in a gamified way. The system integrates an LLM backend, a quest builder, a modular pipeline, and a configuration-driven theme manager, all orchestrated to deliver customized narratives.
 
-**Adventure Awaits** – Choose your quest wisely, brave adventurer!
+**Adventure Awaits** – Choose your quest wisely to uncover the architecture beneath it all.
 
 **🗺️ Available Quests:**
 
-**Quest 1: The Mystical Codex of Generation** - Explore the enchanted pipeline of the HTML Adventure Generator, guided by spells from **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts**.
-**Quest 2: The Knights of the MCP Citadel** - Unearth the majestic tools of the MCP Citadel, where the valiant methods in **server.ts** and **tools.ts** guard the realms of adventure.
-**Quest 3: The Quest Forge** - Journey through the sacred Quest Forge, where **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** conjure immersive tales and noble challenges.
-**Quest 4: The Oracle of Insight** - Seek answers from the Oracle of Insight, examining the foresight granted by **repo-analyzer.ts** and the alchemy of magic through **llm-client.ts**.
-**Quest 5: The Enchanted Tapestry of Themes** - Unravel the intricate spells behind theme creation and configuration, consulting the ancient scrolls of **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts**.
+**Quest 1: HTML Generator & Static Site Pipeline** - Explore the **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts** files to understand how adventures are rendered as engaging static websites with templating and asset management tools.
+**Quest 2: MCP Tool Interface** - Inspect the **server.ts** and **tools.ts** files where interfaces for managing adventure selection, quest exploration, and progress tracking are implemented through MCP tooling.
+**Quest 3: Quest Generation Engine** - Dive into **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** to see how the system constructs dynamic quests by combining project analysis, storytelling prompts, and configuration.
+**Quest 4: Code Analysis & Content Pipeline** - Analyze the **repo-analyzer.ts** and **llm-client.ts** files to uncover how codebases are parsed and API calls are structured to generate contextually aware prompts for adventure building.
+**Quest 5: Configuration & Theme System** - Explore **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts** to see how configurations, themes, and validations power the customization and thematic consistency of the generator.

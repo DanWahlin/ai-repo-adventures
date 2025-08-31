@@ -8,8 +8,9 @@
 
   // Initialize theme on page load
   function initTheme() {
-    // Check for saved theme preference or default to 'light'
-    const savedTheme = localStorage.getItem('theme-mode') || 'light';
+    // Check for saved theme preference or default to 'dark'
+    // This preference persists across all adventure themes
+    const savedTheme = localStorage.getItem('theme-mode') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateToggleButton(savedTheme);
   }
