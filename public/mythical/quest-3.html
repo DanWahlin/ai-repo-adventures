@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 3: The Codex of Analytica - Repo Adventure</title>
+    <title>Quest 3: The Legendary Scrolls - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -33,7 +33,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Enchanted Repository of Code Chronicles</a>
+                <a href="index.html">The Enchanted Framework of Mythica</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -57,125 +57,202 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Codex of Analytica</h1>
+    <h1>Quest 3: The Legendary Scrolls</h1>
 <hr>
-<p>In the midst of your journey through the Enchanted Repository, you discover an ancient legend—the Codex of Analytica. Esteemed by scholars, this arcane text harbors secrets of automated thought and precise crafting of adventurer&#39;s tales. However, the repository&#39;s guardian spirits demand proof of worth—only those who master structured storytelling and logic may unlock the Codex&#39;s mystical powers. The stakes grow higher as shadows of unfinished quests surround you. Brave the Codex&#39;s trials, seek its hidden formulae, and bring balance to Codexia!</p>
+<p>In the enchanted kingdom of Mythica, you tread deeper into the mystical archives of the &quot;Code of Unity.&quot; Bound by spells of wisdom and imagination, it holds secrets that empower adventurers to create structured quests. However, rumor spreads of corrupted scrolls hidden deep within the artifact&#39;s essence, threatening to disrupt its magical balance. Your challenge is to analyze the core files and uncover the magic weaving through these scrolls. Only by solving its patterns can the kingdoms thrive with uninterrupted adventures.</p>
 <h2>Quest Objectives</h2>
 <p>As you explore the code below, investigate these key questions:</p>
 <ul>
-<li>🔍 <strong>Codex Unification</strong>: How does <code class="inline-code">initializeAdventure</code> assemble the narrative and quests for an adventure?</li>
-<li>⚡ <strong>Mystic Execution</strong>: What steps are performed in <code class="inline-code">exploreQuest</code> to validate, locate, and execute a user&#39;s choice of quest?</li>
-<li>🛡️ <strong>Arcane Accuracy</strong>: How does <code class="inline-code">parseAdventureConfig</code> ensure the correctness of the parsed configuration? What validation techniques are used?</li>
+<li>🔍 <strong>Scroll Validation Mysteries</strong>: How does <code class="inline-code">AdventureManager.initializeAdventure</code> ensure a smooth setup at the start of an adventure while handling multiple configurations?</li>
+<li>⚡ <strong>Weaving Magic Threads</strong>: How does <code class="inline-code">StoryGenerator.generateQuestContent</code> craft detailed quest stories by extracting scroll highlights and guiding themes?</li>
+<li>🛡️ <strong>Guarding Against Chaos</strong>: What role does <code class="inline-code">parseAdventureConfig</code> play in maintaining safe access and structured data for the quest configuration?</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a>: The architect of quests</h3>
-<p>The <code class="inline-code">AdventureManager</code> is the heart of the quest generation engine, orchestrating the transformation of project data into a dynamic adventure. It is responsible for initializing adventures, facilitating quest progression, and generating content. Key tasks include managing the <code class="inline-code">AdventureState</code>, which tracks progress, themes, and quest details. The <code class="inline-code">exploreQuest</code> function determines the user’s selected path and triggers the associated challenge.</p>
+<h3><span class="header-prefix">packages/core/src/adventure/adventure-manager.ts:</span> Adventure Initialization</h3>
+<p>The <code class="inline-code">AdventureManager</code> is central to weaving the magic of quest creation and adventure flows. This file generates quests dynamically, validates adventure choices, and caches previously completed quests to optimize performance. By exploring <code class="inline-code">initializeAdventure</code>, you investigate how project information syncs with themes, config files, and scroll highlights, ensuring each adventure begins with complete harmony.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">initializeAdventure</code>: Constructs a cohesive story and quest list, incorporating user-defined themes and custom configurations.</li>
-<li><code class="inline-code">exploreQuest</code>: Handles user interaction by validating inputs, locating the corresponding quest, and executing it with appropriate pre-checks.</li>
-<li><code class="inline-code">generateQuestContent</code>: Dynamically creates content for each quest, blending project context with magical themes.</li>
+<li><code class="inline-code">initializeAdventure</code>: Sets up the adventure context by processing project information, themes, and additional config details. It’s vital for starting adventures correctly without missing scroll data.</li>
+<li><code class="inline-code">mergeQuestFilesFromConfig</code>: Integrates config files with the generated quest structure and links scroll highlights with appropriate files.</li>
+<li><code class="inline-code">executeQuest</code>: Handles the core logic for running a chosen quest, ensuring each scroll executes its intended magic seamlessly.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
+<h3>packages/core/src/adventure/adventure-manager.ts</h3>
 <pre><code class="language-typescript">async initializeAdventure(
   projectInfo: ProjectInfo, 
-  theme: AdventureTheme,  
-  projectPath?: string, 
+  theme: AdventureTheme, 
+  projectPath?: string,
   customThemeData?: CustomThemeData
 ): Promise&lt;string&gt; {
+  // Reset state for new adventure
   this.state.reset();
   this.state.projectInfo = projectInfo;
   this.state.currentTheme = theme;
   this.state.projectPath = projectPath || process.cwd();
-
+  
+  // Set custom theme data if provided
   if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
     this.storyGenerator.setCustomTheme(customThemeData);
   }
 
+  // Generate the overall story and quests using LLM
   const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-
+  
   this.state.title = storyResponse.title;
   this.state.story = storyResponse.story;
+  
+  // Merge files from adventure config into the generated quests
   this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
+  
+  // Enforce quest count from adventure.config.json if it exists
   this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
 
-  return this.formatStoryWithQuests({ ...storyResponse, quests: this.state.quests });
-}
-</code></pre>
-<ul>
-<li>This function resets the <code class="inline-code">AdventureState</code> to ensure a clean slate for a new adventure.</li>
-<li>It dynamically applies custom themes or themes selected by the user.</li>
-<li>Integrates project data and optional configurations to create a robust storytelling framework.</li>
-<li>Ensures consistency by merging and validating quest files defined in the adventure configuration.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
-}
-</code></pre>
-<ul>
-<li>Validates the user’s selection via <code class="inline-code">validateAndSanitizeChoice</code>.</li>
-<li>Distinguishes between quest exploration and progress requests with <code class="inline-code">isProgressRequest</code>.</li>
-<li>Locates the relevant quest based on title, ID, or order.</li>
-<li>Executes the quest with pre-checks and caching optimization for already-completed quests.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private async generateQuestContent(quest: Quest): Promise&lt;QuestContent&gt; {
-  let codeContent: string;
-
-  if (quest.codeFiles &amp;&amp; quest.codeFiles.length &gt; 0 &amp;&amp; this.state.projectPath) {
-    try {
-      codeContent = await repoAnalyzer.generateTargetedContent(
-        this.state.projectPath,
-        quest.codeFiles,
-        false
-      );
-    } catch (error) {
-      codeContent = this.state.projectInfo!.repomixContent;
-    }
-  } else {
-    codeContent = this.state.projectInfo!.repomixContent;
-  }
-
-  const questPosition = this.state.quests.findIndex(q =&gt; q.id === quest.id) + 1;
-  const totalQuests = this.state.quests.length;
-
-  return await this.storyGenerator.generateQuestContent({
-    quest,
-    theme: this.state.currentTheme!,
-    codeContent,
-    questPosition,
-    totalQuests
+  // Return the story with available quests
+  return this.formatStoryWithQuests({
+    ...storyResponse,
+    quests: this.state.quests
   });
 }
 </code></pre>
 <ul>
-<li>Generates vibrant quest content that integrates file-specific or general project data.</li>
-<li>Makes efficient use of analytic tools like <code class="inline-code">repoAnalyzer</code> for targeted insights.</li>
-<li>Ensures a tailored thematic experience through position-aware and sequential generation.</li>
+<li>This code initializes adventures by linking project data, themes, and configurations into the quest setup.</li>
+<li>It synchronizes story generation with logical enforcement of quest count from configuration data.</li>
+<li>Performance is optimized with modular generation to blend story with scroll combinations.</li>
+<li>The encapsulated logic prevents corrupted or missing adventures while ensuring robust theme compatibility.</li>
+<li>Observe the chained calls that flow from reset state to formatted quest output—each weaving a magical quest seamlessly.</li>
 </ul>
-<h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Keeper of configurations</h3>
-<p>The <code class="inline-code">adventure-config</code> module is vital for extracting and validating the adventure structure from user project files. It ensures robust parsing, valid paths, and concise formatting of details for various systems.</p>
+<hr>
+<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
+  if (!projectPath) return quests;
+  
+  const config = parseAdventureConfig(projectPath);
+  if (!config || typeof config !== &#39;object&#39;) return quests;
+  
+  const adventure = (config as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) return quests;
+  
+  // Create a map of quest titles to their file paths from the config
+  const configQuestFiles = new Map&lt;string, string[]&gt;();
+  for (const configQuest of adventure.quests) {
+    if (configQuest.title &amp;&amp; Array.isArray(configQuest.files)) {
+      const filePaths = configQuest.files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (filePaths.length &gt; 0) {
+        configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
+      }
+    }
+  }
+  
+  // Merge the files into the generated quests
+  return quests.map((quest, index) =&gt; {
+    // Primary matching: by quest order (index)
+    const configQuests = adventure.quests;
+    if (index &lt; configQuests.length &amp;&amp; configQuests[index] &amp;&amp; configQuests[index].files) {
+      const files = configQuests[index].files
+        .filter((f: any) =&gt; f.path)
+        .map((f: any) =&gt; f.path);
+      if (files.length &gt; 0) {
+        // Successfully matched files from config
+        return { ...quest, codeFiles: files };
+      }
+    }
+    
+    // Fallback: try to match quest by title (case-insensitive partial match)
+    const questTitleLower = quest.title.toLowerCase();
+    for (const [configTitle, files] of configQuestFiles.entries()) {
+      if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
+        // Successfully matched files via fallback
+        return { ...quest, codeFiles: files };
+      }
+    }
+    
+    // No specific files found - quest will use general context
+    return quest;
+  });
+}
+</code></pre>
+<ul>
+<li>Merges magical quests with their associated scroll files by relying on structure from configurations.</li>
+<li>Uses fallback logic to gracefully map titles or files if primary matching isn’t feasible.</li>
+<li>Removes the possibility of mismatched quests due to file discrepancies.</li>
+<li>This approach optimizes runtime flexibility while ensuring thematic correctness within the scroll framework.</li>
+<li>Readers should notice how logic layers and fallback methods create resilience in merging files.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/adventure/story-generator.ts:</span> Scroll Highlight Extraction</h3>
+<p>The <code class="inline-code">StoryGenerator</code> file crafts magical quests by integrating theme guidelines, scroll highlights, and project insights. By focusing on <code class="inline-code">generateQuestContent</code>, you unearth how story-specific code elements bind to themes, enabling seamless creation of mythical quests.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">parseAdventureConfig</code>: Parses the main adventure configuration file into a structured object and validates its format.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies and resolves all unique files referenced in the configuration with proper validation.</li>
-<li><code class="inline-code">formatAdventureConfigForPrompt</code>: Condenses the configuration into a compact format suitable for prompts.</li>
+<li><code class="inline-code">generateQuestContent</code>: Transforms thematic guidelines and scroll highlights into detailed quest narratives. It ensures quests maintain both functionality and magical storytelling.</li>
+<li><code class="inline-code">parseMarkdownToStoryResponse</code>: Extracts structured quest details from markdown responses, preserving mystical storytelling integrity.</li>
+<li><code class="inline-code">removeLLMMetaCommentary</code>: Purifies structured outputs by isolating storytelling elements from unwanted LLM commentary.</li>
 </ul>
 <h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
+<h3>packages/core/src/adventure/story-generator.ts</h3>
+<pre><code class="language-typescript">async generateQuestContent(config: QuestGenerationConfig): Promise&lt;QuestContent&gt; {
+  const { quest, theme, codeContent, questPosition, totalQuests } = config;
+  // Include formatted adventure config as context if available
+  let adventureGuidance = &#39;&#39;;
+  let customInstructions = &#39;&#39;;
+  
+  if (this.projectPath) {
+    const formattedConfig = formatAdventureConfigForPrompt(this.projectPath);
+    if (formattedConfig) {
+      adventureGuidance = formattedConfig;
+    }
+    
+    const customInstructionsFromConfig = extractCustomInstructions(this.projectPath);
+    if (customInstructionsFromConfig) {
+      customInstructions = customInstructionsFromConfig;
+    }
+  }
+
+  const prompt = loadQuestContentPrompt({
+    theme,
+    adventureTitle: quest.title,
+    codeContent,
+    storyContent: this.currentStoryContent || &#39;No story context available.&#39;,
+    adventureGuidance: adventureGuidance || &#39;&#39;,
+    ...(customInstructions &amp;&amp; { customInstructions }),
+    questPosition,
+    totalQuests,
+    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
+  }) + &#39;\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.&#39;;
+
+  const response = await this.withTimeout(
+    this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+  );
+  
+  // Additional safety check - if markers are still present, remove them manually
+  cleanContent = this.removeLLMMetaCommentary(cleanContent);
+  
+  return {
+    adventure: cleanContent,
+    fileExploration: &#39;&#39;,
+    codeSnippets: [],
+    hints: []
+  };
+}
+</code></pre>
+<ul>
+<li>Enables magical quests by integrating code scrolls, theme guidelines, and content from <code class="inline-code">adventure.config</code>.</li>
+<li>Enhances storytelling through layered prompts, ensuring narratives align with mythical vocabularies.</li>
+<li>The structured handling of LLM responses binds scroll content to meaningful quests without errors.</li>
+<li>This technique highlights the precise interplay between scroll files and adventurer paths in Mythica.</li>
+<li>Readers should focus on modular handling of quests for reusability, showcasing robust patterns of magically woven adventures.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">packages/core/src/shared/adventure-config.ts:</span> Config File Analysis</h3>
+<p>This file safeguards the scroll repository, ensuring all paths are valid and configurations are unmarred by corruption. By studying <code class="inline-code">parseAdventureConfig</code>, adventurers will comprehend validation patterns crucial for scroll extraction.</p>
+<h4>Highlights</h4>
+<ul>
+<li><code class="inline-code">loadAdventureConfig</code>: Retrieves raw configurations for scroll validation. Its safe file reading prevents catastrophic failures.</li>
+<li><code class="inline-code">parseAdventureConfig</code>: Transforms raw JSON into structured configurations for quest creation while handling errors gracefully.</li>
+<li><code class="inline-code">extractUniqueFilePaths</code>: Ensures uniqueness in file references, maintaining an organized, corruption-free scroll repository.</li>
+</ul>
+<h2>Code</h2>
+<h3>packages/core/src/shared/adventure-config.ts</h3>
 <pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
   const raw = loadAdventureConfig(projectPath);
   if (!raw) return null;
@@ -187,87 +264,21 @@
 }
 </code></pre>
 <ul>
-<li>Reads the configuration file and converts it into a JavaScript object.</li>
-<li>Handles parsing errors gracefully by returning <code class="inline-code">null</code>, ensuring non-critical failures do not break the system.</li>
+<li>Safeguards quests by validating JSON configurations and ensuring they remain unmarred during extraction.</li>
+<li>Focuses on resilience to parsing errors, enabling adventurers to continue progress despite misconfigured scrolls.</li>
+<li>Readers should observe how this function isolates logical fallbacks critical for mythical repository management.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
-
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== &#39;object&#39;) continue;
-
-    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
-      const rel = node.path.trim();
-      if (fs.existsSync(path.resolve(projectPath, rel))) {
-        unique.add(rel);
-      }
-    }
-
-    const children = Array.isArray(node) ? node : Object.values(node);
-    children.forEach(child =&gt; {
-      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
-    });
-  }
-
-  return Array.from(unique);
-}
-</code></pre>
-<ul>
-<li>Recursively explores configuration nodes to extract unique paths.</li>
-<li>Uses <code class="inline-code">fs.existsSync</code> for robust path validation, ensuring only existent files are included.</li>
-<li>Provides a navigational framework for quests based on accurate file mappings.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) {
-    return &#39;&#39;;
-  }
-
-  const adventure = (parsed as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) {
-    return &#39;&#39;;
-  }
-
-  let formatted = `## Quest Structure\n`;
-
-  for (const quest of adventure.quests) {
-    if (!quest.title || !Array.isArray(quest.files)) continue;
-
-    formatted += `### ${quest.title}\n`;
-    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
-    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
-
-    const functions = quest.files
-      .flatMap((f: any) =&gt; f.highlights || [])
-      .map((h: any) =&gt; h.name)
-      .filter(Boolean);
-    formatted += `Functions: ${functions.join(&#39;, &#39;)}\n\n`;
-  }
-
-  return formatted;
-}
-</code></pre>
-<ul>
-<li>Converts configuration into a concise, human-readable format for LLM compatibility.</li>
-<li>Aggregates file paths and function highlights for easy contextual setup.</li>
-<li>Optimizes the prompt size by removing redundancy, enhancing efficiency.</li>
-</ul>
 <h2>Helpful Hints</h2>
 <ul>
-<li><strong>Forge your strategy</strong>: Focus on how quest content ties specific project context to thematic elements.</li>
-<li><strong>Inspect the Codex</strong>: Trace configuration parsing to understand validation intricacies.</li>
-<li><strong>Broaden your knowledge</strong>: Observe how logical layering in <code class="inline-code">exploreQuest</code> ensures seamless user interaction.</li>
+<li><strong>Tip for Mythical Adventures</strong>: Pay attention to the fallback logic, as resilience is key during quest execution.</li>
+<li><strong>Exploration Recommendation</strong>: Analyze the layered narrative prompts to recreate the mythical storytelling magic.</li>
+<li><strong>Next Steps</strong>: Use the insights from these spell files to bind additional creative components into future quests.</li>
 </ul>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries.</p>
-<p>By the decree of the Celestial Council, your triumphant acquisition of the Codex of Analytica hath illuminated the realms of knowledge, securing your path as a steadfast champion of the Great Quest—press onward, valiant seeker, for glory most radiant lies ahead! 🚀⚡💎</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries within the enchanted land of Mythica. 
+---END MARKDOWN---</p>
+<p>Through the heroic might of your intellect and the guardianship of knowledge&#39;s sacred flame, you have triumphantly claimed the Legendary Scrolls, advancing deeper into the labyrinthine realms of wisdom—keep shining as a star among questers! ⭐ ⚡ 🚀</p>
 
 </div>
 
