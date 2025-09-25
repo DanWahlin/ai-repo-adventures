@@ -1,86 +1,770 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Repo Adventures - Repository Adventure</title>
-    <link rel="stylesheet" href="assets/theme.css">
+    <title>AI Repo Adventures Generator - Transform Code into Adventures</title>
+    <link rel="stylesheet" href="examples/assets/theme.css">
+    <style>
+        /* Additional landing page specific styles */
+        .landing-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .landing-nav-links a {
+            color: var(--heading-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition-normal);
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .landing-nav-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        .section {
+            margin: 3.2rem auto;
+            animation: fadeInUp 1s ease-out forwards;
+        }
+
+        .section.story-content {
+            max-width: 100%;
+            padding: 2rem;
+        }
+
+        .section h2 {
+            color: var(--heading-color);
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+        }
+
+        .about-content {
+            margin: 3rem auto;
+            text-align: center;
+        }
+
+        .about-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 2.5rem 2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.12),
+                0 1px 2px rgba(0, 0, 0, 0.08);
+            transition: var(--transition-slow);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 10px 25px rgba(102, 126, 234, 0.1),
+                0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 16px 16px 0 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-icon {
+            font-size: 2.8rem;
+            margin-bottom: 1.25rem;
+            transition: transform 0.3s ease;
+            display: block;
+            text-align: center;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.05);
+        }
+
+        .feature-card h3 {
+            color: var(--heading-color);
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .feature-card:hover h3 {
+            color: var(--accent-primary);
+        }
+
+        .feature-card p {
+            transition: color 0.3s ease;
+        }
+
+        .feature-card:hover p {
+            color: var(--heading-color);
+        }
+
+        .install-content {
+            margin: 0 auto;
+        }
+
+        .install-step {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 10px 20px 10px 20px;
+            margin-bottom: 1.6rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .install-step h3 {
+            color: var(--heading-color);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            font-family: var(--font-code);
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .code-block-header {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: 0.3rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+
+        .code-block code {
+            display: block;
+            padding: 1.5rem;
+            margin: 0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .copy-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            opacity: 0.8;
+        }
+
+        .copy-button:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .copy-button.copied {
+            color: #90EE90;
+            opacity: 1;
+        }
+
+        .copy-button .label {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .copy-icon {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .options-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .options-table th {
+            background: #f7fafc;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+
+        .options-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .options-table code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--font-code);
+            font-size: 0.9em;
+            color: var(--accent-primary);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: var(--transition-normal);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Utility classes for inline styles */
+        .text-lg {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        .text-md {
+            font-size: 1.2rem;
+            margin-top: 3rem;
+        }
+
+        .mt-2 {
+            margin-top: 2rem;
+        }
+
+        .text-center-mt-3 {
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .landing-nav-links {
+                gap: 1rem;
+            }
+
+            .section h2 {
+                font-size: 2rem;
+            }
+
+            .about-features {
+                grid-template-columns: 1fr;
+            }
+
+            .code-block code {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .code-block-header {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .options-table {
+                font-size: 0.9rem;
+            }
+
+            .options-table th,
+            .options-table td {
+                padding: 0.75rem;
+            }
+        }
+
+        /* Override background image for main landing page only */
+        .hero-background {
+            background-image: url('examples/assets/images/ancient-quest-2.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+        }
+    </style>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-content">
             <div class="nav-left">
-                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
-                    <img src="assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
+                <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer"
+                    class="github-link">
+                    <img src="examples/assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
                 <a href="index.html">AI Repo Adventures</a>
             </div>
-            <div class="nav-right">
+            <div class="nav-right landing-nav-links">
+                <a href="#about">About</a>
+                <a href="#install">Install</a>
+                <a href="examples/index.html">Example</a>
             </div>
         </div>
     </nav>
-    
+
+    <!-- SVG Sprite for Icons -->
+    <svg style="display: none;" aria-hidden="true">
+        <symbol id="copy-icon" viewBox="0 0 24 24">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+        </symbol>
+    </svg>
+
     <div class="container">
+        <!-- Hero Section with Theme Cards -->
         <div class="hero-section">
             <div class="hero-background"></div>
             <div class="hero-content">
-                <h1>AI Repo Adventures<br><span class="subtitle">Repository Adventure</span></h1>
+                <h1>AI Repo Adventures Generator<br><span class="subtitle">Transform Your Code Into Adventures</span>
+                </h1>
             </div>
         </div>
-        
-        <div class="story-content">
-            <div class="welcome-section">
-                <p>Welcome to Repository Adventure! An innovative way to explore and learn codebases through immersive, themed adventure quests. Each theme offers a unique perspective on the <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer">AI Repo Adventures</a> repo's code, transforming technical exploration into fun and engaging code exploration.</p>
+
+        <!-- About Section -->
+        <section id="about" class="section story-content">
+            <h2>What is AI Repo Adventures?</h2>
+            <div class="about-content"> 
+                <p class="text-lg">
+                    AI Repo Adventures revolutionizes how developers explore and understand codebases. Instead of dry
+                    documentation or overwhelming file structures, allow developers to experience your code through
+                    engaging, AI-generated adventure stories that make learning more memorable and fun.
+                </p>
+
+                <div class="about-features">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI-Powered Stories</h3>
+                        <p>Dynamic narratives generated specifically for your codebase using advanced language models
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎨</div>
+                        <h3>Beautiful Themes</h3>
+                        <p>Choose from space, mythical, ancient, or developer themes - or create your own custom
+                            adventure</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Responsive Design</h3>
+                        <p>Mobile-first HTML websites that look great on any device with smooth animations</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3>Easy Generation</h3>
+                        <p>Simple CLI commands with interactive mode or automated batch processing</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔗</div>
+                        <h3>GitHub Integration</h3>
+                        <p>Automatic linking to source files on GitHub for seamless code exploration</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Fast & Efficient</h3>
+                        <p>Optimized with caching and parallel processing for quick multi-theme generation</p>
+                    </div>
+                </div>
+
+                <p class="text-md">
+                    Perfect for onboarding new team members, creating engaging documentation, teaching code
+                    architecture, or simply making your projects more accessible and enjoyable to explore.
+                </p>
             </div>
-            
-            <div class="theme-selector">
-                <h2>Choose Your Adventure Theme</h2>
-                <div class="theme-grid">
-                    <div class="theme-card" onclick="window.location.href='space/index.html'">
-    <div class="theme-preview">
-        <img src="assets/images/space.png" alt="Space Explorer Preview" loading="lazy">
-    </div>
-    <div class="theme-info">
-        <h3>Space Explorer</h3>
-        <p>Embark on cosmic adventures through code galaxies and starship protocols.</p>
-    </div>
-</div>
-<div class="theme-card" onclick="window.location.href='mythical/index.html'">
-    <div class="theme-preview">
-        <img src="assets/images/mythical.png" alt="Enchanted Kingdom Preview" loading="lazy">
-    </div>
-    <div class="theme-info">
-        <h3>Enchanted Kingdom</h3>
-        <p>Journey through ancient codebases in a realm of parchment and magic.</p>
-    </div>
-</div>
-<div class="theme-card" onclick="window.location.href='ancient/index.html'">
-    <div class="theme-preview">
-        <img src="assets/images/ancient.png" alt="Ancient Explorer Preview" loading="lazy">
-    </div>
-    <div class="theme-info">
-        <h3>Ancient Explorer</h3>
-        <p>Discover sacred coding wisdom in mystical temples and ancient halls.</p>
-    </div>
-</div>
-<div class="theme-card" onclick="window.location.href='developer/index.html'">
-    <div class="theme-preview">
-        <img src="assets/images/developer.png" alt="Developer Preview" loading="lazy">
-    </div>
-    <div class="theme-info">
-        <h3>Developer</h3>
-        <p>Navigate modern development workflows with professional precision.</p>
-    </div>
-</div>
+        </section>
+
+        <!-- Install Section -->
+        <section id="install" class="section story-content">
+            <h2>Installation & Usage</h2>
+            <div class="install-content">
+                <!-- Step 1: Install -->
+                <section class="install-step">
+                    <h3>📦 Step 1: Install the Package</h3>
+                    <p>Install globally for use across all your projects:</p>
+                    <div class="code-block bash">
+                        <div class="code-block-header">
+                            <span>bash</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code>npm install -g @codewithdan/ai-repo-adventure-generator</code>
+                    </div>
+                    <p>Or use directly without installation:</p>
+                    <div class="code-block bash">
+                        <div class="code-block-header">
+                            <span>bash</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code>npx @codewithdan/ai-repo-adventure-generator</code>
+                    </div>
+                </section>
+
+                <!-- Step 2: Configure -->
+                <section class="install-step">
+                    <h3>🔧 Step 2: Configure Your LLM</h3>
+                    <p>Create a <code>.env</code> file in your project root with your preferred LLM provider:</p>
+                    <div class="code-block env">
+                        <div class="code-block-header">
+                            <span>env</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code># Azure AI Foundry
+LLM_API_KEY=your_azure_key_here
+LLM_BASE_URL=https://your-resource.openai.azure.com
+LLM_MODEL=gpt-4o
+LLM_API_VERSION=2025-01-01-preview
+
+# OpenAI Configuration
+LLM_API_KEY=your_openai_key_here
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o</code>
+                    </div>
+
+                    <p><strong>Token Usage:</strong> The AI Adventure generator requires significant token usage as it analyzes your entire codebase and generates personalized adventure content. Usage varies based on repository size and the amount of content generated. We recommend starting with a single theme to evaluate costs and value before expanding to multiple themes.</p>
+                </section>
+
+                <!-- Step 3: Adventure Config -->
+                <section class="install-step">
+                    <h3>🎯 Step 3: Create an Adventure Configuration File</h3>
+                    <p>For better quest generation, create an <code>adventure.config.json</code> in your project root to
+                        let the AI know about important areas of your codebase and key code it should focus on.</p>
+
+                    <p>Use this prompt with any AI coding assistant that knows about your repo (GitHub Copilot, etc.) to
+                        generate your configuration:</p>
+                    <div class="code-block text">
+                        <div class="code-block-header">
+                            <span>prompt</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code>Please analyze this codebase and create an adventure.config.json file at the root of the project to help users explore the project through guided quests.
+
+Requirements:
+- Identify 3-5 key areas of functionality in the codebase
+- Select 2-4 representative files for each area
+- Highlight 2-4 important functions/classes or other members per file
+- Focus on entry points, main logic, and system integrations
+
+Use this exact JSON structure:
+
+{
+  "adventure": {
+    "name": "[Your Project Name]",
+    "description": "[Brief project description]",
+    "url": "https://github.com/[username]/[repo-name]",
+    "customInstructions": "[Optional: Any specific guidance for story generation]",
+    "quests": [
+      {
+        "title": "[Quest Name - e.g. 'Authentication System']",
+        "description": "[What users learn from exploring this area]",
+        "files": [
+          {
+            "path": "[relative/path/to/important/file.js]",
+            "description": "[Role of this file in the system]",
+            "highlights": [
+              {
+                "name": "[functionName or ClassName.method]",
+                "description": "[What this code does and why it matters]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
+Prioritize files that contain:
+✓ Main entry points (index.js, program.cs, main.ts, app.js, etc.)
+✓ Core business logic and algorithms
+✓ API routes and controllers
+✓ Database models and data access
+✓ Configuration and setup code
+✓ Key middleware and utilities
+
+Avoid:
+✗ Test files, build scripts, or configuration-only files
+✗ Simple utility functions without business logic
+✗ Auto-generated or boilerplate code
+
+Aim for 15-25 total highlights across all quests for the best exploration experience.</code>
+                    </div>
+
+                    <p class="mt-2"><strong>Example generated configuration:</strong></p>
+                    <div class="code-block json">
+                        <div class="code-block-header">
+                            <span>json</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code>{
+  "adventure": {
+    "name": "Your Project Name",
+    "description": "What your project does",
+    "url": "https://github.com/username/repo",
+    "quests": [
+      {
+        "title": "Core Features",
+        "description": "Main functionality exploration",
+        "files": [
+          {
+            "path": "src/main.ts",
+            "description": "Entry point",
+            "highlights": [
+              {
+                "name": "initApp",
+                "description": "Initialization logic"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}</code>
+                    </div>
+                    <p>This helps the AI create more focused and relevant adventure content for your specific codebase.
+                    </p>
+                </section>
+
+                <!-- Step 4: Run -->
+                <section class="install-step">
+                    <h3>🚀 Step 4: Generate Your Adventure</h3>
+                    <p><strong>Interactive Mode</strong> (recommended for first-time users):</p>
+                    <div class="code-block bash">
+                        <div class="code-block-header">
+                            <span>bash</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code>repo-adventure</code>
+                    </div>
+                    <p>This will guide you through theme selection and configuration options.</p>
+
+                    <p class="mt-2"><strong>Command Line Mode</strong> with options:</p>
+                    <div class="code-block bash">
+                        <div class="code-block-header">
+                            <span>bash</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code>repo-adventure --theme space --output ./docs --serve</code>
+                    </div>
+                </section>
+
+                <!-- Command Line Options -->
+                <section class="install-step">
+                    <h3>⚙️ Command Line Options</h3>
+                    <table class="options-table">
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>--theme &lt;theme&gt;</code></td>
+                                <td>Choose theme: space, mythical, ancient, developer, custom, or all</td>
+                                <td><code>--theme mythical</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--output &lt;dir&gt;</code></td>
+                                <td>Output directory (default: ./public)</td>
+                                <td><code>--output ./docs</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--overwrite</code></td>
+                                <td>Overwrite existing files without prompting</td>
+                                <td><code>--overwrite</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--max-quests &lt;num&gt;</code></td>
+                                <td>Limit number of quests to generate</td>
+                                <td><code>--max-quests 5</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--serve</code></td>
+                                <td>Start HTTP server and open browser after generation</td>
+                                <td><code>--serve</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--log-llm-output</code></td>
+                                <td>Save raw LLM output for debugging</td>
+                                <td><code>--log-llm-output</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--help</code></td>
+                                <td>Show help message with all options</td>
+                                <td><code>--help</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p class="mt-2"><strong>Example Commands:</strong></p>
+                    <div class="code-block bash">
+                        <div class="code-block-header">
+                            <span>bash</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <code># Generate space theme with auto-serve
+repo-adventure --theme space --serve
+
+# Generate all themes in parallel
+repo-adventure --theme all --output ./adventures --overwrite
+
+# Quick test with limited quests
+repo-adventure --theme mythical --max-quests 3 --serve
+
+# Custom theme with specific output
+repo-adventure --theme custom --output ./custom-docs</code>
+                    </div>
+                </section>
+
+                <div class="text-center-mt-3">
+                    <a href="examples/index.html" class="cta-button">
+                        View AI Adventures Example
+                    </a>
                 </div>
             </div>
-        </div>
+        </section>
+
     </div>
-    
+
     <footer class="footer">
         <div class="footer-content">
-            <span>Created using <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span>
+            <!-- <span>Created using <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank"
+                    rel="noopener noreferrer" class="repo-link">AI Repo Adventures</a></span> -->
         </div>
     </footer>
+
+    <script>
+        function showCopyFeedback(button, label) {
+            const originalText = label.textContent;
+            button.classList.add('copied');
+            label.textContent = 'copied!';
+            setTimeout(() => {
+                button.classList.remove('copied');
+                label.textContent = originalText;
+            }, 2000);
+        }
+
+        function copyToClipboard(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code');
+            const text = code.textContent;
+            const label = button.querySelector('.label');
+
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyFeedback(button, label);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopyFeedback(button, label);
+                } catch (err) {
+                    console.error('Fallback: Could not copy text', err);
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+    </script>
 </body>
+
 </html>
