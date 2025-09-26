@@ -80,10 +80,10 @@ export const IGNORE_PATTERNS = [
   'Thumbs.db',
 ] as const;
 
-// Prompt file paths
+// Prompt file paths (relative to package root)
 export const PROMPT_PATHS = {
-  STORY_GENERATION: 'src/prompts/story-generation-prompt.md',
-  QUEST_CONTENT: 'src/prompts/quest-content-prompt.md',
-  COMPLETION: 'src/prompts/completion-prompt.md',
-  THEME_GUIDELINES: 'src/prompts/theme-guidelines.json'
+  STORY_GENERATION: 'prompts/story-generation-prompt.md',
+  QUEST_CONTENT: 'prompts/quest-content-prompt.md',
+  COMPLETION: 'prompts/completion-prompt.md',
+  THEME_GUIDELINES: 'prompts/theme-guidelines.json'
 } as const;
