@@ -2,7 +2,7 @@
  * Shared utilities for MCP tools
  */
 
-import { ProjectInfo } from '@ai-repo-adventures/core/shared';
+import { ProjectInfo } from '@codewithdan/ai-repo-adventures-core/shared';
 
 export function formatInitialResponse(projectInfo: ProjectInfo, isUsingConfig: boolean = false): string {
   const configMessage = isUsingConfig 

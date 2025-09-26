@@ -7,8 +7,8 @@
 
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { validateAdventureChoice } from '@ai-repo-adventures/core/shared';
-import { adventureManager } from '@ai-repo-adventures/core/adventure';
+import { validateAdventureChoice } from '@codewithdan/ai-repo-adventures-core/shared';
+import { adventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import { formatQuestResponse } from './shared.js';
 
 // Schema

@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { adventureManager } from '@ai-repo-adventures/core/adventure';
+import { adventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import { formatProgressResponse } from './shared.js';
 
 // Schema

@@ -10,7 +10,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { tools } from './tools.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { repoAnalyzer } from '@ai-repo-adventures/core/analyzer';
+import { repoAnalyzer } from '@codewithdan/ai-repo-adventures-core/analyzer';
 
 class RepoAdventureServer {
   private server: Server;

@@ -14,7 +14,7 @@
  * Tools are now organized in separate files for better maintainability.
  */
 
-import { adventureManager } from '@ai-repo-adventures/core/adventure';
+import { adventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import { startAdventure } from './tools/start-adventure.js';
 import { chooseTheme } from './tools/choose-theme.js';
 import { exploreQuest } from './tools/explore-quest.js';

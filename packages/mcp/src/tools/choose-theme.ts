@@ -7,10 +7,10 @@
 
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { repoAnalyzer } from '@ai-repo-adventures/core/analyzer';
-import { parseTheme, getAllThemes, AdventureTheme, validateTheme } from '@ai-repo-adventures/core/shared';
-import { createProjectInfo } from '@ai-repo-adventures/core';
-import { adventureManager } from '@ai-repo-adventures/core/adventure';
+import { repoAnalyzer } from '@codewithdan/ai-repo-adventures-core/analyzer';
+import { parseTheme, getAllThemes, AdventureTheme, validateTheme } from '@codewithdan/ai-repo-adventures-core/shared';
+import { createProjectInfo } from '@codewithdan/ai-repo-adventures-core';
+import { adventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import { formatThemeResponse } from './shared.js';
 
 // Schema

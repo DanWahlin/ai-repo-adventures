@@ -7,9 +7,9 @@
 
 import { z } from 'zod';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { repoAnalyzer } from '@ai-repo-adventures/core/analyzer';
-import { formatErrorForUser, validateProjectPath, extractUniqueFilePaths } from '@ai-repo-adventures/core/shared';
-import { createProjectInfo } from '@ai-repo-adventures/core';
+import { repoAnalyzer } from '@codewithdan/ai-repo-adventures-core/analyzer';
+import { formatErrorForUser, validateProjectPath, extractUniqueFilePaths } from '@codewithdan/ai-repo-adventures-core/shared';
+import { createProjectInfo } from '@codewithdan/ai-repo-adventures-core';
 import { formatInitialResponse } from './shared.js';
 
 // Schema

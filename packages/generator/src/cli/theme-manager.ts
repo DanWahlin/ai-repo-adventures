@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { AdventureTheme } from '@ai-repo-adventures/core';
+import { AdventureTheme } from '@codewithdan/ai-repo-adventures-core';
 
 /**
  * Handles theme selection and CSS generation
