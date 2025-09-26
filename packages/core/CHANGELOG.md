@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.4](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.3...@codewithdan/ai-repo-adventures-core@1.1.4) (2025-09-26)
+
+
+### Bug Fixes
+
+* update build script to include asset copying ([1f3a349](https://github.com/danwahlin/ai-repo-adventures/commit/1f3a3490ad27ff01e1b32c537031c3d98ffa2a5e))
+
+
+
+
+
 ## [1.1.3](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.2...@codewithdan/ai-repo-adventures-core@1.1.3) (2025-09-26)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventures-core
