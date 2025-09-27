@@ -4,6 +4,7 @@ import { StoryGenerator, Quest, StoryResponse, QuestContent } from './story-gene
 import { validateAdventureChoice } from '../shared/input-validator.js';
 import { repoAnalyzer } from '../analyzer/repo-analyzer.js';
 import { parseAdventureConfig } from '../shared/adventure-config.js';
+import { smartTruncateContent, validateContentSize } from '../shared/content-truncator.js';
 
 // Re-export interfaces from story-generator
 export type { Quest, StoryResponse, QuestContent, CodeSnippet } from './story-generator.js';
@@ -284,6 +285,34 @@ export class AdventureManager {
     } else {
       // Fallback to full repomix content
       codeContent = this.state.projectInfo!.repomixContent;
+    }
+
+    // Apply smart content truncation to prevent context overflow
+    // Pass quest files as priority files if available
+    const originalLength = codeContent.length;
+    const priorityFiles = quest.codeFiles || [];
+    codeContent = smartTruncateContent(codeContent, priorityFiles);
+
+    if (codeContent.length < originalLength) {
+      console.log(`📦 Content truncated: ${originalLength} → ${codeContent.length} chars`);
+      if (priorityFiles.length > 0) {
+        console.log(`🎯 Priority preservation applied for ${priorityFiles.length} configured files`);
+      }
+    }
+
+    // Validate the final content size before sending to LLM
+    const basePromptEstimate = 5000; // Rough estimate for prompt template + instructions
+    const validation = validateContentSize('', codeContent, 120000 - basePromptEstimate);
+
+    if (!validation.valid) {
+      console.warn(`⚠️  Content may still be too large: ${validation.estimatedTokens} tokens`);
+      if (validation.recommendation) {
+        console.warn(`💡 ${validation.recommendation}`);
+      }
+      // Apply emergency truncation if still too large
+      const emergencyLimit = Math.floor(codeContent.length * 0.7);
+      codeContent = codeContent.substring(0, emergencyLimit) + '\n\n... [Content truncated for context limits] ...';
+      console.log(`🚨 Emergency truncation applied: reduced to ${codeContent.length} chars`);
     }
 
     // Calculate quest position for completion message guidance
