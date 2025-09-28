@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.9](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.8...@codewithdan/ai-repo-adventures-core@1.1.9) (2025-09-28)
+
+
+### Bug Fixes
+
+* add content chunker tests and integrate into unit test runner. Fix chunking logic. ([0872eea](https://github.com/danwahlin/ai-repo-adventures/commit/0872eeaaf2758fbe0a358b79a49e38d34c84ab2b))
+
+
+
+
+
 ## [1.1.8](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.7...@codewithdan/ai-repo-adventures-core@1.1.8) (2025-09-28)
 
 
