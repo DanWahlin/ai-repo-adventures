@@ -10,6 +10,7 @@ import { runThemeTests } from './unit/theme.test.js';
 import { runInputValidatorTests } from './unit/input-validator.test.js';
 import { runAdventureConfigTests } from './unit/adventure-config.test.js';
 import { runPromptLoaderTests } from './unit/prompt-loader.test.js';
+import { runContentChunkerTests } from './unit/content-chunker.test.js';
 
 // Print detailed summary table function
 function printDetailedSummary(results: Array<{
@@ -54,7 +55,8 @@ function printDetailedSummary(results: Array<{
   console.log(`  • Security Layer: ${results[1]?.passed || 0} tests ensure input validation prevents injection attacks`);
   console.log(`  • Configuration: ${results[2]?.passed || 0} tests verify file loading with proper error handling`);
   console.log(`  • Templates: ${results[3]?.passed || 0} tests validate dynamic content generation and variable replacement`);
-  console.log(`  • LLM Integration: ${results[4]?.passed || 0} tests cover API client functionality with graceful fallbacks`);
+  console.log(`  • Content Chunking: ${results[4]?.passed || 0} tests verify intelligent content splitting and token management`);
+  console.log(`  • LLM Integration: ${results[5]?.passed || 0} tests cover API client functionality with graceful fallbacks`);
   
   console.log('');
   console.log('🎯 COVERAGE ANALYSIS:');
@@ -116,24 +118,28 @@ async function runAllUnitTests() {
   };
 
   await runTestSuite('🧪 MCP Repo Adventure - Unit Test Suite', [
-    { 
-      name: 'Theme Utilities', 
+    {
+      name: 'Theme Utilities',
       runner: createStatsWrapper(runThemeTests, 'Theme Utilities', 14, 'Theme parsing, validation, formatting')
     },
-    { 
-      name: 'Input Validation', 
+    {
+      name: 'Input Validation',
       runner: createStatsWrapper(runInputValidatorTests, 'Input Validation', 14, 'Security validation, whitelist checking')
     },
-    { 
-      name: 'Adventure Configuration', 
+    {
+      name: 'Adventure Configuration',
       runner: createStatsWrapper(runAdventureConfigTests, 'Adventure Configuration', 15, 'File system operations, flexible parsing')
     },
-    { 
-      name: 'Prompt Template Processing', 
+    {
+      name: 'Prompt Template Processing',
       runner: createStatsWrapper(runPromptLoaderTests, 'Template Processing', 11, 'Variable replacement, template parsing')
     },
-    { 
-      name: 'LLM Client', 
+    {
+      name: 'Content Chunking',
+      runner: createStatsWrapper(runContentChunkerTests, 'Content Chunking', 17, 'Dynamic chunk limits, module grouping, token management')
+    },
+    {
+      name: 'LLM Client',
       runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 5, 'API integration, caching, error handling')
     }
   ]);

@@ -12,6 +12,10 @@ const CONTEXT_SUMMARY_TOKENS = 8000;
 const SUBSEQUENT_CHUNK_TOKENS = AVAILABLE_CONTENT_TOKENS - CONTEXT_SUMMARY_TOKENS;
 const SUBSEQUENT_CHUNK_CHARS = Math.floor(SUBSEQUENT_CHUNK_TOKENS / ESTIMATED_TOKENS_PER_CHAR);
 
+function getChunkCharLimit(chunkIndex: number): number {
+  return chunkIndex === 0 ? AVAILABLE_CONTENT_CHARS : SUBSEQUENT_CHUNK_CHARS;
+}
+
 export interface ContentChunk {
   content: string;
   metadata: {
@@ -50,9 +54,9 @@ export class ContentChunker {
   static chunkContent(content: string): ChunkResult {
     const totalTokens = estimateTokenCount(content);
 
-    console.log(`📊 Content size: ${content.length} chars, estimated ${totalTokens} tokens`);
-    console.log(`📊 Available for content: ${AVAILABLE_CONTENT_CHARS} chars (${AVAILABLE_CONTENT_TOKENS} tokens)`);
-    console.log(`📊 Reserved for response: ${RESPONSE_TOKENS} tokens, prompt: ${PROMPT_TOKENS} tokens`);
+    console.log(`📊 Content size: ${content.length.toLocaleString()} chars, estimated ${totalTokens.toLocaleString()} tokens`);
+    console.log(`📊 Available for content: ${AVAILABLE_CONTENT_CHARS.toLocaleString()} chars (${AVAILABLE_CONTENT_TOKENS.toLocaleString()} tokens)`);
+    console.log(`📊 Reserved for response: ${RESPONSE_TOKENS.toLocaleString()} tokens, prompt: ${PROMPT_TOKENS.toLocaleString()} tokens`);
 
     // If content fits in first chunk, use it as-is
     if (content.length <= AVAILABLE_CONTENT_CHARS) {
@@ -86,33 +90,91 @@ export class ContentChunker {
     const chunks: ContentChunk[] = [];
     let totalEstimatedTokens = 0;
 
+    console.log(`📂 Found ${fileBlocks.length} files in ${moduleGroups.length} modules:`);
+    moduleGroups.forEach(group => {
+      const totalSize = group.blocks.reduce((sum, block) => sum + block.content.length, 0);
+      console.log(`  - ${group.moduleName}: ${group.blocks.length} files, ${totalSize} chars`);
+    });
+
+    // Combine modules into chunks to maximize space usage
+    let currentChunkContent = '';
+    let currentChunkModules: string[] = [];
+    let currentChunkFiles: string[] = [];
+    let currentChunkTokens = 0;
+
     for (const moduleGroup of moduleGroups) {
       const moduleContent = moduleGroup.blocks.map(block => block.content).join('\n\n');
       const moduleTokens = estimateTokenCount(moduleContent);
 
       // Determine chunk size limit (first chunk gets more space)
-      const chunkLimit = chunks.length === 0 ? AVAILABLE_CONTENT_CHARS : SUBSEQUENT_CHUNK_CHARS;
+      const currentChunkIndex = chunks.length;
+      const chunkLimit = getChunkCharLimit(currentChunkIndex);
 
-      if (moduleContent.length <= chunkLimit) {
-        // Module fits in one chunk
-        chunks.push({
-          content: moduleContent,
-          metadata: {
-            chunkIndex: chunks.length,
-            totalChunks: 0, // Will be updated later
-            strategy: 'module-based',
-            modules: [moduleGroup.moduleName],
-            files: moduleGroup.blocks.map(block => block.filePath),
-            estimatedTokens: moduleTokens
-          }
-        });
-        totalEstimatedTokens += moduleTokens;
+      // Check if this module fits in the current chunk
+      const combinedContent = currentChunkContent ? `${currentChunkContent}\n\n${moduleContent}` : moduleContent;
+      const combinedSize = combinedContent.length;
+
+      if (combinedSize <= chunkLimit) {
+        // Add module to current chunk
+        currentChunkContent = combinedContent;
+        currentChunkModules.push(moduleGroup.moduleName);
+        currentChunkFiles.push(...moduleGroup.blocks.map(block => block.filePath));
+        currentChunkTokens += moduleTokens;
       } else {
-        // Module is too large, split it
-        const splitChunks = this.splitLargeModule(moduleGroup, chunkLimit, chunks.length);
-        chunks.push(...splitChunks);
-        totalEstimatedTokens += splitChunks.reduce((sum, chunk) => sum + chunk.metadata.estimatedTokens, 0);
+        // Finalize current chunk if it has content
+        if (currentChunkContent) {
+          chunks.push({
+            content: currentChunkContent,
+            metadata: {
+              chunkIndex: chunks.length,
+              totalChunks: 0, // Will be updated later
+              strategy: 'module-based',
+              modules: [...currentChunkModules],
+              files: [...currentChunkFiles],
+              estimatedTokens: currentChunkTokens
+            }
+          });
+          totalEstimatedTokens += currentChunkTokens;
+        }
+
+        // Start new chunk with current module
+        const nextChunkLimit = getChunkCharLimit(chunks.length);
+
+        if (moduleContent.length <= nextChunkLimit) {
+          // Module fits in new chunk
+          currentChunkContent = moduleContent;
+          currentChunkModules = [moduleGroup.moduleName];
+          currentChunkFiles = moduleGroup.blocks.map(block => block.filePath);
+          currentChunkTokens = moduleTokens;
+        } else {
+          // Module is too large, split it
+          const splitChunks = this.splitLargeModule(moduleGroup, nextChunkLimit, chunks.length);
+          chunks.push(...splitChunks);
+          totalEstimatedTokens += splitChunks.reduce((sum, chunk) => sum + chunk.metadata.estimatedTokens, 0);
+
+          // Reset current chunk
+          currentChunkContent = '';
+          currentChunkModules = [];
+          currentChunkFiles = [];
+          currentChunkTokens = 0;
+        }
       }
+    }
+
+    // Add final chunk if there's remaining content
+    if (currentChunkContent) {
+      chunks.push({
+        content: currentChunkContent,
+        metadata: {
+          chunkIndex: chunks.length,
+          totalChunks: 0, // Will be updated later
+          strategy: 'module-based',
+          modules: [...currentChunkModules],
+          files: [...currentChunkFiles],
+          estimatedTokens: currentChunkTokens
+        }
+      });
+      totalEstimatedTokens += currentChunkTokens;
     }
 
     // Update total chunks count
@@ -182,7 +244,7 @@ export class ContentChunker {
   }
 
   /**
-   * Extract module name from file path (directory-based)
+   * Extract module name from file path (directory-based with intelligent grouping)
    */
   private static extractModuleName(filePath: string): string {
     const normalizedPath = filePath.replace(/\\/g, '/');
@@ -193,9 +255,27 @@ export class ContentChunker {
       return 'root';
     }
 
-    // For nested files, use the immediate parent directory
-    // e.g., "packages/core/src/adventure/story.ts" -> "adventure"
-    // e.g., "src/components/Button.tsx" -> "components"
+    // Use broader grouping to avoid too many tiny modules
+    // Look for top-level directories like 'src', 'lib', 'packages', etc.
+    const topLevelDirs = ['src', 'lib', 'packages', 'components', 'modules', 'app', 'pages'];
+
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (topLevelDirs.includes(parts[i])) {
+        // If we find a top-level dir, use the next directory level for grouping
+        if (i + 1 < parts.length - 1) {
+          return `${parts[i]}/${parts[i + 1]}`;
+        } else {
+          return parts[i];
+        }
+      }
+    }
+
+    // Fallback: use broader grouping by taking only the first 2 directory levels
+    if (parts.length > 2) {
+      return `${parts[0]}/${parts[1]}`;
+    }
+
+    // For shallow paths, use the parent directory
     return parts[parts.length - 2];
   }
 
@@ -204,7 +284,7 @@ export class ContentChunker {
    */
   private static splitLargeModule(
     moduleGroup: { moduleName: string; blocks: Array<{ filePath: string; content: string }> },
-    chunkLimit: number,
+    initialChunkLimit: number,
     startingChunkIndex: number
   ): ContentChunk[] {
     const chunks: ContentChunk[] = [];
@@ -214,6 +294,10 @@ export class ContentChunker {
 
     for (const block of moduleGroup.blocks) {
       const blockSize = block.content.length;
+
+      // Recalculate chunk limit based on current chunk index
+      const currentChunkIndex = startingChunkIndex + chunks.length;
+      const chunkLimit = getChunkCharLimit(currentChunkIndex);
 
       // If adding this block would exceed the limit, finalize current chunk
       if (currentChunkSize > 0 && currentChunkSize + blockSize > chunkLimit) {
@@ -232,16 +316,30 @@ export class ContentChunker {
         currentChunkContent = [];
         currentChunkFiles = [];
         currentChunkSize = 0;
-      }
 
-      // If single block is too large, split the file itself
-      if (blockSize > chunkLimit) {
-        const fileChunks = this.splitLargeFile(block, chunkLimit, moduleGroup.moduleName, startingChunkIndex + chunks.length);
-        chunks.push(...fileChunks);
+        // Recalculate chunk limit after pushing previous chunk
+        const newChunkIndex = startingChunkIndex + chunks.length;
+        const newChunkLimit = getChunkCharLimit(newChunkIndex);
+
+        // If single block is too large for the new chunk, split the file itself
+        if (blockSize > newChunkLimit) {
+          const fileChunks = this.splitLargeFile(block, newChunkLimit, moduleGroup.moduleName, startingChunkIndex + chunks.length);
+          chunks.push(...fileChunks);
+        } else {
+          currentChunkContent.push(block.content);
+          currentChunkFiles.push(block.filePath);
+          currentChunkSize += blockSize;
+        }
       } else {
-        currentChunkContent.push(block.content);
-        currentChunkFiles.push(block.filePath);
-        currentChunkSize += blockSize;
+        // If single block is too large, split the file itself
+        if (blockSize > chunkLimit) {
+          const fileChunks = this.splitLargeFile(block, chunkLimit, moduleGroup.moduleName, startingChunkIndex + chunks.length);
+          chunks.push(...fileChunks);
+        } else {
+          currentChunkContent.push(block.content);
+          currentChunkFiles.push(block.filePath);
+          currentChunkSize += blockSize;
+        }
       }
     }
 
@@ -268,7 +366,7 @@ export class ContentChunker {
    */
   private static splitLargeFile(
     fileBlock: { filePath: string; content: string },
-    chunkLimit: number,
+    initialChunkLimit: number,
     moduleName: string,
     startingChunkIndex: number
   ): ContentChunk[] {
@@ -285,6 +383,10 @@ export class ContentChunker {
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       const lineSize = line.length + 1; // +1 for newline
+
+      // Recalculate chunk limit based on current chunk index
+      const currentChunkIndex = startingChunkIndex + chunks.length;
+      const chunkLimit = getChunkCharLimit(currentChunkIndex);
 
       // If adding this line would exceed limit, finalize current chunk
       if (currentSize + lineSize > chunkLimit && currentChunk.length > 1) {
@@ -306,10 +408,26 @@ export class ContentChunker {
         // Start new chunk with header
         currentChunk = [headerLine];
         currentSize = headerLine.length;
-      }
 
-      currentChunk.push(line);
-      currentSize += lineSize;
+        // Recalculate chunk limit for the new chunk
+        const newChunkIndex = startingChunkIndex + chunks.length;
+        const newChunkLimit = getChunkCharLimit(newChunkIndex);
+
+        // Check if the current line fits in the new chunk with updated limit
+        if (currentSize + lineSize <= newChunkLimit) {
+          currentChunk.push(line);
+          currentSize += lineSize;
+        } else {
+          // Line is too large even for the new chunk - this is very rare but handle gracefully
+          // Add the line anyway but log a warning
+          console.warn(`Warning: Line ${i} exceeds chunk limit (${lineSize} chars > ${newChunkLimit - currentSize} available)`);
+          currentChunk.push(line);
+          currentSize += lineSize;
+        }
+      } else {
+        currentChunk.push(line);
+        currentSize += lineSize;
+      }
     }
 
     // Add final chunk
