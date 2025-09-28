@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.8](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.7...@codewithdan/ai-repo-adventures-core@1.1.8) (2025-09-28)
+
+
+### Bug Fixes
+
+* update token allocation and add logging for chunking process ([91bc4c8](https://github.com/danwahlin/ai-repo-adventures/commit/91bc4c866d3709d1049f5e1cb3d802465e387d9b))
+
+
+
+
+
 ## [1.1.7](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.6...@codewithdan/ai-repo-adventures-core@1.1.7) (2025-09-28)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventures-core
