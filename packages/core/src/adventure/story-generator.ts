@@ -4,6 +4,7 @@ import { LLM_REQUEST_TIMEOUT, DEFAULT_THEME, LLM_MAX_TOKENS_STORY, LLM_MAX_TOKEN
 import { isValidTheme } from '../shared/theme.js';
 import { LLMClient } from '../llm/llm-client.js';
 import { formatAdventureConfigForPrompt, extractCustomInstructions } from '../shared/adventure-config.js';
+import { ChunkResult } from '../shared/content-chunker.js';
 import { loadStoryGenerationPrompt, loadQuestContentPrompt, loadCompletionPrompt } from '../shared/prompt-loader.js';
 import { marked, Token } from 'marked';
 import { z } from 'zod';
@@ -39,7 +40,7 @@ export interface CodeSnippet {
 export interface QuestGenerationConfig {
   quest: Quest;
   theme: AdventureTheme;
-  codeContent: string;
+  chunkResult: ChunkResult;
   questPosition?: number;
   totalQuests?: number;
 }
@@ -231,7 +232,7 @@ export class StoryGenerator {
    * Generate detailed quest content using LLM
    */
   async generateQuestContent(config: QuestGenerationConfig): Promise<QuestContent> {
-    const { quest, theme, codeContent, questPosition, totalQuests } = config;
+    const { quest, theme, chunkResult, questPosition, totalQuests } = config;
     // Include formatted adventure config as context if available
     let adventureGuidance = '';
     let customInstructions = '';
@@ -248,24 +249,34 @@ export class StoryGenerator {
       }
     }
 
-    const prompt = loadQuestContentPrompt({
-      theme,
-      adventureTitle: quest.title,
-      codeContent,
-      storyContent: this.currentStoryContent || 'No story context available.',
-      adventureGuidance: adventureGuidance || '',
-      ...(customInstructions && { customInstructions }),
-      questPosition,
-      totalQuests,
-      ...(this.customThemeData && { customThemeData: this.customThemeData })
-    }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.';
+    // Handle chunked content processing
+    let response;
 
-    const response = await this.withTimeout(
-      this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
-    );
-    
-    if (!response.content || response.content.trim() === '') {
-      throw new Error('LLM returned empty response for quest content');
+    if (chunkResult.chunks.length === 1) {
+      // Single chunk - direct processing
+      const prompt = loadQuestContentPrompt({
+        theme,
+        adventureTitle: quest.title,
+        codeContent: chunkResult.chunks[0].content,
+        storyContent: this.currentStoryContent || 'No story context available.',
+        adventureGuidance: adventureGuidance || '',
+        ...(customInstructions && { customInstructions }),
+        questPosition,
+        totalQuests,
+        ...(this.customThemeData && { customThemeData: this.customThemeData })
+      }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.';
+
+      response = await this.withTimeout(
+        this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+      );
+
+      if (!response.content || response.content.trim() === '') {
+        throw new Error('LLM returned empty response for quest content');
+      }
+    } else {
+      // Multiple chunks - iterative processing
+      console.log(`🔄 Processing ${chunkResult.chunks.length} chunks iteratively`);
+      return await this.processChunkedQuestContent(quest, theme, chunkResult, adventureGuidance, customInstructions, questPosition, totalQuests);
     }
     
     // Clean and process the LLM response
@@ -323,6 +334,165 @@ export class StoryGenerator {
     };
   }
 
+  /**
+   * Process quest content using multiple chunks iteratively
+   */
+  private async processChunkedQuestContent(
+    quest: Quest,
+    theme: AdventureTheme,
+    chunkResult: ChunkResult,
+    adventureGuidance: string,
+    customInstructions: string,
+    questPosition?: number,
+    totalQuests?: number
+  ): Promise<QuestContent> {
+    let accumulatedContent = '';
+    let contextSummary = '';
+
+    for (let i = 0; i < chunkResult.chunks.length; i++) {
+      const chunk = chunkResult.chunks[i];
+      const isFirstChunk = i === 0;
+      const isLastChunk = i === chunkResult.chunks.length - 1;
+
+      console.log(`📦 Processing chunk ${i + 1}/${chunkResult.chunks.length} (${chunk.metadata.estimatedTokens} tokens)`);
+
+      let prompt: string;
+
+      if (isFirstChunk) {
+        // First chunk - establish the story foundation
+        prompt = loadQuestContentPrompt({
+          theme,
+          adventureTitle: quest.title,
+          codeContent: chunk.content,
+          storyContent: this.currentStoryContent || 'No story context available.',
+          adventureGuidance: adventureGuidance || '',
+          ...(customInstructions && { customInstructions }),
+          questPosition,
+          totalQuests,
+          ...(this.customThemeData && { customThemeData: this.customThemeData })
+        }) + `\n\nThis is the first part of a large codebase (${chunkResult.chunks.length} parts total). Generate a comprehensive quest adventure that establishes the foundation. More code context will be provided in subsequent parts to enhance and expand the adventure.`;
+      } else if (isLastChunk) {
+        // Last chunk - finalize the story
+        prompt = `You are continuing to generate quest content for "${quest.title}" with a ${theme} theme.
+
+Previous story context: ${contextSummary}
+
+Here is the final part of the codebase:
+${chunk.content}
+
+Please enhance and finalize the adventure story based on this additional context. Ensure the story feels complete and cohesive with all the code you've seen. This is the final part (${i + 1}/${chunkResult.chunks.length}).
+
+${adventureGuidance ? `Adventure Configuration:\n${adventureGuidance}` : ''}
+${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}`;
+      } else {
+        // Middle chunk - continue building the story
+        prompt = `You are continuing to generate quest content for "${quest.title}" with a ${theme} theme.
+
+Previous story context: ${contextSummary}
+
+Here is part ${i + 1} of ${chunkResult.chunks.length} of the codebase:
+${chunk.content}
+
+Please enhance and expand the adventure story based on this additional context. Keep building on the previous content while incorporating insights from this new code. More parts will follow.
+
+${adventureGuidance ? `Adventure Configuration:\n${adventureGuidance}` : ''}
+${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}`;
+      }
+
+      prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content here]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters.';
+
+      const response = await this.withTimeout(
+        this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
+      );
+
+      if (!response.content || response.content.trim() === '') {
+        console.warn(`⚠️ Empty response for chunk ${i + 1}, using accumulated content`);
+        continue;
+      }
+
+      // Process the response
+      let chunkContent = this.extractMarkdownContent(response.content);
+
+      if (isFirstChunk) {
+        accumulatedContent = chunkContent;
+      } else {
+        // For subsequent chunks, we replace the accumulated content with the enhanced version
+        accumulatedContent = chunkContent;
+      }
+
+      // Generate summary for next iteration (except for last chunk)
+      if (!isLastChunk) {
+        contextSummary = await this.generateContextSummary(accumulatedContent, theme, i + 1, chunkResult.chunks.length);
+      }
+    }
+
+    return {
+      adventure: accumulatedContent,
+      fileExploration: '',
+      codeSnippets: [],
+      hints: []
+    };
+  }
+
+  /**
+   * Extract markdown content from LLM response
+   */
+  private extractMarkdownContent(content: string): string {
+    let cleanContent = content.trim();
+
+    // Enhanced markdown extraction with better error handling
+    const beginMarker = '---BEGIN MARKDOWN---';
+    const endMarker = '---END MARKDOWN---';
+    const beginIndex = cleanContent.indexOf(beginMarker);
+    const endIndex = cleanContent.indexOf(endMarker);
+
+    if (beginIndex !== -1 && endIndex !== -1 && endIndex > beginIndex) {
+      const extracted = cleanContent.substring(
+        beginIndex + beginMarker.length,
+        endIndex
+      ).trim();
+
+      if (!extracted.includes(beginMarker) && !extracted.includes(endMarker)) {
+        cleanContent = extracted;
+      }
+    }
+
+    // Remove any remaining markers
+    cleanContent = cleanContent
+      .replace(/---BEGIN MARKDOWN---/g, '')
+      .replace(/---END MARKDOWN---/g, '')
+      .trim();
+
+    // Remove markdown code fences if present
+    if (cleanContent.startsWith('```markdown')) {
+      cleanContent = cleanContent.replace(/^```markdown\s*/, '').replace(/\s*```$/, '');
+    }
+
+    // Remove LLM meta-commentary
+    return this.removeLLMMetaCommentary(cleanContent);
+  }
+
+  /**
+   * Generate a concise summary of current content for next chunk
+   */
+  private async generateContextSummary(content: string, theme: AdventureTheme, chunkNumber: number, totalChunks: number): Promise<string> {
+    const prompt = `Summarize the following quest adventure content in 2-3 sentences for context in continuing the story. Focus on the main narrative, key discoveries, and current adventure state:
+
+${content}
+
+Provide a concise summary that will help continue the ${theme}-themed adventure coherently.`;
+
+    try {
+      const response = await this.withTimeout(
+        this.llmClient.generateResponse(prompt, { maxTokens: 500 })
+      );
+
+      return response.content?.trim() || `${theme}-themed quest adventure exploring the codebase (part ${chunkNumber}/${totalChunks}).`;
+    } catch (error) {
+      console.warn(`⚠️ Failed to generate context summary: ${error}`);
+      return `${theme}-themed quest adventure exploring the codebase (part ${chunkNumber}/${totalChunks}).`;
+    }
+  }
 
   /**
    * Generate completion summary using LLM

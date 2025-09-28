@@ -1,13 +1,13 @@
-# Galactic Code Odyssey
+# Developer's Codebase Exploration
 
-In the vast expanse of the digital cosmos, a brave crew embarks on a mission to explore the Galactic Code Repository. Their starship is equipped with advanced tools and technologies that allow them to analyze, generate, and navigate through the complex structures of code, seeking to unlock the secrets of the universe and craft new adventures. As they traverse the cosmic streams of data, they will face challenges that test their skills and knowledge, all while striving to create a harmonious balance between creativity and structure.
+You navigate a robust codebase designed for generating interactive adventures from repositories, integrating AI-driven insights and customizable themes. The system analyzes project structures, validates inputs, and generates quests and stories, empowering developers to create engaging experiences based on their unique projects.
 
 **Adventure Awaits** – Choose your quest wisely, brave adventurer!
 
 **🗺️ Available Quests:**
 
-**Quest 1: Quest Generation Engine** - Venture into the *Control Room* where **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** orchestrate the creation of thrilling quests and narratives.
-**Quest 2: MCP Tool Interface** - Navigate the *Mission Control* where **server.ts** and **tools.ts** manage the interactions and commands essential for executing your adventures in the digital realm.
-**Quest 3: Code Analysis & Content Pipeline** - Explore the *Data Observatory* where **repo-analyzer.ts** and **llm-client.ts** analyze the repository's structure and generate insightful content for your journey.
-**Quest 4: HTML Generator & Static Site Pipeline** - Chart a course through the *Web Development Bay* where **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts** prepare your adventure for display across the cosmos.
-**Quest 5: Configuration & Theme System** - Investigate the *Theme Forge* where **config.ts**, **theme.ts**, **theme-manager.ts**, and **input-validator.ts** craft the aesthetic and operational parameters of your interstellar adventures.
+**Quest 1: HTML Generator & Static Site Pipeline** - Explore the *HTML Generator & Static Site Pipeline*, where **html-generator.ts**, **template-engine.ts**, and **asset-manager.ts** work together to create and manage your adventure's web presence.
+**Quest 2: MCP Tool Interface** - Venture into the *MCP Tool Interface*, focusing on **server.ts** and **tools.ts**, which facilitate the interaction between the adventure server and various tools for managing quests.
+**Quest 3: Quest Generation Engine** - Investigate the *Quest Generation Engine*, where **adventure-manager.ts**, **story-generator.ts**, and **adventure-config.ts** orchestrate the creation and management of quests and their narratives.
+**Quest 4: Code Analysis & Content Pipeline** - Discover the *Code Analysis & Content Pipeline*, utilizing **repo-analyzer.ts** and **llm-client.ts** to analyze repository data and generate targeted content through AI.
+**Quest 5: Configuration & Theme System** - Examine the *Configuration & Theme System*, where **config.ts**, **theme.ts**, **theme-manager.ts**, **input-validator.ts**, and **adventure-config.ts** establish the foundational settings and theme management for your adventures.

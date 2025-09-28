@@ -66,15 +66,26 @@ class HTMLAdventureGenerator {
     console.log();
 
     try {
-      await this.selectTheme();
+      const shouldGenerateAllThemes = await this.selectTheme();
       await this.selectOutputDirectory();
-      await this.generateAdventure();
-      
-      console.log();
-      console.log(chalk.green.bold('🎉 Adventure website generated successfully!'));
-      console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
-      console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
-      
+
+      if (shouldGenerateAllThemes) {
+        // Generate all themes using the same logic as command-line --theme all
+        const args = new Map<string, string>();
+        args.set('output', this.outputDir);
+        args.set('overwrite', 'true'); // Always overwrite in interactive mode for simplicity
+
+        await this.generateAllThemes(args);
+      } else {
+        // Generate single theme as usual
+        await this.generateAdventure();
+
+        console.log();
+        console.log(chalk.green.bold('🎉 Adventure website generated successfully!'));
+        console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
+        console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
+      }
+
     } catch (error) {
       console.error(chalk.red('❌ Error generating adventure:'), error);
       this.rl.close();
@@ -236,20 +247,35 @@ class HTMLAdventureGenerator {
     }
   }
 
-  private async selectTheme(): Promise<void> {
+  private async selectTheme(): Promise<boolean> {
     console.log(chalk.yellow.bold('📚 Choose Your Adventure Theme:'));
     console.log();
-    
+
     const themes = getAllThemes();
+    const allThemesId = themes.length + 1;
+
     themes.forEach((theme: any) => {
       console.log(`${theme.emoji} ${chalk.bold(theme.id.toString())}. ${theme.displayName} - ${theme.description}`);
     });
+
+    // Add "all themes" option
+    console.log(`🌈 ${chalk.bold(allThemesId.toString())}. Generate All Themes - Create adventures in all available themes simultaneously`);
     console.log();
 
-    const choice = await this.prompt('Enter theme number or name: ');
-    
+    const choice = await this.prompt('Enter theme number or name (or "all" for all themes): ');
+
     // Parse theme choice
+    const cleanChoice = choice.trim().toLowerCase();
     const themeNumber = parseInt(choice.trim());
+
+    // Check if user selected "all themes"
+    if (cleanChoice === 'all' || themeNumber === allThemesId) {
+      console.log(chalk.green('✅ Selected: Generate All Themes'));
+      console.log();
+      return true; // Signal that all themes should be generated
+    }
+
+    // Handle regular theme selection
     if (!isNaN(themeNumber)) {
       const theme = themes.find((t: any) => t.id === themeNumber);
       if (theme) {
@@ -259,7 +285,7 @@ class HTMLAdventureGenerator {
         this.selectedTheme = 'space';
       }
     } else {
-      const theme = getThemeByKey(choice.trim().toLowerCase());
+      const theme = getThemeByKey(cleanChoice);
       if (theme) {
         this.selectedTheme = theme.key as AdventureTheme;
       } else {
@@ -276,6 +302,8 @@ class HTMLAdventureGenerator {
     const selectedThemeInfo = getThemeByKey(this.selectedTheme);
     console.log(chalk.green(`✅ Selected: ${selectedThemeInfo?.displayName || this.selectedTheme}`));
     console.log();
+
+    return false; // Single theme selected
   }
 
   private async createCustomTheme(): Promise<void> {
@@ -1743,7 +1771,7 @@ Examples:
   npm run generate-html --theme space --output ./docs --overwrite
   npm run generate-html --theme mythical
   npm run generate-html --theme all --output public --overwrite
-  npm run generate-html (interactive mode)
+  npm run generate-html (interactive mode - includes "Generate All Themes" option)
 `);
     return;
   }

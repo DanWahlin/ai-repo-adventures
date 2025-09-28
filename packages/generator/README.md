@@ -36,7 +36,7 @@ repo-adventure
 ```
 
 This will guide you through:
-1. Choosing a theme
+1. Choosing a theme (including "Generate All Themes" option)
 2. Selecting an output directory
 3. Generating your adventure website
 

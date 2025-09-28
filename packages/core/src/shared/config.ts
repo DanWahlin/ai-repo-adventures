@@ -47,19 +47,11 @@ export const GPT5_REASONING_EFFORT = (process.env.GPT5_REASONING_EFFORT as 'mini
 
 // Adventure settings
 export const DEFAULT_THEME = 'space' as const;
-export const MAX_FILE_LINES_FOR_LLM = 100; // Truncate files to keep LLM prompts manageable
 export const MAX_FILES_PER_QUEST = 3; // Limit files per quest to maintain focus and readability
 
-// Token management and content limits
-export const MAX_CONTEXT_TOKENS = 120000; // Leave 8k tokens for response (128k total - 8k response)
+// Token management and chunking configuration
+export const MAX_CONTEXT_TOKENS = 128000; // Full 128k context window
 export const ESTIMATED_TOKENS_PER_CHAR = 0.25; // Rough estimation: 4 chars per token
-export const MAX_CODE_CONTENT_CHARS = Math.floor(MAX_CONTEXT_TOKENS * 0.7 / ESTIMATED_TOKENS_PER_CHAR); // 70% of context for code content
-export const MAX_FILE_LINES_FOR_LARGE_FILES = 50; // Reduced line limit for very large codebases
-export const TRUNCATION_MESSAGE = '\n\n... [Content truncated to fit context limits] ...';
-
-// Smart truncation thresholds - use token-based limits instead of arbitrary character counts
-export const LARGE_CODEBASE_THRESHOLD = Math.floor(MAX_CODE_CONTENT_CHARS * 0.85); // 85% of max content chars (~71.4k tokens)
-export const AGGRESSIVE_TRUNCATION_LINES = 25; // Lines per file when applying aggressive truncation
 
 // Error settings
 export const MAX_ERROR_MESSAGE_LENGTH = 200;
