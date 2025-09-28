@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.9...@codewithdan/ai-repo-adventures-core@1.2.0) (2025-09-28)
+
+
+### Features
+
+* implement adaptive throttling for Azure S0 rate limits in LLMClient and enhance unit tests ([ea8e3b3](https://github.com/danwahlin/ai-repo-adventures/commit/ea8e3b333b2dafc020e0e9a69ee0a77ee18f04ce))
+
+
+
+
+
 ## [1.1.9](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.8...@codewithdan/ai-repo-adventures-core@1.1.9) (2025-09-28)
 
 
