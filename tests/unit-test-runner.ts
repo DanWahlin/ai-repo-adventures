@@ -56,7 +56,7 @@ function printDetailedSummary(results: Array<{
   console.log(`  • Configuration: ${results[2]?.passed || 0} tests verify file loading with proper error handling`);
   console.log(`  • Templates: ${results[3]?.passed || 0} tests validate dynamic content generation and variable replacement`);
   console.log(`  • Content Chunking: ${results[4]?.passed || 0} tests verify intelligent content splitting and token management`);
-  console.log(`  • LLM Integration: ${results[5]?.passed || 0} tests cover API client functionality with graceful fallbacks`);
+  console.log(`  • LLM Integration: ${results[5]?.passed || 0} tests cover API client functionality and adaptive throttling for rate limits`);
   
   console.log('');
   console.log('🎯 COVERAGE ANALYSIS:');
@@ -140,7 +140,7 @@ async function runAllUnitTests() {
     },
     {
       name: 'LLM Client',
-      runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 5, 'API integration, caching, error handling')
+      runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 8, 'API integration, caching, error handling, adaptive throttling')
     }
   ]);
 

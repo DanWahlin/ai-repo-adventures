@@ -44,6 +44,13 @@ export class LLMClient {
   private client: OpenAI | AzureOpenAI;
   private model: string;
 
+  // Adaptive throttling state
+  private isThrottling: boolean = false;
+  private throttleDelay: number = 1000; // Start with 1 second delay
+  private lastRequestTime: number = 0;
+  private readonly MAX_THROTTLE_DELAY = 30000; // Maximum 30 second delay
+  private readonly THROTTLE_DECAY_RATE = 0.8; // Reduce delay by 20% on successful requests
+
   constructor() {
     this.model = LLM_MODEL;
     
@@ -98,23 +105,34 @@ export class LLMClient {
    * Generate a response from the LLM
    */
   async generateResponse(prompt: string, options?: LLMRequestOptions): Promise<LLMResponse> {
+    // Apply throttling if active
+    await this.applyThrottling();
+
     try {
       const requestParams = this.buildRequestParams(prompt, options);
       const completion = await this.executeRequest(requestParams);
       let content = this.validateResponse(completion);
-      
+
       // Post-process JSON responses that might be wrapped in markdown
       if (options?.responseFormat === 'json_object') {
         content = this.cleanJsonResponse(content);
       }
-      
+
       this.logTokenUsage(completion);
-      
+
+      // Successful request - reduce throttling gradually
+      this.onSuccessfulRequest();
+
       return { content };
     } catch (error) {
+      // Check if this is an Azure S0 rate limit error
+      if (this.isAzureS0RateLimitError(error)) {
+        this.activateThrottling(error);
+      }
+
       // Enhanced error logging for debugging
       this.logDetailedError(error, prompt);
-      
+
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`LLM request failed: ${message}`);
     }
@@ -316,5 +334,84 @@ export class LLMClient {
     }
     
     console.error(`${red}═══════════════════════════════════════════════════════════════${reset}\n`);
+  }
+
+  /**
+   * Check if the error is specifically an Azure S0 pricing tier rate limit error
+   */
+  private isAzureS0RateLimitError(error: any): boolean {
+    const errorMessage = error?.message || '';
+    const isRateLimit = error?.status === 429 || errorMessage.includes('429');
+    const isS0Tier = errorMessage.includes('exceeded token rate limit of your current AIServices S0 pricing tier');
+
+    return isRateLimit && isS0Tier;
+  }
+
+  /**
+   * Activate throttling when Azure S0 rate limit is detected
+   */
+  private activateThrottling(error: any): void {
+    this.isThrottling = true;
+
+    // Extract retry delay from error message if available
+    const errorMessage = error?.message || '';
+    const retryMatch = errorMessage.match(/retry after (\d+) seconds/);
+
+    if (retryMatch) {
+      const suggestedDelay = parseInt(retryMatch[1]) * 1000; // Convert to milliseconds
+      this.throttleDelay = Math.min(suggestedDelay, this.MAX_THROTTLE_DELAY);
+    } else {
+      // Double the delay if no specific time given, but cap it
+      this.throttleDelay = Math.min(this.throttleDelay * 2, this.MAX_THROTTLE_DELAY);
+    }
+
+    const yellow = '\x1b[33m';
+    const cyan = '\x1b[36m';
+    const reset = '\x1b[0m';
+
+    console.error(`\n${yellow}🐌 ADAPTIVE THROTTLING ACTIVATED${reset}`);
+    console.error(`${cyan}Detected Azure S0 pricing tier rate limit.${reset}`);
+    console.error(`${cyan}Throttling subsequent requests with ${(this.throttleDelay / 1000).toFixed(1)}s delay.${reset}\n`);
+  }
+
+  /**
+   * Apply throttling delay if active
+   */
+  private async applyThrottling(): Promise<void> {
+    if (!this.isThrottling) return;
+
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+
+    if (timeSinceLastRequest < this.throttleDelay) {
+      const remainingDelay = this.throttleDelay - timeSinceLastRequest;
+
+      const cyan = '\x1b[36m';
+      const reset = '\x1b[0m';
+      console.error(`${cyan}⏳ Throttling: waiting ${(remainingDelay / 1000).toFixed(1)}s before next request...${reset}`);
+
+      await new Promise(resolve => setTimeout(resolve, remainingDelay));
+    }
+
+    this.lastRequestTime = Date.now();
+  }
+
+  /**
+   * Handle successful request - gradually reduce throttling
+   */
+  private onSuccessfulRequest(): void {
+    if (this.isThrottling) {
+      // Gradually reduce the throttle delay on successful requests
+      this.throttleDelay = Math.max(this.throttleDelay * this.THROTTLE_DECAY_RATE, 1000);
+
+      // If delay is back to minimum, disable throttling
+      if (this.throttleDelay <= 1000) {
+        this.isThrottling = false;
+
+        const green = '\x1b[32m';
+        const reset = '\x1b[0m';
+        console.error(`${green}✅ Rate limit recovered - throttling disabled${reset}\n`);
+      }
+    }
   }
 }
