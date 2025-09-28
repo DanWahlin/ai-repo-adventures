@@ -1,8 +1,9 @@
-import { ESTIMATED_TOKENS_PER_CHAR, MAX_CONTEXT_TOKENS } from './config.js';
+import { ESTIMATED_TOKENS_PER_CHAR, MAX_CONTEXT_TOKENS, LLM_MAX_TOKENS_QUEST } from './config.js';
 
 // Reserve tokens for LLM response and base prompts
-const RESPONSE_TOKENS = 4000;
-const PROMPT_TOKENS = 2000;
+// Use the actual max tokens that will be requested for responses
+const RESPONSE_TOKENS = Math.max(LLM_MAX_TOKENS_QUEST, 10000); // Account for actual response size requested
+const PROMPT_TOKENS = 3000; // Increased to account for prompt template and instructions
 const AVAILABLE_CONTENT_TOKENS = MAX_CONTEXT_TOKENS - RESPONSE_TOKENS - PROMPT_TOKENS;
 const AVAILABLE_CONTENT_CHARS = Math.floor(AVAILABLE_CONTENT_TOKENS / ESTIMATED_TOKENS_PER_CHAR);
 
@@ -49,8 +50,13 @@ export class ContentChunker {
   static chunkContent(content: string): ChunkResult {
     const totalTokens = estimateTokenCount(content);
 
+    console.log(`📊 Content size: ${content.length} chars, estimated ${totalTokens} tokens`);
+    console.log(`📊 Available for content: ${AVAILABLE_CONTENT_CHARS} chars (${AVAILABLE_CONTENT_TOKENS} tokens)`);
+    console.log(`📊 Reserved for response: ${RESPONSE_TOKENS} tokens, prompt: ${PROMPT_TOKENS} tokens`);
+
     // If content fits in first chunk, use it as-is
     if (content.length <= AVAILABLE_CONTENT_CHARS) {
+      console.log(`✅ Content fits in single chunk`);
       return {
         chunks: [{
           content,
@@ -67,6 +73,7 @@ export class ContentChunker {
     }
 
     // Content is too large, use hybrid chunking
+    console.log(`🔄 Content too large, using hybrid chunking`);
     return this.createHybridChunks(content);
   }
 
