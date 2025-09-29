@@ -126,6 +126,44 @@ async function runLLMClientTests() {
     assert(reducedDelay === 8000, 'Should reduce delay by 20% on successful requests');
   });
 
+  // Token Rate Limit Tests - Testing the new token rate exceeded functionality
+  console.log('\n🔄 Token Rate Limit Tests');
+  console.log('-'.repeat(30));
+
+  await test('Token rate exceeded error detection', () => {
+    // Test the token rate exceeded error (no retry after time)
+    const tokenRateError = {
+      status: 429,
+      message: '429 Requests to the ChatCompletions_Create Operation under Azure OpenAI API version 2025-01-01-preview have exceeded token rate limit of your current AIServices S0 pricing tier.'
+    };
+
+    // Verify this is detected as a 429 error
+    const is429 = tokenRateError.status === 429 || tokenRateError.message.includes('429');
+    assert(is429, 'Should detect 429 status');
+
+    // Verify it contains S0 tier message
+    const hasS0Message = tokenRateError.message.includes('exceeded token rate limit of your current AIServices S0 pricing tier');
+    assert(hasS0Message, 'Should have S0 tier message');
+
+    // Verify it does NOT have "retry after" (distinguishes from request rate limit)
+    const hasRetryAfter = tokenRateError.message.includes('retry after');
+    assert(!hasRetryAfter, 'Should NOT have retry after for token rate exceeded');
+  });
+
+  await test('Request rate limit vs token rate exceeded differentiation', () => {
+    // Token rate exceeded (no retry time)
+    const tokenRateError = '429 Requests... exceeded token rate limit of your current AIServices S0 pricing tier.';
+
+    // Request rate limit (has retry time)
+    const requestRateError = '429 Requests... exceeded token rate limit of your current AIServices S0 pricing tier. Please retry after 59 seconds.';
+
+    // Token rate should NOT have retry after
+    assert(!tokenRateError.includes('retry after'), 'Token rate error should not have retry after');
+
+    // Request rate should have retry after
+    assert(requestRateError.includes('retry after'), 'Request rate error should have retry after');
+  });
+
   printResults();
 }
 

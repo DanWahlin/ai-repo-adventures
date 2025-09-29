@@ -3,6 +3,7 @@
  */
 
 import { getAllThemes, isValidTheme, parseTheme } from './theme.js';
+import { VALIDATION_MAX_CHOICE_LENGTH, VALIDATION_MAX_PATH_LENGTH, VALIDATION_MAX_DISPLAY_LENGTH } from './config.js';
 
 // Simple validation functions instead of complex class
 export function validateAdventureChoice(input: string): string {
@@ -10,8 +11,8 @@ export function validateAdventureChoice(input: string): string {
     throw new Error('Choice is required');
   }
   
-  if (input.length > 200) {
-    throw new Error('Choice too long (max 200 characters)');
+  if (input.length > VALIDATION_MAX_CHOICE_LENGTH) {
+    throw new Error(`Choice too long (max ${VALIDATION_MAX_CHOICE_LENGTH} characters)`);
   }
   
   return input.trim();
@@ -38,8 +39,8 @@ export function validateProjectPath(input?: string): string {
     return process.cwd();
   }
   
-  if (input.length > 500) {
-    throw new Error('Project path too long (max 500 characters)');
+  if (input.length > VALIDATION_MAX_PATH_LENGTH) {
+    throw new Error(`Project path too long (max ${VALIDATION_MAX_PATH_LENGTH} characters)`);
   }
   
   if (input.includes('\0')) {
@@ -49,7 +50,7 @@ export function validateProjectPath(input?: string): string {
   return input.trim();
 }
 
-export function sanitizeForDisplay(input: string, maxLength = 1000): string {
+export function sanitizeForDisplay(input: string, maxLength = VALIDATION_MAX_DISPLAY_LENGTH): string {
   if (!input) return '';
   
   return input

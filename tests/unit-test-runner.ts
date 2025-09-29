@@ -11,6 +11,7 @@ import { runInputValidatorTests } from './unit/input-validator.test.js';
 import { runAdventureConfigTests } from './unit/adventure-config.test.js';
 import { runPromptLoaderTests } from './unit/prompt-loader.test.js';
 import { runContentChunkerTests } from './unit/content-chunker.test.js';
+import { runAutomaticModeSwitchingTests } from './unit/automatic-mode-switching.test.js';
 
 // Print detailed summary table function
 function printDetailedSummary(results: Array<{
@@ -57,6 +58,7 @@ function printDetailedSummary(results: Array<{
   console.log(`  • Templates: ${results[3]?.passed || 0} tests validate dynamic content generation and variable replacement`);
   console.log(`  • Content Chunking: ${results[4]?.passed || 0} tests verify intelligent content splitting and token management`);
   console.log(`  • LLM Integration: ${results[5]?.passed || 0} tests cover API client functionality and adaptive throttling for rate limits`);
+  console.log(`  • Mode Switching: ${results[6]?.passed || 0} tests ensure automatic recovery from token rate limit errors`);
   
   console.log('');
   console.log('🎯 COVERAGE ANALYSIS:');
@@ -140,7 +142,11 @@ async function runAllUnitTests() {
     },
     {
       name: 'LLM Client',
-      runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 8, 'API integration, caching, error handling, adaptive throttling')
+      runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 10, 'API integration, caching, error handling, adaptive throttling, token rate limits')
+    },
+    {
+      name: 'Automatic Mode Switching',
+      runner: createStatsWrapper(runAutomaticModeSwitchingTests, 'Mode Switching', 8, 'Rate limit recovery, progress tracking, error handling')
     }
   ]);
 

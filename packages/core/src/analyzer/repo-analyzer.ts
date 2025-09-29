@@ -32,6 +32,52 @@ export class RepoAnalyzer {
   constructor() {}
 
   /**
+   * Extract README.md content for project overview
+   * Returns the first 100 lines or until first major section ends
+   */
+  private extractReadmeContent(projectPath: string, maxLines: number = 100): string {
+    const readmePaths = [
+      path.join(projectPath, 'README.md'),
+      path.join(projectPath, 'readme.md'),
+      path.join(projectPath, 'Readme.md')
+    ];
+
+    for (const readmePath of readmePaths) {
+      if (fs.existsSync(readmePath)) {
+        try {
+          const fullContent = fs.readFileSync(readmePath, 'utf-8');
+          const lines = fullContent.split('\n');
+
+          // Smart extraction: include up to maxLines or until we hit a second ## heading
+          let extractedLines: string[] = [];
+          let majorSectionCount = 0;
+
+          for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
+            const line = lines[i];
+
+            // Count major sections (## headings)
+            if (line.startsWith('## ')) {
+              majorSectionCount++;
+              // Stop after including 2-3 major sections
+              if (majorSectionCount > 3) {
+                break;
+              }
+            }
+
+            extractedLines.push(line);
+          }
+
+          return extractedLines.join('\n');
+        } catch (error) {
+          console.warn(`Failed to read README at ${readmePath}:`, error);
+        }
+      }
+    }
+
+    return '';
+  }
+
+  /**
    * Basic validation for project path - minimal checks for actual use case
    */
   private validateProjectPath(projectPath: string): void {
@@ -134,11 +180,18 @@ export class RepoAnalyzer {
       
       // Apply function-focused optimization
       const optimizedContent = this.extractFunctionFocusedContent(fullContent);
-      
+
+      // Prepend README content for context
+      const readmeContent = this.extractReadmeContent(projectPath);
+      let finalContent = optimizedContent;
+      if (readmeContent) {
+        finalContent = `# Project Overview (from README.md)\n\n${readmeContent}\n\n---\n\n# Repository Code\n\n${optimizedContent}`;
+      }
+
       // Cache the optimized result
-      this.cache.set(cacheKey, { content: optimizedContent, timestamp: Date.now() });
-      
-      return optimizedContent;
+      this.cache.set(cacheKey, { content: finalContent, timestamp: Date.now() });
+
+      return finalContent;
     } catch (error) {
       throw new Error(`Optimized content generation failed: ${error instanceof Error ? error.message : String(error)}`);
     }

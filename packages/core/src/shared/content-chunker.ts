@@ -1,14 +1,21 @@
-import { ESTIMATED_TOKENS_PER_CHAR, MAX_CONTEXT_TOKENS, LLM_MAX_TOKENS_QUEST } from './config.js';
+import {
+  ESTIMATED_TOKENS_PER_CHAR,
+  MAX_CONTEXT_TOKENS,
+  LLM_MAX_TOKENS_QUEST,
+  CHUNKING_RESPONSE_TOKENS,
+  CHUNKING_PROMPT_TOKENS,
+  CHUNKING_CONTEXT_SUMMARY_TOKENS
+} from './config.js';
 
 // Reserve tokens for LLM response and base prompts
 // Use the actual max tokens that will be requested for responses
-const RESPONSE_TOKENS = Math.max(LLM_MAX_TOKENS_QUEST, 10000); // Account for actual response size requested
-const PROMPT_TOKENS = 3000; // Increased to account for prompt template and instructions
+const RESPONSE_TOKENS = Math.max(LLM_MAX_TOKENS_QUEST, CHUNKING_RESPONSE_TOKENS); // Account for actual response size requested
+const PROMPT_TOKENS = CHUNKING_PROMPT_TOKENS; // Configurable prompt template tokens
 const AVAILABLE_CONTENT_TOKENS = MAX_CONTEXT_TOKENS - RESPONSE_TOKENS - PROMPT_TOKENS;
 const AVAILABLE_CONTENT_CHARS = Math.floor(AVAILABLE_CONTENT_TOKENS / ESTIMATED_TOKENS_PER_CHAR);
 
 // For subsequent chunks, reserve space for previous context summary
-const CONTEXT_SUMMARY_TOKENS = 8000;
+const CONTEXT_SUMMARY_TOKENS = CHUNKING_CONTEXT_SUMMARY_TOKENS;
 const SUBSEQUENT_CHUNK_TOKENS = AVAILABLE_CONTENT_TOKENS - CONTEXT_SUMMARY_TOKENS;
 const SUBSEQUENT_CHUNK_CHARS = Math.floor(SUBSEQUENT_CHUNK_TOKENS / ESTIMATED_TOKENS_PER_CHAR);
 

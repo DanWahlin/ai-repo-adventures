@@ -268,22 +268,52 @@ export class AdventureManager {
    */
   private async generateQuestContent(quest: Quest): Promise<QuestContent> {
     let codeContent: string;
-    
-    // Use targeted content if quest has specific files, otherwise use full repomix content
-    if (quest.codeFiles && quest.codeFiles.length > 0 && this.state.projectPath) {
-      try {
-        console.log(`🎯 Generating targeted content for ${quest.codeFiles.length} files`);
-        codeContent = await repoAnalyzer.generateTargetedContent(
-          this.state.projectPath,
-          quest.codeFiles,
-          false  // Use uncompressed content for detailed quest exploration
-        );
-      } catch (error) {
-        console.warn(`Failed to generate targeted content, falling back to full repomix content:`, error);
+
+    // Check if we have a project path
+    if (this.state.projectPath) {
+      const config = parseAdventureConfig(this.state.projectPath);
+      const hasConfigOptimization = config && typeof config === 'object' && 'adventure' in config;
+
+      // PRIORITY 1: Use quest-specific files if provided (most targeted)
+      if (quest.codeFiles && quest.codeFiles.length > 0) {
+        try {
+          console.log(`🎯 Generating targeted content for ${quest.codeFiles.length} quest-specific files`);
+          codeContent = await repoAnalyzer.generateTargetedContent(
+            this.state.projectPath,
+            quest.codeFiles,
+            false  // Use uncompressed content for detailed quest exploration
+          );
+        } catch (error) {
+          console.warn(`Failed to generate targeted content, falling back to optimized content:`, error);
+          // Fallback to adventure.config.json optimized content if available
+          if (hasConfigOptimization) {
+            try {
+              codeContent = await repoAnalyzer.generateRepomixContext(this.state.projectPath);
+            } catch (optimizedError) {
+              console.warn(`Failed to generate optimized content, using full repomix:`, optimizedError);
+              codeContent = this.state.projectInfo!.repomixContent;
+            }
+          } else {
+            codeContent = this.state.projectInfo!.repomixContent;
+          }
+        }
+      }
+      // PRIORITY 2: Use adventure.config.json optimized content (fallback when no quest-specific files)
+      else if (hasConfigOptimization) {
+        console.log(`🎯 Using adventure.config.json optimized content (no quest-specific files)`);
+        try {
+          codeContent = await repoAnalyzer.generateRepomixContext(this.state.projectPath);
+        } catch (error) {
+          console.warn(`Failed to generate optimized content, falling back to project content:`, error);
+          codeContent = this.state.projectInfo!.repomixContent;
+        }
+      }
+      // PRIORITY 3: Fallback to full repomix content
+      else {
         codeContent = this.state.projectInfo!.repomixContent;
       }
     } else {
-      // Fallback to full repomix content
+      // No project path available, use existing content
       codeContent = this.state.projectInfo!.repomixContent;
     }
 

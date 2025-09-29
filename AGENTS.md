@@ -238,3 +238,7 @@ Key implications:
 - **Quick Testing**: `npm run test:html` - Fast HTML generation with minimal LLM calls
 - **Specific Theme**: `npm run test:html -- --theme=mythical` - Generate specific theme for testing
 - **All Themes**: `node packages/generator/bin/cli.js --theme all --output tests/public --overwrite --max-quests 1` - Generate all themes with parallel processing
+
+### Special Instructions
+
+**Important**: Add each prompt entered by the user to ./user-prompts.md. Create the file if it doesn't already exist. 

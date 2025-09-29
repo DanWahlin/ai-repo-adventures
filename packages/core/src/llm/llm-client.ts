@@ -1,7 +1,8 @@
 import { OpenAI, AzureOpenAI } from 'openai';
-import { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_REQUEST_TIMEOUT, 
+import { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_REQUEST_TIMEOUT,
          LLM_API_VERSION, GITHUB_TOKEN, LLM_MAX_TOKENS_DEFAULT, LLM_TEMPERATURE,
-         GPT5_VERBOSITY, GPT5_REASONING_EFFORT } from '../shared/config.js';
+         GPT5_VERBOSITY, GPT5_REASONING_EFFORT, LLM_INITIAL_THROTTLE_DELAY,
+         LLM_MAX_THROTTLE_DELAY, LLM_THROTTLE_DECAY_RATE, TOKEN_RATE_WINDOW_SECONDS } from '../shared/config.js';
 
 /**
  * Format numbers in a friendly way (25000 -> 25K)
@@ -28,6 +29,36 @@ export interface LLMRequestOptions {
   reasoningEffort?: 'minimal' | 'medium' | 'high';
 }
 
+export enum RateLimitType {
+  TOKEN_RATE_EXCEEDED = 'token_rate_exceeded',  // Example: 200K tokens/60s window exceeded
+  REQUEST_RATE_LIMIT = 'request_rate_limit',     // Example: S0 tier per-request throttling
+  NONE = 'none'
+}
+
+export interface RateLimitInfo {
+  type: RateLimitType;
+  waitSeconds: number;
+  message: string;
+}
+
+/**
+ * Custom error class for rate limit errors with detailed information
+ */
+export class RateLimitError extends Error {
+  constructor(
+    public type: RateLimitType,
+    public waitSeconds: number = 60,
+    public originalMessage: string,
+    public originalError?: any
+  ) {
+    const waitMsg = type === RateLimitType.TOKEN_RATE_EXCEEDED
+      ? `Token rate limit exceeded (200K tokens/60s). Wait ${waitSeconds} seconds.`
+      : `Request rate limit hit. Retry after ${waitSeconds} seconds.`;
+    super(waitMsg);
+    this.name = 'RateLimitError';
+  }
+}
+
 interface OpenAIRequestParams {
   model: string;
   messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
@@ -46,10 +77,10 @@ export class LLMClient {
 
   // Adaptive throttling state
   private isThrottling: boolean = false;
-  private throttleDelay: number = 1000; // Start with 1 second delay
+  private throttleDelay: number = LLM_INITIAL_THROTTLE_DELAY; // Start with configurable initial delay
   private lastRequestTime: number = 0;
-  private readonly MAX_THROTTLE_DELAY = 30000; // Maximum 30 second delay
-  private readonly THROTTLE_DECAY_RATE = 0.8; // Reduce delay by 20% on successful requests
+  private readonly MAX_THROTTLE_DELAY = LLM_MAX_THROTTLE_DELAY; // Maximum delay from config
+  private readonly THROTTLE_DECAY_RATE = LLM_THROTTLE_DECAY_RATE; // Decay rate from config
 
   constructor() {
     this.model = LLM_MODEL;
@@ -125,9 +156,22 @@ export class LLMClient {
 
       return { content };
     } catch (error) {
-      // Check if this is an Azure S0 rate limit error
-      if (this.isAzureS0RateLimitError(error)) {
-        this.activateThrottling(error);
+      // Check if this is an Azure S0 rate limit error and handle appropriately
+      const rateLimitInfo = this.detectRateLimitType(error);
+
+      if (rateLimitInfo.type !== RateLimitType.NONE) {
+        // Activate throttling for request rate limits
+        if (rateLimitInfo.type === RateLimitType.REQUEST_RATE_LIMIT) {
+          this.activateThrottling(error);
+        }
+
+        // Throw custom RateLimitError for better error handling upstream
+        throw new RateLimitError(
+          rateLimitInfo.type,
+          rateLimitInfo.waitSeconds,
+          rateLimitInfo.message,
+          error
+        );
       }
 
       // Enhanced error logging for debugging
@@ -337,31 +381,63 @@ export class LLMClient {
   }
 
   /**
-   * Check if the error is specifically an Azure S0 pricing tier rate limit error
+   * Detect the type of rate limit error
    */
-  private isAzureS0RateLimitError(error: any): boolean {
+  detectRateLimitType(error: any): RateLimitInfo {
     const errorMessage = error?.message || '';
-    const isRateLimit = error?.status === 429 || errorMessage.includes('429');
-    const isS0Tier = errorMessage.includes('exceeded token rate limit of your current AIServices S0 pricing tier');
+    const is429Error = error?.status === 429 || errorMessage.includes('429');
 
-    return isRateLimit && isS0Tier;
+    if (!is429Error) {
+      return { type: RateLimitType.NONE, waitSeconds: 0, message: '' };
+    }
+
+    // Check for token rate exceeded (200K tokens/60s window)
+    // This happens when parallel processing sends too many tokens at once
+    if (errorMessage.includes('exceeded token rate limit of your current AIServices S0 pricing tier') &&
+        !errorMessage.includes('retry after')) {
+      // This is the token window exceeded error - no retry time given
+      return {
+        type: RateLimitType.TOKEN_RATE_EXCEEDED,
+        waitSeconds: TOKEN_RATE_WINDOW_SECONDS, // Configurable window (default: 60s)
+        message: `Token rate limit exceeded (200K tokens/${TOKEN_RATE_WINDOW_SECONDS}s window)`
+      };
+    }
+
+    // Check for request rate limit (with retry after time)
+    if (errorMessage.includes('exceeded token rate limit of your current AIServices S0 pricing tier') &&
+        errorMessage.includes('retry after')) {
+      const retryMatch = errorMessage.match(/retry after (\d+) seconds/);
+      const waitSeconds = retryMatch ? parseInt(retryMatch[1]) : 60;
+
+      return {
+        type: RateLimitType.REQUEST_RATE_LIMIT,
+        waitSeconds,
+        message: `Request rate limit hit, retry after ${waitSeconds} seconds`
+      };
+    }
+
+    // Generic 429 rate limit
+    return {
+      type: RateLimitType.REQUEST_RATE_LIMIT,
+      waitSeconds: 60,
+      message: '429 rate limit encountered'
+    };
   }
 
   /**
    * Activate throttling when Azure S0 rate limit is detected
+   * Uses rate limit information from detectRateLimitType() to set appropriate delays
    */
   private activateThrottling(error: any): void {
     this.isThrottling = true;
+    const rateLimitInfo = this.detectRateLimitType(error);
 
-    // Extract retry delay from error message if available
-    const errorMessage = error?.message || '';
-    const retryMatch = errorMessage.match(/retry after (\d+) seconds/);
-
-    if (retryMatch) {
-      const suggestedDelay = parseInt(retryMatch[1]) * 1000; // Convert to milliseconds
+    if (rateLimitInfo.type !== RateLimitType.NONE) {
+      // Use waitSeconds from detection (already extracted from error message)
+      const suggestedDelay = rateLimitInfo.waitSeconds * 1000; // Convert to milliseconds
       this.throttleDelay = Math.min(suggestedDelay, this.MAX_THROTTLE_DELAY);
     } else {
-      // Double the delay if no specific time given, but cap it
+      // Fallback: double the delay if no rate limit detected, but cap it
       this.throttleDelay = Math.min(this.throttleDelay * 2, this.MAX_THROTTLE_DELAY);
     }
 
@@ -402,10 +478,10 @@ export class LLMClient {
   private onSuccessfulRequest(): void {
     if (this.isThrottling) {
       // Gradually reduce the throttle delay on successful requests
-      this.throttleDelay = Math.max(this.throttleDelay * this.THROTTLE_DECAY_RATE, 1000);
+      this.throttleDelay = Math.max(this.throttleDelay * this.THROTTLE_DECAY_RATE, LLM_INITIAL_THROTTLE_DELAY);
 
       // If delay is back to minimum, disable throttling
-      if (this.throttleDelay <= 1000) {
+      if (this.throttleDelay <= LLM_INITIAL_THROTTLE_DELAY) {
         this.isThrottling = false;
 
         const green = '\x1b[32m';

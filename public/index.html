@@ -383,6 +383,17 @@
             margin-top: 3rem;
         }
 
+        /* Hide bullet points for lists with checkmarks */
+        .install-step ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .install-step ul li {
+            padding-left: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
         @media (max-width: 768px) {
             .landing-nav-links {
                 gap: 1rem;
@@ -735,6 +746,11 @@ Aim for 15-25 total highlights across all quests for the best exploration experi
                                 <td><code>--overwrite</code></td>
                             </tr>
                             <tr>
+                                <td><code>--sequential</code></td>
+                                <td>Process themes sequentially to avoid rate limits (for --theme all)</td>
+                                <td><code>--sequential</code></td>
+                            </tr>
+                            <tr>
                                 <td><code>--max-quests &lt;num&gt;</code></td>
                                 <td>Limit number of quests to generate</td>
                                 <td><code>--max-quests 5</code></td>
@@ -774,9 +790,60 @@ repo-adventure --theme space --serve
 # Generate all themes (space, mythical, ancient, developer) in parallel
 repo-adventure --theme all --output ./adventures --overwrite
 
+# Generate all themes sequentially to avoid rate limits (Azure S0)
+repo-adventure --theme all --sequential --output ./adventures --overwrite
+
 # Quick test with limited quests
 repo-adventure --theme mythical --max-quests 2 --serve</code></pre>
                     </div>
+                </section>
+
+                <!-- Rate Limits Section -->
+                <section class="install-step">
+                    <h3>⚡ Handling Rate Limits</h3>
+                    <p>When using Azure AI Foundry OpenAI models, you may encounter token rate limits when processing multiple themes in parallel depending on the TPM supported by for the model. The system provides automatic detection and graceful handling:</p>
+
+                    <p><strong>Azure Rate Limit Error:</strong></p>
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span>error</span>
+                        </div>
+                        <pre><code class="language-text">429 Requests... have exceeded token rate limit of your current AIServices S0 pricing tier</code></pre>
+                    </div>
+
+                    <p><strong>Automatic Solutions:</strong></p>
+                    <ul>
+                        <li>System detects token rate exceeded errors (different from request rate limits)</li>
+                        <li>Shows helpful suggestions for using <code>--sequential</code> flag</li>
+                        <li>In sequential mode: automatically waits 60 seconds and continues processing</li>
+                    </ul>
+
+                    <p><strong>Recommended Usage for AI Foundry models with more limited Token Per Minute (TPM):</strong></p>
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <span>bash</span>
+                            <button type="button" class="copy-button" onclick="copyToClipboard(this)">
+                                <span class="label">copy</span>
+                                <svg class="copy-icon">
+                                    <use href="#copy-icon"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <pre><code class="language-bash"># Proactively avoid rate limits
+repo-adventure --theme all --sequential --output ./public
+
+# Or let the system handle it automatically
+repo-adventure --theme all --output ./public
+# System will suggest using --sequential if rate limit hit</code></pre>
+                    </div>
+
+                    <p><strong>Benefits of Sequential Processing:</strong></p>
+                    <ul>
+                        <li>✅ Avoids overwhelming token rate windows (200K tokens/60s)</li>
+                        <li>✅ All themes still generate successfully (just takes longer)</li>
+                        <li>✅ Clear progress indicators and wait time notifications</li>
+                        <li>✅ No manual intervention required</li>
+                    </ul>
                 </section>
 
                 <div class="text-center-mt-3">

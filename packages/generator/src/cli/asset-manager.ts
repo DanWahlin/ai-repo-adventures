@@ -137,10 +137,10 @@ export class AssetManager {
       const targetImagesDir = path.join(globalAssetsDir, 'images');
       fs.mkdirSync(targetImagesDir, { recursive: true });
 
-      // Copy global shared images to shared directory  
+      // Copy global shared images to shared directory
       const globalSharedDir = path.join(outputDir, 'assets', 'shared');
       fs.mkdirSync(globalSharedDir, { recursive: true });
-      
+
       const globalImages = ['github-mark.svg', 'github-mark-white.svg'];
       globalImages.forEach(file => {
         const sourcePath = path.join(this.sourceDir, 'assets', 'shared', file);
@@ -156,8 +156,27 @@ export class AssetManager {
         const headerImageTarget = path.join(targetImagesDir, 'ai-adventures.png');
         fs.copyFileSync(headerImageSource, headerImageTarget);
       }
+
+      // Copy the homepage theme CSS from the themes directory
+      const homepageCSSSource = path.join(this.sourceDir, 'themes', 'homepage.css');
+      console.log(chalk.dim(`📁 Looking for homepage CSS at: ${homepageCSSSource}`));
+
+      if (!fs.existsSync(homepageCSSSource)) {
+        throw new Error(`Homepage CSS not found at: ${homepageCSSSource}`);
+      }
+
+      const homepageCSSContent = fs.readFileSync(homepageCSSSource, 'utf-8');
+      const cssPath = path.join(outputDir, 'assets', 'theme.css');
+
+      // Ensure assets directory exists
+      fs.mkdirSync(path.dirname(cssPath), { recursive: true });
+
+      fs.writeFileSync(cssPath, homepageCSSContent);
+      console.log(chalk.green(`✅ Homepage CSS copied to: ${cssPath}`));
+
     } catch (error) {
-      console.log(chalk.yellow('⚠️ Warning: Could not copy global images'));
+      console.log(chalk.yellow('⚠️ Warning: Could not copy global assets'));
+      throw error;
     }
   }
 }

@@ -1,3 +1,3 @@
 // LLM module exports
-export { LLMClient } from './llm-client.js';
-export type { LLMRequestOptions, LLMResponse } from './llm-client.js';
+export { LLMClient, RateLimitType, RateLimitError } from './llm-client.js';
+export type { LLMRequestOptions, LLMResponse, RateLimitInfo } from './llm-client.js';

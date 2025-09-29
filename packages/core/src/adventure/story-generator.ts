@@ -266,9 +266,7 @@ export class StoryGenerator {
         ...(this.customThemeData && { customThemeData: this.customThemeData })
       }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.';
 
-      response = await this.withTimeout(
-        this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
-      );
+      response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST });
 
       if (!response.content || response.content.trim() === '') {
         throw new Error('LLM returned empty response for quest content');
@@ -401,9 +399,7 @@ ${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}`;
 
       prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content here]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters.';
 
-      const response = await this.withTimeout(
-        this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST })
-      );
+      const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST });
 
       if (!response.content || response.content.trim() === '') {
         console.warn(`⚠️ Empty response for chunk ${i + 1}, using accumulated content`);
@@ -483,9 +479,7 @@ ${content}
 Provide a concise summary that will help continue the ${theme}-themed adventure coherently.`;
 
     try {
-      const response = await this.withTimeout(
-        this.llmClient.generateResponse(prompt, { maxTokens: 500 })
-      );
+      const response = await this.llmClient.generateResponse(prompt, { maxTokens: 500 });
 
       return response.content?.trim() || `${theme}-themed quest adventure exploring the codebase (part ${chunkNumber}/${totalChunks}).`;
     } catch (error) {
@@ -569,9 +563,7 @@ Provide a concise summary that will help continue the ${theme}-themed adventure 
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     });
 
-    const response = await this.withTimeout(
-      this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY })
-    );
+    const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY });
     
     if (!response.content || response.content.trim() === '') {
       throw new Error('LLM returned empty response');
@@ -599,16 +591,6 @@ Provide a concise summary that will help continue the ${theme}-themed adventure 
     return parsed;
   }
 
-  /**
-   * Helper to wrap promises with timeout
-   */
-  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number = LLM_REQUEST_TIMEOUT): Promise<T> {
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs);
-    });
-    
-    return Promise.race([promise, timeoutPromise]);
-  }
 
   /**
    * Validate and normalize theme

@@ -441,6 +441,7 @@ Options:
   --theme              Theme: space, mythical, ancient, developer, custom, or all
   --output             Output directory (default: ./public)
   --overwrite          Overwrite existing files without prompting
+  --sequential         Process themes sequentially to avoid rate limits (for --theme all)
   --serve              Start HTTP server and open browser after generation
   --port               HTTP server port (default: 8080)
   --max-quests         Limit number of quests for testing (default: unlimited)
@@ -451,8 +452,39 @@ Examples:
   npm run generate-html                              # Interactive mode
   npm run generate-html --theme space --output ./public --overwrite --serve
   npm run generate-html --theme all --output ./docs  # Generate all themes
+  npm run generate-html --theme all --sequential --output ./docs  # Avoid rate limits
   npm run generate-html --theme mythical --max-quests 2 --log-llm-output
 ```
+
+### Handling Rate Limits
+
+When using Azure OpenAI with certain pricing tiers (like S0), you may encounter token rate limits when processing multiple themes in parallel. The system provides automatic detection and graceful handling:
+
+#### Azure S0 Rate Limit Error
+```
+429 Requests... have exceeded token rate limit of your current AIServices S0 pricing tier
+```
+
+**Automatic Solutions:**
+- System detects token rate exceeded errors (different from request rate limits)
+- Shows helpful suggestions for using `--sequential` flag
+- In sequential mode: automatically waits 60 seconds and continues processing
+
+**Recommended Usage for Azure S0 Users:**
+```bash
+# Proactively avoid rate limits
+npm run generate-html --theme all --sequential --output ./public
+
+# Or let system handle it automatically
+npm run generate-html --theme all --output ./public
+# System will suggest using --sequential if rate limit hit
+```
+
+**Benefits of Sequential Processing:**
+- ✅ Avoids overwhelming token rate windows (200K tokens/60s)
+- ✅ All themes still generate successfully (just takes longer)
+- ✅ Clear progress indicators and wait time notifications
+- ✅ No manual intervention required
 
 ### Quick Test Generator
 ```bash

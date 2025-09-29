@@ -15,7 +15,7 @@ import { marked } from 'marked';
 import { repoAnalyzer } from '@codewithdan/ai-repo-adventures-core/analyzer';
 import { AdventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import { getAllThemes, getThemeByKey, AdventureTheme, parseAdventureConfig, LLM_MODEL } from '@codewithdan/ai-repo-adventures-core/shared';
-import { LLMClient } from '@codewithdan/ai-repo-adventures-core/llm';
+import { LLMClient, RateLimitType, RateLimitInfo, RateLimitError } from '@codewithdan/ai-repo-adventures-core/llm';
 import { createProjectInfo } from '@codewithdan/ai-repo-adventures-core';
 import { TemplateEngine } from './template-engine.js';
 import { AssetManager } from './asset-manager.js';
@@ -47,6 +47,12 @@ class HTMLAdventureGenerator {
   private logLlmOutput: boolean = false;
   private serve: boolean = false;
   private isMultiTheme: boolean = false;
+  private processingMode: 'parallel' | 'sequential' = 'parallel';
+  private forceSequential: boolean = false;
+  private tokenRateLimitEncountered: boolean = false;
+  private completedThemes = new Set<string>();
+  private currentProcessingTheme?: string;
+  private rateLimitWaitStartTime?: number;
 
   constructor() {
     this.rl = readline.createInterface({
@@ -55,6 +61,14 @@ class HTMLAdventureGenerator {
     });
     this.adventureManager = new AdventureManager();
     this.templateEngine = new TemplateEngine();
+  }
+
+  /**
+   * Get AssetManager instance for current directory
+   */
+  private async getAssetManager() {
+    const __dirname = path.dirname(new URL(import.meta.url).pathname);
+    return new (await import('./asset-manager.js')).AssetManager(__dirname);
   }
 
   async start(): Promise<void> {
@@ -418,11 +432,17 @@ class HTMLAdventureGenerator {
 
     console.log(chalk.dim('🧭 Adding quest navigator...'));
     if (!this.isMultiTheme) {
-      this.copyQuestNavigator();
+      const assetManager = await this.getAssetManager();
+      assetManager.copyQuestNavigator(this.outputDir);
     }
 
     console.log(chalk.dim('🖼️ Copying images...'));
-    this.copyImages();
+    // Skip copying images in multi-theme mode for individual themes
+    // Images are copied once at the root level
+    if (!this.isMultiTheme) {
+      const assetManager = await this.getAssetManager();
+      assetManager.copyImages(this.outputDir, this.isMultiTheme);
+    }
 
     console.log(chalk.dim('📝 Creating main adventure page...'));
     this.generateIndexHTML();
@@ -674,51 +694,7 @@ class HTMLAdventureGenerator {
     fs.writeFileSync(cssPath, combinedCSS);
   }
 
-  private copyImages(): void {
-    // Skip copying images in multi-theme mode for individual themes
-    // Images are copied once at the root level
-    if (this.isMultiTheme) {
-      return;
-    }
 
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const sourceImagesDir = path.join(__dirname, 'assets', 'images');
-    const sourceSharedDir = path.join(__dirname, 'assets', 'shared');
-    const targetImagesDir = path.join(this.outputDir, 'assets', 'images');
-    const targetSharedDir = path.join(this.outputDir, 'assets', 'shared');
-
-    try {
-      // Copy theme-specific images
-      if (fs.existsSync(sourceImagesDir)) {
-        fs.mkdirSync(targetImagesDir, { recursive: true });
-        const imageFiles = fs.readdirSync(sourceImagesDir);
-        imageFiles.forEach(file => {
-          const sourcePath = path.join(sourceImagesDir, file);
-          const targetPath = path.join(targetImagesDir, file);
-          fs.copyFileSync(sourcePath, targetPath);
-        });
-      }
-
-      // Copy shared images 
-      if (fs.existsSync(sourceSharedDir)) {
-        fs.mkdirSync(targetSharedDir, { recursive: true });
-        const sharedFiles = fs.readdirSync(sourceSharedDir);
-        sharedFiles.forEach(file => {
-          const sourcePath = path.join(sourceSharedDir, file);
-          const targetPath = path.join(targetSharedDir, file);
-          fs.copyFileSync(sourcePath, targetPath);
-        });
-      }
-    } catch (error) {
-      console.log(chalk.yellow('⚠️ Warning: Could not copy images from source directory'));
-    }
-  }
-
-  private copyQuestNavigator(): void {
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const assetManager = new AssetManager(__dirname);
-    assetManager.copyQuestNavigator(this.outputDir);
-  }
 
   private loadThemeCSS(theme: AdventureTheme): string {
     return this.loadCSSFile(`themes/${theme}.css`, 'themes/default.css');
@@ -790,6 +766,14 @@ class HTMLAdventureGenerator {
         
       } catch (error) {
         console.log(chalk.red(`    ❌ Failed to generate quest [${this.selectedTheme}]: ${quest.title}`));
+
+        // Fail-fast strategy: If we're in multi-theme mode and a quest fails,
+        // throw an error to trigger sequential mode
+        if (this.isMultiTheme) {
+          throw new Error(`Quest generation failed for ${quest.title} in ${this.selectedTheme} theme. Switching to sequential mode for consistency.`);
+        }
+
+        // For single theme generation, still create placeholder
         const placeholderHTML = this.buildQuestHTML(quest, 'Quest content could not be generated.', i);
         const questPath = path.join(this.outputDir, quest.filename);
         fs.writeFileSync(questPath, placeholderHTML);
@@ -1420,7 +1404,16 @@ Focus on architectural patterns, technical systems, frameworks, and development 
   private async generateAllThemes(args: Map<string, string>): Promise<void> {
     console.log(chalk.green('✅ Generating all themes'));
     this.isMultiTheme = true;
-    
+
+    // Check for sequential flag
+    if (args.has('sequential')) {
+      this.forceSequential = true;
+      this.processingMode = 'sequential';
+      console.log(chalk.cyan('📋 Processing mode: Sequential (--sequential flag)'));
+    } else {
+      console.log(chalk.cyan('📋 Processing mode: Parallel (default)'));
+    }
+
     // Set output directory from args
     const outputArg = args.get('output');
     this.outputDir = outputArg || './public';
@@ -1474,32 +1467,81 @@ Focus on architectural patterns, technical systems, frameworks, and development 
     fs.mkdirSync(path.join(this.outputDir, 'assets', 'images'), { recursive: true });
 
     // Copy shared assets to avoid duplication across themes
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    const assetManager = new (await import('./asset-manager.js')).AssetManager(__dirname);
+    const assetManager = await this.getAssetManager();
     assetManager.copySharedNavigator(this.outputDir);
     assetManager.copyGlobalAssets(this.outputDir);
-    
-    // Copy all images once to the root assets directory
-    const sourceImagesDir = path.join(__dirname, 'assets', 'images');
-    const targetImagesDir = path.join(this.outputDir, 'assets', 'images');
-    
-    if (fs.existsSync(sourceImagesDir)) {
-      fs.mkdirSync(targetImagesDir, { recursive: true });
-      const imageFiles = fs.readdirSync(sourceImagesDir);
-      console.log(chalk.green(`✅ Copying ${imageFiles.length} images to shared assets directory`));
-      imageFiles.forEach(file => {
-        const sourcePath = path.join(sourceImagesDir, file);
-        const targetPath = path.join(targetImagesDir, file);
-        fs.copyFileSync(sourcePath, targetPath);
-      });
-    }
+
+    // Copy all images once to the root assets directory using AssetManager
+    console.log(chalk.green(`✅ Copying images to shared assets directory`));
+    assetManager.copyImages(this.outputDir, true);
 
     // Generate each theme in its own subdirectory
     const themes: AdventureTheme[] = ['space', 'mythical', 'ancient', 'developer'];
-    
+
+    // Generate initial homepage early for --theme all to ensure it exists even if process is interrupted
+    console.log(chalk.yellow('🏠 Creating initial homepage (will be updated after theme generation)...'));
+    try {
+      this.generateHomepageIndex();
+      console.log(chalk.green('✅ Initial homepage index.html created'));
+    } catch (homepageError) {
+      console.log(chalk.yellow(`⚠️  Could not create initial homepage: ${homepageError}`));
+    }
+
+    // Process themes based on current mode
+    try {
+      if (this.processingMode === 'sequential') {
+        await this.generateThemesSequentially(themes);
+      } else {
+        await this.generateThemesInParallel(themes);
+      }
+    } catch (error) {
+      // Check if this is any rate limit error that needs recovery
+      if (error instanceof RateLimitError &&
+          (error.type === RateLimitType.TOKEN_RATE_EXCEEDED || error.type === RateLimitType.REQUEST_RATE_LIMIT)) {
+        await this.handleTokenRateLimitAndRetry(themes, error);
+      } else {
+        // Log the error but continue to generate homepage
+        console.log(chalk.yellow(`⚠️  Theme generation encountered errors: ${error}`));
+        console.log(chalk.yellow('🏠 Continuing with homepage generation...'));
+      }
+    } finally {
+      // Always generate homepage index.html when using --theme all
+      // This ensures navigation is available even if some themes fail
+      console.log(chalk.yellow('\n🏠 Generating homepage...'));
+      try {
+        this.generateHomepageIndex();
+        console.log(chalk.green('✅ Homepage index.html created successfully'));
+      } catch (homepageError) {
+        console.log(chalk.red(`❌ Failed to generate homepage: ${homepageError}`));
+      }
+
+      // Global assets are already copied in generateAllThemes for multi-theme mode
+      // Single-theme mode needs to copy global assets
+      if (!this.isMultiTheme) {
+        try {
+          const assetManager = await this.getAssetManager();
+          assetManager.copyGlobalAssets(this.outputDir);
+        } catch (assetError) {
+          console.log(chalk.yellow(`⚠️  Failed to copy some assets: ${assetError}`));
+        }
+      }
+    }
+
+    console.log();
+    console.log(chalk.green.bold('🎉 All themes generated successfully!'));
+    console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
+
+    if (this.serve) {
+      await this.startHttpServer();
+    } else {
+      console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
+    }
+  }
+
+  private async generateThemesInParallel(themes: AdventureTheme[]): Promise<void> {
     console.log(chalk.blue(`\n🎯 Starting parallel generation of ${themes.length} themes...`));
     console.log(chalk.dim('Themes will be generated concurrently for faster completion'));
-    
+
     // Track progress
     const progress = {
       completed: 0,
@@ -1527,8 +1569,14 @@ Focus on architectural patterns, technical systems, frameworks, and development 
         themeGenerator['maxQuests'] = this.maxQuests;
         themeGenerator['logLlmOutput'] = this.logLlmOutput;
         themeGenerator['isMultiTheme'] = this.isMultiTheme;
-        
+
+        // Track which theme is being processed
+        this.currentProcessingTheme = theme;
+
         await themeGenerator.generateAdventure();
+
+        // Mark theme as completed
+        this.completedThemes.add(theme);
         
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         progress.completed++;
@@ -1536,10 +1584,27 @@ Focus on architectural patterns, technical systems, frameworks, and development 
         
         return { theme, success: true };
       } catch (error) {
+        // Check if this is any rate limit error OR a quest failure - if so, propagate it up
+        if (error instanceof RateLimitError &&
+            (error.type === RateLimitType.TOKEN_RATE_EXCEEDED || error.type === RateLimitType.REQUEST_RATE_LIMIT)) {
+          throw error; // This will trigger sequential mode
+        }
+
+        // Check if this is a quest failure (fail-fast strategy)
+        if (error instanceof Error && error.message.includes('Quest generation failed')) {
+          console.log(chalk.yellow(`\n⚠️  Quest failure detected in ${theme} theme`));
+          throw new RateLimitError(
+            RateLimitType.REQUEST_RATE_LIMIT,
+            60,
+            'Quest generation failed - switching to sequential mode for consistency',
+            error
+          ); // Reuse rate limit error to trigger sequential mode
+        }
+
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         progress.completed++;
         console.log(chalk.red(`❌ [${progress.completed}/${progress.total}] ${theme} theme failed after ${duration}s:`, error instanceof Error ? error.message : error));
-        
+
         return { theme, success: false, error };
       } finally {
         // Always close the readline interface to allow process to exit
@@ -1578,22 +1643,91 @@ Focus on architectural patterns, technical systems, frameworks, and development 
       }
     });
 
-    // Generate homepage index.html
-    console.log(chalk.yellow('\n🏠 Generating homepage...'));
-    this.generateHomepageIndex();
-    
-    // Copy global assets
-    this.copyGlobalAssets();
-    
-    console.log();
-    console.log(chalk.green.bold('🎉 All themes generated successfully!'));
-    console.log(chalk.cyan(`📁 Location: ${this.outputDir}`));
-    
-    if (this.serve) {
-      await this.startHttpServer();
-    } else {
-      console.log(chalk.cyan(`🌐 Open: ${path.join(this.outputDir, 'index.html')}`));
+    // CRITICAL: Check if any theme hit a rate limit and re-throw to trigger sequential fallback
+    const rateLimitRejection = results.find(
+      result =>
+        result.status === 'rejected' &&
+        result.reason instanceof RateLimitError &&
+        (result.reason.type === RateLimitType.TOKEN_RATE_EXCEEDED ||
+          result.reason.type === RateLimitType.REQUEST_RATE_LIMIT)
+    );
+
+    if (rateLimitRejection && rateLimitRejection.status === 'rejected') {
+      // Re-throw the rate limit error so it can be caught by generateAllThemes
+      // and trigger the automatic sequential retry mechanism
+      throw rateLimitRejection.reason;
     }
+  }
+
+  /**
+   * Handle rate limit errors by waiting and switching to sequential mode
+   */
+  private async handleTokenRateLimitAndRetry(
+    themes: AdventureTheme[],
+    error: RateLimitError
+  ): Promise<void> {
+    // User messaging: Explain what happened
+    console.log();
+
+    // Check if this is actually a quest failure (fail-fast strategy)
+    if (error.message.includes('Quest generation failed')) {
+      console.log(chalk.yellow('⚠️  Quest generation failed during parallel processing'));
+      console.log(chalk.yellow('📋 To ensure consistency across all themes, switching to sequential mode...'));
+    } else if (error.type === RateLimitType.TOKEN_RATE_EXCEEDED) {
+      console.log(chalk.yellow('⚠️  Token rate limit exceeded (200K tokens/60s window for Azure S0 tier)'));
+    } else {
+      console.log(chalk.yellow('⚠️  Request rate limit exceeded (Azure S0 tier limitations)'));
+    }
+    console.log(chalk.dim(`    Error details: ${error.originalMessage}`));
+
+    // Identify remaining themes (those not completed)
+    const remainingThemes = themes.filter(theme => !this.completedThemes.has(theme));
+
+    if (remainingThemes.length === 0) {
+      console.log(chalk.green('✅ All themes were completed before the rate limit was hit'));
+      return;
+    }
+
+    // Show progress so far
+    console.log();
+    console.log(chalk.blue('📊 Progress Status:'));
+    console.log(chalk.green(`  ✅ Completed: ${this.completedThemes.size} themes`));
+    this.completedThemes.forEach(theme => {
+      console.log(chalk.dim(`    ✓ ${theme}`));
+    });
+    console.log(chalk.yellow(`  ⏳ Remaining: ${remainingThemes.length} themes`));
+    remainingThemes.forEach(theme => {
+      console.log(chalk.dim(`    • ${theme}`));
+    });
+
+    // Wait for the rate limit window to reset
+    const waitSeconds = (error instanceof RateLimitError) ? error.waitSeconds : 60;
+    console.log();
+    console.log(chalk.cyan(`⏳ Waiting ${waitSeconds} seconds for rate limit window to reset...`));
+
+    // Show countdown
+    for (let i = waitSeconds; i > 0; i--) {
+      process.stdout.write(`\r${chalk.cyan(`⏳ Time remaining: ${i} seconds  `)}`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
+
+    // Switch to sequential processing mode
+    console.log(chalk.blue('🔄 Switching to sequential processing mode to avoid further rate limits'));
+    console.log(chalk.dim('   Processing will continue more slowly but reliably'));
+
+    this.processingMode = 'sequential';
+    this.tokenRateLimitEncountered = true;
+
+    // Process remaining themes sequentially
+    console.log();
+    console.log(chalk.green(`✅ Continuing with remaining ${remainingThemes.length} themes...`));
+    await this.generateThemesSequentially(remainingThemes);
+
+    // Show helpful tip for future runs
+    console.log();
+    console.log(chalk.cyan('💡 Tip: Use --sequential flag next time for large theme sets with Azure S0'));
+    console.log(chalk.dim('   Example: repo-adventure --theme all --sequential --output ./public'));
   }
 
   private generateHomepageIndex(): void {
@@ -1669,55 +1803,135 @@ Focus on architectural patterns, technical systems, frameworks, and development 
     console.log(chalk.green('✅ Homepage index.html created'));
   }
 
-  private copyGlobalAssets(): void {
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    
-    // Copy the homepage theme CSS from the themes directory
-    const homepageCSSSource = path.join(__dirname, 'themes', 'homepage.css');
-    const homepageCSSContent = fs.readFileSync(homepageCSSSource, 'utf-8');
-
-    const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
-    fs.writeFileSync(cssPath, homepageCSSContent);
-    
-    // Copy global images (ai-adventures.png and github icons)
-    const sourceImagesDir = path.join(__dirname, 'assets', 'images');
-    const targetImagesDir = path.join(this.outputDir, 'assets', 'images');
-
-    try {
-      if (fs.existsSync(sourceImagesDir)) {
-        // Ensure target directory exists
-        fs.mkdirSync(targetImagesDir, { recursive: true });
-        
-        // Copy global shared images to shared directory  
-        const globalSharedDir = path.join(this.outputDir, 'assets', 'shared');
-        fs.mkdirSync(globalSharedDir, { recursive: true });
-        
-        const globalImages = ['github-mark.svg', 'github-mark-white.svg'];
-        globalImages.forEach(file => {
-          const sourcePath = path.join(__dirname, 'assets', 'shared', file);
-          if (fs.existsSync(sourcePath)) {
-            const targetPath = path.join(globalSharedDir, file);
-            fs.copyFileSync(sourcePath, targetPath);
-          }
-        });
-
-        // Copy header image for theme selection page
-        const headerImageSource = path.join(__dirname, 'assets', 'images', 'ai-adventures.png');
-        if (fs.existsSync(headerImageSource)) {
-          const headerImageTarget = path.join(targetImagesDir, 'ai-adventures.png');
-          fs.copyFileSync(headerImageSource, headerImageTarget);
-        }
-      }
-    } catch (error) {
-      console.log(chalk.yellow('⚠️ Warning: Could not copy global images'));
-    }
-    
-    console.log(chalk.green('✅ Global assets copied'));
-  }
 
   private prompt(question: string): Promise<string> {
     return new Promise((resolve) => {
       this.rl.question(chalk.bold(question), resolve);
+    });
+  }
+
+  /**
+   * Check if an error is a rate limit error that should trigger sequential retry
+   * Recognizes RateLimitError instances from the LLM client
+   */
+  private isTokenRateLimitError(error: any): boolean {
+    if (!error) return false;
+
+    // Check for RateLimitError instances from LLM client
+    if (error instanceof RateLimitError) {
+      // Handle both TOKEN_RATE_EXCEEDED and REQUEST_RATE_LIMIT
+      return error.type === RateLimitType.TOKEN_RATE_EXCEEDED ||
+             error.type === RateLimitType.REQUEST_RATE_LIMIT;
+    }
+
+    // Not a recognized rate limit error
+    return false;
+  }
+
+  /**
+   * Generate themes sequentially to avoid rate limits
+   */
+  private async generateThemesSequentially(themes: AdventureTheme[]): Promise<void> {
+    console.log(chalk.blue(`\n🎯 Starting sequential generation of ${themes.length} themes...`));
+    console.log(chalk.dim('Themes will be generated one at a time to avoid rate limits'));
+
+    const results: { theme: string; success: boolean; error?: any }[] = [];
+
+    for (let i = 0; i < themes.length; i++) {
+      const theme = themes[i];
+      let retryCount = 0;
+      const maxRetries = 3; // Prevent infinite retry loops
+      let themeCompleted = false;
+
+      while (!themeCompleted && retryCount < maxRetries) {
+        const startTime = Date.now();
+        const attemptNumber = retryCount > 0 ? ` (retry ${retryCount}/${maxRetries})` : '';
+        console.log(chalk.yellow(`\n📝 [${i + 1}/${themes.length}] Generating ${theme} theme${attemptNumber}...`));
+
+        // Create theme-specific directory
+        const themeDir = path.join(this.outputDir, theme);
+        fs.mkdirSync(themeDir, { recursive: true });
+        fs.mkdirSync(path.join(themeDir, 'assets'), { recursive: true });
+
+        // Create a new generator instance for this theme
+        const themeGenerator = new HTMLAdventureGenerator();
+
+        try {
+          themeGenerator['selectedTheme'] = theme;
+          themeGenerator['outputDir'] = themeDir;
+          themeGenerator['maxQuests'] = this.maxQuests;
+          themeGenerator['logLlmOutput'] = this.logLlmOutput;
+          themeGenerator['isMultiTheme'] = this.isMultiTheme;
+
+          await themeGenerator.generateAdventure();
+
+          // Mark theme as completed
+          this.completedThemes.add(theme);
+          themeCompleted = true;
+
+          const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+          console.log(chalk.green(`✅ ${theme} theme completed in ${duration}s`));
+          results.push({ theme, success: true });
+        } catch (error) {
+          const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+          // Check for token rate limit error
+          if (this.isTokenRateLimitError(error)) {
+            console.log(chalk.yellow(`⚠️ ${theme} theme hit token rate limit after ${duration}s`));
+
+            // Extract wait time from RateLimitError or use default
+            const waitSeconds = (error instanceof RateLimitError) ? error.waitSeconds : 60;
+            console.log(chalk.cyan(`⏳ Waiting ${waitSeconds} seconds for rate limit window to reset...`));
+
+            // Show countdown
+            for (let j = waitSeconds; j > 0; j--) {
+              process.stdout.write(`\r${chalk.cyan(`⏳ Time remaining: ${j} seconds  `)}`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
+
+            console.log(chalk.green(`✅ Rate limit window reset. Retrying ${theme} theme...`));
+            retryCount++;
+            // Continue to retry the same theme
+          } else {
+            // Non-rate-limit error, don't retry
+            console.log(chalk.red(`❌ ${theme} theme failed after ${duration}s:`, error instanceof Error ? error.message : error));
+            results.push({ theme, success: false, error });
+            break; // Exit retry loop for non-rate-limit errors
+          }
+        } finally {
+          // Clean up
+          try {
+            themeGenerator['rl'].close();
+          } catch (cleanupError) {
+            // Ignore cleanup errors
+          }
+        }
+      }
+
+      // If we exhausted retries, mark as failed
+      if (!themeCompleted && retryCount >= maxRetries) {
+        console.log(chalk.red(`❌ ${theme} theme failed after ${maxRetries} retries due to rate limits`));
+        results.push({ theme, success: false, error: 'Exceeded maximum retries due to rate limits' });
+      }
+    }
+
+    // Show summary
+    const successful = results.filter(r => r.success).length;
+    const failed = results.length - successful;
+
+    console.log(chalk.blue('\n📊 Generation Summary:'));
+    console.log(chalk.green(`  ✅ Successful: ${successful}/${themes.length}`));
+    if (failed > 0) {
+      console.log(chalk.red(`  ❌ Failed: ${failed}/${themes.length}`));
+    }
+
+    results.forEach(result => {
+      if (result.success) {
+        console.log(chalk.dim(`    ✓ ${result.theme}`));
+      } else {
+        console.log(chalk.dim(`    ✗ ${result.theme} - generation failed`));
+      }
     });
   }
 }
@@ -1762,6 +1976,7 @@ Options:
   --theme <theme>        Theme: space, mythical, ancient, developer, custom, or all
   --output <dir>         Output directory (default: ./public)
   --overwrite           Overwrite existing files without prompting
+  --sequential          Process themes sequentially to avoid rate limits (for --theme all)
   --max-quests <num>    Limit number of quests to generate (default: all)
   --log-llm-output      Save raw LLM output to tests/llm-output directory
   --serve               Start HTTP server and open browser after generation
@@ -1771,6 +1986,7 @@ Examples:
   npm run generate-html --theme space --output ./docs --overwrite
   npm run generate-html --theme mythical
   npm run generate-html --theme all --output public --overwrite
+  npm run generate-html --theme all --sequential --output public  # Avoid rate limits
   npm run generate-html (interactive mode - includes "Generate All Themes" option)
 `);
     return;
