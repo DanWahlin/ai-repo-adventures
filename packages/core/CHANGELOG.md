@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.2.0...@codewithdan/ai-repo-adventures-core@1.3.0) (2025-09-29)
+
+
+### Features
+
+* Implement automatic mode switching for token rate limit handling ([da953b6](https://github.com/danwahlin/ai-repo-adventures/commit/da953b671661a8f2876f65f23d1c9b8b84639dc3))
+
+
+
+
+
 # [1.2.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.1.9...@codewithdan/ai-repo-adventures-core@1.2.0) (2025-09-28)
 
 
