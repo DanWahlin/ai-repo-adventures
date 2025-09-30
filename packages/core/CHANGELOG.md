@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.3.0...@codewithdan/ai-repo-adventures-core@1.4.0) (2025-09-30)
+
+
+### Features
+
+* Enhance quest content generation and logging features ([978b185](https://github.com/danwahlin/ai-repo-adventures/commit/978b185ab7abb47e64461f3b610bde0e5270e709))
+
+
+
+
+
 # [1.3.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.2.0...@codewithdan/ai-repo-adventures-core@1.3.0) (2025-09-29)
 
 
