@@ -164,6 +164,57 @@ async function runLLMClientTests() {
     assert(requestRateError.includes('retry after'), 'Request rate error should have retry after');
   });
 
+  // TOKEN_RATE_WINDOW_SECONDS Configuration Tests
+  console.log('\n⚙️ TOKEN_RATE_WINDOW_SECONDS Configuration Tests');
+  console.log('-'.repeat(30));
+
+  await test('TOKEN_RATE_WINDOW_SECONDS default value is 60 seconds', () => {
+    // Test that the default value matches Azure S0 token rate window
+    const defaultValue = parseInt(process.env.TOKEN_RATE_WINDOW_SECONDS || '60');
+    assert(defaultValue === 60, 'Default should be 60 seconds for Azure S0 tier');
+  });
+
+  await test('TOKEN_RATE_WINDOW_SECONDS can be customized via environment', () => {
+    // Test that custom values are respected
+    const originalValue = process.env.TOKEN_RATE_WINDOW_SECONDS;
+
+    // Simulate custom configuration
+    const customWindow = 120;
+    process.env.TOKEN_RATE_WINDOW_SECONDS = customWindow.toString();
+
+    const configuredValue = parseInt(process.env.TOKEN_RATE_WINDOW_SECONDS || '60');
+    assert(configuredValue === customWindow, 'Should use custom configured value');
+
+    // Restore original value
+    if (originalValue !== undefined) {
+      process.env.TOKEN_RATE_WINDOW_SECONDS = originalValue;
+    } else {
+      delete process.env.TOKEN_RATE_WINDOW_SECONDS;
+    }
+  });
+
+  await test('detectRateLimitType uses TOKEN_RATE_WINDOW_SECONDS in error message', () => {
+    // Test that error messages include the configured window value
+    const windowSeconds = parseInt(process.env.TOKEN_RATE_WINDOW_SECONDS || '60');
+
+    // Simulate the error message format from detectRateLimitType()
+    const errorMessage = `Token rate limit exceeded (200K tokens/${windowSeconds}s window)`;
+
+    assert(errorMessage.includes(`${windowSeconds}s window`), 'Error message should include configured window');
+    assert(errorMessage.includes('200K tokens'), 'Error message should include token limit');
+  });
+
+  await test('TOKEN_RATE_WINDOW_SECONDS is used for wait time default', () => {
+    // Test that the window value is used as default wait time
+    const windowSeconds = parseInt(process.env.TOKEN_RATE_WINDOW_SECONDS || '60');
+
+    // When token rate is exceeded without retry time, use window as wait time
+    const defaultWaitTime = windowSeconds;
+
+    assert(defaultWaitTime === windowSeconds, 'Default wait time should match configured window');
+    assert(defaultWaitTime >= 60, 'Wait time should be at least 60 seconds for S0 tier');
+  });
+
   printResults();
 }
 

@@ -264,7 +264,7 @@ export class StoryGenerator {
         questPosition,
         totalQuests,
         ...(this.customThemeData && { customThemeData: this.customThemeData })
-      }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content here starting with the quest title]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters. Start the content immediately with the quest title.';
+      }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content following the Required Format template above EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] followed by ---\n- Include ## Quest Objectives section with investigative questions\n- Include ## File Exploration section with filepath headings and highlights\n- Include ## Code section with actual code from the files (not generic examples)\n- Include ## Helpful Hints section\n- End with completion message and ---\n- Do NOT add "Chapter" headings or deviate from the template structure\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
 
       response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST });
 
@@ -397,7 +397,7 @@ ${adventureGuidance ? `Adventure Configuration:\n${adventureGuidance}` : ''}
 ${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}`;
       }
 
-      prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content here]\n---END MARKDOWN---\n\nDo NOT include any conversational text outside the delimiters.';
+      prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content following the Required Format template EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] followed by ---\n- Include ## Quest Objectives section with investigative questions\n- Include ## File Exploration section with filepath headings and highlights\n- Include ## Code section with actual code from the files (not generic examples)\n- Include ## Helpful Hints section\n- End with completion message and ---\n- Do NOT add "Chapter" headings or deviate from the template structure\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
 
       const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST });
 

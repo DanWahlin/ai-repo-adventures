@@ -278,11 +278,14 @@ export class AdventureManager {
       if (quest.codeFiles && quest.codeFiles.length > 0) {
         try {
           console.log(`🎯 Generating targeted content for ${quest.codeFiles.length} quest-specific files`);
-          codeContent = await repoAnalyzer.generateTargetedContent(
+          const targetedContent = await repoAnalyzer.generateTargetedContent(
             this.state.projectPath,
             quest.codeFiles,
             false  // Use uncompressed content for detailed quest exploration
           );
+
+          // Add README context for better project understanding
+          codeContent = repoAnalyzer.prependReadmeContext(this.state.projectPath, targetedContent);
         } catch (error) {
           console.warn(`Failed to generate targeted content, falling back to optimized content:`, error);
           // Fallback to adventure.config.json optimized content if available

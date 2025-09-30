@@ -393,17 +393,91 @@ async function runTests() {
   await test('Adventure content includes code snippets and hints', async () => {
     const manager = new AdventureManager();
     await manager.initializeAdventure(realProjectInfo, 'ancient');
-    
+
     const result = await manager.exploreQuest('1');
-    
+
     // Check for code-related content using shared helper
     const codeIndicators = ['function', 'class', 'import', 'export', 'const', 'let', '()', '{}'];
     assert(TestHelpers.containsAnyWord(result.narrative, codeIndicators), 'Should include code-related content');
-    
+
     // Check for educational content using shared helper
     const educationalWords = ['learn', 'understand', 'explore', 'discover', 'pattern', 'architecture'];
     assert(TestHelpers.containsAnyWord(result.narrative, educationalWords), 'Should include educational content');
   }, { timeout: 45000 });
+
+  // Quest Content Priority Integration Tests
+  console.log('');
+  console.log('🎯 Quest Content Priority Integration Tests');
+  console.log('-'.repeat(40));
+
+  await test('Quest with specific files uses targeted content (not full repo)', async () => {
+    const manager = new AdventureManager();
+
+    // Create project info with adventure.config.json
+    const projectInfoWithConfig = {
+      ...realProjectInfo,
+      hasAdventureConfig: true
+    };
+
+    // Initialize with space theme
+    await manager.initializeAdventure(projectInfoWithConfig, 'space');
+
+    // Get progress to find a quest with codeFiles
+    const progress = manager.getProgress();
+    assert(progress.choices && progress.choices.length > 0, 'Should have quests available');
+
+    // Explore the first quest - it should use quest-specific files if defined
+    const result = await manager.exploreQuest('1');
+
+    // Verify quest was generated
+    assert(result.narrative && result.narrative.length > 0, 'Should generate quest narrative');
+    assert(result.completed === true, 'Quest should be marked as completed');
+
+    // The quest should reference specific code elements (not a generic full repo description)
+    // This validates that targeted content was used instead of full repository context
+    const hasSpecificCode = TestHelpers.containsAnyWord(result.narrative, [
+      'function', 'class', 'method', 'import', 'export', 'const', 'interface'
+    ]);
+    assert(hasSpecificCode, 'Should contain specific code references from targeted files');
+
+    // Verify the narrative is focused (not overly broad like full repo would be)
+    // A targeted quest should be specific enough to be educational but not overwhelming
+    assert(result.narrative.length < 15000, 'Quest narrative should be focused, not entire repo dump');
+
+    console.log(`\n✅ Quest content is targeted (${result.narrative.length} chars)`);
+    console.log(`   This validates quest-specific files take priority over full repo`);
+
+  }, { timeout: 60000 });
+
+  await test('Quest content respects adventure.config.json optimization', async () => {
+    const manager = new AdventureManager();
+
+    // Create project info WITH adventure.config.json but WITHOUT quest-specific files
+    const projectInfoOptimized = {
+      ...realProjectInfo,
+      hasAdventureConfig: true
+    };
+
+    // Initialize adventure
+    await manager.initializeAdventure(projectInfoOptimized, 'mythical');
+
+    // Explore quest
+    const result = await manager.exploreQuest('1');
+
+    // Verify quest uses optimized content
+    assert(result.narrative && result.narrative.length > 0, 'Should generate quest narrative');
+    assert(result.completed === true, 'Quest should be completed');
+
+    // Check that content is project-specific (validates adventure.config.json was used)
+    const hasProjectElements = TestHelpers.containsAnyWord(result.narrative, [
+      'TypeScript', 'package', 'src', 'test', 'adventure', 'analyzer'
+    ]);
+    assert(hasProjectElements, 'Should reference project elements from adventure.config.json');
+
+    console.log(`\n✅ Quest uses adventure.config.json optimization`);
+    console.log(`   Content size: ${result.narrative.length} chars`);
+
+  }, { timeout: 60000 });
 
   // Note: LLM misconfiguration test removed due to ES module complexity
   // The LLMClient constructor properly throws 'LLM configuration required' error

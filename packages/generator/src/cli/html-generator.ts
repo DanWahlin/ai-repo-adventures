@@ -45,6 +45,7 @@ class HTMLAdventureGenerator {
   private repoUrl: string | null = null;
   private maxQuests?: number;
   private logLlmOutput: boolean = false;
+  private logLlmOutputDir: string = '.ai-repo-adventures/llm-output';
   private serve: boolean = false;
   private isMultiTheme: boolean = false;
   private processingMode: 'parallel' | 'sequential' = 'parallel';
@@ -195,7 +196,11 @@ class HTMLAdventureGenerator {
     // Configure logging and serving
     this.logLlmOutput = args.has('log-llm-output');
     if (this.logLlmOutput) {
-      console.log(chalk.green('✅ LLM output logging: enabled'));
+      const customDir = args.get('log-llm-output-dir');
+      if (customDir) {
+        this.logLlmOutputDir = customDir;
+      }
+      console.log(chalk.green(`✅ LLM output logging: enabled (${this.logLlmOutputDir})`));
     }
 
     this.serve = args.has('serve');
@@ -482,12 +487,12 @@ class HTMLAdventureGenerator {
   }
 
   /**
-   * Save LLM output to tests/llm-output directory if logging is enabled
+   * Save LLM output to configured directory if logging is enabled
    */
   private saveLlmOutput(baseFilename: string, content: string): void {
     if (!this.logLlmOutput) return;
-    
-    const llmOutputDir = path.join('tests', 'llm-output');
+
+    const llmOutputDir = this.logLlmOutputDir;
     
     // Create directory if it doesn't exist
     if (!fs.existsSync(llmOutputDir)) {
@@ -1439,7 +1444,11 @@ Focus on architectural patterns, technical systems, frameworks, and development 
     // Handle log-llm-output setting
     this.logLlmOutput = args.has('log-llm-output');
     if (this.logLlmOutput) {
-      console.log(chalk.green('✅ LLM output logging: enabled'));
+      const customDir = args.get('log-llm-output-dir');
+      if (customDir) {
+        this.logLlmOutputDir = customDir;
+      }
+      console.log(chalk.green(`✅ LLM output logging: enabled (${this.logLlmOutputDir})`));
     }
 
     // Handle serve setting
@@ -1568,6 +1577,7 @@ Focus on architectural patterns, technical systems, frameworks, and development 
         themeGenerator['outputDir'] = themeDir;
         themeGenerator['maxQuests'] = this.maxQuests;
         themeGenerator['logLlmOutput'] = this.logLlmOutput;
+        themeGenerator['logLlmOutputDir'] = this.logLlmOutputDir;
         themeGenerator['isMultiTheme'] = this.isMultiTheme;
 
         // Track which theme is being processed
@@ -1861,6 +1871,7 @@ Focus on architectural patterns, technical systems, frameworks, and development 
           themeGenerator['outputDir'] = themeDir;
           themeGenerator['maxQuests'] = this.maxQuests;
           themeGenerator['logLlmOutput'] = this.logLlmOutput;
+          themeGenerator['logLlmOutputDir'] = this.logLlmOutputDir;
           themeGenerator['isMultiTheme'] = this.isMultiTheme;
 
           await themeGenerator.generateAdventure();
@@ -1978,7 +1989,8 @@ Options:
   --overwrite           Overwrite existing files without prompting
   --sequential          Process themes sequentially to avoid rate limits (for --theme all)
   --max-quests <num>    Limit number of quests to generate (default: all)
-  --log-llm-output      Save raw LLM output to tests/llm-output directory
+  --log-llm-output      Save raw LLM output for debugging
+  --log-llm-output-dir <dir>  Directory for LLM output logs (default: .ai-repo-adventures/llm-output)
   --serve               Start HTTP server and open browser after generation
   --help, -h            Show this help message
 

@@ -8,6 +8,7 @@
 import type { CliOptions } from 'repomix';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { spawn } from 'child_process';
 import { REPOMIX_CACHE_TTL, REPOMIX_SUBPROCESS_TIMEOUT, REPOMIX_GRACEFUL_TIMEOUT, REPOMIX_MAX_BUFFER_SIZE } from '../shared/config.js';
 import { extractUniqueFilePaths } from '../shared/adventure-config.js';
@@ -30,6 +31,18 @@ export class RepoAnalyzer {
   private cache = new Map<string, { content: string; timestamp: number }>();
 
   constructor() {}
+
+  /**
+   * Prepend README context to targeted content for better project understanding
+   * Public method for use by adventure-manager
+   */
+  prependReadmeContext(projectPath: string, content: string): string {
+    const readmeContent = this.extractReadmeContent(projectPath);
+    if (readmeContent) {
+      return `# Project Overview (from README.md)\n\n${readmeContent}\n\n---\n\n# Repository Code\n\n${content}`;
+    }
+    return content;
+  }
 
   /**
    * Extract README.md content for project overview
@@ -566,19 +579,45 @@ export class RepoAnalyzer {
    */
   private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise<string> {
     return new Promise((resolve, reject) => {
+      let tempConfigPath: string | undefined;
+
       // Build repomix CLI arguments
       const args = [
         ...directories,
         '--stdout',
         '--style', options.style || 'markdown'
       ];
-      
+
       if (options.compress) args.push('--compress');
       if (options.removeComments) args.push('--remove-comments');
       if (options.removeEmptyLines) args.push('--remove-empty-lines');
       if (options.noDirectoryStructure) args.push('--no-directory-structure');
       if (options.ignore) args.push('--ignore', options.ignore);
-      if (options.include) args.push('--include', options.include);
+      if (options.include) {
+        args.push('--include', options.include);
+
+        // CRITICAL FIX: When doing targeted include, we must prevent repomix.config.json from
+        // adding its own global include patterns (like "src", "infra") which would load the entire codebase.
+        // Create a minimal temporary config that doesn't override the command-line include
+        try {
+          tempConfigPath = path.join(os.tmpdir(), `repomix-targeted-${Date.now()}.json`);
+          const minimalConfig = {
+            output: {
+              style: 'markdown'
+            },
+            ignore: {
+              useGitignore: false,
+              useDefaultPatterns: false,
+              customPatterns: []
+            }
+          };
+          fs.writeFileSync(tempConfigPath, JSON.stringify(minimalConfig), 'utf-8');
+          args.push('--config', tempConfigPath);
+        } catch (error) {
+          // If temp config creation fails, continue without it (best effort)
+          console.warn('Failed to create temporary repomix config, continuing without it:', error);
+        }
+      }
       
       // Spawn repomix as subprocess
       const repomix = spawn('npx', ['repomix', ...args], {
@@ -628,7 +667,16 @@ export class RepoAnalyzer {
         if (!isResolved) {
           isResolved = true;
           clearTimeout(timeout);
-          
+
+          // Clean up temporary config file if it was created
+          if (tempConfigPath) {
+            try {
+              fs.unlinkSync(tempConfigPath);
+            } catch (cleanupError) {
+              // Ignore cleanup errors
+            }
+          }
+
           if (code === 0 && stdout.trim().length > 0) {
             resolve(stdout);
           } else {
@@ -636,11 +684,21 @@ export class RepoAnalyzer {
           }
         }
       });
-      
+
       repomix.on('error', (error) => {
         if (!isResolved) {
           isResolved = true;
           clearTimeout(timeout);
+
+          // Clean up temporary config file if it was created
+          if (tempConfigPath) {
+            try {
+              fs.unlinkSync(tempConfigPath);
+            } catch (cleanupError) {
+              // Ignore cleanup errors
+            }
+          }
+
           reject(new Error(`Repomix spawn failed: ${error.message}`));
         }
       });

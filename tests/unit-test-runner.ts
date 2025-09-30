@@ -12,6 +12,8 @@ import { runAdventureConfigTests } from './unit/adventure-config.test.js';
 import { runPromptLoaderTests } from './unit/prompt-loader.test.js';
 import { runContentChunkerTests } from './unit/content-chunker.test.js';
 import { runAutomaticModeSwitchingTests } from './unit/automatic-mode-switching.test.js';
+import { runQuestContentPriorityTests } from './unit/quest-content-priority.test.js';
+import { runHtmlGeneratorTests } from './unit/html-generator.test.js';
 
 // Print detailed summary table function
 function printDetailedSummary(results: Array<{
@@ -59,6 +61,8 @@ function printDetailedSummary(results: Array<{
   console.log(`  • Content Chunking: ${results[4]?.passed || 0} tests verify intelligent content splitting and token management`);
   console.log(`  • LLM Integration: ${results[5]?.passed || 0} tests cover API client functionality and adaptive throttling for rate limits`);
   console.log(`  • Mode Switching: ${results[6]?.passed || 0} tests ensure automatic recovery from token rate limit errors`);
+  console.log(`  • Quest Priority: ${results[7]?.passed || 0} tests protect against P0 regression in quest content routing`);
+  console.log(`  • HTML Generator: ${results[8]?.passed || 0} tests validate rate limit detection and error handling`);
   
   console.log('');
   console.log('🎯 COVERAGE ANALYSIS:');
@@ -142,11 +146,19 @@ async function runAllUnitTests() {
     },
     {
       name: 'LLM Client',
-      runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 10, 'API integration, caching, error handling, adaptive throttling, token rate limits')
+      runner: createStatsWrapper(runLLMClientTests, 'LLM Client', 14, 'API integration, caching, error handling, adaptive throttling, token rate limits, configuration')
     },
     {
       name: 'Automatic Mode Switching',
-      runner: createStatsWrapper(runAutomaticModeSwitchingTests, 'Mode Switching', 8, 'Rate limit recovery, progress tracking, error handling')
+      runner: createStatsWrapper(runAutomaticModeSwitchingTests, 'Mode Switching', 14, 'Rate limit recovery, progress tracking, error handling')
+    },
+    {
+      name: 'Quest Content Priority',
+      runner: createStatsWrapper(runQuestContentPriorityTests, 'Quest Priority', 15, 'P0 bug protection, priority chain, fallback logic')
+    },
+    {
+      name: 'HTML Generator',
+      runner: createStatsWrapper(runHtmlGeneratorTests, 'HTML Generator', 12, 'Rate limit detection, error handling, wait time extraction')
     }
   ]);
 
