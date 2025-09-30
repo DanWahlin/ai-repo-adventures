@@ -761,10 +761,10 @@ class HTMLAdventureGenerator {
       
       try {
         const questContent = await this.generateQuestContentWithRetry(quest.id);
-        
-        // Save quest content if logging is enabled
-        this.saveLlmOutput('quest.output.md', questContent);
-        
+
+        // Save quest content if logging is enabled (unique file per quest)
+        this.saveLlmOutput(`quest-${quest.id}.output.md`, questContent);
+
         const html = this.buildQuestHTML(quest, questContent, i);
         const questPath = path.join(this.outputDir, quest.filename);
         fs.writeFileSync(questPath, html);
