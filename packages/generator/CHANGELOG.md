@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.1](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.4.0...@codewithdan/ai-repo-adventure-generator@1.4.1) (2025-10-01)
+
+
+### Bug Fixes
+
+* Improve flow in theme generation process and cleanup handling ([6ab7091](https://github.com/danwahlin/ai-repo-adventures/commit/6ab7091fe4c408bbe5c5c289ab45e0c1732dfc6b))
+
+
+
+
+
 # [1.4.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.3.1...@codewithdan/ai-repo-adventure-generator@1.4.0) (2025-10-01)
 
 
