@@ -45,3 +45,8 @@ export const PARSING_CONFIG = {
   /** Keywords to skip when scanning for functions */
   SKIP_KEYWORDS: ['if', 'for', 'while', 'switch', 'catch', 'return', 'const', 'let', 'var'] as const,
 } as const;
+
+export const HOMEPAGE = {
+  /** Number of files to preview when directory exists */
+  FILE_PREVIEW_LIMIT: 5,
+} as const;

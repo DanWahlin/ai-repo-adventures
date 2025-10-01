@@ -179,4 +179,43 @@ export class AssetManager {
       throw error;
     }
   }
+
+  /**
+   * Load theme-specific CSS file
+   */
+  loadThemeCSS(theme: string): string {
+    return this.loadCSSFile(`themes/${theme}.css`, 'themes/default.css');
+  }
+
+  /**
+   * Load base CSS file
+   */
+  loadBaseCSS(): string {
+    return this.loadCSSFile('themes/base.css', null) || '/* Base CSS not found */';
+  }
+
+  /**
+   * Load animations CSS file
+   */
+  loadAnimationsCSS(): string {
+    return this.loadCSSFile('themes/animations.css', null) || '/* Animations CSS not found */';
+  }
+
+  /**
+   * Load a CSS file with optional fallback
+   */
+  private loadCSSFile(relativePath: string, fallbackPath: string | null): string {
+    try {
+      return fs.readFileSync(path.join(this.sourceDir, relativePath), 'utf-8');
+    } catch {
+      if (fallbackPath) {
+        try {
+          return fs.readFileSync(path.join(this.sourceDir, fallbackPath), 'utf-8');
+        } catch {
+          return '/* Fallback CSS not available */';
+        }
+      }
+      return '';
+    }
+  }
 }
