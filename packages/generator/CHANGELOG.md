@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.2](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.4.1...@codewithdan/ai-repo-adventure-generator@1.4.2) (2025-10-01)
+
+
+### Bug Fixes
+
+* Remove console log for homepage index creation ([149e7c6](https://github.com/danwahlin/ai-repo-adventures/commit/149e7c628561c91a07b46af4aba1161732e64f99))
+
+
+
+
+
 ## [1.4.1](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.4.0...@codewithdan/ai-repo-adventure-generator@1.4.1) (2025-10-01)
 
 
