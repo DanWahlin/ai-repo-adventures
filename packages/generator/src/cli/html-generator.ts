@@ -1807,7 +1807,6 @@ Focus on architectural patterns, technical systems, frameworks, and development 
     const html = this.templateEngine.renderTemplate('homepage-template.html', variables);
     const indexPath = path.join(this.outputDir, 'index.html');
     fs.writeFileSync(indexPath, html);
-    console.log(chalk.green('✅ Homepage index.html created'));
   }
 
 
