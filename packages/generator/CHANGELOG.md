@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.4.2...@codewithdan/ai-repo-adventure-generator@1.5.0) (2025-10-01)
+
+
+### Features
+
+* Implement DevServer for serving generated adventure files ([674b837](https://github.com/danwahlin/ai-repo-adventures/commit/674b837172474d61ad8f2c52a1dcbdb2d1524834))
+
+
+
+
+
 ## [1.4.2](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.4.1...@codewithdan/ai-repo-adventure-generator@1.4.2) (2025-10-01)
 
 
