@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.1](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.3.0...@codewithdan/ai-repo-adventure-generator@1.3.1) (2025-09-30)
+
+
+### Bug Fixes
+
+* Save quest content to unique files per quest in HTMLAdventureGenerator ([1d608a1](https://github.com/danwahlin/ai-repo-adventures/commit/1d608a1cd1799a23747e8c5220f4d0432cfbb627))
+
+
+
+
+
 # [1.3.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.2.0...@codewithdan/ai-repo-adventure-generator@1.3.0) (2025-09-30)
 
 
