@@ -120,30 +120,35 @@ class HTMLAdventureGenerator {
       const shouldGenerateAllThemes = this.configureTheme(args);
       if (shouldGenerateAllThemes) {
         await this.generateAllThemes(args);
-        return;
-      }
+        // Don't return early - fall through to cleanup
+      } else {
+        // Configure output and options
+        this.configureOutputDirectory(args);
+        const overwrite = this.configureOptions(args);
 
-      // Configure output and options
-      this.configureOutputDirectory(args);
-      const overwrite = this.configureOptions(args);
-      
-      // Setup directories and generate
-      this.setupOutputDirectories(overwrite);
-      await this.generateAdventure();
-      
-      this.printSuccessMessage();
-      
-      if (this.serve) {
-        await this.startHttpServer();
+        // Setup directories and generate
+        this.setupOutputDirectories(overwrite);
+        await this.generateAdventure();
+
+        this.printSuccessMessage();
+
+        if (this.serve) {
+          await this.startHttpServer();
+        }
       }
     } catch (error) {
       console.error(chalk.red('❌ Error generating adventure:'), error);
       this.rl.close();
       process.exit(1);
     }
-    
+
+    // Cleanup and exit (runs for both single theme and all themes)
     this.rl.close();
-    process.exit(0);
+
+    // Only exit if not serving (server keeps process alive)
+    if (!this.serve) {
+      process.exit(0);
+    }
   }
 
   private printHeader(): void {
