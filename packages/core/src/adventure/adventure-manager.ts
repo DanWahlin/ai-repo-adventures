@@ -284,8 +284,8 @@ export class AdventureManager {
             false  // Use uncompressed content for detailed quest exploration
           );
 
-          // Add README context for better project understanding
-          codeContent = repoAnalyzer.prependReadmeContext(this.state.projectPath, targetedContent);
+          // Add core project documentation context for better project understanding
+          codeContent = repoAnalyzer.prependCoreProjectContext(this.state.projectPath, targetedContent);
         } catch (error) {
           console.warn(`Failed to generate targeted content, falling back to optimized content:`, error);
           // Fallback to adventure.config.json optimized content if available

@@ -109,6 +109,122 @@ As you explore the code below, investigate these key questions:
 - Use the theme-appropriate vocabulary and do NOT reference specific quest numbers]
 ```
 
+## Example Output
+
+Here's an example of a properly formatted quest response (space theme):
+
+```markdown
+# Quest 1: Command Bridge Operations
+---
+You materialize on the starship's Command Bridge, where the Repository Explorer's communication systems pulse with cosmic energy. The bridge crew coordinates all incoming transmissions from distant codebases, routing them through sophisticated instrument panels that validate each signal's integrity before processing.
+
+## Quest Objectives
+As you explore the code below, investigate these key questions:
+- 🔍 **Signal Reception Protocol**: How does the bridge receive and categorize incoming transmissions from different star systems?
+- ⚡ **Instrument Calibration**: What validation checks ensure that ship instruments are properly configured before mission deployment?
+- 🛡️ **Emergency Protocols**: How does the system handle corrupted data streams or invalid command sequences?
+
+## File Exploration
+### packages/mcp/src/server.ts: Command Bridge Control Center
+The Command Bridge operates as the central nervous system of the starship, managing all communications between the vessel and external systems. The `RepoAdventureServer` class coordinates mission deployments by initializing transport systems, registering available instruments, and maintaining real-time status updates. This module demonstrates sophisticated orchestration patterns, using dependency injection to manage the ship's tool registry and employing async initialization for reliable startup sequences.
+
+#### Highlights
+- `setupHandlers` dynamically registers all available ship instruments by listing tools and validating their parameters before mission execution
+- `run` activates the transport system and pre-generates story content to ensure seamless crew workflows without delays
+- `main` orchestrates the complete bridge initialization sequence, including configuration validation and graceful shutdown procedures
+- The constructor pattern enables flexible dependency injection, allowing different transport and tool configurations for various mission types
+- Error handling throughout ensures the bridge remains operational even when individual subsystems encounter anomalies
+
+## Code
+### packages/mcp/src/server.ts
+```typescript
+async setupHandlers() {
+  this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: this.tools.getTools().map(tool => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.schema
+    }))
+  }));
+
+  this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const tool = this.tools.getTool(request.params.name);
+    if (!tool) {
+      throw new Error(`Unknown tool: ${request.params.name}`);
+    }
+    return await tool.handler(request.params.arguments || {});
+  });
+}
+```
+- This code establishes the bridge's communication protocols, defining how the ship responds to external tool queries and execution requests
+- The `ListToolsRequestSchema` handler provides a manifest of all available instruments, ensuring external systems know what capabilities the ship offers
+- Tool validation prevents execution of unknown or malicious commands by checking against the registered tool registry
+- The error handling pattern demonstrates defensive programming, protecting the bridge from invalid tool invocations
+- This architecture enables extensibility by decoupling tool registration from tool execution, allowing new instruments to be added without modifying core communication logic
+
+---
+
+```typescript
+async run() {
+  await this.transport.connect();
+
+  // Pre-generate story to avoid delays during first crew interaction
+  await this.adventureManager.initializeAdventure(
+    this.projectInfo,
+    'space'
+  );
+
+  await this.transport.close();
+}
+```
+- The run method coordinates the complete mission lifecycle, from transport activation to graceful shutdown
+- Pre-generating story content eliminates latency during the first crew interaction, providing instant responses
+- The connection pattern ensures transport systems are properly initialized before any communication attempts
+- Graceful closure prevents resource leaks by properly terminating all active connections
+- This approach demonstrates the importance of warm-up sequences in interactive systems where first-response time is critical
+
+---
+
+```typescript
+async main() {
+  const config = await loadConfig();
+  const projectInfo = await analyzeRepository(config.repoPath);
+
+  const server = new RepoAdventureServer(projectInfo);
+  await server.run();
+}
+```
+- The main function orchestrates the complete bridge initialization sequence, loading configuration and analyzing the repository structure
+- Configuration loading happens first to ensure all system parameters are validated before any resource allocation
+- Repository analysis provides the bridge with critical mission intelligence about the codebase being explored
+- The separation of concerns (config → analysis → server → run) creates a clear initialization pipeline
+- This pattern enables easier testing by allowing each component to be independently validated
+
+---
+
+## Helpful Hints
+- Study how the `setupHandlers` method uses schema validation to ensure type safety across the communication boundary
+- Notice the pre-generation strategy in the `run` method that trades initial startup time for improved responsiveness
+- Explore how dependency injection in the constructor enables different configurations for testing versus production
+
+---
+Excellent work! Continue to the next quest to uncover more mysteries of the starship's systems.
+```
+
+**KEY FORMATTING REQUIREMENTS**:
+- Start with H1 quest title (plain text, no emojis)
+- Use `---` separator immediately after title
+- Include 75-100 word themed narrative paragraph
+- Use "## Quest Objectives" with "As you explore the code below, investigate these key questions:" introduction
+- Use 3 objectives with emoji + bold investigation name + specific question
+- Include "## File Exploration" section with filepath analysis
+- Use "#### Highlights" with 3-5 descriptive bullets (NOT just function names)
+- Include "## Code" section with code blocks for each highlight
+- Add 5 educational bullet points after EACH code snippet
+- Use `---` separators between code blocks
+- Include "## Helpful Hints" section with 3 practical tips
+- End with themed completion message after final `---`
+
 ## Input Sections
 {{storyContent}}
 {{themeGuidelines}} 

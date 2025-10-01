@@ -69,6 +69,12 @@ export const VALIDATION_MAX_CHOICE_LENGTH = parseInt(process.env.VALIDATION_MAX_
 export const VALIDATION_MAX_PATH_LENGTH = parseInt(process.env.VALIDATION_MAX_PATH_LENGTH || '500'); // Maximum path length
 export const VALIDATION_MAX_DISPLAY_LENGTH = parseInt(process.env.VALIDATION_MAX_DISPLAY_LENGTH || '1000'); // Maximum display length
 
+// Multi-model testing configuration
+export const LLM_TEST_MODELS = process.env.LLM_TEST_MODELS
+  ? process.env.LLM_TEST_MODELS.split(',').map(m => m.trim()).filter(m => m.length > 0)
+  : [LLM_MODEL]; // Default to primary model if not specified
+export const LLM_MULTI_MODEL_TESTS = process.env.LLM_MULTI_MODEL_TESTS === 'true'; // Enable multi-model tests (default: false)
+
 // Error settings
 export const MAX_ERROR_MESSAGE_LENGTH = 200;
 export const INCLUDE_STACK_TRACES = process.env.NODE_ENV === 'development';

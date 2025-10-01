@@ -33,46 +33,80 @@ export class RepoAnalyzer {
   constructor() {}
 
   /**
-   * Prepend README context to targeted content for better project understanding
+   * Prepend core project documentation to targeted content for better project understanding
    * Public method for use by adventure-manager
    */
-  prependReadmeContext(projectPath: string, content: string): string {
-    const readmeContent = this.extractReadmeContent(projectPath);
-    if (readmeContent) {
-      return `# Project Overview (from README.md)\n\n${readmeContent}\n\n---\n\n# Repository Code\n\n${content}`;
+  prependCoreProjectContext(projectPath: string, content: string): string {
+    const coreContent = this.extractCoreProjectFiles(projectPath);
+    if (coreContent) {
+      return `# Project Overview\n\n${coreContent}\n\n---\n\n# Repository Code\n\n${content}`;
     }
     return content;
   }
 
   /**
-   * Extract README.md content for project overview
-   * Returns the first 100 lines or until first major section ends
+   * Extract content from core project documentation files
+   * Configurable array makes it easy to add more files in the future
+   * Returns combined content from all found files
    */
-  private extractReadmeContent(projectPath: string, maxLines: number = 100): string {
-    const readmePaths = [
-      path.join(projectPath, 'README.md'),
-      path.join(projectPath, 'readme.md'),
-      path.join(projectPath, 'Readme.md')
+  private extractCoreProjectFiles(projectPath: string): string {
+    // Define core files to extract - easy to extend in the future
+    const coreFiles = [
+      { name: 'README.md', maxLines: 100, stopAfterSections: 3 },
+      { name: 'AGENTS.md', maxLines: null, stopAfterSections: null }, // Include full file
     ];
 
-    for (const readmePath of readmePaths) {
-      if (fs.existsSync(readmePath)) {
+    const extractedContent: string[] = [];
+
+    for (const fileConfig of coreFiles) {
+      const content = this.extractDocFile(projectPath, fileConfig);
+      if (content) {
+        extractedContent.push(content);
+      }
+    }
+
+    return extractedContent.join('\n\n---\n\n');
+  }
+
+  /**
+   * Extract content from a single documentation file with configurable limits
+   */
+  private extractDocFile(
+    projectPath: string,
+    config: { name: string; maxLines: number | null; stopAfterSections: number | null }
+  ): string {
+    const { name, maxLines, stopAfterSections } = config;
+
+    // Try common case variations
+    const filePaths = [
+      path.join(projectPath, name),
+      path.join(projectPath, name.toLowerCase()),
+      path.join(projectPath, name.charAt(0).toUpperCase() + name.slice(1).toLowerCase())
+    ];
+
+    for (const filePath of filePaths) {
+      if (fs.existsSync(filePath)) {
         try {
-          const fullContent = fs.readFileSync(readmePath, 'utf-8');
+          const fullContent = fs.readFileSync(filePath, 'utf-8');
           const lines = fullContent.split('\n');
 
-          // Smart extraction: include up to maxLines or until we hit a second ## heading
+          // If no limits, return full content
+          if (maxLines === null && stopAfterSections === null) {
+            return `## From ${name}\n\n${fullContent}`;
+          }
+
+          // Smart extraction with limits
           let extractedLines: string[] = [];
           let majorSectionCount = 0;
+          const lineLimit = maxLines ?? lines.length;
 
-          for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
+          for (let i = 0; i < Math.min(lines.length, lineLimit); i++) {
             const line = lines[i];
 
-            // Count major sections (## headings)
-            if (line.startsWith('## ')) {
+            // Count major sections (## headings) if configured
+            if (stopAfterSections !== null && line.startsWith('## ')) {
               majorSectionCount++;
-              // Stop after including 2-3 major sections
-              if (majorSectionCount > 3) {
+              if (majorSectionCount > stopAfterSections) {
                 break;
               }
             }
@@ -80,9 +114,9 @@ export class RepoAnalyzer {
             extractedLines.push(line);
           }
 
-          return extractedLines.join('\n');
+          return `## From ${name}\n\n${extractedLines.join('\n')}`;
         } catch (error) {
-          console.warn(`Failed to read README at ${readmePath}:`, error);
+          console.warn(`Failed to read ${name} at ${filePath}:`, error);
         }
       }
     }
@@ -194,12 +228,8 @@ export class RepoAnalyzer {
       // Apply function-focused optimization
       const optimizedContent = this.extractFunctionFocusedContent(fullContent);
 
-      // Prepend README content for context
-      const readmeContent = this.extractReadmeContent(projectPath);
-      let finalContent = optimizedContent;
-      if (readmeContent) {
-        finalContent = `# Project Overview (from README.md)\n\n${readmeContent}\n\n---\n\n# Repository Code\n\n${optimizedContent}`;
-      }
+      // Prepend core project documentation for context
+      const finalContent = this.prependCoreProjectContext(projectPath, optimizedContent);
 
       // Cache the optimized result
       this.cache.set(cacheKey, { content: finalContent, timestamp: Date.now() });

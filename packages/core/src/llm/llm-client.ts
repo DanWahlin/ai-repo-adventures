@@ -234,19 +234,30 @@ export class LLMClient {
   private validateResponse(completion: any): string {
     const choice = completion.choices[0];
     const content = choice?.message?.content;
-    
+
     if (!choice) {
       throw new Error('LLM returned no choices in response');
     }
-    
+
     if (!choice.message) {
       throw new Error('LLM returned choice without message');
     }
-    
+
+    // Log finish reason for debugging truncated responses
+    if (choice.finish_reason) {
+      console.error(`🔍 LLM finish reason: ${choice.finish_reason} (content length: ${content?.length || 0} chars)`);
+
+      if (choice.finish_reason === 'length') {
+        console.warn('⚠️  Response truncated due to max_tokens limit');
+      } else if (choice.finish_reason === 'content_filter') {
+        console.warn('⚠️  Response filtered by content policy');
+      }
+    }
+
     if (!content || content.trim() === '') {
       this.handleEmptyResponse(choice);
     }
-    
+
     return content;
   }
 

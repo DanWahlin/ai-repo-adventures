@@ -116,18 +116,22 @@ function createQuest(questData: Partial<Quest>, questIndex: number): Quest {
 
 /**
  * Parse markdown response to extract structured data
+ * Handles multiple quest formats:
+ * 1. H3 headings: ### Quest 1: Title
+ * 2. Bold headings: **Quest 1: Title** - Description
+ * 3. Numbered lists: 1. **Quest Title** – Description
  */
 function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
   const tokens = marked.lexer(markdownContent);
-  
+
   const title = extractTitle(tokens);
   let story = '';
   const quests: Quest[] = [];
-  
+
   let currentSection = '';
   let currentQuest: Partial<Quest> = {};
   let titleFound = false;
-  
+
   for (const token of tokens) {
     if (token.type === 'heading') {
       if (token.depth === 1) {
@@ -144,21 +148,82 @@ function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
         currentQuest = { title: token.text, description: '', codeFiles: [] };
       }
     } else if (token.type === 'paragraph') {
-      if (isStorySection(currentSection, titleFound)) {
+      // Check if paragraph contains bold quest format: **Quest 1: Title** - Description
+      const boldQuestMatch = token.text.match(/^\*\*Quest\s+\d+:\s*(.+?)\*\*\s*[-–—]\s*(.+)$/);
+
+      if (boldQuestMatch && isQuestSection(currentSection)) {
+        // Save previous quest if valid
+        if (currentQuest.title && currentQuest.description) {
+          quests.push(createQuest(currentQuest, quests.length));
+        }
+        // Extract quest from bold format - create complete quest immediately
+        const newQuest = {
+          title: boldQuestMatch[1].trim(),
+          description: boldQuestMatch[2].trim(),
+          codeFiles: []
+        };
+        // Push immediately since description is complete
+        quests.push(createQuest(newQuest, quests.length));
+        // Reset current quest
+        currentQuest = {};
+      } else if (isStorySection(currentSection, titleFound)) {
         story += token.text + '\n\n';
       } else if (currentQuest.title) {
         currentQuest.description += token.text + '\n\n';
       }
-    } else if (token.type === 'list' && currentQuest.title) {
-      extractCodeFilesFromList(token, currentQuest);
+    } else if (token.type === 'list') {
+      // Check if this is a numbered quest list format: 1. **Quest Title** – Description
+      // Only treat as quest list if at least one item matches the pattern
+      let isQuestList = false;
+      if (token.items && isQuestSection(currentSection)) {
+        // First, check if ANY item matches the quest pattern
+        for (const item of token.items) {
+          const listQuestMatch = item.text.match(/^\*\*([^*]+)\*\*\s*[-–—]\s*(.+)$/s);
+          if (listQuestMatch) {
+            isQuestList = true;
+            break;
+          }
+        }
+
+        // If it's a quest list, process all matching items
+        if (isQuestList) {
+          for (const item of token.items) {
+            // Match pattern: **Quest Title** – Description
+            // Use [^*] to match title (anything except asterisks), then match the rest
+            const listQuestMatch = item.text.match(/^\*\*([^*]+)\*\*\s*[-–—]\s*(.+)$/s);
+
+            if (listQuestMatch) {
+              // Save previous quest if valid
+              if (currentQuest.title && currentQuest.description) {
+                quests.push(createQuest(currentQuest, quests.length));
+              }
+              // Extract quest from numbered list format - create complete quest immediately
+              const newQuest = {
+                title: listQuestMatch[1].trim(),
+                description: listQuestMatch[2].trim(),
+                codeFiles: []
+              };
+              // Push immediately since description is complete
+              quests.push(createQuest(newQuest, quests.length));
+              // Reset current quest
+              currentQuest = {};
+            }
+          }
+        }
+      }
+
+      // If NOT a quest list, extract code files from existing quest (H3 format)
+      if (!isQuestList && currentQuest.title) {
+        extractCodeFilesFromList(token, currentQuest);
+      }
     }
   }
-  
+
   // Add final quest if valid
   if (currentQuest.title && currentQuest.description) {
     quests.push(createQuest(currentQuest, quests.length));
   }
-  
+
   return {
     title,
     story: story.trim() || 'Welcome to your coding adventure!',

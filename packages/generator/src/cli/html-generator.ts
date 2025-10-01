@@ -20,6 +20,7 @@ import { createProjectInfo } from '@codewithdan/ai-repo-adventures-core';
 import { TemplateEngine } from './template-engine.js';
 import { AssetManager } from './asset-manager.js';
 import { ThemeManager } from './theme-manager.js';
+import { RETRY_CONFIG, SERVER_CONFIG, THEME_ICONS, DEFAULT_PATHS, PARSING_CONFIG } from './constants.js';
 
 interface CustomThemeData {
   name: string;
@@ -45,7 +46,7 @@ class HTMLAdventureGenerator {
   private repoUrl: string | null = null;
   private maxQuests?: number;
   private logLlmOutput: boolean = false;
-  private logLlmOutputDir: string = '.ai-repo-adventures/llm-output';
+  private logLlmOutputDir: string = DEFAULT_PATHS.LLM_LOG_DIR;
   private serve: boolean = false;
   private isMultiTheme: boolean = false;
   private processingMode: 'parallel' | 'sequential' = 'parallel';
@@ -171,7 +172,7 @@ class HTMLAdventureGenerator {
 
   private configureOutputDirectory(args: Map<string, string>): void {
     const outputArg = args.get('output');
-    this.outputDir = outputArg || './public';
+    this.outputDir = outputArg || DEFAULT_PATHS.OUTPUT_DIR;
     console.log(chalk.green(`✅ Output: ${this.outputDir}`));
   }
 
@@ -516,7 +517,7 @@ class HTMLAdventureGenerator {
   /**
    * Start an HTTP server in the output directory
    */
-  private async startHttpServer(port: number = 8080): Promise<void> {
+  private async startHttpServer(port: number = SERVER_CONFIG.DEFAULT_PORT): Promise<void> {
     return new Promise((resolve, reject) => {
       const server = http.createServer((req, res) => {
         let filePath = path.join(this.outputDir, req.url === '/' ? 'index.html' : req.url || '');
@@ -715,7 +716,7 @@ class HTMLAdventureGenerator {
 
   private loadCSSFile(relativePath: string, fallbackPath: string | null): string {
     const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    
+
     try {
       return fs.readFileSync(path.join(__dirname, relativePath), 'utf-8');
     } catch {
@@ -723,18 +724,10 @@ class HTMLAdventureGenerator {
         try {
           return fs.readFileSync(path.join(__dirname, fallbackPath), 'utf-8');
         } catch {
-          return this.getFallbackCSS();
+          return '/* Fallback CSS not available */';
         }
       }
       return '';
-    }
-  }
-
-  private getFallbackCSS(): string {
-    try {
-      return this.loadCSSFile('themes/fallback.css', null) || '/* No fallback CSS available */';
-    } catch {
-      return '/* Fallback CSS load failed */';
     }
   }
 
@@ -786,7 +779,7 @@ class HTMLAdventureGenerator {
     }
   }
 
-  private async generateQuestContentWithRetry(questId: string, maxRetries: number = 3): Promise<string> {
+  private async generateQuestContentWithRetry(questId: string, maxRetries: number = RETRY_CONFIG.MAX_QUEST_RETRIES): Promise<string> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const result = await this.adventureManager.exploreQuest(questId);
@@ -796,7 +789,7 @@ class HTMLAdventureGenerator {
         if (attempt === maxRetries) {
           throw error;
         }
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, RETRY_CONFIG.RETRY_DELAY_MS));
       }
     }
     throw new Error('Max retries exceeded');
@@ -1305,8 +1298,7 @@ Focus on architectural patterns, technical systems, frameworks, and development 
             const functionName = match[1];
 
             // Skip common non-function words
-            const skipWords = ['if', 'for', 'while', 'switch', 'catch', 'return', 'const', 'let', 'var'];
-            if (skipWords.includes(functionName)) {
+            if (PARSING_CONFIG.SKIP_KEYWORDS.includes(functionName as any)) {
               continue;
             }
 
@@ -1711,7 +1703,7 @@ Focus on architectural patterns, technical systems, frameworks, and development 
     });
 
     // Wait for the rate limit window to reset
-    const waitSeconds = (error instanceof RateLimitError) ? error.waitSeconds : 60;
+    const waitSeconds = (error instanceof RateLimitError) ? error.waitSeconds : RETRY_CONFIG.RATE_LIMIT_WAIT_SECONDS;
     console.log();
     console.log(chalk.cyan(`⏳ Waiting ${waitSeconds} seconds for rate limit window to reset...`));
 
@@ -1850,7 +1842,7 @@ Focus on architectural patterns, technical systems, frameworks, and development 
     for (let i = 0; i < themes.length; i++) {
       const theme = themes[i];
       let retryCount = 0;
-      const maxRetries = 3; // Prevent infinite retry loops
+      const maxRetries = RETRY_CONFIG.MAX_THEME_RETRIES; // Prevent infinite retry loops
       let themeCompleted = false;
 
       while (!themeCompleted && retryCount < maxRetries) {
@@ -1891,7 +1883,7 @@ Focus on architectural patterns, technical systems, frameworks, and development 
             console.log(chalk.yellow(`⚠️ ${theme} theme hit token rate limit after ${duration}s`));
 
             // Extract wait time from RateLimitError or use default
-            const waitSeconds = (error instanceof RateLimitError) ? error.waitSeconds : 60;
+            const waitSeconds = (error instanceof RateLimitError) ? error.waitSeconds : RETRY_CONFIG.RATE_LIMIT_WAIT_SECONDS;
             console.log(chalk.cyan(`⏳ Waiting ${waitSeconds} seconds for rate limit window to reset...`));
 
             // Show countdown

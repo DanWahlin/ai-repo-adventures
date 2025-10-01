@@ -129,6 +129,7 @@ export const mockProjectInfo: ProjectInfo = {
 
 /**
  * Real project info for integration testing
+ * Contains substantial repomix content to enable proper quest generation
  */
 export const realProjectInfo: ProjectInfo = {
   type: 'TypeScript MCP Server',
@@ -138,8 +139,157 @@ export const realProjectInfo: ProjectInfo = {
   hasDatabase: false,
   hasApi: true,
   hasFrontend: false,
-  repomixContent: '# MCP Repo Adventure\\n\\nTypeScript MCP server for gamified code exploration.\\n\\n## File: src/server.ts\\n```typescript\\nexport class RepoAdventureServer { }\\n```\\n\\n## File: src/adventure/adventure-manager.ts\\n```typescript\\nexport class AdventureManager { }\\n```',
-  llmContextSummary: 'Real MCP server project for testing'
+  repomixContent: `# MCP Repo Adventure
+
+TypeScript MCP server for gamified code exploration and learning.
+
+## File: packages/mcp/src/server.ts
+\`\`\`typescript
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+export class RepoAdventureServer {
+  private server: Server;
+  private tools: ToolRegistry;
+  private adventureManager: AdventureManager;
+
+  constructor(projectInfo: ProjectInfo) {
+    this.server = new Server({ name: 'repo-adventure', version: '1.0.0' });
+    this.tools = new ToolRegistry();
+    this.adventureManager = new AdventureManager();
+    this.setupHandlers();
+  }
+
+  async setupHandlers() {
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+      tools: this.tools.getTools()
+    }));
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const tool = this.tools.getTool(request.params.name);
+      return await tool.handler(request.params.arguments);
+    });
+  }
+
+  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    await this.adventureManager.initializeAdventure(this.projectInfo, 'space');
+  }
+}
+\`\`\`
+
+## File: packages/core/src/adventure/adventure-manager.ts
+\`\`\`typescript
+export class AdventureManager {
+  private state: AdventureState;
+  private storyGenerator: StoryGenerator;
+
+  constructor() {
+    this.state = new AdventureState();
+    this.storyGenerator = new StoryGenerator();
+  }
+
+  async initializeAdventure(projectInfo: ProjectInfo, theme: string): Promise<string> {
+    this.state.reset();
+    this.state.projectInfo = projectInfo;
+    this.state.currentTheme = theme;
+
+    const story = await this.storyGenerator.generateStory(projectInfo, theme);
+    const quests = await this.parseQuests(story);
+    this.state.quests = quests;
+
+    return story;
+  }
+
+  async exploreQuest(questId: string): Promise<QuestResult> {
+    const quest = this.state.quests.get(questId);
+    if (!quest) throw new Error('Quest not found');
+
+    const content = await this.storyGenerator.generateQuestContent(quest);
+    quest.completed = true;
+
+    return { narrative: content, completed: true };
+  }
+}
+\`\`\`
+
+## File: packages/core/src/adventure/story-generator.ts
+\`\`\`typescript
+export class StoryGenerator {
+  private llmClient: LLMClient;
+
+  constructor() {
+    this.llmClient = new LLMClient();
+  }
+
+  async generateStory(projectInfo: ProjectInfo, theme: string): Promise<string> {
+    const prompt = await this.loadPrompt('story-generation-prompt.md');
+    const processedPrompt = this.replaceVariables(prompt, { theme, projectInfo });
+
+    return await this.llmClient.generateContent(processedPrompt);
+  }
+
+  async generateQuestContent(quest: Quest): Promise<string> {
+    const prompt = await this.loadPrompt('quest-content-prompt.md');
+    return await this.llmClient.generateContent(prompt);
+  }
+}
+\`\`\`
+
+## File: packages/core/src/llm/llm-client.ts
+\`\`\`typescript
+export class LLMClient {
+  private apiKey: string;
+  private baseURL: string;
+  private model: string;
+
+  constructor(config?: LLMConfig) {
+    this.apiKey = config?.apiKey || process.env.LLM_API_KEY;
+    this.baseURL = config?.baseURL || process.env.LLM_BASE_URL;
+    this.model = config?.model || process.env.LLM_MODEL;
+  }
+
+  async generateContent(prompt: string): Promise<string> {
+    const response = await fetch(\`\${this.baseURL}/chat/completions\`, {
+      method: 'POST',
+      headers: {
+        'Authorization': \`Bearer \${this.apiKey}\`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+}
+\`\`\`
+
+## File: packages/core/src/shared/config.ts
+\`\`\`typescript
+export interface Config {
+  llmApiKey: string;
+  llmBaseURL: string;
+  llmModel: string;
+  llmTemperature: number;
+  maxTokens: number;
+}
+
+export async function loadConfig(): Promise<Config> {
+  return {
+    llmApiKey: process.env.LLM_API_KEY || '',
+    llmBaseURL: process.env.LLM_BASE_URL || 'https://api.openai.com/v1',
+    llmModel: process.env.LLM_MODEL || 'gpt-4',
+    llmTemperature: parseFloat(process.env.LLM_TEMPERATURE || '0.7'),
+    maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '4000')
+  };
+}
+\`\`\``,
+  llmContextSummary: 'Real MCP server project with comprehensive file structure'
 };
 
 /**

@@ -14,6 +14,7 @@ import { runContentChunkerTests } from './unit/content-chunker.test.js';
 import { runAutomaticModeSwitchingTests } from './unit/automatic-mode-switching.test.js';
 import { runQuestContentPriorityTests } from './unit/quest-content-priority.test.js';
 import { runHtmlGeneratorTests } from './unit/html-generator.test.js';
+import { runTests as runLLMResponseValidatorTests } from './unit/llm-response-validator.test.js';
 
 // Print detailed summary table function
 function printDetailedSummary(results: Array<{
@@ -159,6 +160,10 @@ async function runAllUnitTests() {
     {
       name: 'HTML Generator',
       runner: createStatsWrapper(runHtmlGeneratorTests, 'HTML Generator', 12, 'Rate limit detection, error handling, wait time extraction')
+    },
+    {
+      name: 'LLM Response Validator',
+      runner: createStatsWrapper(runLLMResponseValidatorTests, 'LLM Response Validator', 25, 'Markdown validation, HTML compatibility, structure analysis')
     }
   ]);
 

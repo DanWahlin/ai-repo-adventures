@@ -10,6 +10,7 @@ import { runTests as runTargetedExtractionTests } from './integration/targeted-e
 import { runTests as runLLMTargetedContentTests } from './integration/llm-targeted-content.test.js';
 import { runTests as runSimplifiedAlgorithmTests } from './integration/simplified-algorithms.test.js';
 import { runTests as runAdventureLLMTests } from './integration/adventure-llm.test.js';
+import { runTests as runMultiModelTests } from './integration/multi-model.test.js';
 
 async function runAllIntegrationTests() {
   console.log('⚠️  These tests require external services (file system, LLM, repomix)');
@@ -20,7 +21,8 @@ async function runAllIntegrationTests() {
     { name: 'Targeted Extraction', runner: runTargetedExtractionTests },
     { name: 'LLM Targeted Content', runner: runLLMTargetedContentTests },
     { name: 'Simplified Architecture', runner: runSimplifiedAlgorithmTests },
-    { name: 'Adventure LLM Integration', runner: runAdventureLLMTests }
+    { name: 'Adventure LLM Integration', runner: runAdventureLLMTests },
+    { name: 'Multi-Model Compatibility', runner: runMultiModelTests }
   ]);
 }
 
