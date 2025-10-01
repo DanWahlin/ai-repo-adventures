@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.4.0...@codewithdan/ai-repo-adventures-core@1.5.0) (2025-10-01)
+
+
+### Features
+
+* Implement comprehensive HTML and markdown validation utilities ([0b66d6e](https://github.com/danwahlin/ai-repo-adventures/commit/0b66d6e30702d13454800265c69f942c1a9a39ae))
+
+
+
+
+
 # [1.4.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.3.0...@codewithdan/ai-repo-adventures-core@1.4.0) (2025-09-30)
 
 
