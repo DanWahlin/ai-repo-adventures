@@ -246,6 +246,35 @@ export class StoryGenerator {
   private currentStoryContent?: string;
   private projectPath?: string | undefined;
 
+  /**
+   * Quest format instructions appended to prompts to ensure consistent markdown output.
+   * These instructions align with the quest-content-prompt.md template and are used
+   * in both single-chunk and multi-chunk quest generation paths.
+   */
+  private readonly QUEST_FORMAT_INSTRUCTIONS = `
+
+IMPORTANT: Respond with ONLY markdown content between explicit delimiters.
+
+Format your response EXACTLY like this:
+
+---BEGIN MARKDOWN---
+[Your markdown content following the Required Format template above EXACTLY]
+---END MARKDOWN---
+
+CRITICAL FORMAT REQUIREMENTS:
+- Start with # Quest X: [Title] (plain text, no emojis) followed by ---
+- Include 75-100 word themed narrative paragraph immediately after ---
+- Include ## Key Takeaways section (NO Quest Objectives section - this is forbidden)
+- Include ## File Exploration section with ### File: [filepath] subsections
+- Each file must have: description paragraph → #### Highlights → #### Code with snippets
+- Add 3-5 educational bullet points after EACH code snippet
+- Use --- separators between code blocks
+- Include ## Helpful Hints section with 3 practical tips
+- Include ## Try This section with 2-3 hands-on experiments (NO emoji in heading)
+- End with themed completion message after final ---
+- Do NOT add "Chapter" headings or "Quest Objectives" section
+- Do NOT write generic code examples - extract real code from the Complete Codebase section`;
+
   constructor() {
     this.llmClient = new LLMClient();
   }
@@ -329,7 +358,7 @@ export class StoryGenerator {
         questPosition,
         totalQuests,
         ...(this.customThemeData && { customThemeData: this.customThemeData })
-      }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content following the Required Format template above EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] (plain text, no emojis) followed by ---\n- Include 75-100 word themed narrative paragraph immediately after ---\n- Include ## Key Takeaways section (NO Quest Objectives section - this is forbidden)\n- Include ## File Exploration section with ### File: [filepath] subsections\n- Each file must have: description paragraph → #### Highlights → #### Code with snippets\n- Add 3-5 educational bullet points after EACH code snippet\n- Use --- separators between code blocks\n- Include ## Helpful Hints section with 3 practical tips\n- Include ## Try This section with 2-3 hands-on experiments (NO emoji in heading)\n- End with themed completion message after final ---\n- Do NOT add "Chapter" headings or "Quest Objectives" section\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
+      }) + this.QUEST_FORMAT_INSTRUCTIONS;
 
       response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST, context: 'quest content' });
 
@@ -456,7 +485,7 @@ ${adventureGuidance ? `Adventure Configuration:\n${adventureGuidance}` : ''}
 ${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}`;
       }
 
-      prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content following the Required Format template EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] (plain text, no emojis) followed by ---\n- Include 75-100 word themed narrative paragraph immediately after ---\n- Include ## Key Takeaways section (NO Quest Objectives section - this is forbidden)\n- Include ## File Exploration section with ### File: [filepath] subsections\n- Each file must have: description paragraph → #### Highlights → #### Code with snippets\n- Add 3-5 educational bullet points after EACH code snippet\n- Use --- separators between code blocks\n- Include ## Helpful Hints section with 3 practical tips\n- Include ## Try This section with 2-3 hands-on experiments (NO emoji in heading)\n- End with themed completion message after final ---\n- Do NOT add "Chapter" headings or "Quest Objectives" section\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
+      prompt += this.QUEST_FORMAT_INSTRUCTIONS;
 
       const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST, context: 'quest chunk' });
 
