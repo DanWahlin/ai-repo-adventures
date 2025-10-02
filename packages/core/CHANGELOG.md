@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.1](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.6.0...@codewithdan/ai-repo-adventures-core@1.6.1) (2025-10-02)
+
+
+### Bug Fixes
+
+* Add quest format instructions for consistent markdown output in StoryGenerator ([ca9b94b](https://github.com/danwahlin/ai-repo-adventures/commit/ca9b94bd9d30007352f613e5a90af36998ea460c))
+
+
+
+
+
 # [1.6.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.5.1...@codewithdan/ai-repo-adventures-core@1.6.0) (2025-10-02)
 
 
