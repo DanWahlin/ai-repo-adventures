@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.2](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.6.1...@codewithdan/ai-repo-adventure-generator@1.6.2) (2025-10-02)
+
+
+### Bug Fixes
+
+* Rename "Change Theme" to "Change Adventure" in HTML templates and styles for clarity ([8b2c88a](https://github.com/danwahlin/ai-repo-adventures/commit/8b2c88a7aa3bef727f0ef5d5e68c40e42156e4d0))
+
+
+
+
+
 ## [1.6.1](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.6.0...@codewithdan/ai-repo-adventure-generator@1.6.1) (2025-10-02)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventure-generator
