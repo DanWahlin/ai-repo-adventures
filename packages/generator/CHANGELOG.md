@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.5.0...@codewithdan/ai-repo-adventure-generator@1.6.0) (2025-10-02)
+
+
+### Features
+
+* Improve logging and content processing in various modules; update templates and styles ([e296115](https://github.com/danwahlin/ai-repo-adventures/commit/e2961159c148bac80b2333c607fe53e78022abd9))
+
+
+
+
+
 # [1.5.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.4.2...@codewithdan/ai-repo-adventure-generator@1.5.0) (2025-10-01)
 
 
