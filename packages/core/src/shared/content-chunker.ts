@@ -61,13 +61,9 @@ export class ContentChunker {
   static chunkContent(content: string): ChunkResult {
     const totalTokens = estimateTokenCount(content);
 
-    console.log(`📊 Content size: ${content.length.toLocaleString()} chars, estimated ${totalTokens.toLocaleString()} tokens`);
-    console.log(`📊 Available for content: ${AVAILABLE_CONTENT_CHARS.toLocaleString()} chars (${AVAILABLE_CONTENT_TOKENS.toLocaleString()} tokens)`);
-    console.log(`📊 Reserved for response: ${RESPONSE_TOKENS.toLocaleString()} tokens, prompt: ${PROMPT_TOKENS.toLocaleString()} tokens`);
-
     // If content fits in first chunk, use it as-is
     if (content.length <= AVAILABLE_CONTENT_CHARS) {
-      console.log(`✅ Content fits in single chunk`);
+      console.log(`📦 Content: ${content.length.toLocaleString()} chars (~${totalTokens.toLocaleString()} tokens) - fits in single chunk`);
       return {
         chunks: [{
           content,

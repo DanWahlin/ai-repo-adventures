@@ -329,9 +329,9 @@ export class StoryGenerator {
         questPosition,
         totalQuests,
         ...(this.customThemeData && { customThemeData: this.customThemeData })
-      }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content following the Required Format template above EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] followed by ---\n- Include ## Quest Objectives section with investigative questions\n- Include ## File Exploration section with filepath headings and highlights\n- Include ## Code section with actual code from the files (not generic examples)\n- Include ## Helpful Hints section\n- End with completion message and ---\n- Do NOT add "Chapter" headings or deviate from the template structure\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
+      }) + '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your markdown content following the Required Format template above EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] (plain text, no emojis) followed by ---\n- Include 75-100 word themed narrative paragraph immediately after ---\n- Include ## Key Takeaways section (NO Quest Objectives section - this is forbidden)\n- Include ## File Exploration section with ### File: [filepath] subsections\n- Each file must have: description paragraph → #### Highlights → #### Code with snippets\n- Add 3-5 educational bullet points after EACH code snippet\n- Use --- separators between code blocks\n- Include ## Helpful Hints section with 3 practical tips\n- Include ## Try This section with 2-3 hands-on experiments (NO emoji in heading)\n- End with themed completion message after final ---\n- Do NOT add "Chapter" headings or "Quest Objectives" section\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
 
-      response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST });
+      response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST, context: 'quest content' });
 
       if (!response.content || response.content.trim() === '') {
         throw new Error('LLM returned empty response for quest content');
@@ -350,30 +350,24 @@ export class StoryGenerator {
     const endMarker = '---END MARKDOWN---';
     const beginIndex = cleanContent.indexOf(beginMarker);
     const endIndex = cleanContent.indexOf(endMarker);
-    
-    // Log for debugging purposes
-    console.log(`🔧 Processing LLM response: ${cleanContent.length} chars, markers at ${beginIndex}/${endIndex}`);
-    
+
     if (beginIndex !== -1 && endIndex !== -1 && endIndex > beginIndex) {
       // Extract content between markers
       const extracted = cleanContent.substring(
         beginIndex + beginMarker.length,
         endIndex
       ).trim();
-      
+
       // Verify extraction worked (should not contain the markers)
       if (!extracted.includes(beginMarker) && !extracted.includes(endMarker)) {
         cleanContent = extracted;
-        console.log(`✅ Successfully extracted markdown content: ${cleanContent.length} chars`);
       } else {
-        console.warn(`⚠️ Extraction failed - markers still present, using fallback`);
-        // Continue to fallback processing
+        console.warn(`⚠️ Markdown extraction failed - markers still present`);
       }
     }
     
     // Additional safety check - if markers are still present, remove them manually
     if (cleanContent.includes(beginMarker) || cleanContent.includes(endMarker)) {
-      console.log(`🔧 Removing remaining markdown markers manually`);
       cleanContent = cleanContent
         .replace(beginMarker, '')
         .replace(endMarker, '')
@@ -462,9 +456,9 @@ ${adventureGuidance ? `Adventure Configuration:\n${adventureGuidance}` : ''}
 ${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}`;
       }
 
-      prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content following the Required Format template EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] followed by ---\n- Include ## Quest Objectives section with investigative questions\n- Include ## File Exploration section with filepath headings and highlights\n- Include ## Code section with actual code from the files (not generic examples)\n- Include ## Helpful Hints section\n- End with completion message and ---\n- Do NOT add "Chapter" headings or deviate from the template structure\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
+      prompt += '\n\nIMPORTANT: Respond with ONLY markdown content between explicit delimiters.\n\nFormat your response EXACTLY like this:\n\n---BEGIN MARKDOWN---\n[Your enhanced quest content following the Required Format template EXACTLY]\n---END MARKDOWN---\n\nCRITICAL FORMAT REQUIREMENTS:\n- Start with # Quest X: [Title] (plain text, no emojis) followed by ---\n- Include 75-100 word themed narrative paragraph immediately after ---\n- Include ## Key Takeaways section (NO Quest Objectives section - this is forbidden)\n- Include ## File Exploration section with ### File: [filepath] subsections\n- Each file must have: description paragraph → #### Highlights → #### Code with snippets\n- Add 3-5 educational bullet points after EACH code snippet\n- Use --- separators between code blocks\n- Include ## Helpful Hints section with 3 practical tips\n- Include ## Try This section with 2-3 hands-on experiments (NO emoji in heading)\n- End with themed completion message after final ---\n- Do NOT add "Chapter" headings or "Quest Objectives" section\n- Do NOT write generic code examples - extract real code from the Complete Codebase section';
 
-      const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST });
+      const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_QUEST, context: 'quest chunk' });
 
       if (!response.content || response.content.trim() === '') {
         console.warn(`⚠️ Empty response for chunk ${i + 1}, using accumulated content`);
@@ -544,7 +538,7 @@ ${content}
 Provide a concise summary that will help continue the ${theme}-themed adventure coherently.`;
 
     try {
-      const response = await this.llmClient.generateResponse(prompt, { maxTokens: 500 });
+      const response = await this.llmClient.generateResponse(prompt, { maxTokens: 500, context: 'context summary' });
 
       return response.content?.trim() || `${theme}-themed quest adventure exploring the codebase (part ${chunkNumber}/${totalChunks}).`;
     } catch (error) {
@@ -590,7 +584,7 @@ Provide a concise summary that will help continue the ${theme}-themed adventure 
       vocabularyHint
     });
 
-    const response = await this.llmClient.generateResponse(prompt);
+    const response = await this.llmClient.generateResponse(prompt, { context: 'completion' });
     // Remove surrounding quotes if the LLM added them
     const content = response.content.trim();
     return content.replace(/^["']|["']$/g, '');
@@ -628,7 +622,7 @@ Provide a concise summary that will help continue the ${theme}-themed adventure 
       ...(this.customThemeData && { customThemeData: this.customThemeData })
     });
 
-    const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY });
+    const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY, context: 'story & quests' });
     
     if (!response.content || response.content.trim() === '') {
       throw new Error('LLM returned empty response');

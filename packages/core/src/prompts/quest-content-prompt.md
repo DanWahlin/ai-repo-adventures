@@ -7,6 +7,7 @@ Generate {{theme}}-themed quest content for: "{{adventureTitle}}"
 - Never use em dashes (—), avoid "deeply understand"
 - Quest titles must be plain text only
 - **CRITICAL**: Never add "Chapter" headings - this is a quest format, not a book chapter
+- **CRITICAL**: Never add "Quest Objectives" section - use Key Takeaways instead
 - After the quest title and `---`, start immediately with the themed narrative paragraph
 - Wrap ALL code elements in backticks: `function()`, `Class`, `variable`
 - Use `---` only after quest title and before final message
@@ -27,15 +28,13 @@ Generate {{theme}}-themed quest content for: "{{adventureTitle}}"
 - Format highlights as: `functionName` followed by what it does and why it's important
 - DO NOT just list function names - provide meaningful descriptions
 
-## Quest Objectives Requirements
-**IMPORTANT**: Quest Objectives must be investigative questions based on the actual code:
-- Frame as questions to investigate WHILE reading the code, not prerequisites
-- Each objective should guide readers to specific patterns in the code below
-- Questions should focus on understanding how things work, not just what they are
-- Include a mix of: pattern recognition, flow analysis, and implementation details
-- Objectives must be answerable by studying the code sections shown in the quest
-- Use theme-appropriate naming for investigations (e.g., "Scanner Calibration" for space theme)
-- The introduction should clearly indicate these are exploration guides, not prerequisites
+## Key Takeaways Requirements
+**IMPORTANT**: Key Takeaways should provide clear learning outcomes:
+- Each takeaway starts with an emoji (🎯 🔍 ⚡ 💡) followed by a bold concept name
+- Keep each takeaway to one clear sentence
+- Focus on technical concepts, patterns, and architectural decisions
+- Avoid generic statements - make them specific to the code being explored
+- Takeaways should reflect what developers will actually learn from the quest
 
 ## Required Format
 ```markdown
@@ -43,14 +42,15 @@ Generate {{theme}}-themed quest content for: "{{adventureTitle}}"
 ---
 [75-100 word themed narrative paragraph]
 
-## Quest Objectives
-As you explore the code below, investigate these key questions:
-- 🔍 **[Investigation Name]**: [Specific question about a code pattern, function, or behavior found in the files below]
-- ⚡ **[Discovery Name]**: [Question about system flow, initialization, or key functionality]
-- 🛡️ **[Analysis Name]**: [Question about error handling, validation, or safety mechanisms]
+## Key Takeaways
+After completing this quest, you will understand:
+- 🎯 **[Concept 1]**: [One sentence describing a key technical concept or pattern]
+- 🔍 **[Concept 2]**: [One sentence about an important implementation detail]
+- ⚡ **[Concept 3]**: [One sentence about architectural decisions or trade-offs]
+- 💡 **[Concept 4]**: [Optional: One sentence about practical applications]
 
 ## File Exploration
-### [filepath]: [description]
+### File: [filepath]
 [200-300 word analysis paragraph with backticked code elements]
 #### Highlights
 - [3-5 descriptive bullets explaining what key functions/methods do and why they matter]
@@ -59,8 +59,7 @@ As you explore the code below, investigate these key questions:
 - [Example: `setupHandlers` dynamically lists tools and validates parameters for mission execution]
 - [Example: `run` activates transport and pre-generates actionable content for seamless workflows]
 
-## Code
-### [filepath]
+#### Code
 ```[language]
 [Code for highlight 1 - e.g., setupHandlers function]
 ```
@@ -74,7 +73,7 @@ As you explore the code below, investigate these key questions:
 ---
 
 ```[language]
-[Code for highlight 2 - e.g., run function]  
+[Code for highlight 2 - e.g., run function]
 ```
 [3-5 educational bullet points about this code:]
 - Core functionality and purpose
@@ -85,22 +84,24 @@ As you explore the code below, investigate these key questions:
 
 ---
 
-```[language]
-[Code for highlight 3 - e.g., main function]
-```
-[3-5 insightful bullet points covering:]
-- The role this code plays in the larger system
-- Specific techniques or patterns demonstrated
-- Error handling or edge cases addressed
-- Performance or architectural considerations
-- Learning opportunities for readers
-
----
+[Repeat for each file: File exploration paragraph → Highlights → Code snippets with explanations]
 
 ## Helpful Hints
 - [Practical tip]
-- [Exploration recommendation] 
+- [Exploration recommendation]
 - [Next steps]
+
+## Try This
+Challenge yourself to deepen your understanding:
+
+1. **[Experiment Name]**: [2-3 sentences describing a hands-on modification or exploration task]
+   - Example: "Try adding a new agent to the system. Create a simple agent that handles currency conversion queries and register it with the orchestrator."
+
+2. **[Investigation Name]**: [2-3 sentences describing something to analyze or trace through]
+   - Example: "Trace the complete flow of a user query from the API endpoint through the triage agent to a specialized agent. Add console.log statements to observe how data transforms at each step."
+
+3. **[Challenge Name]**: [Optional 3rd experiment for more complex exploration]
+   - Example: "Modify the error handling to provide more detailed feedback when tool execution fails. Consider what information would be most helpful for debugging."
 
 ---
 [Write a completion message based on quest position:
@@ -118,14 +119,16 @@ Here's an example of a properly formatted quest response (space theme):
 ---
 You materialize on the starship's Command Bridge, where the Repository Explorer's communication systems pulse with cosmic energy. The bridge crew coordinates all incoming transmissions from distant codebases, routing them through sophisticated instrument panels that validate each signal's integrity before processing.
 
-## Quest Objectives
-As you explore the code below, investigate these key questions:
-- 🔍 **Signal Reception Protocol**: How does the bridge receive and categorize incoming transmissions from different star systems?
-- ⚡ **Instrument Calibration**: What validation checks ensure that ship instruments are properly configured before mission deployment?
-- 🛡️ **Emergency Protocols**: How does the system handle corrupted data streams or invalid command sequences?
+## Key Takeaways
+After completing this quest, you will understand:
+- 🎯 **Triage Pattern**: How a central agent routes requests to specialized agents based on query analysis
+- 🔍 **Dynamic Configuration**: How agents are configured at runtime based on available MCP tool servers
+- ⚡ **Server-Sent Events (SSE)**: How real-time streaming enables responsive user experiences in agent systems
+- 💡 **Error Handling**: How the system maintains stability when tools fail or agents encounter issues
 
 ## File Exploration
-### packages/mcp/src/server.ts: Command Bridge Control Center
+
+### File: packages/mcp/src/server.ts
 The Command Bridge operates as the central nervous system of the starship, managing all communications between the vessel and external systems. The `RepoAdventureServer` class coordinates mission deployments by initializing transport systems, registering available instruments, and maintaining real-time status updates. This module demonstrates sophisticated orchestration patterns, using dependency injection to manage the ship's tool registry and employing async initialization for reliable startup sequences.
 
 #### Highlights
@@ -135,8 +138,7 @@ The Command Bridge operates as the central nervous system of the starship, manag
 - The constructor pattern enables flexible dependency injection, allowing different transport and tool configurations for various mission types
 - Error handling throughout ensures the bridge remains operational even when individual subsystems encounter anomalies
 
-## Code
-### packages/mcp/src/server.ts
+#### Code
 ```typescript
 async setupHandlers() {
   this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -207,6 +209,15 @@ async main() {
 - Notice the pre-generation strategy in the `run` method that trades initial startup time for improved responsiveness
 - Explore how dependency injection in the constructor enables different configurations for testing versus production
 
+## Try This
+Challenge yourself to deepen your understanding:
+
+1. **Add Health Check Agent**: Create a new specialized agent called `HealthCheckAgent` that monitors system status. Register it in `setupAgents` with a simple tool that returns server uptime and active connections. This will help you understand the agent registration pattern.
+
+2. **Trace Request Flow**: Add console.log statements at key points: when `setupHandlers` is called, when a tool request arrives, and when the response is sent. Run the system and observe how data flows from client request to agent response. This reveals the complete request lifecycle.
+
+3. **Implement Custom Error Messages**: Modify the error handling in `CallToolRequestSchema` to provide more detailed feedback. Instead of just "Unknown tool", include information about available tools and suggest the closest match. This demonstrates defensive programming and improves developer experience.
+
 ---
 Excellent work! Continue to the next quest to uncover more mysteries of the starship's systems.
 ```
@@ -215,14 +226,13 @@ Excellent work! Continue to the next quest to uncover more mysteries of the star
 - Start with H1 quest title (plain text, no emojis)
 - Use `---` separator immediately after title
 - Include 75-100 word themed narrative paragraph
-- Use "## Quest Objectives" with "As you explore the code below, investigate these key questions:" introduction
-- Use 3 objectives with emoji + bold investigation name + specific question
-- Include "## File Exploration" section with filepath analysis
-- Use "#### Highlights" with 3-5 descriptive bullets (NOT just function names)
-- Include "## Code" section with code blocks for each highlight
-- Add 5 educational bullet points after EACH code snippet
+- Include "## Key Takeaways" with 3-4 bullet points using emojis (🎯 🔍 ⚡ 💡) before bold concept names (NO emoji in heading)
+- Include "## File Exploration" section with "### File: [filepath]" for each file
+- Each file should have: description paragraph → "#### Highlights" → "#### Code" with snippets
+- Add 3-5 educational bullet points after EACH code snippet
 - Use `---` separators between code blocks
 - Include "## Helpful Hints" section with 3 practical tips
+- Include "## Try This" section with 2-3 hands-on experiments (NO emoji in heading)
 - End with themed completion message after final `---`
 
 ## Input Sections

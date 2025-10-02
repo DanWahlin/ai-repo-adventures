@@ -166,7 +166,7 @@ export class AssetManager {
       }
 
       const homepageCSSContent = fs.readFileSync(homepageCSSSource, 'utf-8');
-      const cssPath = path.join(outputDir, 'assets', 'theme.css');
+      const cssPath = path.join(outputDir, 'assets', 'homepage.css');
 
       // Ensure assets directory exists
       fs.mkdirSync(path.dirname(cssPath), { recursive: true });

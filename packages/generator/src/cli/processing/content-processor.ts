@@ -147,14 +147,15 @@ export class ContentProcessor {
     );
 
     // Convert file paths in headings (h3-h6) to hyperlinks
+    // This pattern matches headings that may contain span tags (like header-prefix)
     htmlContent = htmlContent.replace(
-      /<(h[3-6][^>]*)>([^<]*)<\/(h[3-6])>/g,
+      /<(h[3-6][^>]*)>(.*?)<\/(h[3-6])>/g,
       (match, openTag, headingContent, closeTag) => {
         const fileMatch = headingContent.match(filePathPattern);
         if (fileMatch) {
           const filePath = fileMatch[0];
           const githubUrl = createGitHubLink(filePath);
-          const linkedContent = headingContent.replace(filePath, `<a href="${githubUrl}" target="_blank" rel="noopener noreferrer">${filePath}</a>`);
+          const linkedContent = headingContent.replace(filePath, `<a href="${githubUrl}" target="_blank" rel="noopener noreferrer"><code class="inline-code">${filePath}</code></a>`);
           return `<${openTag}>${linkedContent}</${closeTag}>`;
         }
         return match;

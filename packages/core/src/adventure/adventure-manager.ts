@@ -323,9 +323,8 @@ export class AdventureManager {
     // Use chunking to handle content optimally
     const chunkResult = ContentChunker.chunkContent(codeContent);
 
-    if (chunkResult.chunks.length === 1) {
-      console.log(`📦 Content fits in single chunk: ${codeContent.length} chars`);
-    } else {
+    // Only log if content was actually chunked (ContentChunker logs single chunk case)
+    if (chunkResult.chunks.length > 1) {
       console.log(`📦 Content chunked into ${chunkResult.chunks.length} parts for optimal processing`);
     }
 

@@ -27,6 +27,8 @@ export interface LLMRequestOptions {
   // GPT-5 specific parameters
   verbosity?: 'low' | 'medium' | 'high';
   reasoningEffort?: 'minimal' | 'medium' | 'high';
+  // Optional context for logging
+  context?: string;
 }
 
 export enum RateLimitType {
@@ -149,7 +151,7 @@ export class LLMClient {
         content = this.cleanJsonResponse(content);
       }
 
-      this.logTokenUsage(completion);
+      this.logTokenUsage(completion, options?.context);
 
       // Successful request - reduce throttling gradually
       this.onSuccessfulRequest();
@@ -211,8 +213,6 @@ export class LLMClient {
       requestParams.max_tokens = options?.maxTokens || LLM_MAX_TOKENS_DEFAULT;
     }
 
-    console.error(`🔄 Starting LLM request to ${this.model} (timeout: ${LLM_REQUEST_TIMEOUT}ms, prompt length: ${prompt.length} chars)`);
-
     return requestParams;
   }
 
@@ -243,15 +243,11 @@ export class LLMClient {
       throw new Error('LLM returned choice without message');
     }
 
-    // Log finish reason for debugging truncated responses
-    if (choice.finish_reason) {
-      console.error(`🔍 LLM finish reason: ${choice.finish_reason} (content length: ${content?.length || 0} chars)`);
-
-      if (choice.finish_reason === 'length') {
-        console.warn('⚠️  Response truncated due to max_tokens limit');
-      } else if (choice.finish_reason === 'content_filter') {
-        console.warn('⚠️  Response filtered by content policy');
-      }
+    // Only log warnings for problematic finish reasons
+    if (choice.finish_reason === 'length') {
+      console.warn('⚠️  Response truncated due to max_tokens limit');
+    } else if (choice.finish_reason === 'content_filter') {
+      console.warn('⚠️  Response filtered by content policy');
     }
 
     if (!content || content.trim() === '') {
@@ -281,18 +277,17 @@ export class LLMClient {
   }
 
   /**
-   * Log token usage information
+   * Log token usage information (concise format with optional context)
    */
-  private logTokenUsage(completion: any): void {
+  private logTokenUsage(completion: any, context?: string): void {
     if (!completion.usage) return;
-    
-    const promptTokens = completion.usage.prompt_tokens || 0;
-    const completionTokens = completion.usage.completion_tokens || 0;
+
     const totalTokens = completion.usage.total_tokens || 0;
-    
+
     const green = '\x1b[32m';
     const reset = '\x1b[0m';
-    console.error(`🔢 LLM Usage: ${green}${formatTokenCount(promptTokens)}${reset} prompt + ${green}${formatTokenCount(completionTokens)}${reset} response = ${green}${formatTokenCount(totalTokens)}${reset} total tokens\n`);
+    const contextLabel = context ? ` (${context})` : '';
+    console.error(`${green}✓${reset} ${formatTokenCount(totalTokens)} tokens${contextLabel}`);
   }
 
   /**
