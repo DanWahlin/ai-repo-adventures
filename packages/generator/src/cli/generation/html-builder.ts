@@ -180,9 +180,9 @@ export class HTMLBuilder {
     // Use shared THEME_ICONS from constants
     const icons = (THEME_ICONS as any)[this.selectedTheme] || THEME_ICONS.space;
 
-    // Add "Change Theme" link only when in multi-theme mode
-    const changeThemeLink = this.isMultiTheme
-      ? '<a href="../index.html" class="nav-link">Change Theme</a>'
+    // Add "Change Adventure" link only when in multi-theme mode
+    const changeAdventureLink = this.isMultiTheme
+      ? '<a href="../index.html" class="nav-link">Change Adventure</a>'
       : '';
 
     return {
@@ -194,7 +194,7 @@ export class HTMLBuilder {
       THEME_ICON: icons.theme,
       QUEST_ICON: icons.quest,
       GITHUB_LOGO: this.getGitHubLogo(),
-      CHANGE_THEME_LINK: changeThemeLink,
+      CHANGE_ADVENTURE_LINK: changeAdventureLink,
       ASSETS_PATH: 'assets',
       NAVIGATOR_ASSETS_PATH: this.isMultiTheme ? '../assets/shared' : 'assets',
       TOGGLE_ASSETS_PATH: this.isMultiTheme ? '../assets' : 'assets',
