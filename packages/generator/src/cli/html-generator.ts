@@ -437,8 +437,7 @@ Options:
   --overwrite           Overwrite existing files without prompting
   --sequential          Process themes sequentially to avoid rate limits (for --theme all)
   --max-quests <num>    Limit number of quests to generate (default: all)
-  --log-llm-output      Save raw LLM output for debugging
-  --log-llm-output-dir <dir>  Directory for LLM output logs (default: .ai-repo-adventures/llm-output)
+  --log-llm-output [dir]  Save raw LLM output for debugging (default: .ai-repo-adventures/llm-output)
   --serve               Start HTTP server and open browser after generation
   --help, -h            Show this help message
 

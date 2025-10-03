@@ -103,9 +103,10 @@ export class ConfigurationManager {
     const logLlmOutput = args.has('log-llm-output');
     let logLlmOutputDir: string = DEFAULT_PATHS.LLM_LOG_DIR;
     if (logLlmOutput) {
-      const customDir = args.get('log-llm-output-dir');
-      if (customDir) {
-        logLlmOutputDir = customDir;
+      const logValue = args.get('log-llm-output');
+      // If value is not 'true', treat it as a custom directory path
+      if (logValue && logValue !== 'true') {
+        logLlmOutputDir = logValue;
       }
       console.log(chalk.green(`✅ LLM output logging: enabled (${logLlmOutputDir})`));
     }
