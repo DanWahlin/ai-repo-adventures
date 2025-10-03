@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.8.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.7.2...@codewithdan/ai-repo-adventure-generator@1.8.0) (2025-10-03)
+
+
+### Features
+
+* update logging options in CLI and documentation for clarity ([88167bd](https://github.com/danwahlin/ai-repo-adventures/commit/88167bd1a346e410bb12a596bd4c2d2001aa62bd))
+
+
+
+
+
 ## [1.7.2](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.7.1...@codewithdan/ai-repo-adventure-generator@1.7.2) (2025-10-03)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventure-generator
