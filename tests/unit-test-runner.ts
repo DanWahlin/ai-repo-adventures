@@ -15,6 +15,7 @@ import { runAutomaticModeSwitchingTests } from './unit/automatic-mode-switching.
 import { runQuestContentPriorityTests } from './unit/quest-content-priority.test.js';
 import { runHtmlGeneratorTests } from './unit/html-generator.test.js';
 import { runTests as runLLMResponseValidatorTests } from './unit/llm-response-validator.test.js';
+import { runRepoAnalyzerTests } from './unit/repo-analyzer.test.js';
 
 // Print detailed summary table function
 function printDetailedSummary(results: Array<{
@@ -164,6 +165,10 @@ async function runAllUnitTests() {
     {
       name: 'LLM Response Validator',
       runner: createStatsWrapper(runLLMResponseValidatorTests, 'LLM Response Validator', 25, 'Markdown validation, HTML compatibility, structure analysis')
+    },
+    {
+      name: 'RepoAnalyzer Security',
+      runner: createStatsWrapper(runRepoAnalyzerTests, 'RepoAnalyzer Security', 20, 'Path traversal prevention, injection protection, subprocess safety')
     }
   ]);
 
