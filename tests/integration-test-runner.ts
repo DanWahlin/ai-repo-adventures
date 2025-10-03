@@ -11,6 +11,8 @@ import { runTests as runLLMTargetedContentTests } from './integration/llm-target
 import { runTests as runSimplifiedAlgorithmTests } from './integration/simplified-algorithms.test.js';
 import { runTests as runAdventureLLMTests } from './integration/adventure-llm.test.js';
 import { runTests as runMultiModelTests } from './integration/multi-model.test.js';
+import { runAdventureManagerStateTests } from './integration/adventure-manager-state.test.js';
+import { runStoryGeneratorParsingTests } from './integration/story-generator-parsing.test.js';
 
 async function runAllIntegrationTests() {
   console.log('⚠️  These tests require external services (file system, LLM, repomix)');
@@ -22,7 +24,9 @@ async function runAllIntegrationTests() {
     { name: 'LLM Targeted Content', runner: runLLMTargetedContentTests },
     { name: 'Simplified Architecture', runner: runSimplifiedAlgorithmTests },
     { name: 'Adventure LLM Integration', runner: runAdventureLLMTests },
-    { name: 'Multi-Model Compatibility', runner: runMultiModelTests }
+    { name: 'Multi-Model Compatibility', runner: runMultiModelTests },
+    { name: 'AdventureManager State Management', runner: runAdventureManagerStateTests },
+    { name: 'StoryGenerator Markdown Parsing', runner: runStoryGeneratorParsingTests }
   ]);
 }
 
