@@ -1,43 +1,49 @@
-  name: Generate Repo Adventure
+name: Generate Repo Adventure
 
-  on:
-    push:
-      branches:
-        - main
+on:
+  push:
+    branches:
+      - main
 
-  jobs:
-    generate-adventures:
-      runs-on: ubuntu-latest
+jobs:
+  generate-adventures:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.head_commit.message, 'update-adventure:')
+    permissions:
+      contents: write
 
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-        - name: Install AI Repo Adventure Generator
-          run: npm install -g @codewithdan/ai-repo-adventure-generator
+      - name: Install AI Repo Adventure Generator
+        run: npm install -g @codewithdan/ai-repo-adventure-generator
 
-        - name: Generate repo adventures
-          env:
-            LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-            LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-            LLM_MODEL: ${{ secrets.LLM_MODEL }}
-            LLM_API_VERSION: ${{ secrets.LLM_API_VERSION }}
-          run: repo-adventure --theme all --output ./public/examples --overwrite
+      - name: Generate repo adventures
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_API_VERSION: ${{ secrets.LLM_API_VERSION }}
+        run: repo-adventure --theme all --output ./public/examples --overwrite
 
-        - name: Commit generated files
-          run: |
-            git config --local user.email "github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "github-actions[bot]"
-            git add public/examples
-            git diff --staged --quiet || git commit -m "chore: update generated repo adventures"
+      - name: Publish generated files
+        run: npx gh-pages -d public/examples --dest examples
 
-        - name: Push changes
-          uses: ad-m/github-push-action@master
-          with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
-            branch: main
+      - name: Commit generated files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add public/examples
+          git diff --staged --quiet || git commit -m "chore: update generated repo adventures"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main

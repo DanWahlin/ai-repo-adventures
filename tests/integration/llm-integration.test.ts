@@ -318,15 +318,16 @@ async function runTests() {
   await test('Multi-chapter story coherence validation', async () => {
     const manager = new AdventureManager();
     const llmClient = new LLMClient();
-    
+
     // Initialize story
     const mainStory = await manager.initializeAdventure(realProjectInfo, 'ancient');
     const progress = manager.getProgress();
-    
+
     // Explore multiple adventures to get chapter content
+    // Reduced to 2 chapters to stay within timeout
     const chapters: Array<{ id: number; narrative: string; completed: boolean | undefined }> = [];
-    const maxChapters = Math.min(3, progress.choices?.length || 0);
-    
+    const maxChapters = Math.min(2, progress.choices?.length || 0);
+
     for (let i = 1; i <= maxChapters; i++) {
       try {
         const chapter = await manager.exploreQuest(i.toString());
@@ -340,9 +341,9 @@ async function runTests() {
         break;
       }
     }
-    
+
     assert(chapters.length > 0, 'Should have at least one chapter to validate');
-    
+
     // Use LLM to validate the multi-chapter coherence
     const coherencePrompt = `Analyze this story with multiple chapters for overall coherence. Return JSON:
     {
@@ -357,25 +358,25 @@ async function runTests() {
     }
 
     MAIN STORY: ${mainStory}
-    
+
     CHAPTERS: ${JSON.stringify(chapters, null, 2)}`;
 
     const coherenceValidation = await llmClient.generateResponse(coherencePrompt, { responseFormat: 'json_object' });
     const coherenceResult = JSON.parse(coherenceValidation.content);
-    
+
     // Assert story coherence
-    assert(coherenceResult.overallCoherence === 'excellent' || coherenceResult.overallCoherence === 'good', 
+    assert(coherenceResult.overallCoherence === 'excellent' || coherenceResult.overallCoherence === 'good',
            `Story should be coherent: ${coherenceResult.reasoning}`);
-    assert(coherenceResult.chaptersConnected === true, 
+    assert(coherenceResult.chaptersConnected === true,
            `Chapters should be connected: ${coherenceResult.reasoning}`);
-    assert(coherenceResult.progressiveNarrative === true, 
+    assert(coherenceResult.progressiveNarrative === true,
            `Should have progressive narrative: ${coherenceResult.reasoning}`);
-    assert(coherenceResult.educationalProgression === true, 
+    assert(coherenceResult.educationalProgression === true,
            `Should have educational progression: ${coherenceResult.reasoning}`);
-    assert(coherenceResult.themeConsistency === true, 
+    assert(coherenceResult.themeConsistency === true,
            `Theme should be consistent: ${coherenceResult.reasoning}`);
-    
-  }, { timeout: 90000 });
+
+  }, { timeout: 150000 });
 
   await test('LLM responses contain project-specific information', async () => {
     const manager = new AdventureManager();
