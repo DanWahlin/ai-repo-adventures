@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.6.2...@codewithdan/ai-repo-adventure-generator@1.7.0) (2025-10-03)
+
+
+### Features
+
+* Add Microsoft Clarity and Google Analytics tracking support in adventure configuration and templates ([4e1cc1d](https://github.com/danwahlin/ai-repo-adventures/commit/4e1cc1d519081a54858ff341ad2378fff27f2058))
+
+
+
+
+
 ## [1.6.2](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-generator@1.6.1...@codewithdan/ai-repo-adventure-generator@1.6.2) (2025-10-02)
 
 
