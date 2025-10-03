@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import chalk from 'chalk';
-import { AdventureTheme, parseAdventureConfig } from '@codewithdan/ai-repo-adventures-core/shared';
+import { AdventureTheme, parseAdventureConfig, extractMicrosoftClarityCode, extractGoogleAnalyticsCode } from '@codewithdan/ai-repo-adventures-core/shared';
 import { RateLimitError, RateLimitType } from '@codewithdan/ai-repo-adventures-core/llm';
 import { TemplateEngine } from '../template-engine.js';
 import { RateLimitHandler } from '../generation/rate-limit-handler.js';
@@ -372,10 +372,34 @@ export class ThemeOrchestrator {
     }).join('\n');
 
     // Generate homepage using template
+    // Generate Microsoft Clarity tracking script if code is provided
+    const clarityCode = extractMicrosoftClarityCode(this.projectPath);
+    const clarityScript = clarityCode ? `
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "${clarityCode}");
+    </script>` : '';
+
+    // Generate Google Analytics 4 (GA4) tracking script if measurement ID is provided
+    const gaCode = extractGoogleAnalyticsCode(this.projectPath);
+    const gaScript = gaCode ? `
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${gaCode}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${gaCode}');
+    </script>` : '';
+
     const variables = {
       REPO_NAME: repoName,
       REPO_URL: repoUrl,
-      THEME_CARDS: themeCards
+      THEME_CARDS: themeCards,
+      MICROSOFT_CLARITY_SCRIPT: clarityScript,
+      GOOGLE_ANALYTICS_SCRIPT: gaScript
     };
 
     const html = this.templateEngine.renderTemplate('homepage-template.html', variables);

@@ -121,3 +121,39 @@ export function extractCustomInstructions(projectPath: string): string | null {
 
   return adventure.customInstructions.trim() || null;
 }
+
+/**
+ * Extracts the Microsoft Clarity tracking code from adventure.config.json
+ * Used to conditionally inject analytics script into generated HTML pages
+ */
+export function extractMicrosoftClarityCode(projectPath: string): string | null {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') {
+    return null;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || typeof adventure.microsoftClarityCode !== 'string') {
+    return null;
+  }
+
+  return adventure.microsoftClarityCode.trim() || null;
+}
+
+/**
+ * Extracts the Google Analytics 4 (GA4) measurement ID from adventure.config.json
+ * Used to conditionally inject GA4 gtag.js tracking script into generated HTML pages
+ */
+export function extractGoogleAnalyticsCode(projectPath: string): string | null {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== 'object') {
+    return null;
+  }
+
+  const adventure = (parsed as any).adventure;
+  if (!adventure || typeof adventure.googleAnalyticsCode !== 'string') {
+    return null;
+  }
+
+  return adventure.googleAnalyticsCode.trim() || null;
+}

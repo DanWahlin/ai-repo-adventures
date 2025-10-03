@@ -2,7 +2,7 @@ import * as path from 'path';
 import { AdventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import { TemplateEngine } from '../template-engine.js';
 import { ContentProcessor } from '../processing/content-processor.js';
-import { AdventureTheme, parseAdventureConfig } from '@codewithdan/ai-repo-adventures-core/shared';
+import { AdventureTheme, parseAdventureConfig, extractMicrosoftClarityCode, extractGoogleAnalyticsCode } from '@codewithdan/ai-repo-adventures-core/shared';
 import { THEME_ICONS } from '../constants.js';
 
 interface QuestInfo {
@@ -185,6 +185,28 @@ export class HTMLBuilder {
       ? '<a href="../index.html" class="nav-link">Change Adventure</a>'
       : '';
 
+    // Generate Microsoft Clarity tracking script if code is provided
+    const clarityCode = extractMicrosoftClarityCode(this.projectPath);
+    const clarityScript = clarityCode ? `
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "${clarityCode}");
+    </script>` : '';
+
+    // Generate Google Analytics 4 (GA4) tracking script if measurement ID is provided
+    const gaCode = extractGoogleAnalyticsCode(this.projectPath);
+    const gaScript = gaCode ? `
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${gaCode}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${gaCode}');
+    </script>` : '';
+
     return {
       ADVENTURE_TITLE: adventureTitle,
       INDEX_LINK: 'index.html',
@@ -195,6 +217,8 @@ export class HTMLBuilder {
       QUEST_ICON: icons.quest,
       GITHUB_LOGO: this.getGitHubLogo(),
       CHANGE_ADVENTURE_LINK: changeAdventureLink,
+      MICROSOFT_CLARITY_SCRIPT: clarityScript,
+      GOOGLE_ANALYTICS_SCRIPT: gaScript,
       ASSETS_PATH: 'assets',
       NAVIGATOR_ASSETS_PATH: this.isMultiTheme ? '../assets/shared' : 'assets',
       TOGGLE_ASSETS_PATH: this.isMultiTheme ? '../assets' : 'assets',
