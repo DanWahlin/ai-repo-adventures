@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.27](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-mcp@1.1.26...@codewithdan/ai-repo-adventure-mcp@1.1.27) (2025-10-03)
+
+**Note:** Version bump only for package @codewithdan/ai-repo-adventure-mcp
+
+
+
+
+
 ## [1.1.26](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-mcp@1.1.25...@codewithdan/ai-repo-adventure-mcp@1.1.26) (2025-10-03)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventure-mcp
