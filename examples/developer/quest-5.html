@@ -3,10 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest 5: Configuration & Theme Customization Patterns - Repo Adventure</title>
+    <title>Configuration & Theme System - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
+    
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "tk53e05gf2");
+    </script>
+    
     <!-- Prism.js for syntax highlighting -->
     <!-- Using minimal theme since we override all styles with our custom theme -->
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
@@ -16,7 +25,7 @@
         if (window.Prism && window.Prism.plugins && window.Prism.plugins.autoloader) {
             window.Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
         }
-        
+
         // Trigger Prism highlighting after page load
         document.addEventListener('DOMContentLoaded', function() {
             if (window.Prism) {
@@ -33,12 +42,12 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Repository Adventurer's Technical Blueprint</a>
+                <a href="index.html">Developer's Guide to AI Repo Adventures</a>
             </div>
             <div class="nav-middle">
             </div>
             <div class="nav-right">
-                <a href="../index.html" class="nav-link">Change Theme</a>
+                <a href="../index.html" class="nav-link">Change Adventure</a>
                 <a href="#" class="nav-link quest-map-trigger">Quests</a>
                 <button class="theme-toggle-btn" aria-label="Switch to light mode" type="button">
                     <div class="theme-toggle-slider">
@@ -57,193 +66,148 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 5: Configuration &amp; Theme Customization Patterns</h1>
+    <h1>Quest 5: Configuration and Theme System</h1>
 <hr>
-<p>Our journey concludes in the realm of configurations and themes: a cornerstone of a streamlined, modern development workflow. Here, you’ll explore how the system defines, validates, and integrates configuration and themes within the adventure framework. Understanding these patterns will help you uncover techniques for creating adaptable, tightly coupled systems while adhering to developer-friendly design principles.</p>
-<h2>Quest Objectives</h2>
-<p>As you explore the code below, investigate these key questions:</p>
+<p>In the heart of the system lies the Configuration and Theme System, a crucial layer that ensures the adventure engine runs smoothly and is visually engaging. This system defines the parameters for LLM interactions, file analysis, and theme customization, allowing developers to tailor their learning journeys. With robust validation and dynamic theme management, this module ensures consistency and adaptability, whether navigating cosmic codebases or medieval kingdoms. Dive deep into its architecture to understand how it balances flexibility, performance, and user experience.</p>
+<h2>Key Takeaways</h2>
+<p>After completing this quest, you will understand:</p>
 <ul>
-<li>🔍 <strong>Theme Definitions</strong>: How are the available themes structured, and what flexibility does the system provide for adding custom themes? </li>
-<li>⚡ <strong>Configuration Variables</strong>: How does the system manage default values and overrides for key project settings such as timeouts and file size limits?</li>
-<li>🛡️ <strong>Validation Techniques</strong>: How are inputs like project paths and themes validated to ensure system safety and accuracy?</li>
+<li>🎯 <strong>Theme Management</strong>: How themes are dynamically defined, validated, and applied to adventures.</li>
+<li>🔍 <strong>Configuration Patterns</strong>: How centralized configuration simplifies system-wide parameter management.</li>
+<li>⚡ <strong>Validation Techniques</strong>: How input validation ensures system integrity and user-friendly error handling.</li>
+<li>💡 <strong>Dynamic CSS Generation</strong>: How theme-specific styles are composed and applied for seamless visual integration.</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a>: Configuration file handling</h3>
-<p>This file provides key functions for managing the <code class="inline-code">adventure.config.json</code> file, which defines essential settings for the system. Functions cover the loading, parsing, and transformation of the configuration data. Key highlights include parsing configuration safely, extracting file paths used in the project, and formatting data to optimize its use for machine-learning prompts.</p>
+<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/config.ts</code></a></h3>
+<p>The <code class="inline-code">config.ts</code> file centralizes all system-wide parameters, such as timeouts, limits, and environment variables. This approach ensures consistency across modules while allowing for easy updates. It also includes default values and fallback mechanisms for critical settings like LLM configurations, file analysis, and resource constraints.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">loadAdventureConfig</code>: Reads the entire adventure configuration file as a raw string.</li>
-<li><code class="inline-code">parseAdventureConfig</code>: Parses the raw configuration JSON into a valid object and handles errors gracefully.</li>
-<li><code class="inline-code">extractUniqueFilePaths</code>: Identifies and collects all valid file paths referenced in the configuration.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Defines the maximum time for LLM requests to prevent hangs.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Sets the caching duration for repository analysis results.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Limits the size of files processed to enhance performance and stability.</li>
 </ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
-<pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
-  return readFileIfExists(configPath);
-}
+<h4>Code</h4>
+<pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = parseInt(process.env.LLM_REQUEST_TIMEOUT || &#39;60000&#39;); // 60 seconds for complex story generation
+export const REPOMIX_CACHE_TTL = parseInt(process.env.REPOMIX_CACHE_TTL || &#39;60000&#39;); // 60 seconds cache for repository analysis
+export const MAX_FILE_SIZE_MB = 10; // Skip files larger than 10MB to prevent memory issues
 </code></pre>
 <ul>
-<li>This function reads the configuration file from the specified project path.</li>
-<li>Ensures the file exists before attempting to read, protecting against runtime errors.</li>
-<li>A utility-centric approach minimizes coupling for better reusability.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code> ensures long-running requests are capped, improving the system&#39;s responsiveness.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code> optimizes performance by caching analysis results, reducing redundant operations.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code> prevents memory exhaustion by skipping overly large files, focusing on source code.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
-  const raw = loadAdventureConfig(projectPath);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-</code></pre>
-<ul>
-<li>Parses the raw configuration JSON using a single entry point.</li>
-<li>Includes fallback mechanisms for missing files or invalid JSON, ensuring robustness.</li>
-<li>Promotes clean separation between reading and parsing.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
-  const parsed = parseAdventureConfig(projectPath);
-  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
-
-  const unique = new Set&lt;string&gt;();
-  const stack: any[] = [parsed];
-  // More code for traversing and gathering unique paths
-  return Array.from(unique);
-}
-</code></pre>
-<ul>
-<li>Implements a breadth-first traversal to find file paths in nested configurations.</li>
-<li>Uses <code class="inline-code">Set</code> to ensure uniqueness, avoiding duplicate processing.</li>
-<li>Validates paths dynamically, making the system more adaptable to changes.</li>
-</ul>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a>: Theme declarations and utilities</h3>
-<p>This file centralizes theme definitions, providing functions for retrieval and utility methods for matching, parsing, and formatting themes. Themes are internally represented as constants, ensuring reliability and ease of extension.</p>
+<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a></h3>
+<p>The <code class="inline-code">theme.ts</code> file defines the adventure themes and provides utilities for theme selection and validation. It ensures that each theme has a unique identity and that user input is correctly matched to available themes.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">THEMES</code>: A constant object defining all preconfigured themes with properties like <code class="inline-code">id</code> and <code class="inline-code">emoji</code>.</li>
-<li><code class="inline-code">getAllThemes</code>: Returns all available themes as an array for easy iteration or display.</li>
-<li><code class="inline-code">isValidTheme</code>: Confirms whether a given input corresponds to a valid theme.</li>
+<li><code class="inline-code">THEMES</code>: A centralized collection of predefined themes, each with unique properties.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L78" target="_blank" rel="noopener noreferrer"><code class="inline-code">getThemeByKey</code></a>: Retrieves a theme based on its key, ensuring accurate mapping.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a>: Matches user input to themes using keywords or IDs.</li>
 </ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a></h3>
+<h4>Code</h4>
 <pre><code class="language-typescript">export const THEMES = {
-  SPACE: {
-    id: 1,
-    key: &#39;space&#39;,
-    displayName: &#39;Space Exploration&#39;,
-    emoji: &#39;🚀&#39;,
-    description: &#39;Journey through cosmic codebases where data flows like stardust.&#39;,
-    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;, &#39;starship&#39;]
-  },
-  MYTHICAL: {
-    id: 2,
-    key: &#39;mythical&#39;,
-    displayName: &#39;Enchanted Kingdom&#39;,
-    emoji: &#39;🏰&#39;,
-    description: &#39;Explore magical realms where databases are dragon hoards.&#39;,
-    keywords: [&#39;magic&#39;, &#39;castle&#39;, &#39;dragon&#39;]
-  },
-  // Additional themes...
+  SPACE: { id: 1, key: &#39;space&#39;, displayName: &#39;Space Exploration&#39;, emoji: &#39;🚀&#39;, description: &#39;Journey through cosmic codebases&#39; },
+  MYTHICAL: { id: 2, key: &#39;mythical&#39;, displayName: &#39;Enchanted Kingdom&#39;, emoji: &#39;🏰&#39;, description: &#39;Explore magical realms&#39; },
+  ANCIENT: { id: 3, key: &#39;ancient&#39;, displayName: &#39;Ancient Civilization&#39;, emoji: &#39;🏺&#39;, description: &#39;Discover lost temples of code&#39; },
+  DEVELOPER: { id: 4, key: &#39;developer&#39;, displayName: &#39;Developer Documentation&#39;, emoji: &#39;📖&#39;, description: &#39;Technical documentation approach&#39; },
+  CUSTOM: { id: 5, key: &#39;custom&#39;, displayName: &#39;Custom Theme&#39;, emoji: &#39;🎨&#39;, description: &#39;Design your own adventure&#39; },
 };
 </code></pre>
 <ul>
-<li>Defines all themes with structured, descriptive properties.</li>
-<li>Reduces complexity by centralizing data in a single location.</li>
-<li>Customizable keywords make theme selection versatile and intuitive.</li>
+<li><code class="inline-code">THEMES</code> provides a structured way to define and manage themes, ensuring consistency.</li>
+<li>Each theme includes metadata such as <code class="inline-code">emoji</code> and <code class="inline-code">description</code> for user-friendly selection.</li>
+<li>The modular structure allows for easy addition of new themes.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">export function getAllThemes(): ThemeDefinition[] {
-  return THEMES_ARRAY;
-}
-</code></pre>
-<ul>
-<li>Provides a consistent way to retrieve all themes as an iterable array.</li>
-<li>Decouples client logic from data structure designs like objects or arrays.</li>
-<li>Simplifies any need for extension or new integrations.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">export function isValidTheme(theme: string): theme is AdventureTheme {
-  return THEMES_ARRAY.some(t =&gt; t.key === theme);
-}
-</code></pre>
-<ul>
-<li>Implements a type guard to ensure safe usage of themes.</li>
-<li>Uses minimal iteration for concise, readable validation logic.</li>
-<li>Enhances error handling by ensuring invalid inputs are caught early.</li>
-</ul>
-<hr>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/theme-manager.ts</code></a>: Dynamic theme management</h3>
-<p>This file encapsulates low-level operations for CSS management and theme-related utilities. It focuses on the physical representation of themes (e.g., CSS files and icons) in the project.</p>
-<h4>Highlights</h4>
-<ul>
-<li><code class="inline-code">generateThemeCSS</code>: Dynamically compiles theme-specific CSS into final output files.</li>
-<li><code class="inline-code">getGitHubLogo</code>: Determines the appropriate GitHub logo based on theme specifications.</li>
-<li><code class="inline-code">parseThemeArg</code>: Parses and translates CLI arguments into valid themes.</li>
-</ul>
-<h2>Code</h2>
-<h3><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/theme-manager.ts</code></a></h3>
-<pre><code class="language-typescript">generateThemeCSS(theme: AdventureTheme, outputDir: string): void {
-  const cssFiles = [
-    path.join(this.themesDir, &#39;base.css&#39;),
-    // Additional CSS files...
-    path.join(this.themesDir, `${theme}.css`)
-  ];
-  
-  let combinedCSS = &#39;&#39;;
-  cssFiles.forEach(cssFile =&gt; {
-    if (fs.existsSync(cssFile)) {
-      combinedCSS += fs.readFileSync(cssFile, &#39;utf-8&#39;);
-    }
-  });
-  
-  fs.writeFileSync(path.join(outputDir, &#39;assets&#39;, &#39;theme.css&#39;), combinedCSS);
-}
-</code></pre>
-<ul>
-<li>Aggregates multiple CSS files for a cohesive theme experience.</li>
-<li>Validates each file’s existence dynamically, avoiding runtime errors.</li>
-<li>Modular approach allows for scalable inclusion of new themes or styles.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">isLightTheme(theme: AdventureTheme): boolean {
-  const lightThemes: AdventureTheme[] = [&#39;mythical&#39;];
-  return lightThemes.includes(theme);
-}
-</code></pre>
-<ul>
-<li>Separates logic for light/dark theme identification.</li>
-<li>Prepares the system for thematic adjustments based on user interaction.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">parseThemeArg(themeArg: string): AdventureTheme | &#39;all&#39; | null {
-  if (themeArg === &#39;all&#39;) return &#39;all&#39;;
-  const validThemes: AdventureTheme[] = [&#39;space&#39;, &#39;mythical&#39;, &#39;ancient&#39;, &#39;developer&#39;];
-  
-  // Match theme input to predefined themes
-  // ...
+<pre><code class="language-typescript">export function parseTheme(input: string): AdventureTheme | null {
+  const normalized = input.trim().toLowerCase();
+  const exactMatch = getThemeByKey(normalized);
+  if (exactMatch) return exactMatch.key as AdventureTheme;
+
+  const numericId = parseInt(normalized, 10);
+  if (!isNaN(numericId)) {
+    const byId = getThemeById(numericId);
+    if (byId) return byId.key as AdventureTheme;
+  }
+
   return null;
 }
 </code></pre>
 <ul>
-<li>Simplifies theme parsing for command-line interfaces.</li>
-<li>Handles misconfigurations gracefully, reducing user errors.</li>
-<li>Supports only valid options, reinforcing integrity.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> ensures user input is interpreted correctly, supporting both keywords and numeric IDs.</li>
+<li>The function handles edge cases gracefully, returning <code class="inline-code">null</code> for invalid inputs.</li>
+<li>This approach improves user experience by allowing flexible input methods.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/theme-manager.ts</code></a></h3>
+<p>The <code class="inline-code">theme-manager.ts</code> file handles theme-specific operations, such as CSS generation and icon selection. It ensures that each theme is visually distinct and that assets are correctly applied.</p>
+<h4>Highlights</h4>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a>: Combines multiple CSS files into a single theme-specific stylesheet.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L81" target="_blank" rel="noopener noreferrer"><code class="inline-code">getThemeIcons</code></a>: Provides theme-specific icons for templates, enhancing visual consistency.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L40" target="_blank" rel="noopener noreferrer"><code class="inline-code">isLightTheme</code></a>: Identifies themes requiring light or dark logos for better visibility.</li>
+</ul>
+<h4>Code</h4>
+<pre><code class="language-typescript">generateThemeCSS(theme: AdventureTheme, outputDir: string): void {
+  const cssFiles = [
+    path.join(this.themesDir, &#39;base.css&#39;),
+    path.join(this.themesDir, `${theme}.css`)
+  ];
+
+  let combinedCSS = &#39;&#39;;
+  cssFiles.forEach(cssFile =&gt; {
+    if (fs.existsSync(cssFile)) {
+      combinedCSS += fs.readFileSync(cssFile, &#39;utf8&#39;) + &#39;\n\n&#39;;
+    }
+  });
+
+  const cssPath = path.join(outputDir, &#39;assets&#39;, &#39;theme.css&#39;);
+  fs.writeFileSync(cssPath, combinedCSS);
+}
+</code></pre>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a> dynamically creates a consolidated stylesheet for each theme.</li>
+<li>This modular approach simplifies theme updates and ensures consistent styling.</li>
+<li>The function checks for file existence, preventing errors during generation.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">getThemeIcons(theme: AdventureTheme): { theme: string; quest: string } {
+  const themeIcons = {
+    space: { theme: &#39;🚀&#39;, quest: &#39;⭐&#39; },
+    mythical: { theme: &#39;🏰&#39;, quest: &#39;⚔️&#39; },
+    ancient: { theme: &#39;🏺&#39;, quest: &#39;📜&#39; },
+    developer: { theme: &#39;💻&#39;, quest: &#39;🔧&#39; },
+    custom: { theme: &#39;🎨&#39;, quest: &#39;⭐&#39; }
+  };
+  return themeIcons[theme] || themeIcons.space;
+}
+</code></pre>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L81" target="_blank" rel="noopener noreferrer"><code class="inline-code">getThemeIcons</code></a> maps each theme to unique icons, enhancing user engagement.</li>
+<li>The function ensures fallback to a default icon set, maintaining robustness.</li>
+<li>This mapping simplifies the integration of visual elements into templates.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Start by exploring the format and validation functions in <code class="inline-code">adventure-config.ts</code> – these are crucial for system reliability.</li>
-<li>Customize themes through <code class="inline-code">theme.ts</code> and <code class="inline-code">theme-manager.ts</code> to see immediate results in CSS and outputs.</li>
-<li>Look for patterns like centralization (e.g., <code class="inline-code">THEMES</code>) for flexibility in your projects.</li>
+<li>Review the <code class="inline-code">THEMES</code> object structure to understand how themes are defined and managed.</li>
+<li>Explore the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a> function to see how dynamic CSS generation is implemented.</li>
+<li>Test the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> function with various inputs to observe its flexibility and error handling.</li>
 </ul>
+<h2>Try This</h2>
+<p>Challenge yourself to deepen your understanding:</p>
+<ol>
+<li><p><strong>Add a New Theme</strong>: Create a new theme called &quot;Cyberpunk&quot; with a neon aesthetic. Update the <code class="inline-code">THEMES</code> object and ensure it integrates with <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a> and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L81" target="_blank" rel="noopener noreferrer"><code class="inline-code">getThemeIcons</code></a>.</p>
+</li>
+<li><p><strong>Enhance Validation</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L686" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateTheme</code></a> to provide more detailed error messages, including suggestions for valid themes based on user input.</p>
+</li>
+<li><p><strong>Dynamic Theme Switching</strong>: Implement a feature in <code class="inline-code">theme-manager.ts</code> to allow real-time theme switching during adventure exploration. Test it by toggling between themes without restarting the system.</p>
+</li>
+</ol>
 <hr>
-<p>You have mastered all the secrets of developer-driven architecture and theme integration! Your adventure is complete.</p>
-<p>Congratulations, developer—Quest 5: Configuration &amp; Theme Customization Patterns is complete; you&#39;ve successfully refactored your skillset with precision, aligning coding practices to flexibility and scalability—next stop, Quest 6! 🚀⚡💎</p>
+<p>You have mastered all the secrets of the Configuration and Theme System! Your adventure is complete.</p>
+<p>Congratulations on successfully deploying the Configuration &amp; Theme System—your codebase just leveled up with modular elegance and dynamic scalability; onward to the final quest! 🚀⚡💎</p>
 
 </div>
 
