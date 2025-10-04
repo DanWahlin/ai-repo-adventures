@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuration and Theme System - Repo Adventure</title>
+    <title>Configuration & Theme System - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">Developer's Guide to AI Repo Adventures</a>
+                <a href="index.html">The Developer's Guide to AI Repository Adventures</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -68,23 +68,23 @@
         <div class="quest-content">
     <h1>Quest 5: Configuration and Theme System</h1>
 <hr>
-<p>The Configuration and Theme System serves as the backbone of your adventure, ensuring that every quest is tailored to the explorer&#39;s preferences. This system harmonizes the technical complexity of the MCP server with the aesthetic and functional demands of the HTML generator. By understanding how themes are defined, validated, and applied, you will gain mastery over the tools that shape the entire adventure experience. Dive deep into the mechanics that make customization seamless and configuration robust.</p>
+<p>You find yourself in the Configuration Nexus, where the core settings and theme definitions of the system reside. This is the heart of adaptability, where the adventure engine configures itself to meet the needs of any project. Themes are the language of immersion, and configuration ensures the engine operates within its defined limits. As you explore this area, you will uncover how the system validates inputs, manages themes, and enforces operational constraints.</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>Centralized Configuration</strong>: How shared constants and environment variables manage system-wide behavior.</li>
-<li>🔍 <strong>Theme System Design</strong>: How themes are structured, validated, and applied dynamically within the project.</li>
-<li>⚡ <strong>CLI Integration</strong>: How the <code class="inline-code">ThemeManager</code> generates CSS and handles theme-specific assets for HTML adventures.</li>
-<li>💡 <strong>Validation Patterns</strong>: How input validation ensures data integrity and user-friendly error handling.</li>
+<li>🎯 <strong>Centralized Configuration</strong>: How the system uses a single source of truth for timeouts, limits, and validation.</li>
+<li>🔍 <strong>Theme Management</strong>: How themes are defined, parsed, and applied dynamically to adventures.</li>
+<li>⚡ <strong>Input Validation</strong>: How user inputs are sanitized and validated to ensure system integrity and security.</li>
+<li>💡 <strong>Custom Adventure Configurations</strong>: How project-specific configurations are loaded and processed.</li>
 </ul>
 <h2>File Exploration</h2>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/config.ts</code></a></h3>
-<p>This file defines system-wide constants and environment-driven configurations, centralizing all key parameters for the MCP server and related modules. It ensures consistency across packages while allowing flexibility through environment variables.</p>
+<p>This file centralizes all configuration settings for the adventure system, including timeouts, limits, and environment variables. It ensures that all components operate within predefined constraints and provides a single source of truth for system-wide settings.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code> specifies the maximum allowed time for LLM requests, ensuring operations do not hang indefinitely.</li>
-<li><code class="inline-code">REPOMIX_CACHE_TTL</code> sets the cache duration for repository analysis results, optimizing performance by reducing redundant computations.</li>
-<li><code class="inline-code">MAX_FILE_SIZE_MB</code> enforces a file size limit to prevent memory issues during repository scans.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code>: Defines the maximum time allowed for LLM requests, ensuring system responsiveness.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code>: Specifies the cache duration for repository analysis results, optimizing performance.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code>: Sets a limit on file size to prevent memory issues during analysis.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">export const LLM_REQUEST_TIMEOUT = parseInt(process.env.REPO_ADV_LLM_REQUEST_TIMEOUT || &#39;60000&#39;); // 60 seconds
@@ -92,20 +92,20 @@ export const REPOMIX_CACHE_TTL = parseInt(process.env.REPO_ADV_REPOMIX_CACHE_TTL
 export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memory issues
 </code></pre>
 <ul>
-<li>These constants ensure the system operates within defined resource limits, improving reliability.</li>
-<li>Environment variables like <code class="inline-code">LLM_REQUEST_TIMEOUT</code> allow for runtime configuration without code changes.</li>
-<li>The file size limit (<code class="inline-code">MAX_FILE_SIZE_MB</code>) protects against excessive memory consumption during analysis.</li>
-<li>Centralized definitions reduce duplication and ensure consistent behavior across modules.</li>
-<li>These settings are critical for maintaining performance and stability in large-scale projects.</li>
+<li><code class="inline-code">LLM_REQUEST_TIMEOUT</code> ensures that requests to the LLM do not hang indefinitely, maintaining a responsive system.</li>
+<li><code class="inline-code">REPOMIX_CACHE_TTL</code> reduces redundant computations by caching analysis results for reuse.</li>
+<li><code class="inline-code">MAX_FILE_SIZE_MB</code> prevents large files from overwhelming the system, focusing resources on manageable inputs.</li>
+<li>These settings demonstrate the importance of configurable limits in scalable systems.</li>
+<li>Environment variables allow developers to adjust these values without modifying the code.</li>
 </ul>
 <hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a></h3>
-<p>This file serves as the single source of truth for theme definitions, providing a structured way to define, retrieve, and validate themes. It enables dynamic customization of the adventure&#39;s aesthetic and functional elements.</p>
+<p>This file defines the themes available in the system, providing a consistent structure for theme-related data. It includes utility functions for theme retrieval, validation, and formatting.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">THEMES</code> defines a set of predefined themes, each with unique properties like <code class="inline-code">id</code>, <code class="inline-code">key</code>, and <code class="inline-code">description</code>.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L78" target="_blank" rel="noopener noreferrer"><code class="inline-code">getThemeByKey</code></a> retrieves a theme by its key, enabling dynamic lookups based on user input.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> processes user input to match it to a valid theme, using keywords and ID-based matching.</li>
+<li><code class="inline-code">THEMES</code>: A centralized object defining all available themes, including their metadata.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L88" target="_blank" rel="noopener noreferrer"><code class="inline-code">isValidTheme</code></a>: Validates if a given theme string is recognized by the system.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a>: Parses user input to match a theme based on keywords, IDs, or exact keys.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">export const THEMES = {
@@ -114,84 +114,135 @@ export const MAX_FILE_SIZE_MB = 10; // Skip files larger than this to avoid memo
     key: &#39;space&#39;,
     displayName: &#39;Space Exploration&#39;,
     emoji: &#39;🚀&#39;,
-    description: &#39;Journey through cosmic codebases where data flows like stardust and APIs connect distant galaxies&#39;,
-    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;, &#39;starship&#39;, &#39;astronaut&#39;, &#39;sci-fi&#39;, &#39;futuristic&#39;]
+    description: &#39;Journey through cosmic codebases...&#39;,
+    keywords: [&#39;space&#39;, &#39;cosmic&#39;, &#39;galaxy&#39;]
   },
   MYTHICAL: {
     id: 2,
     key: &#39;mythical&#39;,
     displayName: &#39;Enchanted Kingdom&#39;,
     emoji: &#39;🏰&#39;,
-    description: &#39;Explore magical and mythical realms where databases are dragon hoards and functions are powerful spells&#39;,
-    keywords: [&#39;mythical&#39;, &#39;magic&#39;, &#39;enchanted&#39;, &#39;castle&#39;, &#39;dragon&#39;, &#39;fantasy&#39;, &#39;medieval&#39;, &#39;kingdom&#39;]
+    description: &#39;Explore magical and mythical realms...&#39;,
+    keywords: [&#39;mythical&#39;, &#39;magic&#39;, &#39;castle&#39;]
   },
-  // Additional themes omitted for brevity
-};
+  // Other themes omitted for brevity
+} as const;
 </code></pre>
 <ul>
-<li>The <code class="inline-code">THEMES</code> object defines all available themes, each with unique identifiers and metadata.</li>
+<li><code class="inline-code">THEMES</code> provides a structured definition for all themes, ensuring consistency across the system.</li>
+<li>The <code class="inline-code">id</code>, <code class="inline-code">key</code>, <code class="inline-code">displayName</code>, and <code class="inline-code">emoji</code> fields make themes easy to identify and display.</li>
 <li>Keywords allow for flexible user input matching, enhancing usability.</li>
-<li>The structure supports easy extension for custom themes or additional metadata.</li>
-<li>By centralizing theme definitions, the system ensures consistency across modules.</li>
-<li>The use of TypeScript&#39;s <code class="inline-code">readonly</code> properties enforces immutability, reducing errors.</li>
+<li>This structure simplifies the addition of new themes by adhering to a clear schema.</li>
+<li>Centralization reduces the risk of inconsistencies in theme-related operations.</li>
 </ul>
 <hr>
-<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/theme-manager.ts</code></a></h3>
-<p>The <code class="inline-code">ThemeManager</code> class handles theme-specific operations for the HTML generator, including CSS generation and asset management. It bridges the gap between theme definitions and their practical application in generated adventures.</p>
-<h4>Highlights</h4>
-<ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a> combines multiple CSS files into a single output, ensuring each theme has a cohesive style.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L49" target="_blank" rel="noopener noreferrer"><code class="inline-code">getGitHubLogo</code></a> selects the appropriate logo variant based on the theme&#39;s background color.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L81" target="_blank" rel="noopener noreferrer"><code class="inline-code">getThemeIcons</code></a> retrieves theme-specific icons for use in templates, enhancing visual consistency.</li>
-</ul>
-<h4>Code</h4>
-<pre><code class="language-typescript">generateThemeCSS(theme: AdventureTheme, outputDir: string): void {
-  const cssFiles = [
-    path.join(this.themesDir, &#39;base.css&#39;),
-    path.join(this.themesDir, &#39;homepage.css&#39;), 
-    path.join(this.themesDir, &#39;animations.css&#39;),
-    path.join(this.themesDir, `${theme}.css`)
-  ];
+<pre><code class="language-typescript">export function parseTheme(input: string): AdventureTheme | null {
+  const normalized = input.trim().toLowerCase();
+  const exactMatch = getThemeByKey(normalized);
+  if (exactMatch) return exactMatch.key as AdventureTheme;
   
-  let combinedCSS = &#39;&#39;;
+  const numericId = parseInt(normalized, 10);
+  if (!isNaN(numericId)) {
+    const byId = getThemeById(numericId);
+    if (byId) return byId.key as AdventureTheme;
+  }
   
-  cssFiles.forEach(cssFile =&gt; {
-    if (fs.existsSync(cssFile)) {
-      combinedCSS += fs.readFileSync(cssFile, &#39;utf8&#39;) + &#39;\\n\\n&#39;;
+  for (const theme of THEMES_ARRAY) {
+    if (theme.keywords.some(keyword =&gt; normalized.includes(keyword.toLowerCase()))) {
+      return theme.key as AdventureTheme;
     }
-  });
+  }
   
-  const cssPath = path.join(outputDir, &#39;assets&#39;, &#39;theme.css&#39;);
-  fs.writeFileSync(cssPath, combinedCSS);
+  return null;
 }
 </code></pre>
 <ul>
-<li>This function consolidates multiple CSS files into a single theme-specific stylesheet.</li>
-<li>The use of <code class="inline-code">fs</code> ensures compatibility with local file systems during generation.</li>
-<li>By dynamically including theme-specific CSS, the system supports a wide range of visual styles.</li>
-<li>The function&#39;s modular design makes it easy to extend or modify the CSS pipeline.</li>
-<li>The output directory structure ensures assets are organized and accessible.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> demonstrates robust input handling by normalizing and validating user input.</li>
+<li>Exact matches, numeric IDs, and keyword searches provide multiple ways to identify a theme.</li>
+<li>This function ensures that invalid inputs are gracefully rejected, maintaining system integrity.</li>
+<li>The use of <code class="inline-code">THEMES_ARRAY</code> decouples the logic from the <code class="inline-code">THEMES</code> object, promoting modularity.</li>
+<li>Parsing logic is extensible, making it easy to support additional input formats.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/input-validator.ts</code></a></h3>
+<p>This file provides utility functions for validating user inputs, ensuring that all data entering the system is sanitized and conforms to expected formats.</p>
+<h4>Highlights</h4>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L686" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateTheme</code></a>: Ensures that the selected theme is valid and recognized by the system.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts#L9" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateAdventureChoice</code></a>: Validates user choices for adventure selection, enforcing length constraints.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts#L37" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateProjectPath</code></a>: Sanitizes and validates the project path to prevent security issues.</li>
+</ul>
+<h4>Code</h4>
+<pre><code class="language-typescript">export function validateTheme(input: string): string {
+  if (!input?.trim()) {
+    throw new Error(&#39;Theme is required&#39;);
+  }
+  
+  const normalized = input.toLowerCase().trim();
+  const parsedTheme = parseTheme(normalized);
+  
+  if (!parsedTheme || !isValidTheme(parsedTheme)) {
+    const validThemes = getAllThemes().map(t =&gt; t.key).join(&#39;, &#39;);
+    throw new Error(`Invalid theme. Valid themes: ${validThemes}`);
+  }
+  
+  return parsedTheme;
+}
+</code></pre>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L686" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateTheme</code></a> ensures that only recognized themes are used, preventing invalid configurations.</li>
+<li>The use of <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> integrates parsing and validation seamlessly.</li>
+<li>Error messages provide helpful feedback, improving the user experience.</li>
+<li>This function highlights the importance of input validation in preventing invalid state propagation.</li>
+<li>By normalizing input, the function ensures case-insensitivity and trims unnecessary whitespace.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function validateProjectPath(input?: string): string {
+  if (!input?.trim()) {
+    return process.cwd();
+  }
+  
+  if (input.length &gt; VALIDATION_MAX_PATH_LENGTH) {
+    throw new Error(`Project path too long (max ${VALIDATION_MAX_PATH_LENGTH} characters)`);
+  }
+  
+  if (input.includes(&#39;\0&#39;)) {
+    throw new Error(&#39;Project path contains invalid characters&#39;);
+  }
+  
+  return input.trim();
+}
+</code></pre>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts#L37" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateProjectPath</code></a> ensures that paths are sanitized and free of invalid characters.</li>
+<li>The fallback to <code class="inline-code">process.cwd()</code> provides a sensible default for missing inputs.</li>
+<li>Length constraints prevent excessively long paths that could cause errors.</li>
+<li>The use of <code class="inline-code">\0</code> checks protects against null byte injection attacks, enhancing security.</li>
+<li>This function demonstrates the importance of robust input handling in file-based systems.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Review how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> matches user input to themes to understand flexible input handling.</li>
-<li>Examine how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a> combines base and theme-specific styles for a cohesive design.</li>
-<li>Explore <code class="inline-code">LLM_REQUEST_TIMEOUT</code> and other constants to learn how environment variables influence runtime behavior.</li>
+<li>Use the <code class="inline-code">THEMES</code> object as a reference when adding new themes to ensure consistency.</li>
+<li>Study how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a> handles flexible input matching to improve user experience in your own projects.</li>
+<li>Review the error messages in <code class="inline-code">input-validator.ts</code> to understand how to provide actionable feedback to users.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><p><strong>Add a New Theme</strong>: Define a custom theme in <code class="inline-code">theme.ts</code> with unique properties and keywords. Test its integration by generating an adventure with the <code class="inline-code">ThemeManager</code>.</p>
+<li><p><strong>Add a New Theme</strong>: Create a new theme called &quot;Cyberpunk&quot; with futuristic elements. Add it to <code class="inline-code">THEMES</code> and ensure it is recognized by <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a>. Test its integration by running the system.</p>
+<ul>
+<li>Example: Use <code class="inline-code">keywords</code> like &quot;cyber&quot;, &quot;neon&quot;, and &quot;futuristic&quot; for input matching.</li>
+</ul>
 </li>
-<li><p><strong>Trace Theme Application</strong>: Add logging to <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a> to trace how CSS files are combined. Observe how changes in theme definitions affect the generated styles.</p>
+<li><p><strong>Enhance Validation</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L686" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateTheme</code></a> to suggest the closest matching valid theme when an invalid input is provided. Implement a simple string similarity algorithm for this purpose.</p>
 </li>
-<li><p><strong>Enhance Validation</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L686" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateTheme</code></a> in <code class="inline-code">input-validator.ts</code> to provide detailed error messages when invalid themes are entered. This will improve user feedback and error handling.</p>
+<li><p><strong>Custom Configuration</strong>: Modify <code class="inline-code">adventure.config.json</code> to include a custom theme and validate its integration. Add unique keywords and test how it interacts with <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L93" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseTheme</code></a>.</p>
 </li>
 </ol>
 <hr>
-<p>You have mastered all the secrets of AI Repo Adventures! Your adventure is complete.</p>
-<p>You&#39;ve successfully refactored the codebase with a robust Configuration and Theme System—your architecture is scaling like a 🚀 and you&#39;re just one commit away from deploying greatness!</p>
+<p>You have mastered all the secrets of configuration and theme systems! Your adventure is complete.</p>
+<p>Congratulations on successfully deploying the Configuration &amp; Theme System—your codebase just leveled up to 80% completion efficiency; keep refactoring brilliance and shipping excellence! 🚀⚡💎</p>
 
 </div>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Forge of Sacred Tales - Repo Adventure</title>
+    <title>The Quest Forge - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Lost Repository of Ancient Wisdom</a>
+                <a href="index.html">The Pyramid of Code</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -66,232 +66,37 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Forge of Sacred Tales</h1>
+    <h1>Quest 3: The Chamber of Configurations</h1>
 <hr>
-<p>In the heart of the jungle lies the Forge of Sacred Tales, a hidden chamber within the Lost Repository. This enigmatic forge is said to refine raw knowledge into structured wisdom, crafting legendary narratives that guide explorers through the labyrinth of ancient code. Your task is to master the art of storytelling by deciphering the scripts that power the Repository’s quest generation engine. Each discovery will bring you closer to unlocking the secrets of the repository’s narrative core.</p>
+<p>As you delve deeper into the Pyramid of Code, you discover the Chamber of Configurations, where ancient glyphs whisper secrets about managing complex systems. The walls are adorned with inscriptions detailing the art of structuring configurations and themes, ensuring harmony across the vast domains of the codebase. The chamber challenges you to decipher these inscriptions and master the techniques of dynamic configuration, validation, and theme management to unlock the next path.</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>Quest Generation Workflow</strong>: How dynamic quests are generated and integrated into the adventure system.</li>
-<li>🔍 <strong>Content Parsing</strong>: Techniques for extracting structured data from markdown and JSON configurations.</li>
-<li>⚡ <strong>Dynamic Story Generation</strong>: How themes influence story and quest creation through LLM-driven prompts.</li>
-<li>💡 <strong>Configuration Integration</strong>: How adventure configuration files enhance and guide the quest generation process.</li>
+<li>🎯 <strong>Dynamic Configuration Loading</strong>: How configuration files are read, parsed, and validated to adapt to project needs.</li>
+<li>🔍 <strong>Theme Management</strong>: Techniques for generating and applying themes dynamically across different parts of the system.</li>
+<li>⚡ <strong>Validation Patterns</strong>: How input validation ensures consistent and secure processing of user and system data.</li>
+<li>💡 <strong>Integration with Content Generation</strong>: How configurations influence story generation and quest formatting.</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
-<p>The <code class="inline-code">AdventureManager</code> serves as the central orchestrator for generating and managing adventures. It initializes the adventure state, validates user choices, and dynamically constructs quests using LLM-generated content and configuration files. This file demonstrates the integration of repository analysis, configuration parsing, and LLM interactions to deliver a cohesive user experience.</p>
-<h4>Highlights</h4>
-<ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L59" target="_blank" rel="noopener noreferrer"><code class="inline-code">initializeAdventure</code></a> resets the adventure state and generates the overarching story and quests.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L109" target="_blank" rel="noopener noreferrer"><code class="inline-code">exploreQuest</code></a> handles user-selected quests, validating choices and caching completed content.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L269" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateQuestContent</code></a> dynamically generates quest-specific content using LLM responses and context chunking.</li>
-</ul>
-<h4>Code</h4>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
-
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
-  }
-
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  
-  this.state.title = storyResponse.title;
-  this.state.story = storyResponse.story;
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
-  });
-}
-</code></pre>
-<ul>
-<li>Resets the adventure state to ensure a clean slate for new adventures.</li>
-<li>Integrates configuration files to merge or limit quests based on predefined rules.</li>
-<li>Utilizes LLM-generated story and quest data to dynamically adapt to the project context.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
-
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
-  }
-
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
-}
-</code></pre>
-<ul>
-<li>Validates user input to ensure a valid quest choice.</li>
-<li>Handles special cases such as progress requests and invalid choices gracefully.</li>
-<li>Executes the selected quest, leveraging cached content for previously completed quests.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">private async generateQuestContent(quest: Quest): Promise&lt;QuestContent&gt; {
-  let codeContent: string;
-
-  if (this.state.projectPath) {
-    const config = parseAdventureConfig(this.state.projectPath);
-    const hasConfigOptimization = config &amp;&amp; typeof config === &#39;object&#39; &amp;&amp; &#39;adventure&#39; in config;
-
-    if (quest.codeFiles &amp;&amp; quest.codeFiles.length &gt; 0) {
-      try {
-        const targetedContent = await repoAnalyzer.generateTargetedContent(
-          this.state.projectPath,
-          quest.codeFiles,
-          false
-        );
-        codeContent = repoAnalyzer.prependCoreProjectContext(this.state.projectPath, targetedContent);
-      } catch {
-        codeContent = hasConfigOptimization
-          ? await repoAnalyzer.generateRepomixContext(this.state.projectPath)
-          : this.state.projectInfo!.repomixContent;
-      }
-    } else {
-      codeContent = hasConfigOptimization
-        ? await repoAnalyzer.generateRepomixContext(this.state.projectPath)
-        : this.state.projectInfo!.repomixContent;
-    }
-  } else {
-    codeContent = this.state.projectInfo!.repomixContent;
-  }
-
-  const chunkResult = ContentChunker.chunkContent(codeContent);
-  return await this.storyGenerator.generateQuestContent({
-    quest,
-    theme: this.state.currentTheme!,
-    chunkResult,
-    questPosition: this.state.quests.findIndex(q =&gt; q.id === quest.id) + 1,
-    totalQuests: this.state.quests.length
-  });
-}
-</code></pre>
-<ul>
-<li>Prioritizes quest-specific files for targeted content generation.</li>
-<li>Falls back to configuration-based or full repository content when specific files are unavailable.</li>
-<li>Uses content chunking to optimize large codebases for LLM processing.</li>
-</ul>
-<hr>
-<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/story-generator.ts</code></a></h3>
-<p>The <code class="inline-code">StoryGenerator</code> is responsible for creating the narrative and quest content for adventures. It integrates with LLMs to generate dynamic stories and quests based on the project’s context and theme. This file showcases advanced prompt engineering and structured markdown parsing.</p>
-<h4>Highlights</h4>
-<ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L299" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateStoryAndQuests</code></a> combines repository content and theme-specific prompts to generate the adventure’s narrative.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L269" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateQuestContent</code></a> processes code content in chunks, ensuring scalability for large projects.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L124" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseMarkdownToStoryResponse</code></a> extracts structured data from LLM-generated markdown responses.</li>
-</ul>
-<h4>Code</h4>
-<pre><code class="language-typescript">async generateStoryAndQuests(projectInfo: ProjectInfo, theme: AdventureTheme, projectPath?: string): Promise&lt;StoryResponse&gt; {
-  this.currentProject = projectInfo;
-  this.projectPath = projectPath;
-
-  const validatedTheme = this.validateTheme(theme);
-  const repomixContent = projectInfo.repomixContent || &#39;No repomix content available&#39;;
-
-  const adventureGuidance = this.projectPath ? formatAdventureConfigForPrompt(this.projectPath) : &#39;&#39;;
-  const customInstructions = this.projectPath ? extractCustomInstructions(this.projectPath) : &#39;&#39;;
-
-  const prompt = loadStoryGenerationPrompt({
-    theme,
-    repomixContent,
-    ...(adventureGuidance &amp;&amp; { adventureGuidance }),
-    ...(customInstructions &amp;&amp; { customInstructions }),
-    ...(this.customThemeData &amp;&amp; { customThemeData: this.customThemeData })
-  });
-
-  const response = await this.llmClient.generateResponse(prompt, { maxTokens: LLM_MAX_TOKENS_STORY, context: &#39;story &amp; quests&#39; });
-
-  let parsed = parseMarkdownToStoryResponse(response.content.trim());
-  StoryResponseSchema.parse(parsed);
-
-  this.currentStoryContent = parsed.story;
-  return parsed;
-}
-</code></pre>
-<ul>
-<li>Generates a cohesive story and quest list using a combination of repository content and theme-specific prompts.</li>
-<li>Validates LLM responses with Zod schemas to ensure structured output.</li>
-<li>Incorporates configuration data and custom instructions to guide the narrative.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">function parseMarkdownToStoryResponse(markdownContent: string): StoryResponse {
-  const tokens = marked.lexer(markdownContent);
-
-  const title = extractTitle(tokens);
-  let story = &#39;&#39;;
-  const quests: Quest[] = [];
-
-  let currentSection = &#39;&#39;;
-  let currentQuest: Partial&lt;Quest&gt; = {};
-  let titleFound = false;
-
-  for (const token of tokens) {
-    if (token.type === &#39;heading&#39;) {
-      if (token.depth === 1) {
-        titleFound = true;
-        currentSection = &#39;story&#39;;
-      } else if (token.depth === 2) {
-        currentSection = token.text.toLowerCase();
-      } else if (token.depth === 3 &amp;&amp; isQuestSection(currentSection)) {
-        if (currentQuest.title &amp;&amp; currentQuest.description) {
-          quests.push(createQuest(currentQuest, quests.length));
-        }
-        currentQuest = { title: token.text, description: &#39;&#39;, codeFiles: [] };
-      }
-    } else if (token.type === &#39;paragraph&#39;) {
-      if (isStorySection(currentSection, titleFound)) {
-        story += token.text + &#39;\n\n&#39;;
-      } else if (currentQuest.title) {
-        currentQuest.description += token.text + &#39;\n\n&#39;;
-      }
-    }
-  }
-
-  if (currentQuest.title &amp;&amp; currentQuest.description) {
-    quests.push(createQuest(currentQuest, quests.length));
-  }
-
-  return { title, story: story.trim(), quests };
-}
-</code></pre>
-<ul>
-<li>Parses LLM-generated markdown into structured story and quest data.</li>
-<li>Supports multiple quest formats, ensuring flexibility in content generation.</li>
-<li>Handles nested structures and extracts relevant details for each quest.</li>
-</ul>
-<hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
-<p>The <code class="inline-code">adventure-config.ts</code> file handles the parsing and validation of adventure configuration files. These configurations guide the quest generation process, ensuring alignment with user-defined rules and preferences.</p>
+<p>The <code class="inline-code">adventure-config.ts</code> file is a critical piece in the Chamber of Configurations, responsible for loading, parsing, and extracting data from the <code class="inline-code">adventure.config.json</code> file. Its functions enable dynamic project configuration, ensuring that adventures are tailored to the specific structure and requirements of the codebase. This file demonstrates patterns for safe file handling, JSON parsing, and data extraction, making it an essential tool in the quest for dynamic content generation.</p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L19" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadAdventureConfig</code></a> reads raw configuration data from the project directory.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L28" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseAdventureConfig</code></a> validates and parses the configuration into a usable format.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> identifies and validates file paths referenced in the configuration.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L19" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadAdventureConfig</code></a>: Reads the raw configuration file text from the project directory.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L28" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseAdventureConfig</code></a>: Parses the configuration JSON and validates its structure, providing a safe entry point for configuration data.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a>: Extracts and validates file paths referenced in the configuration, ensuring they exist within the project.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L75" target="_blank" rel="noopener noreferrer"><code class="inline-code">formatAdventureConfigForPrompt</code></a>: Formats the configuration data for use in LLM prompts, optimizing it for concise and effective storytelling.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">export function loadAdventureConfig(projectPath: string): string | null {
-  const configPath = path.join(projectPath, &#39;adventure.config.json&#39;);
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
   return readFileIfExists(configPath);
 }
 </code></pre>
 <ul>
-<li>Reads the configuration file from the project directory.</li>
-<li>Ensures non-fatal handling of missing or unreadable files.</li>
+<li>This function reads the configuration file from the specified project path.</li>
+<li>It uses <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L6" target="_blank" rel="noopener noreferrer"><code class="inline-code">readFileIfExists</code></a> to handle missing or unreadable files gracefully.</li>
+<li>Ensures the system can adapt to projects with or without configuration files.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">export function parseAdventureConfig(projectPath: string): unknown | null {
@@ -305,8 +110,9 @@
 }
 </code></pre>
 <ul>
-<li>Parses raw JSON configuration data into an object.</li>
-<li>Provides a single point for JSON validation and error handling.</li>
+<li>Parses the JSON content of the configuration file, returning structured data or <code class="inline-code">null</code> on error.</li>
+<li>Centralizes error handling to prevent crashes from malformed files.</li>
+<li>Validates the structure of the configuration, ensuring it aligns with expected patterns.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
@@ -318,39 +124,104 @@
 
   while (stack.length) {
     const node = stack.pop();
-    if (node &amp;&amp; typeof node === &#39;object&#39;) {
-      if (typeof node.path === &#39;string&#39; &amp;&amp; fs.existsSync(path.resolve(projectPath, node.path.trim()))) {
-        unique.add(node.path.trim());
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
       }
-      const children = Array.isArray(node) ? node : Object.values(node);
-      stack.push(...children);
     }
+
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
   }
 
   return Array.from(unique);
 }
 </code></pre>
 <ul>
-<li>Extracts all unique file paths referenced in the configuration.</li>
-<li>Validates file existence to prevent errors during quest generation.</li>
+<li>Extracts file paths from the configuration, validating their existence in the project directory.</li>
+<li>Uses a stack-based traversal to explore nested objects and arrays.</li>
+<li>Ensures only valid and unique paths are returned, avoiding duplicates.</li>
+</ul>
+<hr>
+<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/theme.ts</code></a></h3>
+<p>The <code class="inline-code">theme.ts</code> file serves as the glyph of visual storytelling, defining and validating themes for adventures. It encapsulates the logic for managing pre-defined and custom themes, ensuring consistent styling and vocabulary across quests. This file illustrates how themes are structured, validated, and applied dynamically.</p>
+<h4>Highlights</h4>
+<ul>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L88" target="_blank" rel="noopener noreferrer"><code class="inline-code">isValidTheme</code></a>: Validates whether a given theme is supported by the system.</li>
+<li><code class="inline-code">ThemeDefinition</code>: Provides the schema for defining new themes, ensuring they follow the required structure.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/theme.ts#L82" target="_blank" rel="noopener noreferrer"><code class="inline-code">getAllThemes</code></a>: Retrieves a list of all available themes, including custom ones.</li>
+</ul>
+<h4>Code</h4>
+<pre><code class="language-typescript">export function isValidTheme(theme: string): boolean {
+  return THEMES.includes(theme);
+}
+</code></pre>
+<ul>
+<li>Checks if the provided theme exists in the predefined list of themes.</li>
+<li>Ensures adventures use consistent and supported themes.</li>
+<li>Prevents errors caused by invalid or unsupported theme inputs.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export interface ThemeDefinition {
+  name: string;
+  description: string;
+  keywords: string[];
+  cssFilePath?: string;
+}
+</code></pre>
+<ul>
+<li>Defines the structure for themes, including optional CSS file paths for styling.</li>
+<li>Enables the creation of custom themes with specific keywords and descriptions.</li>
+<li>Provides flexibility for extending the system with new visual styles.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">export function getAllThemes(): ThemeDefinition[] {
+  return THEMES.map(theme =&gt; ({
+    name: theme,
+    description: `The ${theme} theme provides a unique perspective for code exploration.`,
+    keywords: [`${theme}-themed`, `${theme} exploration`],
+  }));
+}
+</code></pre>
+<ul>
+<li>Generates a list of all available themes dynamically.</li>
+<li>Includes descriptions and keywords to guide users in selecting a theme.</li>
+<li>Demonstrates the use of mapping for creating structured data from simple arrays.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L59" target="_blank" rel="noopener noreferrer"><code class="inline-code">initializeAdventure</code></a> as a template for integrating new themes or custom configurations.</li>
-<li>Study <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L124" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseMarkdownToStoryResponse</code></a> to understand how structured data is extracted from markdown.</li>
-<li>Explore how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L269" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateQuestContent</code></a> prioritizes quest-specific files for targeted content generation.</li>
+<li>Use <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L28" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseAdventureConfig</code></a> to validate configuration files before using their data.</li>
+<li>Explore how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> ensures referenced files exist, preventing runtime errors.</li>
+<li>Study <code class="inline-code">ThemeDefinition</code> to understand how themes are structured and extended.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><strong>Add a New Quest Format</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/story-generator.ts#L124" target="_blank" rel="noopener noreferrer"><code class="inline-code">parseMarkdownToStoryResponse</code></a> to support an additional quest format, such as bullet points with file paths. Test your changes by simulating LLM responses.</li>
-<li><strong>Integrate Custom Instructions</strong>: Add a custom instruction in <code class="inline-code">adventure.config.json</code> and observe how it influences the generated story and quests.</li>
-<li><strong>Optimize Content Chunking</strong>: Experiment with different chunk sizes in <code class="inline-code">ContentChunker</code> to see how it affects LLM performance and response quality.</li>
+<li><p><strong>Create a Custom Theme</strong>: Define a new theme in <code class="inline-code">theme.ts</code> with a unique name, description, and keywords. Add a custom CSS file and test its integration with the system.</p>
+<ul>
+<li>Example: &quot;Create an &#39;Oceanic&#39; theme with aquatic vocabulary and blue-toned styling.&quot;</li>
+</ul>
+</li>
+<li><p><strong>Validate Configuration Paths</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> to log invalid paths and suggest corrections. Test it with a configuration file containing both valid and invalid paths.</p>
+<ul>
+<li>Example: &quot;Add error messages for paths that do not exist and propose similar existing paths.&quot;</li>
+</ul>
+</li>
+<li><p><strong>Optimize Prompt Formatting</strong>: Enhance <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L75" target="_blank" rel="noopener noreferrer"><code class="inline-code">formatAdventureConfigForPrompt</code></a> to include additional metadata like quest difficulty or estimated time. Test how this affects LLM responses.</p>
+<ul>
+<li>Example: &quot;Include quest complexity levels to guide LLM-generated content.&quot;</li>
+</ul>
+</li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of the Repository’s sacred mechanisms.</p>
-<p>By the eternal flame of the ancients, thou hast unlocked the hallowed wisdom of &#39;The Forge of Sacred Tales,&#39; a triumph worthy of the sacred scrolls—press on, seeker, for thy journey nears the stars! ⭐⚡💎</p>
+<p>Excellent work! Continue to the next quest to unlock more mysteries hidden within the Pyramid of Code.</p>
+<p>Hail, seeker of wisdom, for thou hast tempered thy spirit in the sacred fires of The Quest Forge, forging thy path with valor—press onward, for the stars of ancient glory yet await thee! ⭐⚡🗺️</p>
 
 </div>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Hall of Ritual Tools - Repo Adventure</title>
+    <title>The Hall of MCP Rituals - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Lost Repository of Ancient Wisdom</a>
+                <a href="index.html">The Pyramid of Code</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -66,28 +66,29 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: The Hall of Ritual Tools</h1>
+    <h1>Quest 2: The Hall of MCP Rituals</h1>
 <hr>
-<p>The Hall of Ritual Tools lies within the labyrinthine depths of the Lost Repository, shrouded in mystery and silence. Here, ancient scholars once crafted mechanisms to harness the wisdom of their civilization. Each tool, etched with glyphs of purpose, awaits an explorer capable of unlocking its secrets. As you step into this sacred chamber, the air hums with latent energy. Your task is to understand the intricate rituals embedded in these tools, decipher their roles, and awaken their dormant powers to progress further into the Repository.</p>
+<p>Venturing further into the Pyramid of Code, you arrive at the Hall of MCP Rituals. This grand chamber is adorned with intricate carvings depicting the ancient Model Context Protocol, a system revered for its ability to orchestrate the flow of tools and knowledge. At the center lies an altar of glyphs, each representing a tool critical to the rituals of interactive storytelling. To unlock the secrets of this hall, you must understand the sacred scripts that govern the MCP tools and their invocation.</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>Dynamic Tool Registration</strong>: How tools are dynamically listed and validated using schemas.</li>
-<li>🔍 <strong>Error Handling</strong>: The use of custom error types to ensure robust tool execution.</li>
-<li>⚡ <strong>Pre-Generation Optimization</strong>: How pre-generating content improves runtime performance.</li>
-<li>💡 <strong>Graceful Shutdown</strong>: Techniques for managing server cleanup and ensuring a stable exit.</li>
+<li>🎯 <strong>Dynamic Tool Registration</strong>: How tools are dynamically registered and exposed via MCP protocols.</li>
+<li>🔍 <strong>Error Handling Patterns</strong>: Techniques for managing tool execution errors and ensuring resilience.</li>
+<li>⚡ <strong>Interactive MCP Workflow</strong>: How the server orchestrates tool execution and pre-generates content for seamless interaction.</li>
+<li>💡 <strong>Schema Validation</strong>: The role of Zod schemas in ensuring input integrity across tool handlers.</li>
 </ul>
 <h2>File Exploration</h2>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
-<p>This file serves as the gateway to the Hall of Ritual Tools, managing the lifecycle of the MCP server. It dynamically registers tools, validates user inputs, and executes tool handlers. It also ensures the server operates smoothly through robust error handling, pre-generates content to optimize performance, and gracefully shuts down when required.</p>
+<p>This file houses the <code class="inline-code">RepoAdventureServer</code>, the central figure in orchestrating the MCP rituals. It defines the server&#39;s behavior, handling dynamic tool registration, execution, and error management. The server also pre-generates repository content to optimize performance and ensures graceful shutdown during interruptions.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code> dynamically registers tools and validates input schemas for secure and extensible operations.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> initializes the server transport, pre-generates repository content, and prepares the system for user interactions.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a> orchestrates the server startup, handles process signals, and manages unhandled rejections for stability.</li>
+<li><code class="inline-code">setupHandlers</code>: Dynamically registers tools and validates their schemas for safe execution.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a>: Initializes the server, connects the transport layer, and pre-generates repository content.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a>: Orchestrates server startup and handles graceful shutdown signals and unexpected errors.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">private setupHandlers() {
+  // Dynamic tool listing
   this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
     const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
       name,
@@ -101,6 +102,7 @@
     return { tools: toolList };
   });
 
+  // Dynamic tool execution
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
@@ -110,6 +112,8 @@
       }
 
       const tool = tools[name as keyof typeof tools];
+      
+      // Validate arguments using the tool&#39;s Zod schema
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) =&gt; 
@@ -118,7 +122,9 @@
         throw new McpError(ErrorCode.InvalidParams, `Invalid parameters: ${errorMessages}`);
       }
 
+      // Execute the tool handler with validated arguments
       return await tool.handler(validationResult.data as any);
+
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -132,44 +138,47 @@
 }
 </code></pre>
 <ul>
-<li>Dynamically registers tools and their schemas, enabling extensibility without modifying core logic.</li>
-<li>Validates user inputs against Zod schemas, preventing invalid or malicious data from being processed.</li>
-<li>Custom error handling ensures clear feedback for both tool validation and execution failures.</li>
-<li>Decouples tool registration from execution, adhering to the single responsibility principle.</li>
-<li>Demonstrates defensive programming by safeguarding against unknown tools and invalid parameters.</li>
+<li>Defines handlers for listing and executing tools dynamically, ensuring extensibility.</li>
+<li>Uses <code class="inline-code">zodToJsonSchema</code> to generate JSON schemas for tool input validation.</li>
+<li>Implements robust error handling with custom <code class="inline-code">McpError</code> types to manage execution failures.</li>
+<li>Demonstrates a clean separation of concerns between validation and execution logic.</li>
+<li>Ensures safe and predictable tool interactions by validating inputs against predefined schemas.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
   const transport = new StdioServerTransport();
   await this.server.connect(transport);
   console.error(&#39;Repo Adventure MCP server running on stdio&#39;);
-
+  
+  // Pre-generate repomix content for the current working directory to warm up the cache
   const projectPath = process.cwd();
   console.error(`Pre-generating repomix content for project at ${projectPath}...`);
   repoAnalyzer.preGenerate(projectPath);
 }
 </code></pre>
 <ul>
-<li>Initializes the server transport to facilitate communication between tools and clients.</li>
-<li>Pre-generates repository content to warm up caches, reducing latency during runtime.</li>
-<li>Logs key server events for monitoring and debugging purposes.</li>
-<li>Uses asynchronous operations to ensure non-blocking execution during initialization.</li>
-<li>Highlights the importance of pre-computation in optimizing user experience.</li>
+<li>Connects the server to the <code class="inline-code">StdioServerTransport</code>, enabling communication via standard I/O.</li>
+<li>Logs server activity to provide visibility into its operation.</li>
+<li>Pre-generates repository content using <code class="inline-code">repoAnalyzer.preGenerate</code>, reducing latency during user interactions.</li>
+<li>Demonstrates a performance optimization pattern by warming up caches before user commands.</li>
+<li>Highlights the importance of initializing critical components before runtime.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async main() {
   try {
     const server = new RepoAdventureServer();
-
+    
+    // Handle graceful shutdown for both signals
     [&#39;SIGINT&#39;, &#39;SIGTERM&#39;].forEach(sig =&gt; 
       process.on(sig as NodeJS.Signals, gracefulShutdown)
     );
-
+    
+    // Handle unhandled promise rejections - log but don&#39;t shutdown during normal operation
     process.on(&#39;unhandledRejection&#39;, (reason) =&gt; {
       console.error(&#39;Unhandled promise rejection:&#39;, reason);
       console.error(&#39;MCP server continuing to run. Please report this error.&#39;);
     });
-
+    
     await server.run();
   } catch (error) {
     console.error(&#39;Fatal error starting MCP server:&#39;, error);
@@ -178,21 +187,20 @@
 }
 </code></pre>
 <ul>
-<li>Manages the server&#39;s lifecycle, handling startup, runtime errors, and shutdown signals.</li>
-<li>Implements graceful shutdown procedures to ensure resources are cleaned up properly.</li>
-<li>Logs unhandled promise rejections for debugging without halting server operations.</li>
-<li>Encapsulates error handling to prevent fatal crashes during initialization.</li>
-<li>Demonstrates resilience and reliability in server design.</li>
+<li>Orchestrates the server lifecycle, including initialization, error handling, and shutdown.</li>
+<li>Sets up signal handlers (<code class="inline-code">SIGINT</code>, <code class="inline-code">SIGTERM</code>) to ensure graceful shutdowns during interruptions.</li>
+<li>Logs unhandled promise rejections for debugging without halting the server.</li>
+<li>Demonstrates defensive programming by catching and handling fatal errors during startup.</li>
+<li>Highlights the importance of robust error management in long-running server applications.</li>
 </ul>
 <hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a></h3>
-<p>This file defines the collection of tools available in the Hall of Ritual Tools. It organizes them into a single registry, ensuring a consistent interface for dynamic registration and execution. Each tool encapsulates a specific functionality, contributing to the overall exploration experience.</p>
+<p>This file defines the MCP tools used in the rituals of interactive storytelling. Each tool corresponds to a specific action, such as starting an adventure or exploring a quest. The tools are dynamically registered and exposed through the MCP server.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">start_adventure</code> initializes the exploration process by analyzing the repository and presenting theme options.</li>
-<li><code class="inline-code">choose_theme</code> generates a custom story and quests based on the selected theme.</li>
-<li><code class="inline-code">explore_quest</code> allows users to delve into individual quests, uncovering specific details of the repository.</li>
-<li><code class="inline-code">view_progress</code> tracks completion status and displays remaining quests.</li>
+<li><code class="inline-code">tools</code>: A centralized registry of all available tools, enabling dynamic discovery and execution.</li>
+<li><code class="inline-code">start_adventure</code>: Analyzes the codebase and presents theme options to the user.</li>
+<li><code class="inline-code">explore_quest</code>: Handles the exploration of individual quests, advancing the adventure&#39;s progress.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">export const tools = {
@@ -203,35 +211,50 @@
 };
 </code></pre>
 <ul>
-<li>Provides a centralized registry for all tools, simplifying dynamic registration in the server.</li>
-<li>Adheres to the single responsibility principle by delegating tool-specific logic to individual modules.</li>
-<li>Enables extensibility by allowing new tools to be added without modifying the core server logic.</li>
-<li>Maintains a clear and consistent interface for clients interacting with the MCP server.</li>
-<li>Demonstrates modular design by separating tool definitions from their implementation.</li>
+<li>Centralizes all tools into a single object for easy registration and discovery.</li>
+<li>Makes it simple to add or remove tools without modifying the server logic.</li>
+<li>Encourages modularity by separating tool implementations into individual files.</li>
+<li>Supports dynamic tool listing by exposing the <code class="inline-code">tools</code> object to the MCP server.</li>
+<li>Demonstrates a clean and extensible design for managing multiple tools.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
+import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
+import { viewProgress } from &#39;./tools/view-progress.js&#39;;
+
+export const start_adventure = startAdventure;
+export const choose_theme = chooseTheme;
+export const explore_quest = exploreQuest;
+export const view_progress = viewProgress;
+</code></pre>
+<ul>
+<li>Imports individual tool implementations, maintaining separation of concerns.</li>
+<li>Re-exports tools with MCP-compatible naming conventions for consistency.</li>
+<li>Facilitates code reuse by sharing the <code class="inline-code">adventureManager</code> across multiple tools.</li>
+<li>Ensures each tool has a clear and isolated responsibility, improving maintainability.</li>
+<li>Highlights the use of descriptive naming conventions to enhance code readability.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Study how <code class="inline-code">setupHandlers</code> uses Zod schemas to ensure type-safe communication between the server and tools.</li>
-<li>Observe the pre-generation strategy in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> to understand how caching improves performance in interactive systems.</li>
-<li>Explore the graceful shutdown logic in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a> to learn techniques for managing server cleanup during unexpected terminations.</li>
+<li>Study how <code class="inline-code">zodToJsonSchema</code> is used to convert Zod schemas into JSON schemas for tool validation.</li>
+<li>Observe how the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> method pre-generates repository content to improve responsiveness during user interactions.</li>
+<li>Explore how tools are dynamically registered and exposed through the <code class="inline-code">tools</code> object.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><p><strong>Add a New Tool</strong>: Create a new tool called <code class="inline-code">list_files</code> that returns a list of files in the current repository. Register it in the <code class="inline-code">tools</code> registry and implement its schema and handler.</p>
-<ul>
-<li>Example: Use <code class="inline-code">fs</code> to read the directory structure and return the result.</li>
-</ul>
+<li><p><strong>Add a New Tool</strong>: Create a new tool called <code class="inline-code">list_files</code> that returns a list of all files in the current directory. Add it to the <code class="inline-code">tools</code> object and register it with the MCP server.</p>
 </li>
-<li><p><strong>Trace Tool Execution</strong>: Add <code class="inline-code">console.log</code> statements in <code class="inline-code">setupHandlers</code> to trace the flow of tool execution. Observe how requests are routed from the client to the server and back.</p>
+<li><p><strong>Trace Tool Execution</strong>: Add logging statements to the <code class="inline-code">CallToolRequestSchema</code> handler to trace the flow of a tool execution request, from input validation to handler invocation. Observe how errors are handled at each stage.</p>
 </li>
-<li><p><strong>Enhance Error Feedback</strong>: Modify the error handling in <code class="inline-code">CallToolRequestSchema</code> to include suggestions for valid tool names when an unknown tool is requested. This will improve the user experience.</p>
+<li><p><strong>Enhance Error Feedback</strong>: Modify the error handling in <code class="inline-code">setupHandlers</code> to include suggestions for resolving common issues, such as missing or invalid parameters.</p>
 </li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries hidden within the Lost Repository.</p>
-<p>Hail, seeker of wisdom, for thou hast unlocked the sacred Hall of Ritual Tools, etching the first triumphant mark upon thy journey toward divine mastery—press onward, for the ancients favor thy path! ⚡💎🗺️</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries within the Pyramid of Code.</p>
+<p>By the sacred flame of wisdom, thou hast unlocked the first rite of The Hall of MCP Rituals, a triumph etched in the annals of ancient quests—press onward, seeker of the eternal ⭐⚡!</p>
 
 </div>
 

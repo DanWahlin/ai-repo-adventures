@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark-white.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">Cosmic Codebase Chronicles</a>
+                <a href="index.html">Galactic Code Odyssey</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -66,28 +66,29 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 2: MCP Command Interface</h1>
+    <h1>Quest 2: Command Interface Calibration</h1>
 <hr>
-<p>The Starship Codex&#39;s MCP Command Interface hums with activity as it prepares to decode the Repository Nebula&#39;s secrets. This system acts as the bridge between the explorers and the ship&#39;s tools, routing requests to specialized modules and ensuring seamless communication. As you step into the control room, the holographic panels display a dynamic list of instruments, ready to execute commands and unravel the mysteries of the galaxy of code. Your mission is to ensure the interface operates flawlessly, guiding the crew through the nebula&#39;s cosmic data streams.</p>
+<p>As the <em>Code Voyager</em> approaches the encrypted nebula, your task is to calibrate the ship&#39;s MCP Command Interface. This interface serves as the nerve center, connecting the starship’s tools to its mission-critical systems. By configuring dynamic handlers and ensuring seamless tool execution, you will unlock the repository’s secrets and enable the crew to navigate the galaxy’s vast knowledge networks. The nebula pulses with encrypted signals—will you decode them in time?</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>Dynamic Tool Registration</strong>: How tools are dynamically listed and validated using schemas for safe execution.</li>
-<li>🔍 <strong>Error Handling Patterns</strong>: Techniques for managing tool execution failures and invalid requests gracefully.</li>
-<li>⚡ <strong>Server Lifecycle Management</strong>: How to handle initialization, shutdown, and background processes in MCP servers.</li>
-<li>💡 <strong>Communication Protocols</strong>: How MCP interfaces ensure seamless interaction between tools and external systems.</li>
+<li>🎯 <strong>Dynamic Tool Registration</strong>: How tools are dynamically registered and validated at runtime using schemas.</li>
+<li>🔍 <strong>Error Handling Patterns</strong>: Techniques for robust error management to ensure system stability.</li>
+<li>⚡ <strong>Transport Initialization</strong>: How the MCP server establishes communication channels and pre-generates content for efficiency.</li>
+<li>💡 <strong>Graceful Shutdown</strong>: Strategies for cleaning up resources during unexpected interruptions.</li>
 </ul>
 <h2>File Exploration</h2>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/server.ts</code></a></h3>
-<p>The MCP Command Interface, implemented in <code class="inline-code">server.ts</code>, is the backbone of the Starship Codex&#39;s communication system. It dynamically registers tools, validates incoming requests, and executes commands. This file showcases robust error handling and lifecycle management, including graceful shutdown procedures and background caching processes. The <code class="inline-code">RepoAdventureServer</code> class encapsulates these functionalities, ensuring reliable operation during exploration missions.</p>
+<p>The <code class="inline-code">server.ts</code> file is the core of the MCP Command Interface, responsible for initializing the server, dynamically registering tools, and handling communication protocols. It employs schema validation for safe input handling and includes mechanisms for error recovery and graceful shutdown. This file demonstrates how the server orchestrates tool execution and pre-generates repository content for optimized performance.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">setupHandlers</code>: Registers tools dynamically and validates input schemas for safe execution.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a>: Activates the MCP server, connects transport systems, and pre-generates repository content for improved responsiveness.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a>: Coordinates server initialization and handles graceful shutdown signals to ensure stability.</li>
+<li><code class="inline-code">setupHandlers</code> dynamically registers tools and validates inputs using Zod schemas.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> initializes the server transport, pre-generates repository content, and starts the command interface.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a> orchestrates server startup and handles graceful shutdown signals for uninterrupted operation.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">private setupHandlers() {
+  // Dynamic tool listing
   this.server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
     const toolList = Object.entries(tools).map(([name, tool]) =&gt; ({
       name,
@@ -101,6 +102,7 @@
     return { tools: toolList };
   });
 
+  // Dynamic tool execution
   this.server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
     try {
       const { name, arguments: args } = request.params;
@@ -110,6 +112,7 @@
       }
 
       const tool = tools[name as keyof typeof tools];
+      
       const validationResult = tool.schema.safeParse(args);
       if (!validationResult.success) {
         const errorMessages = validationResult.error.issues.map((err) =&gt; 
@@ -119,6 +122,7 @@
       }
 
       return await tool.handler(validationResult.data as any);
+
     } catch (error) {
       if (error instanceof McpError) {
         throw error;
@@ -132,11 +136,11 @@
 }
 </code></pre>
 <ul>
-<li>This code dynamically registers tools and validates their schemas, ensuring safe and predictable execution.</li>
-<li>The <code class="inline-code">ListToolsRequestSchema</code> handler provides a manifest of available tools, enabling external systems to understand capabilities.</li>
-<li>Input validation using Zod prevents errors caused by malformed or unexpected arguments.</li>
-<li>The error handling pattern ensures stability, even when tools fail or invalid requests are made.</li>
-<li>This modular approach allows new tools to be added without modifying the core server logic.</li>
+<li>Registers tools dynamically, allowing flexibility in adding or modifying tools without changing core logic.</li>
+<li>Validates inputs with Zod schemas to ensure type safety and prevent invalid commands.</li>
+<li>Implements defensive error handling to protect the server from unknown or invalid tool requests.</li>
+<li>Decouples tool registration and execution, promoting modularity and maintainability.</li>
+<li>Converts Zod schemas to JSON schemas, ensuring compatibility with external systems.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async run() {
@@ -150,11 +154,11 @@
 }
 </code></pre>
 <ul>
-<li>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> method initializes the server, connects transport systems, and pre-generates repository content to optimize responsiveness.</li>
-<li>Background caching ensures that initial user queries are handled efficiently without delays.</li>
-<li>The transport connection pattern supports dynamic communication protocols, enhancing flexibility.</li>
-<li>This method demonstrates the importance of preemptive resource allocation in interactive systems.</li>
-<li>The use of asynchronous operations ensures non-blocking execution during server startup.</li>
+<li>Initializes the server with a <code class="inline-code">StdioServerTransport</code>, enabling communication over standard input/output streams.</li>
+<li>Pre-generates repository content using <code class="inline-code">repoAnalyzer</code> to improve performance during user interactions.</li>
+<li>Logs server status and project path for debugging and operational transparency.</li>
+<li>Demonstrates efficient resource utilization by performing pre-generation in the background.</li>
+<li>Ensures the server is ready to handle requests immediately after startup.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">async main() {
@@ -178,60 +182,65 @@
 }
 </code></pre>
 <ul>
-<li>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a> function orchestrates server initialization, handling shutdown signals and unhandled promise rejections.</li>
-<li>Signal handling ensures the server can gracefully terminate while preserving critical resources.</li>
-<li>Error logging provides transparency and aids debugging during unexpected failures.</li>
-<li>The separation of concerns between initialization, signal handling, and error management enhances maintainability.</li>
-<li>This approach demonstrates robust lifecycle management for long-running services.</li>
+<li>Sets up signal handlers for <code class="inline-code">SIGINT</code> and <code class="inline-code">SIGTERM</code> to gracefully shut down the server during interruptions.</li>
+<li>Catches unhandled promise rejections, logs them, and ensures the server remains operational.</li>
+<li>Encapsulates the server startup process in a try-catch block to handle fatal errors and exit cleanly.</li>
+<li>Demonstrates robust error recovery and resource management in a production-grade system.</li>
+<li>Highlights the importance of operational resilience in long-running server applications.</li>
 </ul>
 <hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/tools.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/mcp/src/tools.ts</code></a></h3>
-<p>The <code class="inline-code">tools.ts</code> file defines the interactive tools available for exploration missions. These tools are organized into separate modules for maintainability and dynamically registered within the MCP server. The file highlights the modular design of the tool system, enabling flexible expansion and clear separation of responsibilities.</p>
+<p>This file defines the tools available to the MCP Command Interface. Each tool corresponds to a specific functionality, such as starting an adventure or viewing progress. The tools are modularly organized for maintainability and exported for dynamic registration.</p>
 <h4>Highlights</h4>
 <ul>
-<li><code class="inline-code">start_adventure.handler</code>: Analyzes the repository and presents theme options.</li>
-<li><code class="inline-code">choose_theme.handler</code>: Generates a custom story and quests based on the selected theme.</li>
-<li><code class="inline-code">explore_quest.handler</code>: Executes individual quests, facilitating deeper exploration.</li>
-<li><code class="inline-code">view_progress.handler</code>: Provides completion status and remaining quests, guiding the crew&#39;s progress.</li>
+<li><code class="inline-code">start_adventure</code> initializes the adventure by analyzing the repository and presenting theme options.</li>
+<li><code class="inline-code">choose_theme</code> generates a custom story and quests based on the selected theme.</li>
+<li><code class="inline-code">explore_quest</code> allows users to interact with individual quests.</li>
+<li><code class="inline-code">view_progress</code> tracks completion status and provides a summary of remaining tasks.</li>
 </ul>
 <h4>Code</h4>
-<pre><code class="language-typescript">export const tools = {
-  start_adventure,
-  choose_theme,
-  explore_quest,
-  view_progress
+<pre><code class="language-typescript">import { startAdventure } from &#39;./tools/start-adventure.js&#39;;
+import { chooseTheme } from &#39;./tools/choose-theme.js&#39;;
+import { exploreQuest } from &#39;./tools/explore-quest.js&#39;;
+import { viewProgress } from &#39;./tools/view-progress.js&#39;;
+
+export const tools = {
+  start_adventure: startAdventure,
+  choose_theme: chooseTheme,
+  explore_quest: exploreQuest,
+  view_progress: viewProgress
 };
 </code></pre>
 <ul>
-<li>This snippet exports tools in a structured format, enabling dynamic registration in the MCP server.</li>
-<li>Each tool is defined as a modular handler, simplifying code organization and future expansions.</li>
-<li>The naming convention aligns with MCP standards, ensuring consistent interaction patterns.</li>
-<li>This approach decouples tool definitions from their execution logic, improving maintainability.</li>
-<li>Modular design allows individual tools to be tested and updated independently without affecting others.</li>
+<li>Organizes tools into a single exportable object for easy integration with the MCP server.</li>
+<li>Adheres to the single-responsibility principle by separating tool logic into individual files.</li>
+<li>Ensures consistency in tool naming conventions for intuitive usage.</li>
+<li>Facilitates dynamic registration in the server by providing a centralized tool registry.</li>
+<li>Promotes scalability, allowing new tools to be added without modifying existing functionality.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Investigate how <code class="inline-code">setupHandlers</code> uses Zod schemas for input validation and dynamic tool registration.</li>
-<li>Observe how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> pre-generates content to improve responsiveness during initial user interactions.</li>
-<li>Explore the modular structure of tools in <code class="inline-code">tools.ts</code> to understand how new functionalities can be added seamlessly.</li>
+<li>Explore how <code class="inline-code">setupHandlers</code> uses Zod schemas for input validation and consider how this approach prevents runtime errors.</li>
+<li>Study the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L85" target="_blank" rel="noopener noreferrer"><code class="inline-code">run</code></a> method to understand how pre-generating repository content improves responsiveness.</li>
+<li>Examine the graceful shutdown logic in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/mcp/src/server.ts#L108" target="_blank" rel="noopener noreferrer"><code class="inline-code">main</code></a> to learn best practices for resource cleanup in long-running servers.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><p><strong>Add a New Tool</strong>: Create a new tool called <code class="inline-code">analyze_dependencies</code> that scans the repository for dependency usage. Register it in <code class="inline-code">tools.ts</code> and implement its handler logic in a separate file.</p>
+<li><p><strong>Add a New Tool</strong>: Create a new tool called <code class="inline-code">list_files</code> that lists all files in the current project directory. Use Zod schemas to validate optional parameters like file extensions.</p>
 <ul>
-<li>Example: &quot;Use Zod schemas to validate input parameters for the tool and ensure safe execution.&quot;</li>
+<li>Example: Add the tool to <code class="inline-code">tools.ts</code> and register it in <code class="inline-code">setupHandlers</code>.</li>
 </ul>
 </li>
-<li><p><strong>Trace Tool Execution</strong>: Add logging statements in <code class="inline-code">setupHandlers</code> and <code class="inline-code">CallToolRequestSchema</code> to trace the lifecycle of a tool request. Observe how requests are validated, executed, and responded to by the MCP server.</p>
+<li><p><strong>Trace Tool Execution</strong>: Add console logs in <code class="inline-code">setupHandlers</code> to trace the flow of a tool request from input validation to execution. Observe how errors are handled during invalid requests.</p>
 </li>
-<li><p><strong>Enhance Error Messages</strong>: Modify the error handling in <code class="inline-code">CallToolRequestSchema</code> to include suggestions for valid tool names when an unknown tool is requested. This improves user experience and demonstrates defensive programming.</p>
+<li><p><strong>Enhance Error Messages</strong>: Modify the error handling in <code class="inline-code">CallToolRequestSchema</code> to include suggestions for valid tools when an unknown tool is requested. This will improve the user experience.</p>
 </li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of the starship&#39;s systems.</p>
-<p>Mission accomplished, Star Commander—MCP Command Interface is now fully operational, propelling you 20% closer to cosmic mastery! 🚀💎⭐</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the galaxy’s encrypted repository.</p>
+<p>Mission accomplished, Cadet—your mastery of the MCP Command Interface has ignited the thrusters for this starship&#39;s journey, propelling you 20% closer to cosmic conquest! ⭐🚀⚡</p>
 
 </div>
 
