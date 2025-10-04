@@ -275,18 +275,21 @@ This project uses **Lerna** with **conventional commits** for automated versioni
 
 ### **🔄 Release Process**
 
-Releases are automatically triggered when you push to `main` with conventional commit messages:
+Releases are automatically triggered when you push to `main` with commit messages containing `release:`:
 
 ```bash
-# Examples of commits that trigger releases:
-git commit -m "feat(generator): add new theme support"     # Minor version bump
-git commit -m "fix(mcp): resolve connection issue"         # Patch version bump  
-git commit -m "feat(core)!: breaking API change"          # Major version bump
+# To trigger an automated release:
+git commit -m "release: feat(generator): add new theme support"     # Minor version bump
+git commit -m "release: fix(mcp): resolve connection issue"         # Patch version bump
+git commit -m "release: feat(core)!: breaking API change"          # Major version bump
 
-# Non-releasing commits:
-git commit -m "docs: update README"                        # No version bump
-git commit -m "test: add unit tests"                       # No version bump
+# Regular commits (won't trigger releases):
+git commit -m "feat(generator): add new theme support"              # No release
+git commit -m "docs: update README"                                 # No release
+git commit -m "test: add unit tests"                                # No release
 ```
+
+**Note:** The `release:` prefix is required to trigger automated publishing. This prevents accidental releases on every commit.
 
 ### **🏷️ Manual Release Commands**
 
@@ -621,8 +624,8 @@ To enable the workflow, configure these GitHub repository secrets:
 
 ```bash
 # Run this script to upload required secrets from your .env file
-chmod +x upload-workflow-secrets.sh
-./upload-workflow-secrets.sh
+chmod +x scripts/upload-workflow-secrets.sh
+./scripts/upload-workflow-secrets.sh
 ```
 
 **Required secrets:**

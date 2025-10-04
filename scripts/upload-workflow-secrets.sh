@@ -3,9 +3,14 @@
 # Script to upload only the required GitHub Actions workflow secrets
 # These are the environment variables needed by .github/workflows/generate-adventure.yml
 # Requires: gh CLI (GitHub CLI) to be installed and authenticated
-# To run: ./upload-workflow-secrets.sh
+# To run: ./scripts/upload-workflow-secrets.sh (from project root)
 
 set -e  # Exit on error
+
+# Get the directory of this script and navigate to project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 # Colors for output
 RED='\033[0;31m'
@@ -32,7 +37,8 @@ fi
 
 # Check if .env file exists
 if [ ! -f .env ]; then
-    echo -e "${RED}Error: .env file not found in current directory${NC}"
+    echo -e "${RED}Error: .env file not found in project root${NC}"
+    echo "Expected location: $PROJECT_ROOT/.env"
     exit 1
 fi
 

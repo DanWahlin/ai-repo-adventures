@@ -12,12 +12,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Source directories relative to project root
+// Source directories relative to project root (script is now in scripts/ subdirectory)
 const ASSET_SOURCES = {
-  themes: 'packages/generator/src/cli/themes',
-  assets: 'packages/generator/src/cli/assets',
+  themes: '../packages/generator/src/cli/themes',
+  assets: '../packages/generator/src/cli/assets',
   // Add shared assets if they exist in the future
-  shared: 'packages/generator/src/cli/assets/shared'
+  shared: '../packages/generator/src/cli/assets/shared'
 };
 
 // Default target directory
@@ -97,15 +97,16 @@ function showHelp() {
 Global Assets Copy Script
 
 Usage:
-  node copy-assets.js [target-directory]
+  node scripts/copy-assets.js [target-directory]
+  npm run copy-assets                    # Recommended: use npm script
 
 Arguments:
   target-directory    Directory to copy assets to (default: "public")
 
 Examples:
-  node copy-assets.js                    # Copy to ./public/assets/
-  node copy-assets.js tests/my-test      # Copy to ./tests/my-test/assets/
-  node copy-assets.js ../other-project   # Copy to ../other-project/assets/
+  npm run copy-assets                              # Copy to ./public/assets/
+  node scripts/copy-assets.js tests/my-test        # Copy to ./tests/my-test/assets/
+  node scripts/copy-assets.js ../other-project     # Copy to ../other-project/assets/
 
 What gets copied:
   • All CSS theme files (*.css)
