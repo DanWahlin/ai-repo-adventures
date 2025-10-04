@@ -70,25 +70,25 @@ Create a `.env` file in your project:
 
 ```bash
 # OpenAI
-LLM_API_KEY=your_openai_key_here
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL=gpt-4o
+REPO_ADV_LLM_API_KEY=your_openai_key_here
+REPO_ADV_LLM_BASE_URL=https://api.openai.com/v1
+REPO_ADV_LLM_MODEL=gpt-4o
 
 # Azure AI foundry
-LLM_API_KEY=<your_azure_key_here>
-LLM_BASE_URL=https://<your_azure_ai_foundry_resource>.openai.azure.com
-LLM_MODEL=gpt-4o
-LLM_API_VERSION=2025-01-01-preview
+REPO_ADV_LLM_API_KEY=<your_azure_key_here>
+REPO_ADV_LLM_BASE_URL=https://<your_azure_ai_foundry_resource>.openai.azure.com
+REPO_ADV_LLM_MODEL=gpt-4o
+REPO_ADV_LLM_API_VERSION=2025-01-01-preview
 
 # Or GitHub Models (free tier - very limited and can only be used with very small adventures)
 GITHUB_TOKEN=your_github_token_here
-LLM_BASE_URL=https://models.inference.ai.azure.com
-LLM_MODEL=gpt-4o
+REPO_ADV_LLM_BASE_URL=https://models.inference.ai.azure.com
+REPO_ADV_LLM_MODEL=gpt-4o
 
 # Or Local Ollama (results can vary and may not generate compatible output - you can try it! :-))
-LLM_BASE_URL=http://localhost:11434/v1
-LLM_API_KEY=ollama
-LLM_MODEL=gemma3:27b
+REPO_ADV_LLM_BASE_URL=http://localhost:11434/v1
+REPO_ADV_LLM_API_KEY=ollama
+REPO_ADV_LLM_MODEL=gemma3:27b
 LLM_REQUEST_TIMEOUT=300000  # 5 minutes for slower local models
 ```
 

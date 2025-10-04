@@ -334,32 +334,32 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 
    **🔥 OpenAI (Direct)**:
    ```bash
-   LLM_API_KEY=your_openai_key_here
-   LLM_BASE_URL=https://api.openai.com/v1
-   LLM_MODEL=gpt-4o-mini
+   REPO_ADV_LLM_API_KEY=your_openai_key_here
+   REPO_ADV_LLM_BASE_URL=https://api.openai.com/v1
+   REPO_ADV_LLM_MODEL=gpt-4o-mini
    ```
 
    **🏢 Azure OpenAI**:
    ```bash
-   LLM_API_KEY=your_azure_key_here
-   LLM_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
-   LLM_MODEL=gpt-4o
-   LLM_API_VERSION=2025-01-01-preview
+   REPO_ADV_LLM_API_KEY=your_azure_key_here
+   REPO_ADV_LLM_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
+   REPO_ADV_LLM_MODEL=gpt-4o
+   REPO_ADV_LLM_API_VERSION=2025-01-01-preview
    ```
 
    **🆓 Local Ollama**:
    ```bash
-   LLM_BASE_URL=http://localhost:11434/v1
-   LLM_API_KEY=ollama
-   LLM_MODEL=gemma3:27b
+   REPO_ADV_LLM_BASE_URL=http://localhost:11434/v1
+   REPO_ADV_LLM_API_KEY=ollama
+   REPO_ADV_LLM_MODEL=gemma3:27b
    LLM_REQUEST_TIMEOUT=300000  # 5 minutes for slower local models
    ```
 
    **🆓 GitHub Models (Free tier available - but very limited and will only work with very small scenarios)**:
    ```bash
    GITHUB_TOKEN=your_github_token_here
-   LLM_BASE_URL=https://models.inference.ai.azure.com
-   LLM_MODEL=gpt-4o-mini
+   REPO_ADV_LLM_BASE_URL=https://models.inference.ai.azure.com
+   REPO_ADV_LLM_MODEL=gpt-4o-mini
    ```
 
 3. **Fine-tune Settings** (Optional):

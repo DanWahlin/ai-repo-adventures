@@ -90,7 +90,7 @@ export class LLMClient {
     // Determine API key based on provider
     const apiKey = this.getApiKey();
     if (!apiKey || !LLM_BASE_URL) {
-      throw new Error('LLM configuration required. Please set LLM_BASE_URL and appropriate API key (LLM_API_KEY or GITHUB_TOKEN).');
+      throw new Error('LLM configuration required. Please set REPO_ADV_LLM_BASE_URL and appropriate API key (REPO_ADV_LLM_API_KEY or GITHUB_TOKEN).');
     }
 
     if (this.isAzureOpenAI()) {
@@ -118,9 +118,9 @@ export class LLMClient {
       }
       return GITHUB_TOKEN;
     }
-    // All other providers (OpenAI, Azure OpenAI, Ollama, etc.) use LLM_API_KEY
+    // All other providers (OpenAI, Azure OpenAI, Ollama, etc.) use REPO_ADV_LLM_API_KEY
     if (!LLM_API_KEY) {
-      throw new Error('LLM_API_KEY required. Set LLM_API_KEY environment variable.');
+      throw new Error('REPO_ADV_LLM_API_KEY required. Set REPO_ADV_LLM_API_KEY environment variable.');
     }
     return LLM_API_KEY;
   }
