@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Hero's Quest Engine - Repo Adventure</title>
+    <title>The Quest Forge - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Enchanted Repository Chronicles</a>
+                <a href="index.html">The Enchanted Repository of Adventures</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -66,147 +66,143 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 3: The Chronicles of Quest Generation</h1>
+    <h1>Quest 3: The Enchanted Scrolls of Configuration</h1>
 <hr>
-<p>In the heart of Codethia&#39;s enchanted towers, the Quest Generation Engine hums with a mystical rhythm, forging connections between the arcane codes of repositories and the adventurous paths of heroes. Here, the Adventure Manager and Story Generator work in harmony, guided by the ancient scrolls of the <code class="inline-code">adventure-config</code>. As the sun dips below the horizon, brave adventurers delve into these magical scripts to uncover the secrets of dynamic adventure creation.</p>
+<p>In the heart of Codehaven’s castle lies a hidden chamber filled with enchanted scrolls, each inscribed with the kingdom’s most guarded secrets. These scrolls, bound by ancient magic, hold the power to shape the very foundation of adventures. As the chosen adventurer, you must decipher the scrolls, extract their wisdom, and weave their magic into the kingdom’s quests. But beware, for the scrolls are protected by layers of mystical wards that challenge even the most skilled sorcerers.</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>Dynamic Quest Management</strong>: How the AdventureManager initializes and orchestrates quests dynamically based on context.</li>
-<li>🔍 <strong>Story and Quest Parsing</strong>: The techniques used by StoryGenerator to parse markdown and structure quests.</li>
-<li>⚡ <strong>Content Configuration</strong>: How the <code class="inline-code">adventure-config</code> file influences quest generation and customization.</li>
-<li>💡 <strong>Code Chunking</strong>: How large codebases are processed in manageable chunks to optimize performance.</li>
+<li>🎯 <strong>Adventure Configuration Parsing</strong>: How to safely read and validate configuration files for dynamic quest generation.</li>
+<li>🔍 <strong>File Path Extraction</strong>: Techniques to extract and verify file paths referenced in configuration files.</li>
+<li>⚡ <strong>Optimization for LLM Prompts</strong>: How to format configuration data for efficient use in AI-driven systems.</li>
+<li>💡 <strong>Dynamic Content Integration</strong>: How configuration data influences quest generation and file exploration.</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/adventure/adventure-manager.ts</code></a></h3>
-<p>The <code class="inline-code">AdventureManager</code> is the master conductor of all quests, coordinating state, generating stories, and enabling adventurers to explore quests dynamically. It ensures each quest is contextualized by repository insights and manages progress tracking through its stateful design.</p>
+<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/shared/adventure-config.ts</code></a></h3>
+<p>This file acts as the magical tome that deciphers the enchanted scrolls (adventure configuration files). It provides functions to read, parse, and extract critical details from the <code class="inline-code">adventure.config.json</code> file. These details guide the structure and content of the quests, ensuring alignment with the kingdom&#39;s design.</p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L59" target="_blank" rel="noopener noreferrer"><code class="inline-code">initializeAdventure</code></a> resets the state, selects a theme, and generates a cohesive story with quests tailored to the current project.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L109" target="_blank" rel="noopener noreferrer"><code class="inline-code">exploreQuest</code></a> validates user choices, retrieves quests, and handles execution flow, including caching for completed quests.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L377" target="_blank" rel="noopener noreferrer"><code class="inline-code">mergeQuestFilesFromConfig</code></a> integrates quest-specific file paths from <code class="inline-code">adventure-config</code>, ensuring precise alignment between quests and code.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L19" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadAdventureConfig</code></a>: Reads the raw configuration file, ensuring it exists and is accessible.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a>: Extracts and validates unique file paths referenced in the configuration.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L75" target="_blank" rel="noopener noreferrer"><code class="inline-code">formatAdventureConfigForPrompt</code></a>: Optimizes the configuration data for use in LLM prompts, reducing redundancy while retaining critical information.</li>
 </ul>
 <h4>Code</h4>
-<pre><code class="language-typescript">async initializeAdventure(
-  projectInfo: ProjectInfo, 
-  theme: AdventureTheme, 
-  projectPath?: string,
-  customThemeData?: CustomThemeData
-): Promise&lt;string&gt; {
-  this.state.reset();
-  this.state.projectInfo = projectInfo;
-  this.state.currentTheme = theme;
-  this.state.projectPath = projectPath || process.cwd();
-
-  if (theme === &#39;custom&#39; &amp;&amp; customThemeData) {
-    this.storyGenerator.setCustomTheme(customThemeData);
+<pre><code class="language-typescript">function readFileIfExists(filePath: string): string | null {
+  try {
+    return fs.readFileSync(filePath, &#39;utf-8&#39;);
+  } catch {
+    // Missing or unreadable file is non-fatal
+    return null;
   }
+}
 
-  const storyResponse = await this.storyGenerator.generateStoryAndQuests(projectInfo, theme, this.state.projectPath);
-  this.state.title = storyResponse.title;
-  this.state.story = storyResponse.story;
-  this.state.quests = this.mergeQuestFilesFromConfig(storyResponse.quests, this.state.projectPath);
-  this.state.quests = this.enforceConfigQuestCount(this.state.quests, this.state.projectPath);
-
-  return this.formatStoryWithQuests({
-    ...storyResponse,
-    quests: this.state.quests
-  });
+export function loadAdventureConfig(projectPath: string): string | null {
+  const configPath = path.join(projectPath, ADVENTURE_CONFIG_FILE);
+  return readFileIfExists(configPath);
 }
 </code></pre>
 <ul>
-<li>This method resets the adventure state to ensure no residual data interrupts quest generation.</li>
-<li>It integrates <code class="inline-code">customThemeData</code> for user-defined themes, enabling flexible customization.</li>
-<li>By invoking <code class="inline-code">StoryGenerator</code>, it dynamically crafts a story and quests, ensuring alignment with the repository&#39;s structure.</li>
-<li>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L377" target="_blank" rel="noopener noreferrer"><code class="inline-code">mergeQuestFilesFromConfig</code></a> method enhances quests with targeted file paths for more contextual exploration.</li>
-<li>This approach ensures that quest generation is both dynamic and personalized for the project at hand.</li>
+<li>Reads the <code class="inline-code">adventure.config.json</code> file from the project directory.</li>
+<li>Ensures the file is optional but gracefully handles its absence.</li>
+<li>This defensive approach prevents runtime errors when the file is missing or inaccessible.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async exploreQuest(choice: string): Promise&lt;AdventureResult&gt; {
-  const sanitizedChoice = this.validateAndSanitizeChoice(choice);
+<pre><code class="language-typescript">export function extractUniqueFilePaths(projectPath: string): string[] {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) return [];
 
-  if (this.isProgressRequest(sanitizedChoice)) {
-    return this.getProgress();
+  const unique = new Set&lt;string&gt;();
+  const stack: any[] = [parsed];
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== &#39;object&#39;) continue;
+
+    // Extract and validate path
+    if (typeof node.path === &#39;string&#39; &amp;&amp; node.path.trim()) {
+      const rel = node.path.trim();
+      if (fs.existsSync(path.resolve(projectPath, rel))) {
+        unique.add(rel);
+      }
+    }
+
+    // Add children to stack
+    const children = Array.isArray(node) ? node : Object.values(node);
+    children.forEach(child =&gt; {
+      if (child &amp;&amp; typeof child === &#39;object&#39;) stack.push(child);
+    });
   }
 
-  const quest = this.findQuest(sanitizedChoice);
-  if (!quest) {
-    return this.createNotFoundResult();
-  }
-
-  return await this.executeQuest(quest);
+  return Array.from(unique);
 }
 </code></pre>
 <ul>
-<li>This method handles user input dynamically, validating and sanitizing choices to prevent errors.</li>
-<li>By distinguishing between progress requests and quest selections, it ensures seamless navigation.</li>
-<li>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L208" target="_blank" rel="noopener noreferrer"><code class="inline-code">executeQuest</code></a> function executes quests while leveraging caching for completed ones, ensuring efficiency.</li>
-<li>The modular design allows for better testability and extension of the quest execution logic.</li>
-<li>By centralizing choice validation and quest retrieval, the method streamlines user interaction.</li>
+<li>Traverses the configuration object to extract all unique file paths.</li>
+<li>Validates each path to ensure it exists within the project directory.</li>
+<li>Uses a stack-based approach to handle nested structures, ensuring comprehensive coverage.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private mergeQuestFilesFromConfig(quests: Quest[], projectPath: string | undefined): Quest[] {
-  if (!projectPath) return quests;
-
-  const config = parseAdventureConfig(projectPath);
-  if (!config || typeof config !== &#39;object&#39;) return quests;
-
-  const adventure = (config as any).adventure;
-  if (!adventure || !Array.isArray(adventure.quests)) return quests;
-
-  const configQuestFiles = new Map&lt;string, string[]&gt;();
-  for (const configQuest of adventure.quests) {
-    if (configQuest.title &amp;&amp; Array.isArray(configQuest.files)) {
-      const filePaths = configQuest.files.filter((f: any) =&gt; f.path).map((f: any) =&gt; f.path);
-      if (filePaths.length &gt; 0) {
-        configQuestFiles.set(configQuest.title.toLowerCase(), filePaths);
-      }
-    }
+<pre><code class="language-typescript">export function formatAdventureConfigForPrompt(projectPath: string): string {
+  const parsed = parseAdventureConfig(projectPath);
+  if (!parsed || typeof parsed !== &#39;object&#39;) {
+    return &#39;&#39;;
   }
 
-  return quests.map((quest, index) =&gt; {
-    const configQuests = adventure.quests;
-    if (index &lt; configQuests.length &amp;&amp; configQuests[index]?.files) {
-      const files = configQuests[index].files.filter((f: any) =&gt; f.path).map((f: any) =&gt; f.path);
-      if (files.length &gt; 0) {
-        return { ...quest, codeFiles: files };
-      }
-    }
+  const adventure = (parsed as any).adventure;
+  if (!adventure || !Array.isArray(adventure.quests)) {
+    return &#39;&#39;;
+  }
 
-    const questTitleLower = quest.title.toLowerCase();
-    for (const [configTitle, files] of configQuestFiles.entries()) {
-      if (questTitleLower.includes(configTitle) || configTitle.includes(questTitleLower)) {
-        return { ...quest, codeFiles: files };
-      }
-    }
+  let formatted = `## Quest Structure\n`;
 
-    return quest;
-  });
+  for (const quest of adventure.quests) {
+    if (!quest.title || !Array.isArray(quest.files)) continue;
+
+    formatted += `### ${quest.title}\n`;
+    
+    // Just file paths, no verbose descriptions
+    const filePaths = quest.files.map((f: any) =&gt; f.path).filter(Boolean);
+    formatted += `Files: ${filePaths.join(&#39;, &#39;)}\n`;
+    
+    // Just function names, no descriptions
+    const functions = quest.files
+      .flatMap((f: any) =&gt; f.highlights || [])
+      .map((h: any) =&gt; h.name)
+      .filter(Boolean);
+    formatted += `Functions: ${functions.join(&#39;, &#39;)}\n\n`;
+  }
+
+  return formatted;
 }
 </code></pre>
 <ul>
-<li>This method integrates file paths from <code class="inline-code">adventure-config</code> into quests, ensuring precise alignment with project files.</li>
-<li>It uses a fallback mechanism to match quests by title when direct indexing fails, increasing robustness.</li>
-<li>By mapping file paths to quest titles, it ensures that each quest is enriched with relevant code context.</li>
-<li>The modular approach simplifies the integration of new configuration structures or file-matching strategies.</li>
-<li>This method underscores the importance of adaptability in handling diverse project configurations.</li>
+<li>Formats the configuration into a concise structure suitable for LLM prompts.</li>
+<li>Focuses on essential details like file paths and function names, eliminating redundant descriptions.</li>
+<li>Reduces the size of the configuration data to optimize token usage in AI systems.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L59" target="_blank" rel="noopener noreferrer"><code class="inline-code">initializeAdventure</code></a> to understand how state management ensures a clean slate for each new story.</li>
-<li>Study the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L109" target="_blank" rel="noopener noreferrer"><code class="inline-code">exploreQuest</code></a> method to learn how user interactions are validated and processed dynamically.</li>
-<li>Investigate <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L377" target="_blank" rel="noopener noreferrer"><code class="inline-code">mergeQuestFilesFromConfig</code></a> for insights into integrating external configurations seamlessly.</li>
+<li>Use the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> function to validate file paths referenced in your configuration, ensuring they exist before processing.</li>
+<li>Study how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L75" target="_blank" rel="noopener noreferrer"><code class="inline-code">formatAdventureConfigForPrompt</code></a> optimizes configuration data for efficient LLM usage, a critical skill for working with AI-driven systems.</li>
+<li>Explore the defensive coding patterns in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L19" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadAdventureConfig</code></a> to handle missing or malformed configuration files gracefully.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><strong>Add Custom Themes</strong>: Extend the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L59" target="_blank" rel="noopener noreferrer"><code class="inline-code">initializeAdventure</code></a> method to support a new custom theme, such as &quot;Pirate Adventure.&quot; Modify <code class="inline-code">adventure-config</code> to include theme-specific keywords and verify the proper integration.</li>
-<li><strong>Quest Flow Analysis</strong>: Trace the flow of a quest execution from <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L109" target="_blank" rel="noopener noreferrer"><code class="inline-code">exploreQuest</code></a> through to <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/adventure/adventure-manager.ts#L208" target="_blank" rel="noopener noreferrer"><code class="inline-code">executeQuest</code></a>. Add logging statements to observe how caching impacts performance and revisit behavior.</li>
+<li><p><strong>Add a New Quest</strong>: Modify the <code class="inline-code">adventure.config.json</code> file to include a new quest with specific file paths and highlights. Use <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> to validate your additions.</p>
+<ul>
+<li>Example: Add a quest titled &quot;The Dragon&#39;s Code&quot; with files referencing critical parts of your project.</li>
+</ul>
+</li>
+<li><p><strong>Trace Configuration Flow</strong>: Add <code class="inline-code">console.log</code> statements in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L19" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadAdventureConfig</code></a> and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> to trace how the configuration is read and processed. Observe how nested structures are handled.</p>
+</li>
+<li><p><strong>Optimize for LLM</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L75" target="_blank" rel="noopener noreferrer"><code class="inline-code">formatAdventureConfigForPrompt</code></a> to include additional metadata (e.g., quest difficulty or estimated completion time). Test how this affects the output in LLM prompts.</p>
+</li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to unravel more secrets of the Enchanted Repository.</p>
-<p>By the radiant light of valor and wisdom, thou hast forged 40% of the Hero&#39;s Quest Engine, a mighty artifact in the chronicles of legendary triumph—press on, brave soul, for the realms await thy brilliance! ⚡⭐🗺️💎</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the kingdom’s enchanted technologies.</p>
+<p>The celestial heralds proclaim your triumph, brave seeker, as the anvil of knowledge in &quot;The Quest Forge&quot; glows with 40% mastery—press onward, for the realms of wisdom await your heroic ascent! ⚡💎🗺️</p>
 
 </div>
 
