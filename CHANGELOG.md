@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.10.3](https://github.com/danwahlin/ai-repo-adventures/compare/v1.10.2...v1.10.3) (2025-10-04)
+
+
+### Bug Fixes
+
+* add GITHUB_TOKEN to publish step for proper authentication ([7a359af](https://github.com/danwahlin/ai-repo-adventures/commit/7a359afe79c175d8247f95b976dc46b1564d7227))
+
+
+
+
+
 ## [1.10.2](https://github.com/danwahlin/ai-repo-adventures/compare/v1.10.1...v1.10.2) (2025-10-04)
 
 **Note:** Version bump only for package ai-repo-adventures
