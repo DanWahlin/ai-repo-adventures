@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mystic Forge of HTML Adventures - Repo Adventure</title>
+    <title>The HTML Spellforge - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -66,170 +66,191 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 1: The Mystic Forge of HTML Adventures</h1>
+    <h1>Quest 1: The HTML Spellforge</h1>
 <hr>
-<p>In the mystical Kingdom of Code, a great repository known as the Enchanted Repository safeguards the secrets of interactive storytelling. Deep within its halls lies the Mystic Forge, where raw code is transformed into enchanting HTML adventures. Brave adventurer, your task is to uncover the secrets of the Forge by exploring its spellbinding components: the HTML generator, the template engine, and the asset manager. These tools, imbued with arcane knowledge, will guide you in crafting immersive tales that captivate and educate.</p>
+<p>In the mystical Kingdom of Codethia, the HTML Spellforge glows with ancient runes, pulsating with the energy of boundless creativity. This enchanted forge is the heart of Codethia&#39;s magical web-weaving arts, where adventurers transform raw code into spellbinding HTML adventures. As you approach, the air hums with power, and the forge&#39;s guardians, the Template Engine and Asset Manager, stand ready to guide you. To unlock the forge&#39;s full potential, you must master its intricate workings and learn the secrets of dynamic page rendering and asset management.</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>HTML Generation Pipeline</strong>: How the <code class="inline-code">HTMLAdventureGenerator</code> orchestrates the creation of interactive HTML adventures.</li>
-<li>🔍 <strong>Template Rendering</strong>: How the <code class="inline-code">TemplateEngine</code> dynamically replaces placeholders to generate customized HTML pages.</li>
-<li>⚡ <strong>Asset Management</strong>: How the <code class="inline-code">AssetManager</code> ensures all necessary resources are copied and organized for multi-theme adventures.</li>
-<li>💡 <strong>Extensibility Patterns</strong>: How modular design enables adding new themes or assets without disrupting existing functionality.</li>
+<li>🎯 <strong>Template Rendering</strong>: How templates are dynamically loaded, cached, and rendered with variable substitution.</li>
+<li>🔍 <strong>Asset Management</strong>: Techniques for copying and organizing assets for multi-theme and single-theme HTML generation.</li>
+<li>⚡ <strong>Dynamic Story Integration</strong>: How the HTML generator integrates adventure content into themed static pages.</li>
+<li>💡 <strong>CSS Handling</strong>: How theme-specific and shared CSS are loaded and combined for consistent styling.</li>
 </ul>
 <h2>File Exploration</h2>
-<h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/html-generator.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/html-generator.ts</code></a></h3>
-<p>The <code class="inline-code">HTMLAdventureGenerator</code> is the heart of the Mystic Forge, orchestrating the entire HTML generation process. It analyzes the codebase, generates themed stories and quests, and creates an interactive website. This file demonstrates the integration of multiple components like the <code class="inline-code">AdventureManager</code>, <code class="inline-code">TemplateEngine</code>, and <code class="inline-code">AssetManager</code> to produce cohesive outputs.</p>
-<h4>Highlights</h4>
-<ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/html-generator.ts#L235" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateAdventure</code></a>: Manages the full pipeline from repository analysis to HTML generation.</li>
-<li><code class="inline-code">generateAllThemes</code>: Enables multi-theme generation by isolating state for each theme.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/theme-manager.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateThemeCSS</code></a>: Dynamically combines and adjusts CSS for theme-specific styling.</li>
-</ul>
-<h4>Code</h4>
-<pre><code class="language-typescript">private async generateAdventure(): Promise&lt;void&gt; {
-  console.log(chalk.yellow.bold(&#39;🚀 Generating Adventure...&#39;));
-  const repomixContent = await repoAnalyzer.generateRepomixContext(this.projectPath);
-  const projectInfo = createProjectInfo(repomixContent);
-  const storyContent = await this.adventureManager.initializeAdventure(
-    projectInfo, 
-    this.selectedTheme, 
-    this.projectPath,
-    this.customThemeData
-  );
-  this.extractQuestInfo();
-  await this.generateThemeCSS();
-  const assetManager = await this.getAssetManager();
-  assetManager.copyQuestNavigator(this.outputDir);
-  this.generateIndexHTML();
-  await this.contentGenerator.generateQuestPages();
-  await this.generateSummaryHTML();
-}
-</code></pre>
-<ul>
-<li>This function orchestrates the HTML generation pipeline, starting from repository analysis.</li>
-<li>It integrates the <code class="inline-code">AdventureManager</code> for story generation and the <code class="inline-code">AssetManager</code> for resource handling.</li>
-<li>The modular design allows for easy substitution or extension of components.</li>
-<li>Quest extraction ensures only the required number of quests are processed, improving efficiency.</li>
-<li>CSS generation and asset copying are centralized, simplifying theme-specific customization.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">static async generateSingleThemeStatic(
-  theme: AdventureTheme,
-  themeDir: string,
-  maxQuests: number | undefined,
-  logLlmOutput: boolean,
-  logLlmOutputDir: string
-): Promise&lt;void&gt; {
-  const themeGenerator = new HTMLAdventureGenerator();
-  themeGenerator.selectedTheme = theme;
-  themeGenerator.outputDir = themeDir;
-  themeGenerator.maxQuests = maxQuests;
-  themeGenerator.logLlmOutput = logLlmOutput;
-  themeGenerator.logLlmOutputDir = logLlmOutputDir;
-  themeGenerator.isMultiTheme = true;
-  await themeGenerator.generateAdventure();
-}
-</code></pre>
-<ul>
-<li>This static method isolates state for each theme, enabling parallel generation without conflicts.</li>
-<li>The <code class="inline-code">maxQuests</code> parameter allows fine-grained control over the number of quests generated.</li>
-<li>By creating a new instance for each theme, the method prevents shared state corruption.</li>
-<li>This design supports scalability, making it ideal for large projects with multiple themes.</li>
-</ul>
-<hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/template-engine.ts</code></a></h3>
-<p>The <code class="inline-code">TemplateEngine</code> is the enchanter of the Forge, transforming raw templates into fully-rendered HTML pages. It supports caching for efficiency and dynamically replaces placeholders using provided variables.</p>
+<p>The <code class="inline-code">TemplateEngine</code> class is the magical core of the HTML Spellforge, responsible for dynamically loading, caching, and rendering templates. It ensures that the forge can process placeholder variables and produce beautifully crafted HTML pages. By caching templates, it minimizes redundant file reads, improving performance during large-scale HTML generation.</p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">renderPage</code></a>: Combines base and content templates to generate complete HTML pages.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L44" target="_blank" rel="noopener noreferrer"><code class="inline-code">replacePlaceholders</code></a>: Dynamically substitutes placeholders with variable values.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L25" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadTemplate</code></a>: Caches templates to improve performance during repeated rendering.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L25" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadTemplate</code></a>: Caches and loads template files from the specified directory, ensuring efficient reuse.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L44" target="_blank" rel="noopener noreferrer"><code class="inline-code">replacePlaceholders</code></a>: Replaces placeholders in templates with variable values, enabling dynamic content rendering.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">renderPage</code></a>: Combines base and content templates, rendering a complete HTML page with substituted variables.</li>
 </ul>
 <h4>Code</h4>
-<pre><code class="language-typescript">renderPage(contentTemplate: string, variables: TemplateVariables): string {
-  const baseTemplate = this.loadTemplate(&#39;base-template.html&#39;);
-  const contentHtml = this.loadTemplate(contentTemplate);
-  const renderedContent = this.replacePlaceholders(contentHtml, variables);
-  const pageVariables = { ...variables, CONTENT: renderedContent };
-  return this.replacePlaceholders(baseTemplate, pageVariables);
+<pre><code class="language-typescript">private loadTemplate(templateName: string): string {
+  if (this.templateCache.has(templateName)) {
+    return this.templateCache.get(templateName)!;
+  }
+
+  const templatePath = path.join(this.templatesDir, templateName);
+  
+  try {
+    const content = fs.readFileSync(templatePath, &#39;utf-8&#39;);
+    this.templateCache.set(templateName, content);
+    return content;
+  } catch (error) {
+    throw new Error(`Failed to load template ${templateName}: ${error}`);
+  }
 }
 </code></pre>
 <ul>
-<li>This function renders a complete HTML page by combining a base template with dynamic content.</li>
-<li>The <code class="inline-code">CONTENT</code> placeholder allows for modular insertion of quest-specific HTML.</li>
-<li>By separating base and content templates, the system achieves a clean separation of concerns.</li>
-<li>This design supports reusability, enabling consistent styling across all pages.</li>
+<li>This function ensures templates are loaded efficiently by caching their content after the first read.</li>
+<li>The <code class="inline-code">Map</code> object is used for caching, reducing repetitive file system operations.</li>
+<li>Error handling ensures that issues with template loading are caught and reported clearly.</li>
+<li>The <code class="inline-code">path</code> module is used to construct platform-independent paths.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">private replacePlaceholders(template: string, variables: TemplateVariables): string {
   let result = template;
+  
   for (const [key, value] of Object.entries(variables)) {
     const placeholder = `{{${key}}}`;
     result = result.replace(new RegExp(placeholder, &#39;g&#39;), value || &#39;&#39;);
   }
+  
   return result;
 }
 </code></pre>
 <ul>
-<li>The <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L44" target="_blank" rel="noopener noreferrer"><code class="inline-code">replacePlaceholders</code></a> function performs dynamic substitution of placeholders.</li>
-<li>Regular expressions ensure all instances of a placeholder are replaced, not just the first.</li>
-<li>This approach supports flexibility, allowing templates to be reused with different data.</li>
+<li>This function dynamically replaces placeholders (<code class="inline-code">{{key}}</code>) in a template with provided variable values.</li>
+<li>It uses regular expressions to ensure all occurrences of a placeholder are replaced.</li>
+<li>The approach allows for flexible and reusable templates, adapting to different content needs.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">renderPage(contentTemplate: string, variables: TemplateVariables): string {
+  const baseTemplate = this.loadTemplate(&#39;base-template.html&#39;);
+  const contentHtml = this.loadTemplate(contentTemplate);
+  
+  const renderedContent = this.replacePlaceholders(contentHtml, variables);
+  
+  const pageVariables = {
+    ...variables,
+    CONTENT: renderedContent
+  };
+  
+  return this.replacePlaceholders(baseTemplate, pageVariables);
+}
+</code></pre>
+<ul>
+<li>This method combines a base template with a content template, enabling modular page design.</li>
+<li>It demonstrates the separation of concerns by isolating content rendering from page structure.</li>
+<li>The use of <code class="inline-code">CONTENT</code> as a variable placeholder facilitates embedding dynamic content into a consistent layout.</li>
 </ul>
 <hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/generator/src/cli/asset-manager.ts</code></a></h3>
-<p>The <code class="inline-code">AssetManager</code> is the steward of the Forge, ensuring all images, styles, and scripts are copied to their rightful places. It supports both single-theme and multi-theme configurations.</p>
+<p>The <code class="inline-code">AssetManager</code> class is the diligent steward of the forge, ensuring that all assets—images, styles, and scripts—are properly organized and copied. It supports both single-theme and multi-theme generation, maintaining consistency across adventure pages.</p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L134" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyGlobalAssets</code></a>: Copies shared assets like images and CSS for multi-theme generation.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L97" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyQuestNavigator</code></a>: Handles theme-specific assets like the quest navigator.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L186" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadThemeCSS</code></a>: Dynamically loads and combines CSS files for the selected theme.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L18" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyImages</code></a>: Copies theme-specific and shared images to the appropriate directories.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L97" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyQuestNavigator</code></a>: Copies navigation assets (CSS, JS, SVG) for single-theme adventures.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L134" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyGlobalAssets</code></a>: Manages global shared assets for multi-theme generation.</li>
 </ul>
 <h4>Code</h4>
+<pre><code class="language-typescript">copyImages(outputDir: string, isMultiTheme: boolean = false): void {
+  const sourceImagesDir = path.join(this.sourceDir, &#39;assets&#39;, &#39;images&#39;);
+  const targetImagesDir = path.join(outputDir, &#39;assets&#39;, &#39;images&#39;);
+
+  try {
+    if (fs.existsSync(sourceImagesDir)) {
+      fs.mkdirSync(targetImagesDir, { recursive: true });
+      const imageFiles = fs.readdirSync(sourceImagesDir);
+      imageFiles.forEach(file =&gt; {
+        const sourcePath = path.join(sourceImagesDir, file);
+        const targetPath = path.join(targetImagesDir, file);
+        fs.copyFileSync(sourcePath, targetPath);
+      });
+    }
+  } catch (error) {
+    console.log(chalk.yellow(&#39;⚠️ Warning: Could not copy images from source directory&#39;));
+  }
+}
+</code></pre>
+<ul>
+<li>This method ensures that all required images are copied to the output directory.</li>
+<li>It uses <code class="inline-code">fs.mkdirSync</code> with the <code class="inline-code">recursive</code> option to create directories as needed.</li>
+<li>The <code class="inline-code">fs.existsSync</code> check prevents errors when source directories are missing.</li>
+<li>The approach is flexible, supporting both single-theme and multi-theme modes.</li>
+</ul>
+<hr>
+<pre><code class="language-typescript">copyQuestNavigator(outputDir: string): void {
+  const templatesDir = path.join(this.sourceDir, &#39;templates&#39;);
+  const cssSource = path.join(templatesDir, &#39;quest-navigator.css&#39;);
+  const jsSource = path.join(templatesDir, &#39;quest-navigator.js&#39;);
+  const svgSource = path.join(templatesDir, &#39;compass-icon.svg&#39;);
+
+  const assetsDir = path.join(outputDir, &#39;assets&#39;);
+  fs.mkdirSync(assetsDir, { recursive: true });
+
+  if (fs.existsSync(cssSource)) {
+    fs.copyFileSync(cssSource, path.join(assetsDir, &#39;quest-navigator.css&#39;));
+  }
+  if (fs.existsSync(jsSource)) {
+    fs.copyFileSync(jsSource, path.join(assetsDir, &#39;quest-navigator.js&#39;));
+  }
+  if (fs.existsSync(svgSource)) {
+    fs.copyFileSync(svgSource, path.join(assetsDir, &#39;compass-icon.svg&#39;));
+  }
+}
+</code></pre>
+<ul>
+<li>This function handles the copying of navigation-specific assets to ensure proper functionality.</li>
+<li>It demonstrates modular asset management, isolating navigation files from other assets.</li>
+<li>The use of <code class="inline-code">fs.copyFileSync</code> ensures that files are directly copied without intermediate processing.</li>
+</ul>
+<hr>
 <pre><code class="language-typescript">copyGlobalAssets(outputDir: string): void {
   const globalAssetsDir = path.join(outputDir, &#39;assets&#39;);
   const targetImagesDir = path.join(globalAssetsDir, &#39;images&#39;);
   fs.mkdirSync(targetImagesDir, { recursive: true });
-  const headerImageSource = path.join(this.sourceDir, &#39;assets&#39;, &#39;images&#39;, &#39;ai-adventures.png&#39;);
-  const headerImageTarget = path.join(targetImagesDir, &#39;ai-adventures.png&#39;);
-  fs.copyFileSync(headerImageSource, headerImageTarget);
+
+  const globalImages = [&#39;github-mark.svg&#39;, &#39;github-mark-white.svg&#39;];
+  globalImages.forEach(file =&gt; {
+    const sourcePath = path.join(this.sourceDir, &#39;assets&#39;, &#39;shared&#39;, file);
+    if (fs.existsSync(sourcePath)) {
+      const targetPath = path.join(globalAssetsDir, file);
+      fs.copyFileSync(sourcePath, targetPath);
+    }
+  });
 }
 </code></pre>
 <ul>
-<li>This function ensures global assets like images are copied to the correct directory.</li>
-<li>The use of <code class="inline-code">mkdirSync</code> with <code class="inline-code">recursive: true</code> guarantees directories are created as needed.</li>
-<li>This approach centralizes asset management, reducing duplication across themes.</li>
-</ul>
-<hr>
-<pre><code class="language-typescript">loadThemeCSS(theme: string): string {
-  return this.loadCSSFile(`themes/${theme}.css`, &#39;themes/default.css&#39;);
-}
-</code></pre>
-<ul>
-<li>This function dynamically loads theme-specific CSS, falling back to a default if unavailable.</li>
-<li>The modular design simplifies the addition of new themes without modifying core logic.</li>
-<li>This fallback mechanism ensures robustness, preventing errors due to missing files.</li>
+<li>This method consolidates shared assets like GitHub icons into a global directory.</li>
+<li>It ensures consistency across themes by centralizing shared resources.</li>
+<li>The modular design allows for easy extension with additional shared assets.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Use the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/html-generator.ts#L235" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateAdventure</code></a> method as a blueprint for creating your own custom pipelines.</li>
-<li>Study the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L44" target="_blank" rel="noopener noreferrer"><code class="inline-code">replacePlaceholders</code></a> function to understand dynamic template rendering.</li>
-<li>Experiment with the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L134" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyGlobalAssets</code></a> function to add new resources to your adventures.</li>
+<li>Use the <code class="inline-code">TemplateEngine</code> to experiment with new templates by adding placeholders and observing how they are replaced.</li>
+<li>Study the <code class="inline-code">AssetManager</code> methods to understand how assets are organized for single-theme and multi-theme modes.</li>
+<li>Pay attention to the caching mechanism in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L25" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadTemplate</code></a> to see how it improves performance during repeated operations.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><p><strong>Add a New Theme</strong>: Create a new theme by adding a CSS file and modifying the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L186" target="_blank" rel="noopener noreferrer"><code class="inline-code">loadThemeCSS</code></a> function. Generate an adventure to see your custom theme in action.</p>
+<li><p><strong>Create a Custom Template</strong>: Add a new template file with unique placeholders. Use the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/template-engine.ts#L58" target="_blank" rel="noopener noreferrer"><code class="inline-code">renderPage</code></a> method to generate a page with your custom content.</p>
+<ul>
+<li>Example: Add a <code class="inline-code">custom-template.html</code> file and render it with variables like <code class="inline-code">{{TITLE}}</code> and <code class="inline-code">{{BODY}}</code>.</li>
+</ul>
 </li>
-<li><p><strong>Customize Templates</strong>: Modify the base and content templates to include additional placeholders. Use the <code class="inline-code">TemplateEngine</code> to render a page with your custom data.</p>
+<li><p><strong>Modify Asset Paths</strong>: Experiment with the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L18" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyImages</code></a> method by changing the source directory. Observe how the system handles missing or additional image files.</p>
 </li>
-<li><p><strong>Optimize Asset Management</strong>: Enhance the <code class="inline-code">AssetManager</code> to validate file existence before copying, and log meaningful errors for missing assets.</p>
+<li><p><strong>Multi-Theme Debugging</strong>: Enable multi-theme generation and trace how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L134" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyGlobalAssets</code></a> and <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/generator/src/cli/asset-manager.ts#L97" target="_blank" rel="noopener noreferrer"><code class="inline-code">copyQuestNavigator</code></a> handle shared and theme-specific assets. Add console logs to verify the flow.</p>
 </li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries hidden within the Enchanted Repository.</p>
-<p>By the radiant stars of the Celestial Codex, you have forged the first spark in the Mystic Forge of HTML Adventures—rise, noble coder, for your journey to mastery begins anew! ⚡💎🗺️</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of Codethia&#39;s enchanted systems.</p>
+<p>By the radiant light of the coding constellations, you have conquered the legendary HTML Spellforge, forging the first arcane key to unlock the gates of the web kingdom—onward, valiant hero!</p>
 
 </div>
 
