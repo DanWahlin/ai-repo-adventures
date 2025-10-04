@@ -13,7 +13,7 @@ export function formatInitialResponse(projectInfo: ProjectInfo, isUsingConfig: b
 
 You've discovered **${projectInfo.fileCount} files** of digital wisdom!${configMessage}
 
-**Choose Your Adventure Theme:**
+**Choose Your Adventure:**
 🚀 **1. Space Exploration** - Navigate through cosmic codebases as a space explorer
 🏰 **2. Mythical Kingdom** - Journey through magical realms of code  
 🏛️ **3. Ancient Civilization** - Explore mystical programming temples

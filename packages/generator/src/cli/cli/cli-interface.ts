@@ -67,7 +67,7 @@ export class CLIInterface {
    * @returns true if "all themes" selected, false for single theme
    */
   async selectTheme(): Promise<{ theme: AdventureTheme; customData?: CustomThemeData; isAllThemes: boolean }> {
-    console.log(chalk.yellow.bold('📚 Choose Your Adventure Theme:'));
+    console.log(chalk.yellow.bold('📚 Choose Your Adventure:'));
     console.log();
 
     const themes = getAllThemes();
