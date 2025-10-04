@@ -215,6 +215,14 @@ Projects can include an `adventure.config.json` file to guide story and quest ge
 
 ```json
 {
+  "adventure": {
+    "name": "Your Project Name",
+    "description": "Brief project description",
+    "url": "https://github.com/username/repo-name",
+    "customInstructions": "Optional: Any specific guidance for story generation",
+    "microsoftClarityCode": "optional-clarity-tracking-id",
+    "googleAnalyticsCode": "optional-ga-tracking-id"
+  },
   "quests": [
     {
       "title": "Core MCP Server",
@@ -240,6 +248,7 @@ This configuration:
 - **Guides quest titles** toward important code areas
 - **Highlights key functions and members** for workshop-style exploration
 - **Provides context** for more accurate story generation
+- **Adds analytics tracking** (optional) - Include Microsoft Clarity or Google Analytics codes to track HTML adventure usage
 
 ### Context Flow Summary
 
@@ -307,8 +316,8 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for complete conventional commit 
 Generate a beautiful HTML adventure website with just one command:
 
 ```bash
-npm run test:html                      # Default: mythical theme
-npm run test:html -- --theme=space    # Specify theme (space, mythical, ancient, developer)
+npm run test:html                      # Default: space theme
+npm run test:html -- --theme=mythical # Specify theme (space, mythical, ancient, developer)
 npm run test:html -- --theme=all      # Generate all themes at once
 ```
 
@@ -367,8 +376,9 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 
 3. **Fine-tune Settings** (Optional):
    ```bash
-   LLM_TEMPERATURE=1.0      # Creativity (0.0-2.0)
-   LLM_MAX_TOKENS=1000      # Response length
+   REPO_ADV_LLM_TEMPERATURE=0.7      # Creativity (0.0-2.0, default: 0.7)
+   REPO_ADV_LLM_MAX_TOKENS=10000     # Response length (default: 10000)
+   REPO_ADV_LLM_REQUEST_TIMEOUT=120000  # Request timeout in ms (default: 120000)
    ```
 
 **📝 Model Recommendations**:
@@ -491,7 +501,7 @@ npm run generate-html --theme all --output ./public
 
 ### Quick Test Generator
 ```bash
-npm run test:html                    # Generate single theme (mythical)
+npm run test:html                    # Generate single theme (space)
 npm run test:html -- --theme=all    # Generate all themes
 ```
 
@@ -569,7 +579,7 @@ output-directory/
 
 ```
 packages/
-├── core/                           # @ai-repo-adventures/core (shared business logic)
+├── core/                           # @codewithdan/ai-repo-adventures-core (shared business logic)
 │   └── src/
 │       ├── adventure/              # Adventure generation system
 │       │   ├── adventure-manager.ts   # Orchestrates adventure state and user interactions
