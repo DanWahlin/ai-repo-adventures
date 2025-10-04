@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Analysis System - Repo Adventure</title>
+    <title>Code Analysis Pipeline - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">Developer's Guide to AI Repo Adventures</a>
+                <a href="index.html">The Developer's Codebase Expedition</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -66,243 +66,160 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: Code Analysis System</h1>
+    <h1>Quest 4: Code Analysis Pipeline</h1>
 <hr>
-<p>The Code Analysis System serves as the backbone of AI Repo Adventures, transforming raw codebases into structured content for interactive exploration. This system leverages advanced repository scanning and LLM integration to extract meaningful insights from code, optimize token usage, and dynamically generate adventure-ready content. As a developer, mastering this system will unlock the ability to analyze complex projects efficiently while maintaining high-quality outputs.</p>
+<p>The &quot;Code Analysis Pipeline&quot; is the beating heart of this repository’s adventure generation system. Here, the focus is on unraveling the inner workings of the <code class="inline-code">RepoAnalyzer</code> and <code class="inline-code">LLMClient</code>. These components work in tandem to preprocess repositories and interact with large language models, ensuring precise, contextually rich responses. From validating project paths to executing targeted content extraction, and from managing API integrations to handling rate limits gracefully, this pipeline exemplifies robust and scalable design principles.</p>
 <h2>Key Takeaways</h2>
-<p>After completing this quest, you will understand:</p>
+<p>After completing this quest, you will understand:  </p>
 <ul>
-<li>🎯 <strong>Repository Analysis</strong>: How <code class="inline-code">RepoAnalyzer</code> validates paths and extracts targeted content from codebases.</li>
-<li>🔍 <strong>LLM Request Optimization</strong>: How <code class="inline-code">LLMClient</code> manages adaptive throttling and builds structured prompts for efficient API calls.</li>
-<li>⚡ <strong>Caching Strategy</strong>: How caching reduces redundant computation and improves system performance.</li>
-<li>💡 <strong>Error Handling</strong>: Techniques for managing rate limits and ensuring robust API integration.</li>
+<li>🎯 <strong>Content Optimization</strong>: How to extract and optimize specific parts of a codebase for efficient analysis.  </li>
+<li>🔍 <strong>Rate-Limiting Strategies</strong>: Adaptive throttling techniques for handling API rate limits in real-time.  </li>
+<li>⚡ <strong>Caching Mechanisms</strong>: How caching intermediate results reduces redundant processing and improves system performance.  </li>
+<li>💡 <strong>Integration Design</strong>: Best practices for integrating third-party APIs into a larger application.</li>
 </ul>
 <h2>File Exploration</h2>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> class is responsible for extracting relevant codebase content and preparing it for analysis. It employs techniques like path validation, targeted file extraction, and content optimization to ensure that only essential information is processed. Additionally, it integrates caching mechanisms to minimize redundant operations and improve performance.</p>
+<p>The <code class="inline-code">RepoAnalyzer</code> class is responsible for orchestrating content extraction and preprocessing. It leverages the Repomix CLI to analyze codebases, validate paths, and optimize output for LLM consumption. Key features include caching, content compression, and function-focused extraction for efficient token usage.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts#L37" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateProjectPath</code></a> ensures the project path is secure and valid, preventing path traversal vulnerabilities.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L246" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateTargetedContent</code></a> extracts specific files from the repository and applies compression for token efficiency.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a> runs the <code class="inline-code">repomix</code> CLI as a subprocess, capturing output with memory and timeout protection.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L296" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateRepomixContext</code></a>: Generates a full or targeted analysis of the repository, including fallback mechanisms for error handling.  </li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L150" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateAndNormalizeTargetFiles</code></a>: Validates file paths for security, deduplication, and ensures they exist within the project root.  </li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a>: Executes the Repomix CLI subprocess with memory and timeout protections.</li>
 </ul>
 <h4>Code</h4>
-<pre><code class="language-typescript">private validateProjectPath(projectPath: string): void {
-  if (!projectPath || typeof projectPath !== &#39;string&#39;) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-
-  const trimmedPath = projectPath.trim();
-  if (!trimmedPath) {
-    throw new Error(&#39;Project path must be a non-empty string&#39;);
-  }
-
-  if (trimmedPath.includes(&#39;\0&#39;)) {
-    throw new Error(&#39;Project path contains invalid null bytes&#39;);
-  }
+<pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {  
+  this.validateProjectPath(projectPath);  
+  const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;  
+  const cached = this.cache.get(cacheKey);  
+  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {  
+    return cached.content;  
+  }  
+  const configuredFiles = extractUniqueFilePaths(projectPath);  
+  const context = await this.generateTargetedContent(projectPath, configuredFiles);  
+  this.cache.set(cacheKey, { content: context, timestamp: Date.now() });  
+  return context;  
 }
 </code></pre>
 <ul>
-<li>Validates the project path to ensure it is secure and usable.</li>
-<li>Protects against null byte injection and empty string errors.</li>
-<li>Provides a foundation for safe file system operations.</li>
+<li>Validates the project path to ensure it is secure and non-empty.  </li>
+<li>Checks the cache for previously generated content, reducing redundant computations.  </li>
+<li>Uses the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/adventure-config.ts#L41" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractUniqueFilePaths</code></a> utility to retrieve files from the configuration for targeted analysis.  </li>
+<li>Demonstrates fallback mechanisms for error handling and full codebase analysis.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">async generateTargetedContent(projectPath: string, targetFiles: string[], compress: boolean = true): Promise&lt;string&gt; {
-  this.validateProjectPath(projectPath);
-  const safeFiles = this.validateAndNormalizeTargetFiles(projectPath, targetFiles);
-
-  const cacheKey = `${path.resolve(projectPath)}:targeted:${safeFiles.join(&#39;,&#39;)}:compress=${compress}`;
-  const cached = this.cache.get(cacheKey);
-  if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
-    return cached.content;
-  }
-
-  const cliOptions: CliOptions = {
-    style: &#39;markdown&#39;,
-    stdout: true,
-    compress,
-    include: safeFiles.join(&#39;,&#39;),
-    removeComments: compress,
-    removeEmptyLines: compress,
-    noDirectoryStructure: true
-  };
-
-  const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, cliOptions);
-  this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
-  return context;
+<pre><code class="language-typescript">private validateAndNormalizeTargetFiles(projectPath: string, targetFiles: string[]): string[] {  
+  const MAX_TARGET_FILES = 50;  
+  const projectRoot = path.resolve(projectPath);  
+  const safeFiles = [...new Set(targetFiles)]  
+    .slice(0, MAX_TARGET_FILES)  
+    .map(file =&gt; path.resolve(projectPath, file))  
+    .filter(fs.existsSync)  
+    .sort();  
+  return safeFiles.map(file =&gt; path.relative(projectPath, file));  
 }
 </code></pre>
 <ul>
-<li>Extracts targeted content from specified files, optimizing for token efficiency.</li>
-<li>Employs caching to avoid redundant repomix executions.</li>
-<li>Configures repomix options dynamically, including compression and file inclusion.</li>
+<li>Ensures all file paths are within the project directory to prevent path traversal attacks.  </li>
+<li>Limits the number of files processed to prevent resource exhaustion.  </li>
+<li>Deduplicates and resolves file paths to absolute paths for consistency.  </li>
+<li>Uses <code class="inline-code">fs.existsSync</code> to verify that files exist before processing.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
-  return new Promise((resolve, reject) =&gt; {
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;], { cwd });
-    let stdout = &#39;&#39;;
-    let stderr = &#39;&#39;;
-    let stdoutSize = 0;
-
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
-      const chunk = data.toString();
-      stdoutSize += chunk.length;
-      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
-        reject(new Error(`Repomix output too large (${stdoutSize} bytes)`));
-        return;
-      }
-      stdout += chunk;
-    });
-
-    repomix.stderr.on(&#39;data&#39;, (data) =&gt; {
-      stderr += data.toString();
-    });
-
-    repomix.on(&#39;close&#39;, (code) =&gt; {
-      if (code === 0) {
-        resolve(stdout.trim());
-      } else {
-        reject(new Error(`Repomix failed (exit ${code}): ${stderr}`));
-      }
-    });
-  });
+<pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {  
+  return new Promise((resolve, reject) =&gt; {  
+    const args = [&#39;.&#39;, &#39;--stdout&#39;, &#39;--ignore=node_modules&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];  
+    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });  
+    let stdout = &#39;&#39;;  
+    repomix.stdout.on(&#39;data&#39;, (data) =&gt; (stdout += data.toString()));  
+    repomix.stderr.on(&#39;data&#39;, (data) =&gt; console.warn(data.toString()));  
+    repomix.on(&#39;close&#39;, (code) =&gt; {  
+      if (code === 0) resolve(stdout);  
+      else reject(new Error(`Repomix failed with code ${code}`));  
+    });  
+  });  
 }
 </code></pre>
 <ul>
-<li>Executes the <code class="inline-code">repomix</code> CLI as a subprocess to extract repository context.</li>
-<li>Implements memory protection and timeout handling to ensure reliable execution.</li>
-<li>Provides detailed error handling for subprocess failures.</li>
+<li>Spawns the Repomix CLI as a subprocess to capture its output.  </li>
+<li>Applies robust error handling for subprocess failures.  </li>
+<li>Configures CLI arguments dynamically based on <code class="inline-code">options.style</code>.  </li>
+<li>Demonstrates how to handle both stdout and stderr streams effectively.</li>
 </ul>
 <hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
-<p>The <code class="inline-code">LLMClient</code> class facilitates communication with AI models, handling API requests, error management, and adaptive throttling. It supports multiple providers, including OpenAI and Azure OpenAI, and ensures robust integration through dynamic configuration and caching.</p>
+<p>The <code class="inline-code">LLMClient</code> integrates with large language models (e.g., OpenAI, Azure OpenAI) to generate responses based on preprocessed repository content. It features adaptive throttling, robust error handling, and customizable request parameters.  </p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a> builds structured prompts and processes LLM responses, including error handling for rate limits.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L87" target="_blank" rel="noopener noreferrer"><code class="inline-code">constructor</code></a> initializes the client with provider-specific configurations and adaptive throttling settings.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L392" target="_blank" rel="noopener noreferrer"><code class="inline-code">detectRateLimitType</code></a> identifies rate limit errors and provides actionable feedback for recovery.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a>: Sends a prompt to the LLM and handles rate limits, throttling, and error conditions.  </li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L234" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateResponse</code></a>: Parses and validates the LLM response, ensuring content integrity.  </li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L462" target="_blank" rel="noopener noreferrer"><code class="inline-code">applyThrottling</code></a>: Dynamically adjusts delays between requests to prevent exceeding API rate limits.</li>
 </ul>
 <h4>Code</h4>
-<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
-  await this.applyThrottling();
-
-  try {
-    const requestParams = this.buildRequestParams(prompt, options);
-    const completion = await this.executeRequest(requestParams);
-    let content = this.validateResponse(completion);
-
-    if (options?.responseFormat === &#39;json_object&#39;) {
-      content = this.cleanJsonResponse(content);
-    }
-
-    this.logTokenUsage(completion, options?.context);
-    this.onSuccessfulRequest();
-
-    return { content };
-  } catch (error) {
-    const rateLimitInfo = this.detectRateLimitType(error);
-    if (rateLimitInfo.type !== RateLimitType.NONE) {
-      this.activateThrottling(error);
-      throw new RateLimitError(rateLimitInfo.type, rateLimitInfo.waitSeconds, rateLimitInfo.message, error);
-    }
-
-    throw new Error(`LLM request failed: ${error instanceof Error ? error.message : String(error)}`);
-  }
+<pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {  
+  await this.applyThrottling();  
+  try {  
+    const requestParams = this.buildRequestParams(prompt, options);  
+    const completion = await this.executeRequest(requestParams);  
+    let content = this.validateResponse(completion);  
+    this.onSuccessfulRequest();  
+    return { content };  
+  } catch (error) {  
+    this.activateThrottling(error);  
+    throw error;  
+  }  
 }
 </code></pre>
 <ul>
-<li>Handles the complete lifecycle of an LLM request, including prompt generation and response validation.</li>
-<li>Implements adaptive throttling to manage rate limits dynamically.</li>
-<li>Provides detailed error handling for robust API integration.</li>
+<li>Builds request parameters dynamically, supporting different LLM providers and models.  </li>
+<li>Validates the response to ensure a complete and coherent result.  </li>
+<li>Uses <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L462" target="_blank" rel="noopener noreferrer"><code class="inline-code">applyThrottling</code></a> to manage request timing automatically.  </li>
+<li>Handles errors by activating adaptive throttling when rate limits are encountered.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">constructor() {
-  this.model = LLM_MODEL;
-  const apiKey = this.getApiKey();
-  if (!apiKey || !LLM_BASE_URL) {
-    throw new Error(&#39;LLM configuration required.&#39;);
-  }
-
-  if (this.isAzureOpenAI()) {
-    const azureEndpoint = LLM_BASE_URL.split(&#39;/openai/deployments&#39;)[0];
-    this.client = new AzureOpenAI({
-      endpoint: azureEndpoint,
-      apiKey,
-      apiVersion: LLM_API_VERSION,
-      deployment: this.model
-    });
-  } else {
-    this.client = new OpenAI({
-      apiKey,
-      baseURL: LLM_BASE_URL
-    });
-  }
+<pre><code class="language-typescript">private applyThrottling(): Promise&lt;void&gt; {  
+  if (!this.isThrottling) return Promise.resolve();  
+  const delay = this.throttleDelay - (Date.now() - this.lastRequestTime);  
+  return new Promise((resolve) =&gt; setTimeout(resolve, Math.max(delay, 0)));  
 }
 </code></pre>
 <ul>
-<li>Initializes the LLM client with provider-specific configurations.</li>
-<li>Supports multiple providers, including OpenAI and Azure OpenAI.</li>
-<li>Ensures proper setup for secure API communication.</li>
+<li>Implements an adaptive delay mechanism based on the time since the last request.  </li>
+<li>Ensures rate limits are respected without introducing unnecessary delays.  </li>
+<li>Provides a scalable solution for managing high-throughput API interactions.</li>
 </ul>
 <hr>
-<pre><code class="language-typescript">detectRateLimitType(error: any): RateLimitInfo {
-  const errorMessage = error?.message || &#39;&#39;;
-  const is429Error = error?.status === 429 || errorMessage.includes(&#39;429&#39;);
-
-  if (!is429Error) {
-    return { type: RateLimitType.NONE, waitSeconds: 0, message: &#39;&#39; };
-  }
-
-  if (errorMessage.includes(&#39;exceeded token rate limit&#39;) &amp;&amp; !errorMessage.includes(&#39;retry after&#39;)) {
-    return {
-      type: RateLimitType.TOKEN_RATE_EXCEEDED,
-      waitSeconds: TOKEN_RATE_WINDOW_SECONDS,
-      message: `Token rate limit exceeded (200K tokens/${TOKEN_RATE_WINDOW_SECONDS}s window)`
-    };
-  }
-
-  if (errorMessage.includes(&#39;retry after&#39;)) {
-    const retryMatch = errorMessage.match(/retry after (\d+) seconds/);
-    const waitSeconds = retryMatch ? parseInt(retryMatch[1]) : 60;
-
-    return {
-      type: RateLimitType.REQUEST_RATE_LIMIT,
-      waitSeconds,
-      message: `Request rate limit hit, retry after ${waitSeconds} seconds`
-    };
-  }
-
-  return {
-    type: RateLimitType.REQUEST_RATE_LIMIT,
-    waitSeconds: 60,
-    message: &#39;429 rate limit encountered&#39;
-  };
+<pre><code class="language-typescript">private validateResponse(completion: any): string {  
+  const choice = completion.choices[0];  
+  if (!choice?.message?.content) throw new Error(&#39;LLM returned no content&#39;);  
+  if (choice.finish_reason === &#39;length&#39;) console.warn(&#39;Response truncated due to max_tokens limit&#39;);  
+  return choice.message.content;  
 }
 </code></pre>
 <ul>
-<li>Identifies rate limit errors and provides actionable feedback for recovery.</li>
-<li>Differentiates between token rate limits and request rate limits.</li>
-<li>Supports adaptive error handling for robust API integration.</li>
+<li>Validates the structure and content of the LLM response.  </li>
+<li>Logs warnings for truncated responses to aid in debugging.  </li>
+<li>Ensures the response contains usable content before returning it.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Explore how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/shared/input-validator.ts#L37" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateProjectPath</code></a> ensures security in file system operations.</li>
-<li>Study the adaptive throttling logic in <code class="inline-code">LLMClient</code> to understand rate limit management.</li>
-<li>Review the caching mechanism in <code class="inline-code">RepoAnalyzer</code> for optimizing repeated operations.</li>
+<li>Explore how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L296" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateRepomixContext</code></a> uses caching to optimize repeated analyses.  </li>
+<li>Review the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a> method for subprocess management best practices.  </li>
+<li>Study the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L462" target="_blank" rel="noopener noreferrer"><code class="inline-code">applyThrottling</code></a> implementation to understand adaptive delay mechanisms.</li>
 </ul>
 <h2>Try This</h2>
-<p>Challenge yourself to deepen your understanding:</p>
+<p>Challenge yourself to deepen your understanding:  </p>
 <ol>
-<li><strong>Add Targeted File Extraction</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L246" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateTargetedContent</code></a> to include additional file types, such as <code class="inline-code">.json</code> or <code class="inline-code">.config</code>. Observe how this impacts the extracted content and token efficiency.</li>
-<li><strong>Trace LLM Response Flow</strong>: Add logging statements to <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a> and trace the complete flow of an LLM request. Identify bottlenecks and optimize prompt size or API parameters.</li>
-<li><strong>Enhance Error Handling</strong>: Extend <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L392" target="_blank" rel="noopener noreferrer"><code class="inline-code">detectRateLimitType</code></a> to handle additional error codes or retry strategies. Test these changes by simulating API errors.</li>
+<li><p><strong>Extend File Validation</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L150" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateAndNormalizeTargetFiles</code></a> to include additional security checks, such as rejecting symbolic links. Run tests to ensure the changes work as expected.  </p>
+</li>
+<li><p><strong>Simulate Rate Limits</strong>: Introduce artificial rate limits in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">LLMClient.generateResponse</code></a> and observe how the throttling mechanism adapts. Adjust the <code class="inline-code">LLM_THROTTLE_DECAY_RATE</code> to see its impact.  </p>
+</li>
+<li><p><strong>Optimize Content Extraction</strong>: Update <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a> to include additional CLI options for more granular control over the output. Experiment with compression settings to minimize token usage.</p>
+</li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of AI Repo Adventures.</p>
-<p>Congratulations on successfully deploying the Code Analysis System—your debugging prowess and refactoring skills have pushed the repository of progress to 60% completion; keep committing to greatness! 🚀💎⚡</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the repository’s inner workings.</p>
+<p>The Code Analysis Pipeline quest has been successfully executed, refactored, and committed—you&#39;re 60% deployed toward full-stack mastery; keep pushing to optimize and scale! 🚀⚡💎</p>
 
 </div>
 
