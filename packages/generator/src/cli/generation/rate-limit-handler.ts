@@ -97,7 +97,7 @@ export class RateLimitHandler {
     // Show helpful tip for future runs
     console.log();
     console.log(chalk.cyan('💡 Tip: Use --sequential flag next time for large theme sets with Azure S0'));
-    console.log(chalk.dim('   Example: repo-adventure --theme all --sequential --output ./public'));
+    console.log(chalk.dim('   Example: repo-adventures --theme all --sequential --output ./public'));
   }
 
   /**

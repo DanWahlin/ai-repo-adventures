@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Script to upload .env variables to GitHub repository secrets
+# Script to upload only the required GitHub Actions workflow secrets
+# These are the environment variables needed by .github/workflows/generate-adventure.yml
 # Requires: gh CLI (GitHub CLI) to be installed and authenticated
-# To run: ./upload-secrets.sh
+# To run: ./upload-workflow-secrets.sh
 
 set -e  # Exit on error
 
@@ -12,7 +13,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}GitHub Secrets Uploader${NC}"
+echo -e "${GREEN}GitHub Actions Workflow Secrets Uploader${NC}"
 echo "======================================"
 
 # Check if gh CLI is installed
@@ -46,20 +47,38 @@ REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 echo -e "Repository: ${GREEN}${REPO}${NC}"
 echo ""
 
+# Define the required secrets for the workflow
+REQUIRED_SECRETS=(
+    "REPO_ADV_LLM_API_KEY"
+    "REPO_ADV_LLM_BASE_URL"
+    "REPO_ADV_LLM_MODEL"
+    "REPO_ADV_LLM_API_VERSION"
+)
+
 # Preview the secrets that will be uploaded
-echo -e "${YELLOW}Preview of secrets to upload:${NC}"
+echo -e "${YELLOW}Secrets required by generate-adventure.yml workflow:${NC}"
 echo "======================================"
-while IFS='=' read -r key value || [ -n "$key" ]; do
-    # Skip comments and empty lines
-    [[ $key =~ ^[[:space:]]*# ]] && continue
-    [[ -z $key ]] && continue
-
-    # Trim whitespace
-    key=$(echo "$key" | xargs)
-
-    echo "  - $key"
-done < .env
+for secret in "${REQUIRED_SECRETS[@]}"; do
+    echo "  - $secret"
+done
 echo ""
+
+# Check if all required secrets exist in .env
+echo "Verifying secrets exist in .env file..."
+missing_secrets=()
+for secret in "${REQUIRED_SECRETS[@]}"; do
+    if ! grep -q "^${secret}=" .env; then
+        missing_secrets+=("$secret")
+    fi
+done
+
+if [ ${#missing_secrets[@]} -gt 0 ]; then
+    echo -e "${RED}Error: Missing required secrets in .env:${NC}"
+    for secret in "${missing_secrets[@]}"; do
+        echo "  - $secret"
+    done
+    exit 1
+fi
 
 # Ask for confirmation
 read -p "Do you want to upload these secrets? (y/N): " -n 1 -r
@@ -76,29 +95,19 @@ echo "======================================"
 # Counter for uploaded secrets
 count=0
 
-# Read .env file and upload each variable
-while IFS='=' read -r key value || [ -n "$key" ]; do
-    # Skip comments and empty lines
-    [[ $key =~ ^[[:space:]]*# ]] && continue
-    [[ -z $key ]] && continue
-
-    # Trim whitespace from key
-    key=$(echo "$key" | xargs)
-
-    # Extract value (everything after first =)
-    value=$(echo "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-    # Remove quotes from value if present
-    value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+# Upload each required secret
+for secret in "${REQUIRED_SECRETS[@]}"; do
+    # Extract value from .env file
+    value=$(grep "^${secret}=" .env | cut -d '=' -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
 
     # Upload secret
-    if echo "$value" | gh secret set "$key"; then
-        echo -e "  ${GREEN}✓${NC} Uploaded: $key"
+    if echo "$value" | gh secret set "$secret"; then
+        echo -e "  ${GREEN}✓${NC} Uploaded: $secret"
         ((count++))
     else
-        echo -e "  ${RED}✗${NC} Failed: $key"
+        echo -e "  ${RED}✗${NC} Failed: $secret"
     fi
-done < .env
+done
 
 echo ""
 echo "======================================"

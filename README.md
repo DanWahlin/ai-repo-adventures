@@ -607,7 +607,34 @@ tests/                             # Shared test suite
 └── integration/                   # Integration tests with LLM providers
 
 .github/workflows/                 # Automated release pipeline
-└── release.yml                    # Lerna + conventional commits automation
+├── release.yml                    # Lerna + conventional commits automation
+└── generate-adventure.yml         # Auto-generate HTML adventures on push
+```
+
+## GitHub Actions Setup
+
+The repository includes a workflow (`.github/workflows/generate-adventure.yml`) that automatically generates HTML adventures when you push commits with `update-adventures` in the message.
+
+### Required Secrets
+
+To enable the workflow, configure these GitHub repository secrets:
+
+```bash
+# Run this script to upload required secrets from your .env file
+chmod +x upload-workflow-secrets.sh
+./upload-workflow-secrets.sh
+```
+
+**Required secrets:**
+- `REPO_ADV_LLM_API_KEY` - Your LLM API key
+- `REPO_ADV_LLM_BASE_URL` - LLM API base URL
+- `REPO_ADV_LLM_MODEL` - LLM model name
+- `REPO_ADV_LLM_API_VERSION` - API version (for Azure OpenAI)
+
+**Trigger the workflow:**
+```bash
+git commit -m "update-adventures: regenerate HTML with latest changes"
+git push
 ```
 
 ## Contributing

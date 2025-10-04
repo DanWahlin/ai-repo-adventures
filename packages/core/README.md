@@ -21,8 +21,8 @@ npm install @codewithdan/ai-repo-adventures-core
 ## Usage
 
 This package is primarily used as a dependency by:
-- `@codewithdan/ai-repo-adventure-generator` - HTML generator CLI
-- `@codewithdan/ai-repo-adventure-mcp` - MCP server for Claude
+- `@codewithdan/ai-repo-adventures-generator` - HTML generator CLI
+- `@codewithdan/ai-repo-adventures-mcp` - MCP server for Claude
 
 ### Example
 

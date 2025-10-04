@@ -28,7 +28,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "repo-adventure": {
+    "repo-adventures": {
       "command": "npx",
       "args": ["@codewithdan/ai-repo-adventures-mcp"],
       "cwd": "/path/to/project/you/want/to/explore"

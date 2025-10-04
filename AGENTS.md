@@ -205,7 +205,7 @@ The typical user interaction flow:
 ```json
 {
   "mcpServers": {
-    "repo-adventure": {
+    "repo-adventures": {
       "command": "node",
       "args": ["/path/to/ai-repo-adventures/dist/server.js"],
       "cwd": "/path/to/target/project"

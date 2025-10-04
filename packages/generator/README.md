@@ -1,4 +1,4 @@
-# @codewithdan/ai-repo-adventure-generator
+# @codewithdan/ai-repo-adventures-generator
 
 Generate beautiful, interactive HTML adventure websites from your codebase! Transform your code repository into an engaging story-based exploration experience.
 
