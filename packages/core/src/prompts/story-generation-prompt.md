@@ -36,10 +36,11 @@ Create a {{theme}}-themed story that explains what the codebase does through nar
 
 ## File Coverage Enforcement
 **CRITICAL**: If Adventure Guidance contains quest definitions:
+- **Create the EXACT NUMBER of quests defined in Adventure Guidance** (if 10 quests are defined, create 10 quests)
 - **ONLY create the exact quests listed in Adventure Guidance**
 - **Ensure ALL files from Adventure Guidance are systematically covered**
 - Each quest MUST focus on its specified files - no additions or omissions
-- Apply theme to existing quest structure without changing file scope
+- Apply theme to existing quest structure without changing file scope or quest count
 
 **FORMATTING EXAMPLE**:
 ✅ CORRECT: "Explore the *Command Bridge*, where **server.ts** and **tools.ts** control starship operations"  

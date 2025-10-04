@@ -344,23 +344,30 @@ export class AdventureManager {
 
   /**
    * Enforce quest count from adventure.config.json if it exists
+   * If LLM generates fewer quests than config defines, log a warning
    */
   private enforceConfigQuestCount(quests: Quest[], projectPath: string | undefined): Quest[] {
     if (!projectPath) return quests;
-    
+
     const config = parseAdventureConfig(projectPath);
     if (!config || typeof config !== 'object') return quests;
-    
+
     const adventure = (config as any).adventure;
     if (!adventure || !Array.isArray(adventure.quests)) return quests;
-    
+
     const configQuestCount = adventure.quests.length;
-    
+
     // If we have more quests than the config defines, limit to match config
     if (quests.length > configQuestCount) {
+      console.warn(`LLM generated ${quests.length} quests but adventure.config.json defines ${configQuestCount}. Limiting to ${configQuestCount} quests.`);
       return quests.slice(0, configQuestCount);
     }
-    
+
+    // If we have fewer quests than the config defines, warn the user
+    if (quests.length < configQuestCount) {
+      console.warn(`LLM generated only ${quests.length} quests but adventure.config.json defines ${configQuestCount}. The LLM may have ignored some quest definitions.`);
+    }
+
     return quests;
   }
 
