@@ -16,13 +16,13 @@ Generate beautiful, interactive HTML adventure websites from your codebase! Tran
 ## Installation
 
 ```bash
-npm install -g @codewithdan/ai-repo-adventure-generator
+npm install -g @codewithdan/ai-repo-adventures-generator
 ```
 
 Or use directly with npx:
 
 ```bash
-npx @codewithdan/ai-repo-adventure-generator
+npx @codewithdan/ai-repo-adventures-generator
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ npx @codewithdan/ai-repo-adventure-generator
 Simply run the command in your project directory:
 
 ```bash
-repo-adventure
+repo-adventures
 ```
 
 This will guide you through:
@@ -43,7 +43,7 @@ This will guide you through:
 ### Command-Line Options
 
 ```bash
-repo-adventure [options]
+repo-adventures [options]
 
 Options:
   --theme <theme>        Theme: space, mythical, ancient, developer, custom, or all
@@ -55,9 +55,9 @@ Options:
   --help, -h            Show help message
 
 Examples:
-  repo-adventure --theme space --output ./docs --overwrite
-  repo-adventure --theme all --output ./public --overwrite  # Generate all themes
-  repo-adventure --theme mythical --max-quests 3 --serve    # Limit quests and auto-serve
+  repo-adventures --theme space --output ./docs --overwrite
+  repo-adventures --theme all --output ./public --overwrite  # Generate all themes
+  repo-adventures --theme mythical --max-quests 3 --serve    # Limit quests and auto-serve
 ```
 
 ## Configuration

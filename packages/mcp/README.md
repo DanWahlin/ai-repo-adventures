@@ -1,4 +1,4 @@
-# @codewithdan/ai-repo-adventure-mcp
+# @codewithdan/ai-repo-adventures-mcp
 
 MCP (Model Context Protocol) server for AI-powered code repository exploration through interactive storytelling. Turn your codebase into an engaging adventure!
 
@@ -18,7 +18,7 @@ MCP (Model Context Protocol) server for AI-powered code repository exploration t
 1. Install the package globally:
 
 ```bash
-npm install -g @codewithdan/ai-repo-adventure-mcp
+npm install -g @codewithdan/ai-repo-adventures-mcp
 ```
 
 2. Add to Claude Desktop configuration:
@@ -30,7 +30,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "repo-adventure": {
       "command": "npx",
-      "args": ["@codewithdan/ai-repo-adventure-mcp"],
+      "args": ["@codewithdan/ai-repo-adventures-mcp"],
       "cwd": "/path/to/project/you/want/to/explore"
     }
   }
@@ -40,7 +40,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ### For Development
 
 ```bash
-npm install @codewithdan/ai-repo-adventure-mcp
+npm install @codewithdan/ai-repo-adventures-mcp
 ```
 
 ## Available MCP Tools
@@ -174,4 +174,4 @@ Dan Wahlin
 
 - [GitHub Repository](https://github.com/danwahlin/ai-repo-adventures)
 - [Report Issues](https://github.com/danwahlin/ai-repo-adventures/issues)
-- [NPM Package](https://www.npmjs.com/package/@codewithdan/ai-repo-adventure-mcp)
+- [NPM Package](https://www.npmjs.com/package/@codewithdan/ai-repo-adventures-mcp)

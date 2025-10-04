@@ -270,8 +270,8 @@ This project uses **Lerna** with **conventional commits** for automated versioni
 
 ### **📦 Available Packages**
 
-- **`@codewithdan/ai-repo-adventure-generator`** - CLI tool for generating HTML adventure websites
-- **`@codewithdan/ai-repo-adventure-mcp`** - Model Context Protocol server for interactive code exploration
+- **`@codewithdan/ai-repo-adventures-generator`** - CLI tool for generating HTML adventure websites
+- **`@codewithdan/ai-repo-adventures-mcp`** - Model Context Protocol server for interactive code exploration
 
 ### **🔄 Release Process**
 
@@ -581,7 +581,7 @@ packages/
 │           ├── config.ts           # Configuration and environment settings
 │           ├── input-validator.ts  # Security and input validation
 │           └── adventure-config.ts # Adventure configuration parser
-├── generator/                      # @codewithdan/ai-repo-adventure-generator (HTML CLI)
+├── generator/                      # @codewithdan/ai-repo-adventures-generator (HTML CLI)
 │   └── src/cli/
 │       ├── html-generator.ts       # Interactive HTML adventure generator with CLI options
 │       ├── template-engine.ts      # HTML template processor with variable substitution
@@ -596,7 +596,7 @@ packages/
 │           ├── custom.css          # Custom theme base
 │           ├── base.css            # Base styling for all themes
 │           └── animations.css      # CSS animations and transitions
-└── mcp/                           # @codewithdan/ai-repo-adventure-mcp (MCP server)
+└── mcp/                           # @codewithdan/ai-repo-adventures-mcp (MCP server)
     └── src/
         ├── server.ts              # Main MCP server entry point
         └── tools/                 # MCP tool definitions
