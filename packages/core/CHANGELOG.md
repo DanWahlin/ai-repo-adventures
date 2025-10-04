@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.13](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.8.12...@codewithdan/ai-repo-adventures-core@1.8.13) (2025-10-04)
+
+
+### Bug Fixes
+
+* update package names and workflow secrets for consistency ([82e104e](https://github.com/danwahlin/ai-repo-adventures/commit/82e104e67301aab433df474b7b8e6069c9cfd13f))
+
+
+
+
+
 ## [1.8.12](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-core@1.8.11...@codewithdan/ai-repo-adventures-core@1.8.12) (2025-10-04)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventures-core
