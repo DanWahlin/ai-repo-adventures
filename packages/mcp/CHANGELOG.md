@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.30](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-mcp@1.1.29...@codewithdan/ai-repo-adventure-mcp@1.1.30) (2025-10-04)
+
+
+### Bug Fixes
+
+* update environment variable prefixes to REPO_ADV for mor uniqueness across configurations ([1fd9960](https://github.com/danwahlin/ai-repo-adventures/commit/1fd996025632b9c05ee8404cb28098d4bd3b8aa4))
+
+
+
+
+
 ## [1.1.29](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-mcp@1.1.28...@codewithdan/ai-repo-adventure-mcp@1.1.29) (2025-10-04)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventure-mcp
