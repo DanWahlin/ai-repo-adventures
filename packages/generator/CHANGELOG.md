@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 1.10.0 (2025-10-04)
+
+
+### Bug Fixes
+
+* Improve flow in theme generation process and cleanup handling ([6ab7091](https://github.com/danwahlin/ai-repo-adventures/commit/6ab7091fe4c408bbe5c5c289ab45e0c1732dfc6b))
+* Remove console log for homepage index creation ([149e7c6](https://github.com/danwahlin/ai-repo-adventures/commit/149e7c628561c91a07b46af4aba1161732e64f99))
+* Rename "Change Theme" to "Change Adventure" in HTML templates and styles for clarity ([8b2c88a](https://github.com/danwahlin/ai-repo-adventures/commit/8b2c88a7aa3bef727f0ef5d5e68c40e42156e4d0))
+* Save quest content to unique files per quest in HTMLAdventureGenerator ([1d608a1](https://github.com/danwahlin/ai-repo-adventures/commit/1d608a1cd1799a23747e8c5220f4d0432cfbb627))
+* standardize quest prefix terminology across themes and clean up title parsing ([dde3a7a](https://github.com/danwahlin/ai-repo-adventures/commit/dde3a7a16c7f1cae9ce3644fc2b27675738dcdcc))
+* update environment variable prefixes to REPO_ADV for mor uniqueness across configurations ([1fd9960](https://github.com/danwahlin/ai-repo-adventures/commit/1fd996025632b9c05ee8404cb28098d4bd3b8aa4))
+* update package names and commands for consistency across documentation and configuration ([6e1d6bc](https://github.com/danwahlin/ai-repo-adventures/commit/6e1d6bc556ba084b2e7ceae90b274fc374f6bddc))
+* update package names and workflow secrets for consistency ([82e104e](https://github.com/danwahlin/ai-repo-adventures/commit/82e104e67301aab433df474b7b8e6069c9cfd13f))
+
+
+### Features
+
+* Add Microsoft Clarity and Google Analytics tracking support in adventure configuration and templates ([4e1cc1d](https://github.com/danwahlin/ai-repo-adventures/commit/4e1cc1d519081a54858ff341ad2378fff27f2058))
+* Enhance quest content generation and logging features ([978b185](https://github.com/danwahlin/ai-repo-adventures/commit/978b185ab7abb47e64461f3b610bde0e5270e709))
+* Implement automatic mode switching for token rate limit handling ([da953b6](https://github.com/danwahlin/ai-repo-adventures/commit/da953b671661a8f2876f65f23d1c9b8b84639dc3))
+* Implement comprehensive HTML and markdown validation utilities ([0b66d6e](https://github.com/danwahlin/ai-repo-adventures/commit/0b66d6e30702d13454800265c69f942c1a9a39ae))
+* Implement DevServer for serving generated adventure files ([674b837](https://github.com/danwahlin/ai-repo-adventures/commit/674b837172474d61ad8f2c52a1dcbdb2d1524834))
+* Improve logging and content processing in various modules; update templates and styles ([e296115](https://github.com/danwahlin/ai-repo-adventures/commit/e2961159c148bac80b2333c607fe53e78022abd9))
+* Refactor package structure and update dependencies to use [@codewithdan](https://github.com/codewithdan) scope; add README for core package ([c94f05d](https://github.com/danwahlin/ai-repo-adventures/commit/c94f05da8a1732409b35e594d79c35de2ce299d2))
+* update logging options in CLI and documentation for clarity ([88167bd](https://github.com/danwahlin/ai-repo-adventures/commit/88167bd1a346e410bb12a596bd4c2d2001aa62bd))
+
+
+
+
+
 ## [1.9.2](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventures-generator@1.9.1...@codewithdan/ai-repo-adventures-generator@1.9.2) (2025-10-04)
 
 
