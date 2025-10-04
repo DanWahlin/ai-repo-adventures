@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Dragon of Code Analysis - Repo Adventure</title>
+    <title>The Dragon’s Insight - Repo Adventure</title>
     <link rel="stylesheet" href="assets/theme.css">
     <link rel="stylesheet" href="../assets/shared/quest-navigator.css">
     <link rel="stylesheet" href="../assets/theme-toggle.css">
@@ -42,7 +42,7 @@
                 <a href="https://github.com/danwahlin/ai-repo-adventures" target="_blank" rel="noopener noreferrer" class="github-link">
                     <img src="../assets/shared/github-mark.svg" alt="GitHub" width="24" height="24">
                 </a>
-                <a href="index.html">The Enchanted Repository Chronicles</a>
+                <a href="index.html">The Enchanted Repository of Adventures</a>
             </div>
             <div class="nav-middle">
             </div>
@@ -66,62 +66,96 @@
     
     <div class="container">
         <div class="quest-content">
-    <h1>Quest 4: The Dragon of Code Analysis</h1>
+    <h1>Quest 4: The Dragon’s Insight</h1>
 <hr>
-<p>In the mystical Kingdom of Code, the Dragon of Code Analysis guards the enchanted repository&#39;s most profound secrets. This mythical beast, known as Repomix, breathes streams of structured data, revealing the essence of every file in its domain. To access the repository&#39;s treasures, adventurers must tame the Dragon by mastering its intricate patterns and decoding its magical language. Armed with the wisdom of the LLM Oracle, you will delve into the heart of the Dragon&#39;s lair, unraveling the mysteries of code analysis and dynamic content generation.</p>
+<p>Upon entering the Dragon Hoard’s grand chamber, you are greeted by the shimmering glow of ancient scrolls resting atop piles of enchanted gold. The Dragon of Insight, a wise and formidable being, guards these treasures. To gain its favor, you must prove your mastery over the kingdom&#39;s enchanted technologies. By decoding the scrolls, you will unlock the secrets of the Dragon’s wisdom, enabling you to weave powerful spells that bring harmony to Codehaven. Tread carefully, for only the worthy may command such knowledge.</p>
 <h2>Key Takeaways</h2>
 <p>After completing this quest, you will understand:</p>
 <ul>
-<li>🎯 <strong>Repomix Integration</strong>: How the <code class="inline-code">RepoAnalyzer</code> leverages Repomix to extract targeted content from complex codebases.</li>
-<li>🔍 <strong>LLM Request Optimization</strong>: How the <code class="inline-code">LLMClient</code> constructs efficient prompts and handles rate limits for dynamic story generation.</li>
-<li>⚡ <strong>Caching Strategy</strong>: How caching is used to optimize performance and prevent redundant computations.</li>
-<li>💡 <strong>Error Handling Patterns</strong>: How robust error handling ensures stability during subprocess execution and API calls.</li>
+<li>🎯 <strong>Content Optimization</strong>: How to extract meaningful code snippets for efficient processing.</li>
+<li>🔍 <strong>LLM Integration</strong>: How LLMs are configured and utilized for dynamic content generation.</li>
+<li>⚡ <strong>Error Handling Patterns</strong>: Effective techniques for managing rate limits and ensuring system stability.</li>
+<li>💡 <strong>Caching Strategies</strong>: How caching improves performance and reduces redundant computations.</li>
 </ul>
 <h2>File Exploration</h2>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/analyzer/repo-analyzer.ts</code></a></h3>
-<p>The <code class="inline-code">RepoAnalyzer</code> serves as the Dragon&#39;s handler, orchestrating Repomix subprocesses to extract meaningful code content. It preprocesses documentation, validates file paths, and optimizes content for token efficiency. This module demonstrates advanced subprocess management, caching strategies, and content extraction techniques critical for dynamic code analysis.</p>
+<p>The <code class="inline-code">RepoAnalyzer</code> is a mystical tool that extracts insights from the kingdom&#39;s codebase, much like a sage reading ancient runes. It processes and optimizes content from the repository, ensuring only the most critical information is passed to the Messenger Spirits (LLMs). This file demonstrates techniques for content extraction, validation, and optimization, ensuring efficient and secure processing.</p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L296" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateRepomixContext</code></a> dynamically analyzes the codebase, leveraging Repomix to generate structured content.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L246" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateTargetedContent</code></a> extracts specific file content, applying security validation and compression optimizations.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a> executes the Repomix subprocess, handling timeouts and memory limits gracefully.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L296" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateRepomixContext</code></a>: Generates a comprehensive summary of the repository, leveraging caching for efficiency.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L246" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateTargetedContent</code></a>: Focuses on specific files, extracting optimized content for targeted analysis.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a>: Executes the Repomix subprocess, capturing its output while enforcing memory and time limits.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">async generateRepomixContext(projectPath: string, options: RepomixOptions = {}): Promise&lt;string&gt; {
   this.validateProjectPath(projectPath);
+
+  const configuredFiles = extractUniqueFilePaths(projectPath);
+
+  if (configuredFiles.length &gt; 0) {
+    try {
+      return await this.generateOptimizedContent(projectPath, configuredFiles);
+    } catch (error) {
+      console.warn(`Fallback to targeted content: ${error.message}`);
+      return await this.generateTargetedContent(projectPath, configuredFiles);
+    }
+  }
+
   const cacheKey = `${path.resolve(projectPath)}:${JSON.stringify(options)}`;
   const cached = this.cache.get(cacheKey);
   if (cached &amp;&amp; (Date.now() - cached.timestamp) &lt; REPOMIX_CACHE_TTL) {
     return cached.content;
   }
+
   const context = await this.captureRepomixStdout([&#39;.&#39;], projectPath, {
     style: options.style || &#39;markdown&#39;,
     compress: options.compress !== false,
-    ignore: [&#39;node_modules&#39;, &#39;dist&#39;, &#39;build&#39;, &#39;.git&#39;],
-    removeComments: true,
-    removeEmptyLines: true,
-    noDirectoryStructure: true,
+    ignore: [&#39;node_modules&#39;, &#39;dist&#39;, &#39;.git&#39;].join(&#39;,&#39;),
   });
+
   this.cache.set(cacheKey, { content: context, timestamp: Date.now() });
   return context;
 }
 </code></pre>
 <ul>
-<li>This code validates paths and caches results to optimize performance during repeated analyses.</li>
-<li>It configures Repomix options dynamically based on user preferences, ensuring flexibility.</li>
-<li>The caching strategy reduces redundant subprocess executions, improving efficiency.</li>
-<li>Security checks prevent path traversal and ensure safe file operations.</li>
-<li>The modular design enables easy extension for additional analysis options.</li>
+<li>This function generates repository insights, using caching to avoid redundant computations.</li>
+<li>It gracefully falls back to alternative methods if optimized content generation fails.</li>
+<li>The use of <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a> ensures secure and efficient subprocess execution.</li>
+<li>Validation steps protect against invalid paths or unsafe operations.</li>
+<li>The caching mechanism reduces the load on the system by reusing recent results.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">private async captureRepomixStdout(directories: string[], cwd: string, options: CliOptions): Promise&lt;string&gt; {
   return new Promise((resolve, reject) =&gt; {
-    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style], { cwd });
+    const args = [...directories, &#39;--stdout&#39;, &#39;--style&#39;, options.style || &#39;markdown&#39;];
+    if (options.compress) args.push(&#39;--compress&#39;);
+    const repomix = spawn(&#39;npx&#39;, [&#39;repomix&#39;, ...args], { cwd, stdio: [&#39;pipe&#39;, &#39;pipe&#39;, &#39;pipe&#39;] });
+
     let stdout = &#39;&#39;;
     let stderr = &#39;&#39;;
-    repomix.stdout.on(&#39;data&#39;, (data) =&gt; { stdout += data.toString(); });
-    repomix.stderr.on(&#39;data&#39;, (data) =&gt; { stderr += data.toString(); });
+    let stdoutSize = 0;
+
+    const timeout = setTimeout(() =&gt; {
+      repomix.kill(&#39;SIGTERM&#39;);
+      setTimeout(() =&gt; repomix.kill(&#39;SIGKILL&#39;), REPOMIX_GRACEFUL_TIMEOUT);
+      reject(new Error(`Repomix subprocess timed out`));
+    }, REPOMIX_SUBPROCESS_TIMEOUT);
+
+    repomix.stdout.on(&#39;data&#39;, (data) =&gt; {
+      stdoutSize += data.length;
+      if (stdoutSize &gt; REPOMIX_MAX_BUFFER_SIZE) {
+        repomix.kill(&#39;SIGKILL&#39;);
+        reject(new Error(`Repomix output too large`));
+      }
+      stdout += data.toString();
+    });
+
+    repomix.stderr.on(&#39;data&#39;, (data) =&gt; {
+      stderr += data.toString();
+    });
+
     repomix.on(&#39;close&#39;, (code) =&gt; {
+      clearTimeout(timeout);
       if (code === 0) resolve(stdout);
       else reject(new Error(`Repomix failed: ${stderr}`));
     });
@@ -129,77 +163,98 @@
 }
 </code></pre>
 <ul>
-<li>This function manages the execution of the Repomix subprocess, capturing its output for further processing.</li>
-<li>It handles subprocess errors gracefully, ensuring stability during execution.</li>
-<li>The use of Promises enables asynchronous operation, improving responsiveness.</li>
-<li>The modular subprocess configuration allows for flexible integration with different analysis tools.</li>
-<li>Memory and timeout safeguards prevent resource exhaustion during execution.</li>
+<li>This function securely executes the Repomix tool, capturing its output while enforcing memory and timeout constraints.</li>
+<li>It uses a subprocess to isolate execution, ensuring the main application remains stable.</li>
+<li>Timeout and buffer size limits prevent resource exhaustion, enhancing reliability.</li>
+<li>Error handling provides detailed feedback, aiding in debugging and system resilience.</li>
+<li>The use of promises ensures asynchronous execution without blocking other operations.</li>
 </ul>
 <hr>
 <h3><span class="header-prefix">File:</span> <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts" target="_blank" rel="noopener noreferrer"><code class="inline-code">packages/core/src/llm/llm-client.ts</code></a></h3>
-<p>The <code class="inline-code">LLMClient</code> acts as the Oracle, interfacing with various LLM providers to generate dynamic content. It constructs prompts, handles rate limits, and processes responses to ensure seamless integration with the adventure system. This module showcases adaptive throttling, error detection, and response validation patterns.</p>
+<p>The <code class="inline-code">LLMClient</code> acts as the Messenger Spirit, bridging the mortal realm and the ethereal domain of large language models. It handles communication with the LLMs, ensuring requests are formatted correctly and responses are processed efficiently. This file showcases adaptive throttling, error handling, and API integration.</p>
 <h4>Highlights</h4>
 <ul>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a> constructs and executes LLM requests, handling errors and rate limits dynamically.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L234" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateResponse</code></a> ensures the integrity of LLM responses, processing content for downstream use.</li>
-<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L437" target="_blank" rel="noopener noreferrer"><code class="inline-code">activateThrottling</code></a> manages adaptive delays to comply with rate limits and prevent API overload.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a>: Sends prompts to the LLM and processes responses, with robust error handling.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L437" target="_blank" rel="noopener noreferrer"><code class="inline-code">activateThrottling</code></a>: Manages rate limits by dynamically adjusting request delays.</li>
+<li><a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L312" target="_blank" rel="noopener noreferrer"><code class="inline-code">logDetailedError</code></a>: Provides comprehensive error logging for debugging and analysis.</li>
 </ul>
 <h4>Code</h4>
 <pre><code class="language-typescript">async generateResponse(prompt: string, options?: LLMRequestOptions): Promise&lt;LLMResponse&gt; {
   await this.applyThrottling();
-  const requestParams = this.buildRequestParams(prompt, options);
-  const completion = await this.executeRequest(requestParams);
-  let content = this.validateResponse(completion);
-  if (options?.responseFormat === &#39;json_object&#39;) {
-    content = this.cleanJsonResponse(content);
+
+  try {
+    const requestParams = this.buildRequestParams(prompt, options);
+    const completion = await this.executeRequest(requestParams);
+    let content = this.validateResponse(completion);
+
+    if (options?.responseFormat === &#39;json_object&#39;) {
+      content = this.cleanJsonResponse(content);
+    }
+
+    this.logTokenUsage(completion, options?.context);
+    this.onSuccessfulRequest();
+
+    return { content };
+  } catch (error) {
+    const rateLimitInfo = this.detectRateLimitType(error);
+    if (rateLimitInfo.type !== RateLimitType.NONE) {
+      this.activateThrottling(error);
+      throw new RateLimitError(rateLimitInfo.type, rateLimitInfo.waitSeconds, rateLimitInfo.message, error);
+    }
+
+    this.logDetailedError(error, prompt);
+    throw new Error(`LLM request failed: ${error.message}`);
   }
-  this.logTokenUsage(completion, options?.context);
-  this.onSuccessfulRequest();
-  return { content };
 }
 </code></pre>
 <ul>
-<li>This function constructs LLM requests dynamically, adapting to different models and configurations.</li>
-<li>It applies throttling to comply with rate limits, ensuring stability during high-demand scenarios.</li>
-<li>Response validation ensures that only meaningful content is passed downstream.</li>
-<li>Logging provides transparency into token usage and request outcomes.</li>
-<li>Modular design supports multiple LLM providers and response formats.</li>
+<li>This function manages the full lifecycle of an LLM request, from throttling to response validation.</li>
+<li>It uses adaptive throttling to handle rate limits dynamically, ensuring system stability.</li>
+<li>The error handling logic distinguishes between different types of failures, providing tailored responses.</li>
+<li>Token usage logging offers insights into system performance and resource consumption.</li>
+<li>JSON responses are cleaned to ensure compatibility with downstream processes.</li>
 </ul>
 <hr>
 <pre><code class="language-typescript">private activateThrottling(error: any): void {
   this.isThrottling = true;
   const rateLimitInfo = this.detectRateLimitType(error);
-  this.throttleDelay = Math.min(rateLimitInfo.waitSeconds * 1000, LLM_MAX_THROTTLE_DELAY);
+
+  if (rateLimitInfo.type !== RateLimitType.NONE) {
+    this.throttleDelay = Math.min(rateLimitInfo.waitSeconds * 1000, this.MAX_THROTTLE_DELAY);
+  } else {
+    this.throttleDelay = Math.min(this.throttleDelay * 2, this.MAX_THROTTLE_DELAY);
+  }
+
   console.error(`🐌 Throttling activated: ${(this.throttleDelay / 1000).toFixed(1)}s delay.`);
 }
 </code></pre>
 <ul>
-<li>This function activates adaptive throttling based on detected rate limits, preventing API overload.</li>
-<li>It calculates delay dynamically, balancing responsiveness with compliance.</li>
-<li>Logging provides clear feedback on throttling activation and delay duration.</li>
-<li>The modular design allows for easy integration with different rate limit detection mechanisms.</li>
-<li>Adaptive throttling ensures stability during prolonged high-demand scenarios.</li>
+<li>This function dynamically adjusts the request delay based on rate limit information.</li>
+<li>It ensures the system remains operational even under heavy load or restrictive limits.</li>
+<li>The gradual increase and decrease of delays balance responsiveness with stability.</li>
+<li>Clear logging informs developers about the current state of throttling.</li>
+<li>This approach prevents excessive API calls, reducing the risk of further rate limits.</li>
 </ul>
 <hr>
 <h2>Helpful Hints</h2>
 <ul>
-<li>Study how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L296" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateRepomixContext</code></a> leverages caching to optimize performance during repeated analyses.</li>
-<li>Explore the adaptive throttling mechanism in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L437" target="_blank" rel="noopener noreferrer"><code class="inline-code">activateThrottling</code></a> to understand how rate limits are handled dynamically.</li>
-<li>Examine the subprocess management in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L610" target="_blank" rel="noopener noreferrer"><code class="inline-code">captureRepomixStdout</code></a> to learn best practices for integrating external tools.</li>
+<li>Use <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L296" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateRepomixContext</code></a> to analyze large repositories efficiently, leveraging caching for repeated operations.</li>
+<li>Study how <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a> handles LLM interactions, particularly its adaptive throttling mechanism.</li>
+<li>Explore the error logging in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L312" target="_blank" rel="noopener noreferrer"><code class="inline-code">logDetailedError</code></a> to understand how detailed diagnostics can aid debugging.</li>
 </ul>
 <h2>Try This</h2>
 <p>Challenge yourself to deepen your understanding:</p>
 <ol>
-<li><p><strong>Optimize Content Extraction</strong>: Modify the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L368" target="_blank" rel="noopener noreferrer"><code class="inline-code">extractFunctionFocusedContent</code></a> method in <code class="inline-code">RepoAnalyzer</code> to include additional filtering for unused imports. This will help you understand token optimization techniques.</p>
+<li><p><strong>Optimize Content Extraction</strong>: Modify <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/analyzer/repo-analyzer.ts#L246" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateTargetedContent</code></a> to include additional filters for extracting only high-priority functions. Test it on a sample repository to observe the impact on output size and quality.</p>
 </li>
-<li><p><strong>Trace Throttling Behavior</strong>: Add logging statements in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L462" target="_blank" rel="noopener noreferrer"><code class="inline-code">applyThrottling</code></a> to monitor delay adjustments after each successful request. Run multiple requests to observe how throttling adapts dynamically.</p>
+<li><p><strong>Simulate Rate Limits</strong>: Introduce artificial delays in <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L140" target="_blank" rel="noopener noreferrer"><code class="inline-code">generateResponse</code></a> to simulate rate limits. Observe how the system adapts and maintains stability under constrained conditions.</p>
 </li>
-<li><p><strong>Enhance Error Handling</strong>: Extend the <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L234" target="_blank" rel="noopener noreferrer"><code class="inline-code">validateResponse</code></a> method in <code class="inline-code">LLMClient</code> to include additional checks for unsupported response formats. This will demonstrate robust error handling practices.</p>
+<li><p><strong>Extend Error Handling</strong>: Enhance <a href="https://github.com/danwahlin/ai-repo-adventures/blob/main/packages/core/src/llm/llm-client.ts#L312" target="_blank" rel="noopener noreferrer"><code class="inline-code">logDetailedError</code></a> to include more contextual information, such as the size of the prompt and the response time. This will help in analyzing performance bottlenecks.</p>
 </li>
 </ol>
 <hr>
-<p>Excellent work! Continue to the next quest to uncover more mysteries of the enchanted repository.</p>
-<p>Hail, valiant coder, for you have vanquished the Dragon of Code Analysis with wisdom and might, carving your path through the Kingdom of Logic—press onward, for the stars of mastery await your triumphant ascent! ⭐⚡🚀</p>
+<p>Excellent work! Continue to the next quest to uncover more mysteries of the enchanted kingdom.</p>
+<p>With the wisdom of the ancient wyrm now coursing through your veins, noble hero, you ascend as a beacon of brilliance in the realm—forge onward, for the stars themselves herald your triumph! ⭐⚡💎</p>
 
 </div>
 

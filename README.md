@@ -4,267 +4,73 @@
 
 A fun, Model Context Protocol (MCP) server and/or HTML generator that transforms code repositories into interactive adventures! Explore codebases through engaging stories with themes and characters that represent different technologies and architectural components.
 
+- [Live demo - explore this repo!](https://danwahlin.github.io/ai-repo-adventures/examples/index.html)
+- [Get started using AI Repo Adventures with your repo](https://github.com/danwahlin/ai-repo-adventures)
+
 ## Features
 
 🎮 **Story-based Code Exploration** - Turn learning about codebases into a "choose your own adventure" story
 📚 **Educational Analogies** - Complex technical concepts explained through relatable story elements  
-🌟 **Multiple Themes** - Choose from Space, Medieval, or Ancient Civilization themes
+🌟 **Multiple Themes** - Choose from Space, Mythical, Ancient Civilization, or Developer themes
 🤖 **Character-Based Learning** - Meet characters that represent different technologies (Database Dragons, API Messengers, etc.)
 🔍 **Choose Your Own Adventure** - Interactive exploration paths through the codebase
 🌐 **HTML Adventure Generation** - Export your adventures as beautiful, standalone HTML websites
-🚀 **Auto-Launch Web Server** - Automatically starts a local server and opens your adventure in the browser
-🎨 **Themed Styling** - Rich CSS themes with gradient titles, code highlighting, and responsive design
+🎨 **Themed Styling** - Rich CSS themes with gradient titles, code highlighting, light/dark modes, and responsive design
 
-## How It Works
-
-1. **Start Adventure** - The server analyzes your project using repomix and presents theme options
-2. **Choose Theme** - Select from Space Exploration, Mythical Kingdom, or Ancient Civilization
-3. **Explore Quests** - Follow dynamically generated quest paths through your codebase
-4. **View Progress** - Track your exploration progress and see completed areas
-5. **Learn Through Story** - Understand complex systems through engaging LLM-generated narratives
-6. **Export to HTML** - Generate beautiful web adventures for sharing or offline exploration
-
-## Architecture Flow
+## Architecture Overview
 
 ```mermaid
 graph TD
-    A[MCP Server Package] -->|start_adventure| B[Core: RepoAnalyzer]
-    B --> C[Generate Repomix Content]
-    C --> D[Return Theme Options]
-    
-    A -->|choose_theme| E[Core: AdventureManager]
-    E --> F[Core: StoryGenerator]
-    F --> G[Load adventure.config.json]
-    G --> H[Core: LLM Client]
-    H --> I[Generate Story + Quests]
-    I --> J[Return Themed Story]
-    
-    A -->|explore_quest| K[Core: Find Quest]
-    K --> L[Core: Generate Targeted Content]
-    L --> M[Core: LLM Quest Content]
-    M --> N[Core: Update Progress]
-    N --> O[Return Quest Details]
-    
-    A -->|view_progress| P[Core: Get Progress State]
-    P --> Q[Return Completion Stats]
-    
-    R[Generator Package] --> E
-    R --> S[Generator: TemplateEngine]
-    S --> T[Generator: Generate Themed CSS]
-    S --> U[Generator: Format Markdown Content]
-    R --> V[Generator: Copy GitHub Logos]
-    R --> W[Generator: Build Quest Pages]
-    R --> X[Generator: Auto-Launch Server]
-    R --> Y[Generator: Open Browser]
-    
-    style B fill:#e8f5e8
-    style E fill:#fff3e0
-    style H fill:#e1f5fe
-    style R fill:#f3e5f5
-    style S fill:#e8f5e8
+    subgraph "HTML Generator CLI (Primary Use)"
+        A[CLI Entry] --> B[Theme Selection]
+        B --> C[RepoAnalyzer]
+        C --> D[Repomix + adventure.config.json]
+
+        D --> E[AdventureManager]
+        E --> F[StoryGenerator]
+        F --> G[LLM Client]
+        G --> H[Story + Quests JSON]
+
+        H --> I[ContentProcessor]
+        I --> J[Markdown → HTML]
+
+        H --> K[TemplateEngine]
+        K --> L[Theme CSS + Templates]
+
+        J --> M[HTMLBuilder]
+        L --> M
+        M --> N[Quest Pages]
+
+        N --> O[DevServer + Browser]
+    end
+
+    subgraph "MCP Server"
+        P[start_adventure] --> C
+        Q[choose_theme] --> E
+        R[explore_quest] --> E
+        S[view_progress] --> E
+    end
+
+    style G fill:#e1f5fe
+    style A fill:#f3e5f5
+    style M fill:#e8f5e8
 ```
 
-## 🔍 Project Context Gathering & LLM Integration
+**Primary Flow (HTML Generator):**
+1. **Analyze** → Repomix scans codebase + loads `adventure.config.json`
+2. **Generate Content** → LLM creates themed story and quests (2-6 quests per theme)
+3. **Build HTML** → TemplateEngine applies theme CSS, ContentProcessor converts markdown
+4. **Serve** → DevServer launches on port 8080, auto-opens browser
 
-### Data Flow Architecture
+**Alternative Flow (MCP Server):**
+- Same core logic, but returns JSON for interactive terminal exploration
+- 4 tools: `start_adventure`, `choose_theme`, `explore_quest`, `view_progress`
 
-```mermaid
-graph TD
-    A[User: start_adventure] --> B[Core: RepoAnalyzer]
-    B --> C[Repomix CLI]
-    C --> D[Complete Codebase Content]
-    
-    B --> E[adventure.config.json]
-    E --> F[Adventure Guidance]
-    
-    D --> G[Core: LLM Prompt Builder]
-    F --> G
-    
-    G --> H[Core: LLM API]
-    H --> I[Generated Story & Quests]
-    
-    J[Generator: HTML CLI] --> K[Core: AdventureManager]
-    K --> L[Core: StoryGenerator] 
-    L --> H
-    J --> M[Generator: TemplateEngine]
-    M --> N[Generator: Theme CSS Files]
-    M --> O[Generator: HTML Templates]
-    J --> P[Generator: Markdown Formatter]
-    P --> Q[Generator: Code Highlighting]
-    P --> R[Generator: File Path Links]
-    J --> S[Generator: HTTP Server]
-    J --> T[Generator: Auto Browser Launch]
-    
-    U[Core: Input Validator] --> B
-    U --> K
-    V[Core: Cache System] --> C
-    V --> H
-    
-    style H fill:#e1f5fe
-    style J fill:#f3e5f5
-    style N fill:#e8f5e8
-    style V fill:#fff3e0
-```
-
-### Phase 1: Project Analysis & Context Gathering
-
-#### Step 1: Initial Project Scan
-**Location:** `packages/core/src/analyzer/repo-analyzer.ts`
-
-When `start_adventure` is called, the system:
-1. **Executes Repomix CLI** as a subprocess (`npx repomix`)
-2. **Captures stdout** containing the entire codebase structure and content
-3. **Caches result** with SHA256 hash for 5-minute reuse
-
-**Repomix Output Structure:**
-```markdown
-# Project Summary
-- Files: 50
-- Languages: TypeScript (85%), JavaScript (15%)
-
-## File: src/server.ts
-```typescript
-class RepoAdventureServer {
-  constructor() { ... }
-  setupHandlers() { ... }
-}
-```
-// ... continues for ALL files in the project
-```
-
-#### Step 2: Quest Config Loading
-**Location:** `packages/core/src/shared/adventure-config.ts`
-
-Optionally loads `adventure.config.json` from the project root, which provides:
-- Predefined quest titles and descriptions
-- Important files and functions to highlight
-- Workshop-style exploration guidance
-
-### Phase 2: LLM Prompt Construction
-
-#### What Gets Sent to LLM for Initial Story Generation
-
-The system sends a comprehensive prompt containing:
-
-1. **Complete Repomix Output** - Every file in the project with full content
-2. **Quest Config Guidance** (if available) - Predefined quests with highlighted functions
-3. **Theme Guidelines** - Vocabulary, metaphors, and style rules for the selected theme
-4. **Critical Instructions** - Rules for code authenticity and story structure
-
-**Example prompt structure:**
-```markdown
-You are a technical education specialist creating story-based workshops...
-
-## Complete Codebase
-[Full repomix output with all files]
-
-## Quest Guidance
-Quest: "Core MCP Server"
-Files:
-    File: src/server.ts
-    Key Functions:
-      - RepoAdventureServer.setupHandlers: Registers handlers
-      [... more highlights]
-
-## Theme Guidelines
-[Space/Mythical/Ancient vocabulary and mappings]
-
-## Response Format
-Return JSON with story and adventures array
-```
-
-#### LLM Response
-The LLM generates:
-- A 2-3 paragraph themed story introducing the codebase
-- 2-6 dynamic quests based on project complexity
-- Each quest includes specific files to explore
-
-### Phase 3: Individual Quest Content Generation
-
-#### What Gets Sent for Each Quest
-
-When exploring a specific quest:
-
-1. **Targeted File Content** - Only files relevant to that quest
-2. **Workshop Highlights** - Specific functions to explore step-by-step
-3. **Theme Continuity** - Same vocabulary for consistent narrative
-4. **Code Authenticity Rules** - Must use actual code from files
-
-**Example quest prompt:**
-```markdown
-Continue the space-themed exploration for: "Command Protocols"
-
-## Complete Codebase
-[Only relevant files for this quest]
-
-## Workshop Highlights (Focus Areas)
-Create a step-by-step workshop for:
-- RepoAdventureServer.constructor: Creates MCP server
-- RepoAdventureServer.setupHandlers: Registers handlers
-[... more function highlights]
-
-## Response Format
-Return JSON with quest narrative, code snippets, and hints
-```
-
-### Quest Configuration System
-
-#### adventure.config.json Structure
-
-Projects can include an `adventure.config.json` file to guide story and quest generation:
-
-```json
-{
-  "adventure": {
-    "name": "Your Project Name",
-    "description": "Brief project description",
-    "url": "https://github.com/username/repo-name",
-    "customInstructions": "Optional: Any specific guidance for story generation",
-    "microsoftClarityCode": "optional-clarity-tracking-id",
-    "googleAnalyticsCode": "optional-ga-tracking-id"
-  },
-  "quests": [
-    {
-      "title": "Core MCP Server",
-      "description": "Explore the MCP protocol implementation",
-      "files": [
-        {
-          "path": "src/server.ts",
-          "description": "Main MCP server",
-          "highlights": [
-            {
-              "name": "RepoAdventureServer.setupHandlers",
-              "description": "Registers ListTools and CallTool handlers"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-
-This configuration:
-- **Guides quest titles** toward important code areas
-- **Highlights key functions and members** for workshop-style exploration
-- **Provides context** for more accurate story generation
-- **Adds analytics tracking** (optional) - Include Microsoft Clarity or Google Analytics codes to track HTML adventure usage
-
-### Context Flow Summary
-
-| Component | Purpose | What It Adds to LLM Context |
-|-----------|---------|----------------------------|
-| **Repomix** | Full codebase analysis | Actual code, file structure, all content |
-| **Quest Config** | Guidance structure | Important functions to highlight, suggested titles |
-| **Theme System** | Narrative consistency | Vocabulary, metaphors, character types |
-| **Workshop Highlights** | Educational focus | Step-by-step exploration of key functions |
-
-### Optimization Features
-
-- **Targeted Content**: Quests only receive relevant file content
-- **Smart Caching**: Repomix output cached for 5 minutes, LLM responses cached
-- **Config Loading**: Loaded once per session if available
-- **Fallback System**: Works without LLM using template-based stories
+**Key Features:**
+- **Multi-Theme**: Generate all 4 themes at once (Space, Mythical, Ancient, Developer)
+- **Smart Caching**: Repomix (5 min) and LLM responses cached
+- **Config-Driven**: Highlights specific functions via `adventure.config.json`
+- **Rate Limit Handling**: Auto-detects Azure S0 limits, switches to sequential mode
 
 ## Installation
 
@@ -344,7 +150,7 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
 
 2. **Configure Your Preferred Provider**:
 
-   **🔥 OpenAI (Direct)**:
+   **🔥 OpenAI (Recommended)**:
    ```bash
    REPO_ADV_LLM_API_KEY=your_openai_key_here
    REPO_ADV_LLM_BASE_URL=https://api.openai.com/v1
@@ -359,20 +165,7 @@ The server supports multiple LLM providers through a generic OpenAI-compatible c
    REPO_ADV_LLM_API_VERSION=2025-01-01-preview
    ```
 
-   **🆓 Local Ollama**:
-   ```bash
-   REPO_ADV_LLM_BASE_URL=http://localhost:11434/v1
-   REPO_ADV_LLM_API_KEY=ollama
-   REPO_ADV_LLM_MODEL=gemma3:27b
-   LLM_REQUEST_TIMEOUT=300000  # 5 minutes for slower local models
-   ```
-
-   **🆓 GitHub Models (Free tier available - but very limited and will only work with very small scenarios)**:
-   ```bash
-   GITHUB_TOKEN=your_github_token_here
-   REPO_ADV_LLM_BASE_URL=https://models.inference.ai.azure.com
-   REPO_ADV_LLM_MODEL=gpt-4o-mini
-   ```
+   See `.env.example` for additional providers (Ollama, GitHub Models, etc.)
 
 3. **Fine-tune Settings** (Optional):
    ```bash
@@ -513,41 +306,12 @@ npm run test:html -- --theme=all    # Generate all themes
 
 ### HTML Generator Features
 
-The HTML generator (`packages/generator/src/cli/html-generator.ts`) creates fully-featured adventure websites:
-
 **Core Capabilities:**
-- **Theme System**: 5 built-in themes with custom theme support
+- **Theme System**: 5 built-in themes (Space, Mythical, Ancient, Developer, Custom)
 - **Template Engine**: Dynamic HTML generation with variable substitution
-- **Markdown Processing**: Full markdown to HTML conversion with code highlighting using Prism.js
-- **File Path Linking**: Automatic GitHub URL generation for code files
-- **Responsive Design**: Mobile-first CSS with gradient styling
-- **Navigation System**: Quest-to-quest navigation with progress tracking
-
-**Generated Structure:**
-```
-output-directory/
-├── index.html              # Main adventure homepage with theme selection
-├── [theme]/                # Individual theme directories (space, mythical, ancient, developer)
-│   ├── index.html          # Theme-specific adventure page with story
-│   ├── quest-1.html        # Individual quest pages
-│   ├── quest-2.html
-│   ├── quest-3.html
-│   └── assets/
-│       ├── theme.css       # Combined theme + base + animations CSS
-│       └── images/
-│           ├── github-mark.svg       # Dark GitHub logo for light themes
-│           ├── github-mark-white.svg # White GitHub logo for dark themes
-│           └── [theme-specific-images] # Theme backgrounds and assets
-└── assets/                 # Global assets shared across themes
-    ├── theme.css          # Homepage styling
-    └── images/            # Shared images and GitHub logos
-```
-
-**Theme-Specific Features:**
-- **Dynamic Navbar**: Shows repo name from `adventure.config.json` with GitHub logo
-- **Responsive Design**: GitHub logo positioned right, title aligned left
-- **Theme-Aware Logos**: Dark logos for light themes, white logos for dark themes  
-- **Consistent Footer**: "Created using AI Repo Adventures" across all pages
+- **Markdown Processing**: Code highlighting with Prism.js and automatic GitHub file linking
+- **Responsive Design**: Mobile-first CSS with gradient styling and quest navigation
+- **Auto-Launch**: Local HTTP server with automatic browser opening
 
 ## Example Adventure Flow
 
@@ -705,43 +469,36 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for detailed contribution guideli
 
 MIT
 
-## Prompt for adventure.config.json Generation
+## Creating adventure.config.json
 
-Use this prompt with GitHub Copilot, Claude Code, or your favorite AI coding assistant to generate an `adventure.config.json` file for your project. This configuration helps the AI adventure system understand your project's structure and create meaningful quest paths.
+Enhance quest generation by creating an `adventure.config.json` file at your project root. This guides the AI to focus on important code areas and create better exploration paths.
 
----
+**Quick Start - AI-Assisted Generation:**
 
-**PROMPT FOR AI CODING ASSISTANT:**
+Ask your AI coding assistant (GitHub Copilot, Claude Code, etc.):
 
-```
-Please analyze this codebase and create an adventure.config.json file at the root of the project to help users explore the project through guided quests.
+> "Create an adventure.config.json file identifying 3-5 key functional areas in this codebase. For each area, select 2-4 important files and highlight 2-4 key functions/classes. Focus on entry points, core logic, and system integrations. Aim for 15-25 total highlights."
 
-Requirements:
-- Identify 3-5 key areas of functionality in the codebase
-- Select 2-4 representative files for each area
-- Highlight 2-4 important functions/classes or other members per file
-- Focus on entry points, main logic, and system integrations
+**Manual Configuration Structure:**
 
-Use this exact JSON structure:
-
+```json
 {
   "adventure": {
-    "name": "[Your Project Name]",
-    "description": "[Brief project description]", 
-    "url": "https://github.com/[username]/[repo-name]",
-    "customInstructions": "[Optional: Any specific guidance for story generation]",
+    "name": "Your Project Name",
+    "description": "Brief description",
+    "url": "https://github.com/username/repo",
     "quests": [
       {
-        "title": "[Quest Name - e.g. 'Authentication System']",
-        "description": "[What users learn from exploring this area]",
+        "title": "Authentication System",
+        "description": "Explore user authentication",
         "files": [
           {
-            "path": "[relative/path/to/important/file.js]",
-            "description": "[Role of this file in the system]",
+            "path": "src/auth/auth-service.ts",
+            "description": "Main authentication service",
             "highlights": [
               {
-                "name": "[functionName or ClassName.method]", 
-                "description": "[What this code does and why it matters]"
+                "name": "AuthService.login",
+                "description": "Handles user login flow"
               }
             ]
           }
@@ -750,25 +507,10 @@ Use this exact JSON structure:
     ]
   }
 }
-
-Prioritize files that contain:
-✓ Main entry points (index.js, program.cs, main.ts, app.js, etc.)
-✓ Core business logic and algorithms  
-✓ API routes and controllers
-✓ Database models and data access
-✓ Configuration and setup code
-✓ Key middleware and utilities
-
-Avoid:
-✗ Test files, build scripts, or configuration-only files
-✗ Simple utility functions without business logic
-✗ Auto-generated or boilerplate code
-
-Aim for 15-25 total highlights across all quests for the best exploration experience.
 ```
 
-**After generating the file, the AI adventure system will use this configuration to:**
-- Create themed stories that guide users through your codebase
-- Generate step-by-step exploration paths focusing on the highlighted functions
-- Provide educational context about how different parts of your system work together
-- Create beautiful HTML adventure websites for sharing your project exploration
+**Focus on:**
+- ✓ Entry points, core algorithms, API routes, data models
+- ✗ Tests, build scripts, boilerplate
+
+The system uses this to create targeted quests with step-by-step code exploration.

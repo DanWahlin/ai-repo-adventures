@@ -7,6 +7,7 @@ Create a {{theme}}-themed story that explains what the codebase does through nar
 - Create connected quests that contribute to one overarching story
 - Use only real files from "## Project Codebase" or "## Adventure Guidance"
 - Write in second-person ("You explore...", "You discover...")
+- **Use educational analogies**: Transform complex technical concepts into relatable theme elements (e.g., "databases are dragon hoards", "APIs are messenger spirits", "functions are navigation protocols")
 
 ## Output Format
 ```markdown

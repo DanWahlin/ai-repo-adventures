@@ -11,6 +11,7 @@ Generate {{theme}}-themed quest content for: "{{adventureTitle}}"
 - After the quest title and `---`, start immediately with the themed narrative paragraph
 - Wrap ALL code elements in backticks: `function()`, `Class`, `variable`
 - Use `---` only after quest title and before final message
+- **Use educational analogies**: Explain technical concepts through theme metaphors (e.g., "this function acts as a magical spell", "the API is a messenger service", "the database is a treasure vault")
 
 ## File Scope Enforcement
 **STRICT**: Only discuss files in Adventure Code Guidance below:

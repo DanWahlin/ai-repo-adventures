@@ -29,6 +29,7 @@ interface ThemeGuidelines {
   vocabulary: string;
   restriction: string;
   style: string;
+  characters?: string;
 }
 
 interface ThemeGuidelinesMap {
@@ -122,11 +123,15 @@ function getThemeGuidelines(theme: AdventureTheme, customThemeData?: CustomTheme
 - IMPORTANT: Only use the custom theme elements - do not mix with other themes (space, mythical, ancient, etc.)`;
   }
 
+  const charactersSection = guidelines.characters
+    ? `\n**CHARACTER-BASED LEARNING:**\n- ${guidelines.characters}\n- Use these characters/entities to make technical concepts relatable and memorable`
+    : '';
+
   return `## Theme Guidelines
 
 **${theme.toUpperCase()} THEME VOCABULARY:**
 - Use ${guidelines.vocabulary}
-
+${charactersSection}
 **Story Requirements:**
 - ${guidelines.style}
 - Create an overarching narrative that connects all coding quests
@@ -243,17 +248,20 @@ function getFallbackThemeGuidelines(): ThemeGuidelinesMap {
     space: {
       vocabulary: 'starship/mission/cosmic/galaxy terms',
       restriction: '(space themes only)',
-      style: 'Create space exploration narratives'
+      style: 'Create space exploration narratives',
+      characters: 'Represent technologies as space entities: APIs as Communication Arrays, databases as Data Vaults'
     },
     mythical: {
-      vocabulary: 'kingdom/quest/magic/castle terms', 
+      vocabulary: 'kingdom/quest/magic/castle terms',
       restriction: '(mythical themes only)',
-      style: 'Create magical kingdom quests'
+      style: 'Create magical kingdom quests',
+      characters: 'Represent technologies as mythical beings: databases as Dragon Hoards, APIs as Messenger Spirits'
     },
     ancient: {
       vocabulary: 'temple/wisdom/ancient/pyramid terms',
-      restriction: '(ancient themes only)', 
-      style: 'Create archaeological discoveries'
+      restriction: '(ancient themes only)',
+      style: 'Create archaeological discoveries',
+      characters: 'Represent technologies as ancient artifacts: databases as Sacred Vaults, APIs as Trade Routes'
     },
     developer: {
       vocabulary: 'documentation/technical terms',
