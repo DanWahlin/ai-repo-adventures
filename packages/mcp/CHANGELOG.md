@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 1.9.0 (2025-10-04)
+
+
+### Bug Fixes
+
+* sync package versions ([2890f6d](https://github.com/danwahlin/ai-repo-adventures/commit/2890f6da7ec842e814d3cb325ea1b1bc622da308))
+* update environment variable prefixes to REPO_ADV for mor uniqueness across configurations ([1fd9960](https://github.com/danwahlin/ai-repo-adventures/commit/1fd996025632b9c05ee8404cb28098d4bd3b8aa4))
+* update package names and commands for consistency across documentation and configuration ([6e1d6bc](https://github.com/danwahlin/ai-repo-adventures/commit/6e1d6bc556ba084b2e7ceae90b274fc374f6bddc))
+
+
+### Features
+
+* Refactor package structure and update dependencies to use [@codewithdan](https://github.com/codewithdan) scope; add README for core package ([c94f05d](https://github.com/danwahlin/ai-repo-adventures/commit/c94f05da8a1732409b35e594d79c35de2ce299d2))
+
+
+
+
+
 ## [1.8.10](https://github.com/danwahlin/ai-repo-adventures/compare/@codewithdan/ai-repo-adventure-mcp@1.1.30...@codewithdan/ai-repo-adventure-mcp@1.8.10) (2025-10-04)
 
 
