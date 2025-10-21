@@ -3,6 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { AdventureTheme } from '@codewithdan/ai-repo-adventures-core/shared';
 import { DEFAULT_PATHS } from '../constants.js';
+import { OutputFormat, FormatExporter } from '../formatters/format-exporter.js';
 
 interface ConfigurationOptions {
   theme?: AdventureTheme;
@@ -12,6 +13,7 @@ interface ConfigurationOptions {
   logLlmOutput: boolean;
   logLlmOutputDir: string;
   serve: boolean;
+  format: OutputFormat;
 }
 
 /**
@@ -117,19 +119,29 @@ export class ConfigurationManager {
       console.log(chalk.green('✅ HTTP server: will start after generation'));
     }
 
+    // Configure format
+    const formatArg = args.get('format') || 'html';
+    if (!FormatExporter.isValidFormat(formatArg)) {
+      console.error(chalk.red(`Invalid format specified. Valid formats are: html, markdown, xml, text.`));
+      process.exit(1);
+    }
+    const format = formatArg as OutputFormat;
+    console.log(chalk.green(`✅ Output format: ${format}`));
+
     return {
       overwrite,
       maxQuests,
       logLlmOutput,
       logLlmOutputDir,
-      serve
+      serve,
+      format
     };
   }
 
   /**
    * Setup output directories with overwrite handling
    */
-  setupOutputDirectories(outputDir: string, overwrite: boolean): void {
+  setupOutputDirectories(outputDir: string, overwrite: boolean, format: string): void {
     // Check if output directory exists and handle overwrite
     if (fs.existsSync(outputDir) && !overwrite) {
       const files = fs.readdirSync(outputDir).filter(f => f.endsWith('.html'));
@@ -145,8 +157,12 @@ export class ConfigurationManager {
 
     // Create output directories
     fs.mkdirSync(outputDir, { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'assets'), { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'assets', 'images'), { recursive: true });
+
+    // Create additional folders for HTML format
+    if (format === 'html') {
+      fs.mkdirSync(path.join(outputDir, 'assets'), { recursive: true });
+      fs.mkdirSync(path.join(outputDir, 'assets', 'images'), { recursive: true });
+    }
   }
 }
 

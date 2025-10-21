@@ -23,6 +23,7 @@ import { ConfigurationManager } from './cli/configuration-manager.js';
 import { HTMLBuilder } from './generation/html-builder.js';
 import { ContentGenerator } from './generation/content-generator.js';
 import { ThemeOrchestrator } from './orchestration/theme-orchestrator.js';
+import { FormatExporter, OutputFormat } from './formatters/format-exporter.js';
 
 interface QuestInfo {
   id: string;
@@ -49,6 +50,8 @@ class HTMLAdventureGenerator {
   private logLlmOutputDir: string = DEFAULT_PATHS.LLM_LOG_DIR;
   private serve: boolean = false;
   private isMultiTheme: boolean = false;
+  private format: OutputFormat = 'html';
+  private questContentsMap: Map<string, string> = new Map();
 
   constructor() {
     this.cliInterface = new CLIInterface();
@@ -77,9 +80,16 @@ class HTMLAdventureGenerator {
       this.customThemeData = themeSelection.customData;
       const shouldGenerateAllThemes = themeSelection.isAllThemes;
 
-      this.outputDir = await this.cliInterface.selectOutputDirectory();
+      this.outputDir = await this.cliInterface.selectOutputDirectory(this.format);
 
       if (shouldGenerateAllThemes) {
+
+        if (this.format !== 'html') {
+          console.error('Multi-theme generation is only supported for HTML format.');
+          this.cliInterface.close();
+          process.exit(1);
+        }
+
         // Create theme orchestrator for multi-theme generation
         const themeOrchestrator = new ThemeOrchestrator(
           this.projectPath,
@@ -106,7 +116,7 @@ class HTMLAdventureGenerator {
         // Generate single theme as usual
         await this.generateAdventure();
 
-        this.cliInterface.printSuccessMessage(this.outputDir, this.serve);
+        this.cliInterface.printSuccessMessage(this.outputDir, this.serve, this.format);
       }
 
     } catch (error) {
@@ -137,7 +147,7 @@ class HTMLAdventureGenerator {
         this.serve = options.serve;
 
         // Setup directories
-        this.configManager.setupOutputDirectories(this.outputDir, options.overwrite);
+        this.configManager.setupOutputDirectories(this.outputDir, options.overwrite, this.format);
 
         // Determine processing mode
         const processingMode = args.has('sequential') ? 'sequential' : 'parallel';
@@ -177,12 +187,13 @@ class HTMLAdventureGenerator {
         this.logLlmOutput = options.logLlmOutput;
         this.logLlmOutputDir = options.logLlmOutputDir;
         this.serve = options.serve;
+        this.format = options.format;
 
         // Setup directories and generate
-        this.configManager.setupOutputDirectories(this.outputDir, options.overwrite);
+        this.configManager.setupOutputDirectories(this.outputDir, options.overwrite, this.format);
         await this.generateAdventure();
 
-        this.cliInterface.printSuccessMessage(this.outputDir, this.serve);
+        this.cliInterface.printSuccessMessage(this.outputDir, this.serve, this.format);
 
         if (this.serve) {
           const devServer = new DevServer(this.outputDir);
@@ -294,42 +305,34 @@ class HTMLAdventureGenerator {
       this.selectedTheme,
       this.quests,
       this.isMultiTheme,
-      this.saveLlmOutput.bind(this)
+      this.saveLlmOutput.bind(this),
+      this.questContentsMap
     );
 
-    // Step 4: Generate all files
-    console.log(chalk.dim('🎨 Creating theme styling...'));
-    await this.generateThemeCSS();
+    // Step 4: Generate quest content (fills questContentsMap)
+    console.log(chalk.dim('📖 Generating quest content...'));
+    await this.contentGenerator.generateQuestContent();
 
-    console.log(chalk.dim('🧭 Adding quest navigator...'));
-    if (!this.isMultiTheme) {
-      const assetManager = await this.getAssetManager();
-      assetManager.copyQuestNavigator(this.outputDir);
-    }
-
-    console.log(chalk.dim('🖼️ Copying images...'));
-    // Skip copying images in multi-theme mode for individual themes
-    // Images are copied once at the root level
-    if (!this.isMultiTheme) {
-      const assetManager = await this.getAssetManager();
-      assetManager.copyImages(this.outputDir, this.isMultiTheme);
-    }
-
-    console.log(chalk.dim('📝 Creating main adventure page...'));
-    this.generateIndexHTML();
-
-    console.log(chalk.dim('📖 Generating quest pages...'));
-    await this.contentGenerator.generateQuestPages();
-
-    console.log(chalk.dim('🎉 Creating adventure summary page...'));
-    await this.generateSummaryHTML();
+    // Step 5: Generate all output files using the format strategy
+    console.log(chalk.dim(`💾 Generating ${this.format.toUpperCase()} format...`));
+    const assetManager = await this.getAssetManager();
+    
+    await FormatExporter.export(
+      this.adventureManager,
+      this.format,
+      this.outputDir,
+      this.questContentsMap,
+      this.htmlBuilder,
+      assetManager,
+      this.isMultiTheme
+    );
   }
 
   private extractQuestInfo(): void {
     this.quests = this.adventureManager.getAllQuests().map((quest: any, index: number) => ({
+      filename: `quest-${index + 1}.${this.format}`,
       id: quest.id,
       title: quest.title,
-      filename: `quest-${index + 1}.html`
     }));
   }
 
@@ -358,39 +361,6 @@ class HTMLAdventureGenerator {
     const outputPath = path.join(llmOutputDir, filename);
     fs.writeFileSync(outputPath, content, 'utf-8');
     console.log(chalk.dim(`📝 LLM output saved: ${outputPath}`));
-  }
-
-  private async generateThemeCSS(): Promise<void> {
-    const assetManager = await this.getAssetManager();
-    const themeCSS = assetManager.loadThemeCSS(this.selectedTheme);
-    const baseCSS = assetManager.loadBaseCSS();
-    const animationsCSS = assetManager.loadAnimationsCSS();
-
-    // Combine CSS in the correct order: theme variables, base styles, animations
-    let combinedCSS = themeCSS + '\n\n' + baseCSS + '\n\n' + animationsCSS;
-
-    // Fix image paths based on theme mode
-    // In multi-theme: theme CSS is at ./theme/assets/theme.css, images at root ./assets/images/
-    // In single-theme: theme CSS is at ./assets/theme.css, images at ./assets/images/
-    const imagePath = this.isMultiTheme ? '../../assets/images/' : 'images/';
-    combinedCSS = combinedCSS.replace(/url\('images\//g, `url('${imagePath}`);
-
-    const cssPath = path.join(this.outputDir, 'assets', 'theme.css');
-    fs.writeFileSync(cssPath, combinedCSS);
-  }
-
-  private generateIndexHTML(): void {
-    const html = this.htmlBuilder.buildIndexHTML();
-    const indexPath = path.join(this.outputDir, 'index.html');
-    fs.writeFileSync(indexPath, html);
-  }
-
-  private async generateSummaryHTML(): Promise<void> {
-    // Generate key concepts first
-    const keyConcepts = await this.contentGenerator.generateKeyConcepts();
-    const html = await this.htmlBuilder.buildSummaryHTML(keyConcepts);
-    const summaryPath = path.join(this.outputDir, 'summary.html');
-    fs.writeFileSync(summaryPath, html);
   }
 
 }
@@ -434,23 +404,36 @@ Usage:
 Options:
   --theme <theme>        Theme: space, mythical, ancient, developer, custom, or all
   --output <dir>         Output directory (default: ./public)
+  --format <format>      Output format: html (default), md, txt, json, xml
   --overwrite           Overwrite existing files without prompting
   --sequential          Process themes sequentially to avoid rate limits (for --theme all)
   --max-quests <num>    Limit number of quests to generate (default: all)
   --log-llm-output [dir]  Save raw LLM output for debugging (default: .ai-repo-adventures/llm-output)
-  --serve               Start HTTP server and open browser after generation
+  --serve               Start HTTP server and open browser after generation (HTML format only)
   --help, -h            Show this help message
 
 Examples:
   npm run generate-html --theme space --output ./docs --overwrite
-  npm run generate-html --theme mythical
-  npm run generate-html --theme all --output public --overwrite
+  npm run generate-html --theme mythical --format md
+  npm run generate-html --theme all --output public --overwrite --format html
   npm run generate-html --theme all --sequential --output public  # Avoid rate limits
+  npm run generate-html --theme space --format json --output ./exports
   npm run generate-html (interactive mode - includes "Generate All Themes" option)
 `);
     return;
   }
-  
+
+  // Run CLI args validation
+  if (argMap.has('serve') && argMap.get('format') !== 'html') {
+    console.error('❌ Error: --serve is only supported for HTML format.');
+    process.exit(1);
+  }
+
+  if (argMap.has('theme') && argMap.get('format') !== 'html') {
+    console.error('❌ Error: --theme option is only supported for HTML format.');
+    process.exit(1);
+  }
+
   // Run with CLI args if provided, otherwise interactive
   if (argMap.has('theme')) {
     await generator.startWithArgs(argMap);
