@@ -429,11 +429,6 @@ Examples:
     process.exit(1);
   }
 
-  if (argMap.has('theme') && argMap.get('format') !== 'html') {
-    console.error('❌ Error: --theme option is only supported for HTML format.');
-    process.exit(1);
-  }
-
   // Run with CLI args if provided, otherwise interactive
   if (argMap.has('theme')) {
     await generator.startWithArgs(argMap);
