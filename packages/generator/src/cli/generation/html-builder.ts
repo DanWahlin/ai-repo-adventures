@@ -21,7 +21,7 @@ export class HTMLBuilder {
   private projectPath: string;
   private selectedTheme: AdventureTheme;
   private isMultiTheme: boolean;
-  private quests: QuestInfo[];
+  public quests: QuestInfo[]; // Public for access by HtmlStrategy
 
   constructor(
     adventureManager: AdventureManager,

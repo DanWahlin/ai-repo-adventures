@@ -83,9 +83,10 @@ class HTMLAdventureGenerator {
       this.outputDir = await this.cliInterface.selectOutputDirectory(this.format);
 
       if (shouldGenerateAllThemes) {
-
         if (this.format !== 'html') {
-          console.error('Multi-theme generation is only supported for HTML format.');
+          console.error(chalk.red('❌ Multi-theme generation is only supported for HTML format.'));
+          console.error(chalk.yellow(`   Current format: ${this.format}`));
+          console.error(chalk.yellow('   Please use --format html or omit the --format flag (HTML is the default).'));
           this.cliInterface.close();
           process.exit(1);
         }
@@ -313,10 +314,17 @@ class HTMLAdventureGenerator {
     console.log(chalk.dim('📖 Generating quest content...'));
     await this.contentGenerator.generateQuestContent();
 
-    // Step 5: Generate all output files using the format strategy
+    // Step 5: Generate key concepts for summary page (HTML format only)
+    let keyConcepts: string | undefined;
+    if (this.format === 'html') {
+      console.log(chalk.dim('🔑 Generating key concepts...'));
+      keyConcepts = await this.contentGenerator.generateKeyConcepts();
+    }
+
+    // Step 6: Generate all output files using the format strategy
     console.log(chalk.dim(`💾 Generating ${this.format.toUpperCase()} format...`));
     const assetManager = await this.getAssetManager();
-    
+
     await FormatExporter.export(
       this.adventureManager,
       this.format,
@@ -324,7 +332,8 @@ class HTMLAdventureGenerator {
       this.questContentsMap,
       this.htmlBuilder,
       assetManager,
-      this.isMultiTheme
+      this.isMultiTheme,
+      keyConcepts
     );
   }
 
@@ -424,8 +433,11 @@ Examples:
   }
 
   // Run CLI args validation
-  if (argMap.has('serve') && argMap.get('format') !== 'html') {
+  const format = argMap.get('format') || 'html'; // Default to HTML
+  if (argMap.has('serve') && format !== 'html') {
     console.error('❌ Error: --serve is only supported for HTML format.');
+    console.error(chalk.yellow(`   Current format: ${format}`));
+    console.error(chalk.yellow('   Please use --format html or omit the --format flag (HTML is the default).'));
     process.exit(1);
   }
 
