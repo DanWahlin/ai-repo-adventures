@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.11.0](https://github.com/danwahlin/ai-repo-adventures/compare/v1.10.3...v1.11.0) (2025-10-24)
+
+
+### Features
+
+* **generator:** add multi-format export support and format strategy framework ([8dbb1f9](https://github.com/danwahlin/ai-repo-adventures/commit/8dbb1f9c355de7f388c3b83e5923c059c058bb62))
+* **generator:** allow --theme with non-HTML output formats ([9d39fdc](https://github.com/danwahlin/ai-repo-adventures/commit/9d39fdc6855154d6b9259e767fb0011346ae8ea8))
+
+
+
+
+
 ## [1.10.3](https://github.com/danwahlin/ai-repo-adventures/compare/v1.10.2...v1.10.3) (2025-10-04)
 
 **Note:** Version bump only for package @codewithdan/ai-repo-adventures-generator
