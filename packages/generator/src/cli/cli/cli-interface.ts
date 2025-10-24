@@ -43,13 +43,13 @@ export class CLIInterface {
   /**
    * Display success message after generation
    */
-  printSuccessMessage(outputDir: string, serve: boolean): void {
+  printSuccessMessage(outputDir: string, serve: boolean, format: string): void {
     console.log();
     console.log(chalk.green.bold('🎉 Adventure website generated successfully!'));
     console.log(chalk.cyan(`📁 Location: ${outputDir}`));
 
     if (!serve) {
-      console.log(chalk.cyan(`🌐 Open: ${path.join(outputDir, 'index.html')}`));
+      console.log(chalk.cyan(`🌐 Open: ${path.join(outputDir, 'index')}.${format}`));
     }
   }
 
@@ -159,7 +159,7 @@ export class CLIInterface {
   /**
    * Select output directory interactively
    */
-  async selectOutputDirectory(): Promise<string> {
+  async selectOutputDirectory(format: string): Promise<string> {
     console.log(chalk.yellow.bold('📁 Output Directory:'));
     console.log(chalk.dim(`Current directory: ${process.cwd()}`));
     console.log();
@@ -194,8 +194,12 @@ export class CLIInterface {
 
     // Create directories
     fs.mkdirSync(outputDir, { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'assets'), { recursive: true });
-    fs.mkdirSync(path.join(outputDir, 'assets', 'images'), { recursive: true });
+
+    // Create additional folders for HTML format
+    if (format === 'html') {
+      fs.mkdirSync(path.join(outputDir, 'assets'), { recursive: true });
+      fs.mkdirSync(path.join(outputDir, 'assets', 'images'), { recursive: true });
+    }
 
     console.log(chalk.green(`✅ Output directory: ${outputDir}`));
     console.log();

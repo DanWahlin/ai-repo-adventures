@@ -15,6 +15,8 @@ interface QuestInfo {
 
 /**
  * Handles content generation for quests and summaries
+ * Note: This class only generates CONTENT, not formatted pages.
+ * Page formatting is handled by format strategies.
  */
 export class ContentGenerator {
   private adventureManager: AdventureManager;
@@ -25,6 +27,7 @@ export class ContentGenerator {
   private quests: QuestInfo[];
   private isMultiTheme: boolean;
   private saveLlmOutputFn: (filename: string, content: string) => void;
+  private questContentsMap?: Map<string, string>;
 
   constructor(
     adventureManager: AdventureManager,
@@ -34,7 +37,8 @@ export class ContentGenerator {
     selectedTheme: string,
     quests: QuestInfo[],
     isMultiTheme: boolean,
-    saveLlmOutputFn: (filename: string, content: string) => void
+    saveLlmOutputFn: (filename: string, content: string) => void,
+    questContentsMap?: Map<string, string>
   ) {
     this.adventureManager = adventureManager;
     this.htmlBuilder = htmlBuilder;
@@ -44,32 +48,35 @@ export class ContentGenerator {
     this.quests = quests;
     this.isMultiTheme = isMultiTheme;
     this.saveLlmOutputFn = saveLlmOutputFn;
+    this.questContentsMap = questContentsMap;
   }
 
   /**
-   * Generate all quest pages with content
+   * Generate quest content (LLM narratives) and store in map
+   * This does NOT generate formatted pages - that's done by format strategies
    */
-  async generateQuestPages(): Promise<void> {
+  async generateQuestContent(): Promise<void> {
     const questsToGenerate = this.quests.length;
 
     for (let i = 0; i < questsToGenerate; i++) {
       const quest = this.quests[i];
       if (!quest) continue;
 
-      console.log(chalk.dim(`  📖 Generating quest ${i + 1}/${questsToGenerate} [${this.selectedTheme}]: ${quest.title}`));
+      console.log(chalk.dim(`  📖 Generating quest content ${i + 1}/${questsToGenerate} [${this.selectedTheme}]: ${quest.title}`));
 
       try {
         const questContent = await this.generateQuestContentWithRetry(quest.id);
 
+        // Store quest content in map (required for all format strategies)
+        if (this.questContentsMap) {
+          this.questContentsMap.set(quest.id, questContent);
+        }
+
         // Save quest content if logging is enabled (unique file per quest)
         this.saveLlmOutputFn(`quest-${quest.id}.output.md`, questContent);
 
-        const html = this.htmlBuilder.buildQuestHTML(quest, questContent, i);
-        const questPath = path.join(this.outputDir, quest.filename);
-        fs.writeFileSync(questPath, html);
-
       } catch (error) {
-        console.log(chalk.red(`    ❌ Failed to generate quest [${this.selectedTheme}]: ${quest.title}`));
+        console.log(chalk.red(`    ❌ Failed to generate quest content [${this.selectedTheme}]: ${quest.title}`));
 
         // Fail-fast strategy: If we're in multi-theme mode and a quest fails,
         // throw an error to trigger sequential mode
@@ -77,10 +84,10 @@ export class ContentGenerator {
           throw new Error(`Quest generation failed for ${quest.title} in ${this.selectedTheme} theme. Switching to sequential mode for consistency.`);
         }
 
-        // For single theme generation, still create placeholder
-        const placeholderHTML = this.htmlBuilder.buildQuestHTML(quest, 'Quest content could not be generated.', i);
-        const questPath = path.join(this.outputDir, quest.filename);
-        fs.writeFileSync(questPath, placeholderHTML);
+        // Store placeholder content for failed quests
+        if (this.questContentsMap) {
+          this.questContentsMap.set(quest.id, 'Quest content could not be generated.');
+        }
       }
     }
   }
