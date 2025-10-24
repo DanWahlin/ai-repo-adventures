@@ -44,8 +44,11 @@ export class XmlStrategy extends BaseFormatStrategy {
     return 'xml';
   }
 
-  private escapeXml(text: string): string {
-    return text
+  private escapeXml(text: string | null | undefined): string {
+    if (text == null) {
+      return '';
+    }
+    return String(text)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
