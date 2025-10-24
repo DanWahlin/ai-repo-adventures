@@ -1,6 +1,7 @@
 import { AdventureManager } from '@codewithdan/ai-repo-adventures-core/adventure';
 import type { OutputFormat } from './format-strategy.js';
 import { FormatContext } from './format-context.js';
+import type { HtmlBuilder, AssetManager } from './format-types.js';
 
 /**
  * FormatExporter - Facade for exporting adventures in various formats
@@ -15,9 +16,10 @@ export class FormatExporter {
     format: OutputFormat,
     outputDir: string,
     questContents: Map<string, string>,
-    htmlBuilder?: any,
-    assetManager?: any,
-    isMultiTheme: boolean = false
+    htmlBuilder?: HtmlBuilder,
+    assetManager?: AssetManager,
+    isMultiTheme: boolean = false,
+    keyConcepts?: string
   ): Promise<void> {
     const context = new FormatContext(
       adventureManager,
@@ -27,7 +29,7 @@ export class FormatExporter {
       questContents
     );
 
-    await context.generate(format, htmlBuilder, assetManager, isMultiTheme);
+    await context.generate(format, htmlBuilder, assetManager, isMultiTheme, keyConcepts);
   }
 
   /**

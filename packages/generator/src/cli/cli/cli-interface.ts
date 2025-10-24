@@ -79,6 +79,7 @@ export class CLIInterface {
 
     // Add "all themes" option
     console.log(`🌈 ${chalk.bold(allThemesId.toString())}. Generate All Themes - Create adventures in all available themes simultaneously`);
+    console.log(chalk.dim('   Note: Multi-theme generation is only supported for HTML format'));
     console.log();
 
     const choice = await this.prompt('Enter theme number or name (or "all" for all themes): ');

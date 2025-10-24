@@ -122,7 +122,8 @@ export class ConfigurationManager {
     // Configure format
     const formatArg = args.get('format') || 'html';
     if (!FormatExporter.isValidFormat(formatArg)) {
-      console.error(chalk.red(`Invalid format specified. Valid formats are: html, markdown, xml, text.`));
+      const validFormats = FormatExporter.getSupportedFormats().join(', ');
+      console.error(chalk.red(`Invalid format specified. Valid formats are: ${validFormats}`));
       process.exit(1);
     }
     const format = formatArg as OutputFormat;

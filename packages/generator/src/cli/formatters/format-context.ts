@@ -4,6 +4,7 @@ import { AdventureManager } from '@codewithdan/ai-repo-adventures-core/adventure
 import type { OutputFormat, AdventureData } from './format-strategy.js';
 import { FormatStrategyFactory } from './format-factory.js';
 import { HtmlStrategy } from './strategies/html-strategy.js';
+import type { HtmlBuilder, AssetManager } from './format-types.js';
 
 /**
  * Context for format generation - coordinates all format strategies
@@ -35,9 +36,10 @@ export class FormatContext {
    */
   async generate(
     format: OutputFormat,
-    htmlBuilder?: any,
-    assetManager?: any,
-    isMultiTheme: boolean = false
+    htmlBuilder?: HtmlBuilder,
+    assetManager?: AssetManager,
+    isMultiTheme: boolean = false,
+    keyConcepts?: string
   ): Promise<void> {
     if (format === 'html') {
       // HTML requires special handling with multiple files
@@ -51,7 +53,8 @@ export class FormatContext {
         htmlBuilder,
         assetManager,
         this.questContents,
-        isMultiTheme
+        isMultiTheme,
+        keyConcepts
       );
 
       await htmlStrategy.generateFiles();
@@ -60,6 +63,10 @@ export class FormatContext {
       const strategy = FormatStrategyFactory.createStrategy(format);
       if (!strategy) {
         throw new Error(`No strategy available for format: ${format}`);
+      }
+
+      if (!strategy.format) {
+        throw new Error(`Format strategy for ${format} does not support single-file generation`);
       }
 
       const data = this.prepareAdventureData();
