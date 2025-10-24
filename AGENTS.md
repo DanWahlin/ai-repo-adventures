@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build**: `npm run build` - Compiles all TypeScript packages using workspace dependencies
 - **Run**: `npm start` - Runs the production MCP server
 - **Development**: `npm run dev` - Runs with file watching for development
-- **HTML Generation**: `npm run generate-html` - Interactive CLI for creating themed adventure websites
+- **Adventure Generation**: `npm run generate-html` - Interactive CLI for creating themed adventure content in multiple formats (HTML, Markdown, JSON, XML, Text)
 
 ### Linting Commands
 - **Lint All**: `npm run lint` - Check code quality and complexity
@@ -24,8 +24,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `npm run test:simple` - Basic MCP workflow validation (2 minutes timeout)
   - `npm run test:real-world` - Full system integration with performance monitoring
   - `npm run chat` - Interactive terminal-based testing client
-- **HTML Generation Tests**:
+- **Content Generation Tests**:
   - `npm run test:html` - Quick HTML generation (minimal LLM calls for fast testing)
+  - `npm run test:md` - Quick Markdown generation for testing format strategies
   - `npm run test:prompts` - LLM prompt analysis and debugging
 
 ### LLM Configuration (Optional)
@@ -103,9 +104,16 @@ The system is organized into three specialized packages with clear separation of
 - **`shared/`**: Cross-cutting concerns (configuration, themes, validation, error handling)
 
 #### HTML Generator Package (`packages/generator/`)
-**Presentation Layer**: Static site generation with interactive CLI
+**Presentation Layer**: Multi-format content generation with interactive CLI
 - **`html-generator.ts`**: Multi-theme site builder with parallel generation support
 - **`template-engine.ts`**: Variable substitution and markdown processing
+- **`formatters/`**: Strategy pattern implementation for multiple output formats
+  - **`format-strategy.ts`**: Base interface for all format strategies (supports both single-file and multi-file generation)
+  - **`format-factory.ts`**: Factory for creating format-specific strategies
+  - **`format-context.ts`**: Coordinates format generation and strategy selection
+  - **`format-exporter.ts`**: Facade providing simple API for format export
+  - **`format-types.ts`**: TypeScript interfaces for HTML builder and asset manager
+  - **`strategies/`**: Format implementations (HTML, Markdown, JSON, XML, Text)
 - **`templates/`**: Responsive HTML templates with mobile-first design
 - **`themes/`**: CSS theming system with animations and theme-specific visual elements
 
@@ -134,6 +142,40 @@ Five built-in themes with extensible custom theme support:
 - **Modular Prompts**: Separate prompts for story generation, quest content, and completion messages
 - **Template-Based System**: Variable substitution with theme-specific guidelines and character mappings
 - **Adventure Configuration**: Project-specific quest definitions via `adventure.config.json`
+
+### Format Strategy Architecture
+
+The generator uses the **Strategy Pattern** to support multiple output formats with clean separation of concerns:
+
+#### Format Strategy Components
+- **`FormatStrategy` Interface**: Defines contract for all format implementations
+  - Single-file strategies implement `format(data): string`
+  - Multi-file strategies implement `generateFiles(): Promise<void>`
+  - Both types provide `getFileExtension()`, `getFileName()`, and `isMultiFile()`
+- **`BaseFormatStrategy`**: Abstract base class with shared utilities (e.g., `getQuestContent()`)
+- **`FormatStrategyFactory`**: Creates appropriate strategy based on format type
+  - Supports custom strategy registration via `registerStrategy()`
+- **`FormatContext`**: Coordinates strategy selection and execution
+- **`FormatExporter`**: Facade providing simple API for external callers
+
+#### Format-Specific Strategies
+- **`HtmlStrategy`**: Multi-file generation with themes, assets, and navigation
+- **`MarkdownStrategy`**: Single markdown file with quest sections
+- **`JsonStrategy`**: Structured JSON with quest metadata and content
+- **`XmlStrategy`**: XML format with proper escaping for special characters
+- **`TextStrategy`**: Plain text format with simple formatting
+
+#### Key Design Principles
+- **Open/Closed Principle**: Easy to add new formats without modifying existing code
+- **Single Responsibility**: Each strategy handles one format type
+- **Type Safety**: TypeScript interfaces ensure compile-time validation
+- **Null Safety**: All strategies handle null/undefined values gracefully
+
+#### Format Restrictions
+- **Multi-theme generation** (`--theme all`) is only supported for HTML format
+- **`--serve` flag** only works with HTML format (will error with other formats)
+- Non-HTML formats generate a single output file (e.g., `index.md`, `index.json`)
+- HTML format generates multiple files (index.html, quest pages, summary.html, assets)
 
 ### Advanced Architecture Features
 
@@ -232,12 +274,21 @@ Key implications:
 - Everything scales based on the actual project being explored
 ```
 
-### HTML Generation Commands
+### Adventure Generation Commands
 
-- **Interactive Generation**: `npm run generate-html` - CLI wizard for theme selection and output configuration
+- **Interactive Generation**: `npm run generate-html` - CLI wizard for theme selection, format, and output configuration
 - **Quick Testing**: `npm run test:html` - Fast HTML generation with minimal LLM calls
-- **Specific Theme**: `npm run test:html -- --theme=mythical` - Generate specific theme for testing
-- **All Themes**: `node packages/generator/bin/cli.js --theme all --output tests/public --overwrite --max-quests 1` - Generate all themes with parallel processing
+- **Markdown Format**: `npm run test:md` - Generate markdown format for testing
+- **Multiple Formats**: The generator supports 5 output formats:
+  - **HTML** (default): Interactive website with navigation, themes, and quest pages
+  - **Markdown** (`--format md`): Single markdown file for GitHub/documentation
+  - **JSON** (`--format json`): Structured data for programmatic use
+  - **XML** (`--format xml`): XML format for data exchange
+  - **Text** (`--format txt`): Plain text format
+- **Format Examples**:
+  - `node packages/generator/bin/cli.js --theme space --format md --output ./docs`
+  - `node packages/generator/bin/cli.js --theme mythical --format json --output ./exports`
+  - `node packages/generator/bin/cli.js --theme all --output tests/public --overwrite --max-quests 1` - Generate all themes (HTML only supports multi-theme)
 
 ### Special Instructions
 
